@@ -1,6 +1,4 @@
-// src/components/Header/UserMenu.tsx
-
-'use client';
+'use client'
 import { useState, useRef, useEffect } from "react";
 import { BiLogOut, BiUser } from "react-icons/bi";
 import { FiUserPlus } from "react-icons/fi";
@@ -20,12 +18,12 @@ export default function UserMenu() {
     setIsModalOpen(prev => !prev);
   };
 
-  const [user, setUser] = useState(null);
+  // const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    const user = localStorage.getItem('user');
-    setUser(user)
-  }, [])
+  // useEffect(() => {
+  //   const user = localStorage.getItem('user');
+  //   setUser(user)
+  // }, [])
   
   useEffect(() => {
     if (isModalOpen) {

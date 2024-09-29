@@ -10,7 +10,7 @@ import Addresses from '@/components/Addresses';
 import useAuth from '@/components/useAuth';
 
 const Checkout = () => {
-    // const router = useRouter()
+  
     const userInfo = useAuth()
     console.log(userInfo)
   const [country, setCountry] = useState('Bangladesh');

@@ -1,14 +1,14 @@
 'use client'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link';
 
 const UserName = () => {
      const [user, setUser] = useState(null);
-
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    setUser(user)
+    const userInfo = localStorage.getItem('user');
+    setUser(userInfo)
   }, [])
+    
   return (
       <div>
           <h2>

@@ -101,7 +101,7 @@ export default function Header() {
           <div className="xl:w-2/6 flex items-center justify-end gap-4 text-base">
             <UserMenu />
             <div className="flex gap-2 tracking-wide items-center">
-              {/* <UserName/> */}
+              <UserName/>
               {/* <LogoutButton/> */}
             </div>
           </div>
