@@ -37,7 +37,7 @@ export default async function ProductDetails({ params }) {
     <div className="container mx-auto px-4 py-10 bg-white">
       <h1 className="text-xl md:text-2xl font-extrabold tracking-wide">
                     {product.title}
-                    {product.description.body}
+                    {product?.description?.body}
       </h1>
 
     </div>
