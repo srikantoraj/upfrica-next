@@ -10,7 +10,7 @@ import Addresses from '@/components/Addresses';
 import useAuth from '@/components/useAuth';
 
 const Checkout = () => {
-
+    // const router = useRouter()
     const userInfo = useAuth()
     console.log(userInfo)
   const [country, setCountry] = useState('Bangladesh');
@@ -27,7 +27,8 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
   // Fetch addresses from the API
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('user')) || {};
-        console.log(user)
+        if (!user?.token) router.push('/signin')
+        
         const fetchAddresses = async () => {
         try {
             const myHeaders = new Headers();
@@ -56,7 +57,8 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
             id: address.id,
             value: `${address.address_data.address_line_1}, ${address.address_data.town}, ${address.address_data.country}`,
             }));
-            setDropdownOptions(options);
+          setDropdownOptions(options);
+          setSelectedAddressId(options?.[0]?.id)
         } catch (error) {
             console.error('Failed to fetch addresses:', error);
         }
@@ -97,19 +99,77 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
     setIsOpen(!isOpen);
   };
 
-  const handleCheckout = () => {
-    // Retrieve user information from localStorage
-    const user = JSON.parse(localStorage.getItem('user'));
 
-    if (user) {
-      // If user exists, navigate to the Checkout page
-      // Note: Next.js does not support passing state directly via router.push
-      // The Checkout page should retrieve basket data from localStorage or use a global state management solution
-      router.push('/checkout');
-    } else {
-      // If user does not exist, navigate to the Sign-In page
-      router.push('/signin');
+
+  const placeOrder = async () => {
+    // setIsLoading(true);
+    // setIsLoading(false);
+    const busket = JSON.parse(localStorage.getItem('basket')) || [];
+    const user = JSON.parse(localStorage.getItem('user')) || {};
+
+    if (!busket.length) return;
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${user?.token}`,
+    };
+
+    let itemList = [];
+    for (let item of busket) {
+      console.log({ product_id: item?.id, quantity: item?.quantity });
+      let obj = { product_id: item?.id, quantity: item?.quantity };
+      itemList.push(obj);
     }
+
+    if (!selectedAddressId) {
+      return;
+    }
+    // const deepLink = getDeepLink("callback");
+    
+    var data = {
+      checkout: {
+        address_id: selectedAddressId,
+        products: [
+          {
+            id: itemList[0].product_id,
+            quantity: itemList[0]?.quantity,
+          },
+        ],
+        redirect_uri: 'upfrica-delta.vercel.app/',
+        payment_method: "paystack",
+      },
+    };
+
+    var requestOptions = {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(data),
+      redirect: "follow",
+    };
+
+    // _addLinkingListener();
+
+    fetch(
+      "https://upfrica-staging.herokuapp.com/api/v1/orders/checkout",
+      requestOptions
+    )
+      .then((response) => response.json())
+      .then((result) => {
+        console.log(result)
+        if (true) {
+          router.push(result?.paystack?.data?.authorization_url);
+        }
+        else {
+          onLogin(result?.stripe_url)
+        }
+        // console.log(result?.stripe_url)
+        // onLogin(result?.order?.stripe_url);
+        // setIsLoading(false);
+        // console.log(result)
+      })
+      .catch((error) => {
+        console.log("error", error);
+        // setIsLoading(false);
+      });
   };
 
   return (
@@ -414,7 +474,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
           </p>
           <div className="flex justify-center items-center">
             <button
-              onClick={handleCheckout}
+              onClick={placeOrder}
               className="text-xl font-bold bg-[#f7c32e] w-full md:w-1/3 py-2 md:rounded-3xl fixed bottom-0 sm:relative"
               disabled={basket.length === 0}
             >

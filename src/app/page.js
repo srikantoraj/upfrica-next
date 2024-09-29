@@ -13,7 +13,7 @@ export default function Home() {
       <Categories/>
       <ProductList />
       <AboutSection />
-      <ProductList />
+      <ProductList title="Selected for you"/>
       <FAQ/>
       <Footer/>
     </>

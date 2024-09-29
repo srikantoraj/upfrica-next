@@ -7,7 +7,8 @@ import DeliveryDate from './DeliveryDate';
 
 
 const TextSection = ({ product }) => {
-      const router = useRouter();
+  const router = useRouter();
+  const [addToBusket, setAddToBusket] = useState(false);
     const { id,
         title,
         price,
@@ -89,12 +90,12 @@ const TextSection = ({ product }) => {
     //   autoClose: 5000,
     //   theme: "dark",
     // });
-   
-      router.push("/cart");
+      setAddToBusket(true);
+      // router.push("/cart");
   };
   return (
       <>
-          <div className="space-y-4 text-base">
+          <div className="lg: ml-4 lg:mt-8 space-y-4 text-base">
           <div className="text-xl md:text-2xl font-bold">{title}</div>
            <button className="border py-1 md:py-2 px-2 md:px-4 hover:bg-purple-500 hover:text-white md:text-xl text-purple-500 border-purple-500 rounded-lg">
                 {'Write a review'}
@@ -128,16 +129,19 @@ const TextSection = ({ product }) => {
           <DeliveryDate />
           <p>Get a $1.41 credit for late delivery</p>
 
-          <button
-            onClick={handleAddToBasket}
-            className="bg-[#F7C32E] w-3/4 p-2 rounded-3xl text-base font-bold "
-          >
-            Add to basket
-          </button>
+        {!addToBusket && <button
+          onClick={handleAddToBasket}
+          className="bg-[#F7C32E] w-3/4 p-2 rounded-3xl text-base font-bold "
+        >
+          Add to basket
+        </button>}
 
-          {/* <LaptopDetails laptopDetails={laptopDetails} />
-
-          <ConfidenceSection />  */}
+        {addToBusket && <button
+          onClick={()=>router.push('/cart')}
+          className="bg-[#F7C32E] w-3/4 p-2 rounded-3xl text-base font-bold "
+        >
+          Visit basket
+        </button>}
         </div>
       </>
   )

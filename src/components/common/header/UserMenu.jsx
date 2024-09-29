@@ -7,12 +7,15 @@ import { FiUserPlus } from "react-icons/fi";
 import { IoMdCart, IoMdPerson, IoMdSearch } from "react-icons/io";
 import { MdHelp, MdSettings } from "react-icons/md";
 import Link from "next/link";
+import UserEmail from "./UserEmail";
+import { useRouter } from "next/navigation";
 
 export default function UserMenu() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const modalRef = useRef(null);
   const triggerRef = useRef(null);
   const [user, setUser] = useState(null);
+  const router = useRouter()
 
   const toggleModal = () => {
     setIsModalOpen(prev => !prev);
@@ -41,6 +44,10 @@ export default function UserMenu() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isModalOpen]);
 
+  const logOut = () => {
+    localStorage.removeItem('user'); 
+    router.push('/')
+  }
   return (
     <div onClick={()=>toggleModal()}>
       {/* User Icon and Menu Toggle */}
@@ -68,10 +75,7 @@ export default function UserMenu() {
             tabIndex={-1}
           >
             {/* User Info */}
-            <div className="flex items-center">
-              <FiUserPlus className="h-8 w-8 text-purple-500" />
-              <span className="ml-2 font-bold">user@example.com</span>
-            </div>
+          <UserEmail/>
             <hr className="my-2" />
 
             {/* Menu Items */}
@@ -142,7 +146,7 @@ export default function UserMenu() {
             {/* Sign Out */}
             <div
               className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded"
-              onClick={() => alert("Signed out!")}
+              onClick={() => {logOut()}}
             >
               <BiLogOut className="h-5 w-5 text-red-500" />
               <span className="ml-2 text-red-500">Sign Out</span>

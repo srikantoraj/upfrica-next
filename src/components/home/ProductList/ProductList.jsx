@@ -5,7 +5,7 @@ import React from "react";
 
 
 
-export default async function ProductList() {
+export default async function ProductList({title="Lightening Deals"}) {
     const res = await fetch("https://upfrica-staging.herokuapp.com/api/v1/products", {
       next: { revalidate: 120 }, // Revalidate every 2 minutes
     });
@@ -17,7 +17,7 @@ export default async function ProductList() {
     <div className="container  mx-auto px-4 py-10 bg-white ">
       <div className="flex gap-10 items-center ">
         <h1 className="text-xl md:text-2xl font-extrabold tracking-wide">
-          Lightening Deals
+          {title}
         </h1>
         <IoIosArrowRoundForward className="h-14 w-14 pt-4 text-gray-700" />
       </div>

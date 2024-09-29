@@ -1,6 +1,9 @@
+import Footer from '@/components/common/footer/Footer';
 import Header from '@/components/common/header/Header';
+import ProductList from '@/components/home/ProductList/ProductList';
 import Slider from '@/components/Slider';
 import TextSection from '@/components/TextSection';
+import Dummy from '@/components/ui/details/Dummy';
 import React from 'react';
 
 async function getProductData(id) {
@@ -49,7 +52,7 @@ export async function generateMetadata({ params }) {
     }
 
   return {
-    title: `${product.title} - Product Details`, // Ensure 'product.name' exists
+    title: `${product.title}  - ${product?.user?.country}`, // Ensure 'product.name' exists
     description: removeSpecificTags(product.description.body),     // Ensure 'product.description.body' exists
     // You can add more metadata here if needed
     
@@ -65,10 +68,8 @@ export default async function ProductDetails({ params }) {
     const {
         product_images,
         title,
-        price,
-        postage_fee,
-        sale_end_date,
-        sale_start_date,
+        description,
+       
     } = product || {};
     const laptopDetails = [
         {
@@ -174,12 +175,16 @@ export default async function ProductDetails({ params }) {
     return (
       <>
             <Header />
-            <div className="container space-y-6 md:w-full lg:w-3/4 xl:w-4/5 px-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-5">
+            <div className=" mx-10container space-y-6 md:w-full lg:w-3/4 xl:w-4/5 px-2 lg:mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-5 lg:mx-auto">
                     <Slider product_images={product_images} />
                     <TextSection product={product} />
                 </div>
+                <Dummy title={title } description={description|| "This is a test description"} />
             </div>
+       
+        <ProductList title={'Recommended'} />
+        <Footer/>
       </>
     
   );

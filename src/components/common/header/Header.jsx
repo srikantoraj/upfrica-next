@@ -6,10 +6,16 @@ import { IoMdSearch } from "react-icons/io";
 import Navbar from "./Nav";// Adjust the import path as needed
 import Link from "next/link"; // Use Next.js's Link
 import UserMenu from "./UserMenu"; // Import the Client Component
+import UserName from "./UserName";
+import LogoutButton from "./LogoutButton";
+// import LocalStorageComponent from "@/components/LocalStorageComponent";
 
 export default function Header() {
+
   return (
+    
     <div className="bg-white shadow">
+      
       <div className="xl:flex lg:gap-4 lg:justify-between py-1 shadow-2xl bg-white px-2">
         {/* Small & Medium Devices Layout */}
         <div className="xl:hidden flex flex-col w-full">
@@ -97,17 +103,8 @@ export default function Header() {
           <div className="xl:w-2/6 flex items-center justify-end gap-4 text-base">
             <UserMenu /> {/* Import and use the Client Component */}
             <div className="flex gap-2 tracking-wide items-center">
-              <h2>
-                <span className="font-bold">Hello </span>
-                <Link href="/login">
-                  <span className="text-purple-500">Sign in |</span>
-                </Link>
-              </h2>
-              <Link href="/join">
-                <button className="px-4 py-1 bg-purple-500 text-white rounded text-xl font-bold">
-                  Join
-                </button>
-              </Link>
+              <UserName/>
+              <LogoutButton/>
             </div>
           </div>
         </div>
