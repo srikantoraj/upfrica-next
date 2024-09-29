@@ -1,0 +1,136 @@
+my-shadcn-project/
+├── app/
+│   ├── api/
+│   │   └── hello/route.ts
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── dashboard/
+│       ├── layout.tsx
+│       ├── page.tsx
+│       └── components/
+│           ├── DashboardHeader.tsx
+│           ├── DashboardSidebar.tsx
+│           └── DashboardContent.tsx
+├── components/
+│   ├── ui/
+│   │   ├── Button.tsx
+│   │   ├── Input.tsx
+│   │   └── Modal.tsx
+│   ├── common/
+│   │   ├── Header/
+│   │   │   ├── Header.tsx
+│   │   │   ├── Logo.tsx
+│   │   │   ├── NavMenu.tsx
+│   │   │   └── UserMenu.tsx
+│   │   ├── Footer/
+│   │   │   ├── Footer.tsx
+│   │   │   ├── FooterLinks.tsx
+│   │   │   └── FooterInfo.tsx
+│   │   ├── Sidebar/
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── SidebarItem.tsx
+│   │   │   └── SidebarFooter.tsx
+│   │   └── [other common components]/
+│   ├── forms/
+│   │   ├── LoginForm.tsx
+│   │   └── SignupForm.tsx
+│   ├── widgets/
+│   │   ├── UserProfile.tsx
+│   │   ├── Notifications.tsx
+│   │   ├── StatsCard.tsx
+│   │   └── RecentActivities.tsx
+│   └── [additional component categories]/
+├── features/
+│   ├── auth/
+│   │   ├── components/
+│   │   │   ├── LoginForm.tsx
+│   │   │   └── SignupForm.tsx
+│   │   ├── hooks/
+│   │   │   └── useAuth.ts
+│   │   ├── services/
+│   │   │   └── authService.ts
+│   │   └── types.ts
+│   ├── dashboard/
+│   │   ├── components/
+│   │   │   ├── DashboardHeader.tsx
+│   │   │   ├── DashboardSidebar.tsx
+│   │   │   └── DashboardContent.tsx
+│   │   ├── hooks/
+│   │   │   └── useDashboardData.ts
+│   │   ├── services/
+│   │   │   └── dashboardService.ts
+│   │   └── types.ts
+│   └── [other features]/
+├── lib/
+│   ├── context/
+│   │   └── UserContext.tsx
+│   ├── hooks/
+│   │   └── useFetch.ts
+│   ├── utils.ts
+│   └── [other libraries]
+├── public/
+│   ├── images/
+│   │   ├── logo.png
+│   │   └── user-avatar.png
+│   ├── favicon.ico
+│   └── robots.txt
+├── styles/
+│   ├── globals.css
+│   └── [other styles]
+├── types/
+│   └── index.d.ts
+├── .eslintrc.js
+├── .gitignore
+├── next.config.js
+├── package.json
+├── postcss.config.js
+├── tailwind.config.js
+└── tsconfig.json
+
+
+
+
+
+
+for pages component  
+my-shadcn-project/
+├── app/
+│   ├── api/
+│   ├── layout.tsx
+│   ├── page.tsx          # Home Page
+│   └── [other routes]
+├── components/
+│   ├── ui/
+│   │   ├── Button.tsx
+│   │   ├── Input.tsx
+│   │   └── Modal.tsx
+│   ├── common/
+│   │   ├── Header/
+│   │   │   ├── Header.tsx
+│   │   │   ├── Logo.tsx
+│   │   │   ├── NavMenu.tsx
+│   │   │   └── UserMenu.tsx
+│   │   ├── Footer/
+│   │   │   ├── Footer.tsx
+│   │   │   ├── FooterLinks.tsx
+│   │   │   └── FooterInfo.tsx
+│   │   └── [other common components]
+│   ├── home/
+│   │   ├── ProductList/
+│   │   │   ├── ProductList.tsx
+│   │   │   ├── ProductCard.tsx
+│   │   │   └── ProductFilter.tsx
+│   │   ├── Categories/
+│   │   │   ├── Categories.tsx
+│   │   │   └── CategoryItem.tsx
+│   │   └── FAQ/
+│   │       ├── FAQ.tsx
+│   │       └── FAQItem.tsx
+│   └── [other component categories]
+├── lib/
+├── public/
+├── styles/
+├── types/
+├── next.config.js
+├── tsconfig.json
+└── package.json
