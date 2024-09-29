@@ -134,7 +134,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
             quantity: itemList[0]?.quantity,
           },
         ],
-        redirect_uri: 'upfrica-delta.vercel.app/',
+        redirect_uri: 'upfrica-delta.vercel.app',
         payment_method: "paystack",
       },
     };
@@ -155,6 +155,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
       .then((response) => response.json())
       .then((result) => {
         console.log(result)
+        localStorage.removeItem('basket');
         if (true) {
           router.push(result?.paystack?.data?.authorization_url);
         }

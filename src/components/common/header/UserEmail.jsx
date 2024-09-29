@@ -1,10 +1,15 @@
 
 'use client'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { FiUserPlus } from 'react-icons/fi';
 
 const UserEmail = () => {
-    const user = JSON.parse(localStorage.getItem('user')) || {};
+const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    setUser(user)
+  }, [])
   return (
       <div>
              <div className="flex items-center">

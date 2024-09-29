@@ -14,13 +14,13 @@ export default function UserMenu() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const modalRef = useRef(null);
   const triggerRef = useRef(null);
-  const [user, setUser] = useState(null);
   const router = useRouter()
 
   const toggleModal = () => {
     setIsModalOpen(prev => !prev);
   };
 
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const user = localStorage.getItem('user');

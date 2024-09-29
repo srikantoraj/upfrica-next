@@ -1,5 +1,4 @@
 // src/components/Header/Header.tsx
-
 import { BiUser } from "react-icons/bi";
 import { FaWhatsapp } from "react-icons/fa";
 import { IoMdSearch } from "react-icons/io";
@@ -8,7 +7,6 @@ import Link from "next/link"; // Use Next.js's Link
 import UserMenu from "./UserMenu"; // Import the Client Component
 import UserName from "./UserName";
 import LogoutButton from "./LogoutButton";
-// import LocalStorageComponent from "@/components/LocalStorageComponent";
 
 export default function Header() {
 
@@ -101,10 +99,10 @@ export default function Header() {
 
           {/* User Section */}
           <div className="xl:w-2/6 flex items-center justify-end gap-4 text-base">
-            <UserMenu /> {/* Import and use the Client Component */}
+            <UserMenu />
             <div className="flex gap-2 tracking-wide items-center">
-              <UserName/>
-              <LogoutButton/>
+              {/* <UserName/> */}
+              {/* <LogoutButton/> */}
             </div>
           </div>
         </div>

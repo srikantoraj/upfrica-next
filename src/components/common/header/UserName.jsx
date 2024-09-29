@@ -1,10 +1,14 @@
-
 'use client'
-import React from 'react'
+import React, { useEffect } from 'react'
 import Link from 'next/link';
 
 const UserName = () => {
-    const user = JSON.parse(localStorage.getItem('user')) || {};
+     const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    setUser(user)
+  }, [])
   return (
       <div>
           <h2>
