@@ -25,7 +25,7 @@ export default function Header() {
                 alt="Upfrica Logo"
               />
             </Link>
-            <Link href="/sell">
+            <Link href="/products/new">
               <button className="px-2 py-1 bg-purple-500 text-white rounded-md">
                 Sell
               </button>
@@ -88,9 +88,9 @@ export default function Header() {
 
           {/* Sell Button */}
           <div className="flex items-center justify-center">
-            <div className="border border-gray-500 rounded-md">
-              <Link href="/addNewProducts">
-                <p className="font-bold text-purple-500 px-4 tracking-wide text-xl py-1">
+            <div className="border border-gray-400 rounded-md">
+              <Link href="/products/new">
+                <p className="font-bold text-purple-500 px-2 tracking-wide text-xl py-1">
                   Sell
                 </p>
               </Link>

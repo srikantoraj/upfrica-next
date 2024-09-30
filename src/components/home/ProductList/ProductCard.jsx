@@ -12,7 +12,7 @@ export default function ProductCard({ product }) {
   return (
     <div className="border rounded-lg shadow-lg relative flex flex-col justify-between">
       {/* Card Image Section */}
-      <div>
+      <div >
         <div className="relative" >
           {product_images.length > 0 && (
             <Link href={`/details/${id}`} >

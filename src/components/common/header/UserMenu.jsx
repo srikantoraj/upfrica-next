@@ -68,7 +68,7 @@ export default function UserMenu() {
           id="user-menu"
         >
           <div
-            className="bg-white w-80 p-4 shadow-lg mt-16 mr-4 rounded-md ring-0"
+            className="bg-white w-80 p-4 shadow-lg mt-16 mr-4 rounded-md ring-0 border-none border:ring:"
             ref={modalRef}
             tabIndex={-1}
           >
@@ -120,13 +120,13 @@ export default function UserMenu() {
                   <span className="ml-2">All Orders</span>
                 </div>
               </Link>
-              <Link href="/draftPage">
+              <Link href="/draf">
                 <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
                   <IoMdCart className="h-5 w-5 text-gray-500" />
                   <span className="ml-2">Draft</span>
                 </div>
               </Link>
-              <Link href="/user">
+              <Link href="/admin/users">
                 <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
                   <IoMdCart className="h-5 w-5 text-gray-500" />
                   <span className="ml-2">Users</span>

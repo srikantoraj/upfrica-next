@@ -25,3 +25,7 @@ body {
     text-wrap: balance;
   }
 }
+
+.container {
+  @apply md:mx-auto sm:max-w-xl  md:max-w-full lg:max-w-screen-xl xl:max-w-screen-2xl 2xl:max-w-full    2xl:px-40;
+}
