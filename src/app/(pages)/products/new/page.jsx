@@ -36,6 +36,7 @@ const AddNewProducts = () => {
 
   // image uploading
   const [images, setImages] = React.useState([]);
+  const [files, setFiles] = React.useState([]);
   const maxNumber = 69;
 
   const onChange = (imageList, addUpdateIndex) => {
@@ -43,6 +44,12 @@ const AddNewProducts = () => {
     // data for submit
     console.log(imageList, addUpdateIndex);
     setImages(imageList);
+  };
+  const onFilesChange = (imageList, addUpdateIndex) => {
+    formik.setFieldValue("product_files", imageList);
+    // data for submit
+    console.log(imageList, addUpdateIndex);
+    setFiles(imageList);
   };
 
   const formik = useFormik({
@@ -62,6 +69,7 @@ const AddNewProducts = () => {
       rate: "",
       cbm: "",
       shoppingCost: "",
+      unitValue:"",
       productCost: "",
       totalCost: "",
       title: "",
@@ -568,6 +576,7 @@ const AddNewProducts = () => {
               {formik.values.title.length} / 80
             </p>
           </div>
+        
           {/* *Item description */}
           <div>
             <h2 className="text-2xl font-bold mb-2">*Item description</h2>
@@ -866,7 +875,7 @@ const AddNewProducts = () => {
                       </button> */}
                       {imageList.map((image, index) => (
                         <div key={index} className="image-item">
-                          <Image src={image["data_url"]} alt="" width="100" />
+                          <img src={image["data_url"]} alt="" width="100" />
                           <div className="image-item__btn-wrapper">
                             <button onClick={() => onImageUpdate(index)}>
                               Update
@@ -903,8 +912,8 @@ const AddNewProducts = () => {
               <div className="App">
                 <ImageUploading
                   multiple
-                  value={images}
-                  onChange={onChange}
+                  value={files}
+                  onChange={onFilesChange}
                   maxNumber={maxNumber}
                   dataURLKey="data_url"
                 >
@@ -931,7 +940,7 @@ const AddNewProducts = () => {
                       &nbsp;
                       {imageList.map((image, index) => (
                         <div key={index} className="image-item">
-                          <Image src={image["data_url"]} alt="" width="100" />
+                          <img src={image["data_url"]} alt="" width="100" />
                           <div className="image-item__btn-wrapper">
                             <button onClick={() => onImageUpdate(index)}>
                               Update
@@ -972,15 +981,15 @@ const AddNewProducts = () => {
                 <div>
                   <h1 className="text-gray-700 text-base">Unit value</h1>
                   <div className="flex  md:items-center space-x-2  text-xl font-bold">
-                    <input
-                      id="unitValue"
-                      name="unitValue"
-                      type="number"
-                      onChange={formik.handleChange}
-                      value={formik.values.unitValue}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      placeholder="0"
-                    />
+                  <input
+        id="unitValue"
+        name="unitValue"
+        type="number"
+        onChange={formik.handleChange}
+        value={formik.values.unitValue}
+        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+        placeholder="0"
+      />
                   </div>
                 </div>
                 <div>
@@ -1061,10 +1070,8 @@ const AddNewProducts = () => {
         </div>
         <div className="flex justify-between text-xl font-bold p-4">
           <button
-            onClick={() => console.log(editorRef.current.getContent())}
             type="submit"
-            className="bg-purple-500 text-white px-4 py-2 rounded-md"
-          >
+            className="bg-purple-500 text-white px-4 py-2 rounded-md">
             Save and continue
           </button>
           <button>Cancel</button>

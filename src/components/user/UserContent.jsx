@@ -171,7 +171,7 @@ const UserContent = () => {
                 <td className="py-2 px-4">{item.accounts} account</td>
                 <td className="py-2 px-4">{item.connectedAccounts} connected Accounts</td>
                 <td className="py-2 px-4">
-                  <Link href={`/user/${item.id}`}>Edit</Link>
+                  <Link href="/edit">Edit</Link>
                 </td>
                 <td className="py-2 px-4 text-red-500">Destroy</td>
               </tr>
