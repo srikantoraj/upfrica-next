@@ -1055,7 +1055,7 @@ const AddNewProducts = () => {
                         className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
                         onClick={() => {
                           setSelectedValue("Option 3");
-                          formik.setFieldValue("approval", "Option 3"); // Set value to Formik field
+                          formik.setFieldValue("approval", "Option 3"); 
                           setApproVal(false); // Close dropdown after selection
                         }}
                       >
@@ -1070,6 +1070,7 @@ const AddNewProducts = () => {
         </div>
         <div className="flex justify-between text-xl font-bold p-4">
           <button
+
             type="submit"
             className="bg-purple-500 text-white px-4 py-2 rounded-md">
             Save and continue
