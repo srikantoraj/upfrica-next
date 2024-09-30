@@ -8,7 +8,7 @@ import { MdOutlineArrowDropDown, MdOutlineArrowDropUp } from "react-icons/md";
 import ImageUploading from "react-images-uploading";
 import { Editor } from "@tinymce/tinymce-react";
 import { useFormik } from "formik";
-
+import Image from "next/image";
 const AddNewProducts = () => {
   // ফর্ম টগল করার জন্য state
   const [isOpen, setIsOpen] = useState(false);
@@ -866,7 +866,7 @@ const AddNewProducts = () => {
                       </button> */}
                       {imageList.map((image, index) => (
                         <div key={index} className="image-item">
-                          <img src={image["data_url"]} alt="" width="100" />
+                          <Image src={image["data_url"]} alt="" width="100" />
                           <div className="image-item__btn-wrapper">
                             <button onClick={() => onImageUpdate(index)}>
                               Update
@@ -931,7 +931,7 @@ const AddNewProducts = () => {
                       &nbsp;
                       {imageList.map((image, index) => (
                         <div key={index} className="image-item">
-                          <img src={image["data_url"]} alt="" width="100" />
+                          <Image src={image["data_url"]} alt="" width="100" />
                           <div className="image-item__btn-wrapper">
                             <button onClick={() => onImageUpdate(index)}>
                               Update
