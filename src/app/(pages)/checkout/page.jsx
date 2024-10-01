@@ -1,6 +1,5 @@
 // app/checkout/page.jsx
 'use client';
-
 import React, { useEffect, useState } from 'react';
 import { CountryDropdown } from 'react-country-region-selector';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
@@ -8,11 +7,12 @@ import { IoHome } from 'react-icons/io5';
 import { useRouter } from 'next/navigation';
 import Addresses from '@/components/Addresses';
 import useAuth from '@/components/useAuth';
+import { Formik, useFormik } from 'formik';
 
 const Checkout = () => {
   
-    const userInfo = useAuth()
-    console.log(userInfo)
+  const userInfo = useAuth()
+   console.log(userInfo)
   const [country, setCountry] = useState('Bangladesh');
   const [isOpen, setIsOpen] = useState(false);
   const [basket, setBasket] = useState([]);
@@ -73,6 +73,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
     const storedBasket = JSON.parse(localStorage.getItem('basket')) || [];
     setBasket(storedBasket);
   }, []);
+
 
 
   const handleSelect = (id) => {
@@ -173,6 +174,46 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
       });
   };
 
+  const formik = useFormik({
+    initialValues: {
+      setAsDefault: false,
+      full_name: '',
+      phoneNumber: '',
+      country: '',
+      addressLine1: '',
+      addressLine2: '',
+      postcode: '',
+      localArea: '',
+      town: '',
+      additionalInstructions: '',
+      weekends: {
+        saturdays: false,
+        sundays: false,
+      },
+    },
+    onSubmit: (values) => {
+      const myHeaders = new Headers();
+      myHeaders.append("Authorization", `Bearer ${userInfo?.token}`);
+
+      values['owner_id'] = userInfo?.user?.id;
+
+      const raw = JSON.stringify({address:values});
+
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow"
+      };
+
+      fetch("https://upfrica-staging.herokuapp.com/api/v1/addresses", requestOptions)
+        .then((response) => response.text())
+        .then((result) => console.log(result))
+        .catch((error) => console.error(error));
+          },
+  });
+
+
   return (
     <div>
       {/* Header */}
@@ -235,7 +276,8 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
               {/* Dropdown form */}
               {isOpen && (
                 <div className="mt-4 text-xl">
-                  <form className="space-y-4">
+                
+                  <form onSubmit={formik.handleSubmit} className="space-y-4">
                     <div>
                       <div className="space-y-3">
                         <p className="flex gap-2 items-center">
@@ -244,121 +286,162 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                             <input
                               type="checkbox"
                               name="setAsDefault"
-                              id="setAsDefault"
-                              checked={isChecked}
-                              onChange={handleCheckboxChange}
+                              checked={formik.values.setAsDefault}
+                              onChange={formik.handleChange}
                             />
                           </span>
                         </p>
                         <p>*The field can't be blank</p>
                       </div>
                     </div>
+          
+                    {/* Full Name Field */}
                     <div className="space-y-1">
-                      <label className="block font-medium">
-                        *Full name (First and Last name)
-                      </label>
+                      <label className="block font-medium">*Full name (First and Last name)</label>
                       <input
                         type="text"
+                        name="full_name"
                         className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Full name (First and Last name)"
+                        value={formik.values.fullName}
+                        onChange={formik.handleChange}
                       />
                     </div>
+          
+                    {/* Phone Number Field */}
                     <div className="space-y-1">
-                      <label className="block font-medium">
-                        *Phone number to contact you if required
-                      </label>
+                      <label className="block font-medium">*Phone number to contact you if required</label>
                       <input
                         type="text"
+                        name="phoneNumber"
                         className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Phone number to contact you if required"
+                        value={formik.values.phoneNumber}
+                        onChange={formik.handleChange}
                       />
                     </div>
+          
+                    {/* Country Dropdown */}
                     <div className="space-y-1">
                       <label className="block font-medium">*Country</label>
-                      <div>
-                        <CountryDropdown
-                          className="border focus:outline-none focus:ring focus:border-blue-500 px-2 py-2 rounded-md w-full"
-                          value={country}
-                          onChange={(val) => setCountry(val)}
-                        />
-                      </div>
+                      <CountryDropdown
+                        name="country"
+                        className="border focus:outline-none focus:ring focus:border-blue-500 px-2 py-2 rounded-md w-full"
+                        value={formik.values.country}
+                        onChange={(val) => setCountry(val)}
+                      />
                     </div>
+          
+                    {/* Address Line 1 */}
                     <div className="space-y-1">
-                      <label className="block font-medium">
-                        *Address line 1 (or Company name)
-                      </label>
+                      <label className="block font-medium">*Address line 1 (or Company name)</label>
                       <input
                         type="text"
+                        name="addressLine1"
                         className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Address line 1 (or Company name)"
+                        value={formik.values.addressLine1}
+                        onChange={formik.handleChange}
                       />
                     </div>
+          
+                    {/* Address Line 2 */}
                     <div className="space-y-1">
-                      <label className="block font-medium">
-                        Address line 2 (optional)
-                      </label>
+                      <label className="block font-medium">Address line 2 (optional)</label>
                       <input
                         type="text"
+                        name="addressLine2"
                         className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Address line 2 (optional)"
+                        value={formik.values.addressLine2}
+                        onChange={formik.handleChange}
                       />
                     </div>
+          
+                    {/* Postcode */}
                     <div className="space-y-1">
-                      <label className="block font-medium">
-                        Postcode / GP GPS (optional)
-                      </label>
+                      <label className="block font-medium">Postcode / GP GPS (optional)</label>
                       <input
                         type="text"
+                        name="postcode"
                         className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Postcode / GP GPS (optional)"
+                        value={formik.values.postcode}
+                        onChange={formik.handleChange}
                       />
                     </div>
+          
+                    {/* Local Area */}
                     <div className="space-y-1">
                       <label className="block font-medium">Local area</label>
                       <input
                         type="text"
+                        name="localArea"
                         className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Local area"
+                        value={formik.values.localArea}
+                        onChange={formik.handleChange}
                       />
                     </div>
+          
+                    {/* Town/City */}
                     <div className="space-y-1">
                       <label className="block font-medium">*Town/City</label>
                       <input
                         type="text"
+                        name="town"
                         className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="*Town/City"
+                        value={formik.values.townCity}
+                        onChange={formik.handleChange}
                       />
                     </div>
+          
+                    {/* Additional Instructions */}
                     <div className="space-y-1">
                       <label className="block font-medium">
                         Do we need additional instructions to find this address?
                       </label>
                       <textarea
+                        name="additionalInstructions"
                         className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder=""
+                        value={formik.values.additionalInstructions}
+                        onChange={formik.handleChange}
                       />
                     </div>
+          
+                    {/* Weekend Delivery */}
                     <div>
                       <p>Weekend delivery: I can receive packages on:</p>
                       <div className="flex justify-between py-2">
                         <p>
-                          <span>
-                            <input type="checkbox" name="saturdays" id="saturdays" />
-                          </span>{' '}
+                          <input
+                            type="checkbox"
+                            name="weekends.saturdays"
+                            checked={formik.values.weekends.saturdays}
+                            onChange={formik.handleChange}
+                          />{' '}
                           <span className="text-xl font-bold">Saturdays</span>
                         </p>
                         <p>
-                          <span>
-                            <input type="checkbox" name="sundays" id="sundays" />
-                          </span>{' '}
-                          <span className="text-xl font-bold">Sunday</span>
+                          <input
+                            type="checkbox"
+                            name="weekends.sundays"
+                            checked={formik.values.weekends.sundays}
+                            onChange={formik.handleChange}
+                          />{' '}
+                          <span className="text-xl font-bold">Sundays</span>
                         </p>
                       </div>
                     </div>
-
-                    {/* Add more fields as needed */}
+          
+                    {/* Submit Button */}
+                    <button type="submit" className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md">
+                      Submit
+                    </button>
                   </form>
-                </div>
+                
+              </div>
               )}
             </div>
           </div>

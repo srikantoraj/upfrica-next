@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useRef, useState } from "react";
 import { FaMinus, FaPencilAlt, FaPlus } from "react-icons/fa";
 import { IoMdNotifications, IoMdPhotos } from "react-icons/io";
@@ -9,8 +9,11 @@ import ImageUploading from "react-images-uploading";
 import { Editor } from "@tinymce/tinymce-react";
 import { useFormik } from "formik";
 import Image from "next/image";
+import { Router, useRouter } from "next/navigation";
+
 const AddNewProducts = () => {
   // ফর্ম টগল করার জন্য state
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -26,6 +29,11 @@ const AddNewProducts = () => {
     e.preventDefault();
     setIsOpen(!isOpen);
   };
+
+  // useEffect(()=>{
+  //   const  users = localStorage.getItem('users');
+  //   if(!users) router.push('/signin')
+  // },[])
 
   const editorRef = useRef(null);
   const log = () => {
@@ -69,7 +77,7 @@ const AddNewProducts = () => {
       rate: "",
       cbm: "",
       shoppingCost: "",
-      unitValue:"",
+      unitValue: "",
       productCost: "",
       totalCost: "",
       title: "",
@@ -79,8 +87,27 @@ const AddNewProducts = () => {
       condition: "",
       brand: "",
     },
-    onSubmit: (values) => {
-      console.log(values);
+    onSubmit: async (values) => {
+   
+      
+      const myHeaders = new Headers();
+      myHeaders.append("Authorization", `Bearer ${user?.token}`);
+      myHeaders.append("Content-Type", "text/plain");
+
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: values,
+        redirect: "follow",
+      };
+
+      fetch(
+        "https://upfrica-staging.herokuapp.com/api/v1/products",
+        requestOptions
+      )
+        .then((response) => response.text())
+        .then((result) => console.log(result))
+        .catch((error) => console.error(error));
     },
   });
   return (
@@ -576,7 +603,7 @@ const AddNewProducts = () => {
               {formik.values.title.length} / 80
             </p>
           </div>
-        
+
           {/* *Item description */}
           <div>
             <h2 className="text-2xl font-bold mb-2">*Item description</h2>
@@ -663,7 +690,8 @@ const AddNewProducts = () => {
                     <li
                       className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
                       onClick={() => {
-                        formik.setFieldValue("search", "Option 1"); // Set selected value to Formik field
+                        
+                        formik.setFieldValue("search", "1"); // Set selected value to Formik field
                         setShowDropdown(false); // Hide dropdown after selection
                       }}
                     >
@@ -672,7 +700,7 @@ const AddNewProducts = () => {
                     <li
                       className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
                       onClick={() => {
-                        formik.setFieldValue("search", "Option 2"); // Set selected value to Formik field
+                        formik.setFieldValue("search", "2"); // Set selected value to Formik field
                         setShowDropdown(false); // Hide dropdown after selection
                       }}
                     >
@@ -681,7 +709,7 @@ const AddNewProducts = () => {
                     <li
                       className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
                       onClick={() => {
-                        formik.setFieldValue("search", "Option 3"); // Set selected value to Formik field
+                        formik.setFieldValue("search", "3"); // Set selected value to Formik field
                         setShowDropdown(false); // Hide dropdown after selection
                       }}
                     >
@@ -981,15 +1009,15 @@ const AddNewProducts = () => {
                 <div>
                   <h1 className="text-gray-700 text-base">Unit value</h1>
                   <div className="flex  md:items-center space-x-2  text-xl font-bold">
-                  <input
-        id="unitValue"
-        name="unitValue"
-        type="number"
-        onChange={formik.handleChange}
-        value={formik.values.unitValue}
-        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-        placeholder="0"
-      />
+                    <input
+                      id="unitValue"
+                      name="unitValue"
+                      type="number"
+                      onChange={formik.handleChange}
+                      value={formik.values.unitValue}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="0"
+                    />
                   </div>
                 </div>
                 <div>
@@ -1055,7 +1083,7 @@ const AddNewProducts = () => {
                         className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
                         onClick={() => {
                           setSelectedValue("Option 3");
-                          formik.setFieldValue("approval", "Option 3"); 
+                          formik.setFieldValue("approval", "Option 3");
                           setApproVal(false); // Close dropdown after selection
                         }}
                       >
@@ -1070,9 +1098,9 @@ const AddNewProducts = () => {
         </div>
         <div className="flex justify-between text-xl font-bold p-4">
           <button
-
             type="submit"
-            className="bg-purple-500 text-white px-4 py-2 rounded-md">
+            className="bg-purple-500 text-white px-4 py-2 rounded-md"
+          >
             Save and continue
           </button>
           <button>Cancel</button>
