@@ -13,7 +13,7 @@ import { Router, useRouter } from "next/navigation";
 
 const AddNewProducts = () => {
   // ফর্ম টগল করার জন্য state
-  const router = useRouter()
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -45,10 +45,11 @@ const AddNewProducts = () => {
   // image uploading
   const [images, setImages] = React.useState([]);
   const [files, setFiles] = React.useState([]);
+  const [result, setResult] = React.useState(null);
   const maxNumber = 69;
 
-  const onChange = (imageList, addUpdateIndex) => {
-    formik.setFieldValue("product_images", imageList);
+  const onChange = async (imageList, addUpdateIndex) => {
+    // formik.setFieldValue("product_image", await convertImageListToBase64(imageList));
     // data for submit
     console.log(imageList, addUpdateIndex);
     setImages(imageList);
@@ -60,45 +61,58 @@ const AddNewProducts = () => {
     setFiles(imageList);
   };
 
+  // Utility function for converting images
+  const convertImageListToBase64 = (imageFiles) => {
+    return Promise.all(
+      imageFiles.map((imageFile) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(imageFile);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = (error) => reject(error);
+        });
+      })
+    );
+  };
+
   const formik = useFormik({
     initialValues: {
-      supplierLink: "",
-      content: "",
-      backupSupplier: "",
-      supplerName: "",
-      supplerNumber: "",
-      vPrice: "",
-      productPrice: "",
-      Vshipping: "",
-      L: "",
-      W: "",
-      H: "",
-      CBM: "",
-      rate: "",
-      cbm: "",
-      shoppingCost: "",
-      unitValue: "",
-      productCost: "",
-      totalCost: "",
       title: "",
-      images: [],
-      approval: "",
-      search: "",
-      condition: "",
-      brand: "",
+      condition_id: 1,
+      category_id: 2,
+      description: "",
+      product_quantity: 1,
+      price_cents: 1,
+      sale_price_cents: 0,
+      postage_fee_cents: 0,
+      secondary_postage_fee_cents: 0,
+      price_currency: "",
+      status: "",
     },
+
     onSubmit: async (values) => {
-   
-      
+      console.log(values)
+      // const user = JSON.parse(localStorage.getItem("user"));
+     
+      const product = values;
+      product["product_images"] = [images[0]?.data_url];
+
       const myHeaders = new Headers();
       myHeaders.append("Authorization", `Bearer ${user?.token}`);
-      myHeaders.append("Content-Type", "text/plain");
+      myHeaders.append("Content-Type", "application/json");
+
+      product["user_id"] = user?.user?.id;
+
+      const productObj = {
+        product,
+      };
+
+      console.log(JSON.stringify(productObj));
 
       const requestOptions = {
         method: "POST",
         headers: myHeaders,
-        body: values,
-        redirect: "follow",
+        body: JSON.stringify(productObj),
       };
 
       fetch(
@@ -106,7 +120,10 @@ const AddNewProducts = () => {
         requestOptions
       )
         .then((response) => response.text())
-        .then((result) => console.log(result))
+        .then((result) => {
+          console.log(result);
+          setResult(result);
+        })
         .catch((error) => console.error(error));
     },
   });
@@ -280,7 +297,9 @@ const AddNewProducts = () => {
               </div>
             </div>
           </div>
+
           {/* Admin Inputs section  */}
+
           <div className="p-4 bg-white shadow-md rounded-xl">
             {/* Header Section */}
             <div className="flex items-center justify-between text-base font-bold">
@@ -322,6 +341,7 @@ const AddNewProducts = () => {
                     />
                   </div>
 
+                  {/*Backup Supplier Links */}
                   <div>
                     <label className="block  font-bold mb-2">
                       Backup Supplier Link
@@ -337,6 +357,7 @@ const AddNewProducts = () => {
                     />
                   </div>
 
+                  {/* Supplier name */}
                   <div>
                     <label className="block  font-bold mb-2">
                       Supplier name
@@ -352,6 +373,7 @@ const AddNewProducts = () => {
                     />
                   </div>
 
+                  {/* Supplier phone number */}
                   <div>
                     <label className="block  font-bold mb-2">
                       Supplier phone number
@@ -404,6 +426,7 @@ const AddNewProducts = () => {
                           />
                         </label>
                       </div>
+
                       <div>
                         <label htmlFor="Vshipping">
                           Vshipping
@@ -433,6 +456,7 @@ const AddNewProducts = () => {
                           />
                         </label>
                       </div>
+
                       <div>
                         <label htmlFor="W">
                           w
@@ -447,6 +471,7 @@ const AddNewProducts = () => {
                           />
                         </label>
                       </div>
+
                       <div>
                         <label htmlFor="H">
                           H
@@ -461,6 +486,7 @@ const AddNewProducts = () => {
                           />
                         </label>
                       </div>
+
                       <div>
                         <label htmlFor="1CBM">
                           1CBM
@@ -475,6 +501,7 @@ const AddNewProducts = () => {
                           />
                         </label>
                       </div>
+
                       <div>
                         <label htmlFor="Rate ($ to GHS)">
                           Rate ($ to GHS)
@@ -578,6 +605,7 @@ const AddNewProducts = () => {
             )}
           </div>
         </div>
+
         {/*  title from  */}
         <div className="my-4 bg-white shadow-md  rounded-md p-4 space-y-2">
           {/* title  */}
@@ -621,11 +649,11 @@ const AddNewProducts = () => {
             <Editor
               apiKey="wlfjcowajns1o44b16c3vyk0lmxnctw5pehcbmo9070i2f4x"
               onInit={(_evt, editor) => (editorRef.current = editor)}
-              value={formik.values.content}
-              onEditorChange={(content) =>
-                formik.setFieldValue("content", content)
+              value={formik.values.description}
+              onEditorChange={(description) =>
+                formik.setFieldValue( description)
               }
-              initialValue="<p></p>"
+              // initialValue=""
               init={{
                 height: 200,
                 menubar: false,
@@ -674,7 +702,7 @@ const AddNewProducts = () => {
                 value={formik.values.search} // Formik value
                 onClick={() => setShowDropdown(!showDropdown)} // Toggle dropdown on click
                 onChange={formik.handleChange} // Handle input change
-                name="search" // Set the name for formik
+                name="category_id" // Set the name for formik
               />
               <button
                 type="button"
@@ -690,7 +718,6 @@ const AddNewProducts = () => {
                     <li
                       className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
                       onClick={() => {
-                        
                         formik.setFieldValue("search", "1"); // Set selected value to Formik field
                         setShowDropdown(false); // Hide dropdown after selection
                       }}
@@ -733,7 +760,8 @@ const AddNewProducts = () => {
 
             <div className="relative flex items-center justify-between border rounded-md group focus-within:border-purple-500">
               <input
-                id="condition"
+                id="condition_id
+"
                 name="condition"
                 className="w-full border-none focus:outline-none focus:ring-0 py-2 ps-3"
                 type="text"

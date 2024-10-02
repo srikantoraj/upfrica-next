@@ -15,6 +15,7 @@ const Navbar = () => {
     { title: "UK Site", id: 7 },
   ];
 
+  
   return (
     <div className="hidden lg:flex justify-center py-4 bg-white">
       <ul className="text-base font-bold flex gap-6 tracking-wide text-gray-600">

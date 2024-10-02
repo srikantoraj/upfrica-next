@@ -12,7 +12,7 @@ import { Formik, useFormik } from 'formik';
 const Checkout = () => {
   
   const userInfo = useAuth()
-   console.log(userInfo)
+  //  console.log(userInfo)
   const [country, setCountry] = useState('Bangladesh');
   const [isOpen, setIsOpen] = useState(false);
   const [basket, setBasket] = useState([]);
@@ -178,26 +178,34 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
     initialValues: {
       setAsDefault: false,
       full_name: '',
-      phoneNumber: '',
+      phone_number: '',
       country: '',
-      addressLine1: '',
+      address_line_1: '',
       addressLine2: '',
       postcode: '',
-      localArea: '',
+      local_area: '',
       town: '',
       additionalInstructions: '',
       weekends: {
-        saturdays: false,
-        sundays: false,
+        saturdays: 0,
+        sundays: 0,
       },
     },
     onSubmit: (values) => {
+      // console.log(values)
+      // const myHeaders = new Headers();
+      // myHeaders.append("Authorization", `Bearer ${userInfo?.token}`);
+      const user = JSON.parse(localStorage.getItem('user'))
+      console.log(user)
       const myHeaders = new Headers();
-      myHeaders.append("Authorization", `Bearer ${userInfo?.token}`);
+      myHeaders.append("Authorization", `Bearer ${user.token}`);
+      myHeaders.append("Content-Type", "application/json");
 
       values['owner_id'] = userInfo?.user?.id;
 
       const raw = JSON.stringify({address:values});
+      console.log(raw)
+
 
       const requestOptions = {
         method: "POST",
@@ -207,9 +215,10 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
       };
 
       fetch("https://upfrica-staging.herokuapp.com/api/v1/addresses", requestOptions)
-        .then((response) => response.text())
+        .then((response) => response.json())
         .then((result) => console.log(result))
         .catch((error) => console.error(error));
+
           },
   });
 
@@ -313,7 +322,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                       <label className="block font-medium">*Phone number to contact you if required</label>
                       <input
                         type="text"
-                        name="phoneNumber"
+                        name="phone_number"
                         className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Phone number to contact you if required"
                         value={formik.values.phoneNumber}
@@ -337,7 +346,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                       <label className="block font-medium">*Address line 1 (or Company name)</label>
                       <input
                         type="text"
-                        name="addressLine1"
+                        name="address_line_1"
                         className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Address line 1 (or Company name)"
                         value={formik.values.addressLine1}
@@ -376,7 +385,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                       <label className="block font-medium">Local area</label>
                       <input
                         type="text"
-                        name="localArea"
+                        name="local_area"
                         className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Local area"
                         value={formik.values.localArea}
