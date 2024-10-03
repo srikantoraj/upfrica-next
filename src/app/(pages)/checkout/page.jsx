@@ -1,92 +1,86 @@
 // app/checkout/page.jsx
-'use client';
-import React, { useEffect, useState } from 'react';
-import { CountryDropdown } from 'react-country-region-selector';
-import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import { IoHome } from 'react-icons/io5';
-import { useRouter } from 'next/navigation';
-import Addresses from '@/components/Addresses';
-import useAuth from '@/components/useAuth';
-import { Formik, useFormik } from 'formik';
+"use client";
+import React, { useEffect, useState } from "react";
+import { CountryDropdown } from "react-country-region-selector";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { IoHome } from "react-icons/io5";
+import { useRouter } from "next/navigation";
+import Addresses from "@/components/Addresses";
+import useAuth from "@/components/useAuth";
+import { Formik, useFormik } from "formik";
 
 const Checkout = () => {
-  
-  const userInfo = useAuth()
+  const userInfo = useAuth();
   //  console.log(userInfo)
-  const [country, setCountry] = useState('Bangladesh');
+  const [country, setCountry] = useState("Bangladesh");
   const [isOpen, setIsOpen] = useState(false);
   const [basket, setBasket] = useState([]);
   const [isChecked, setIsChecked] = useState(false);
 
-    
-const [addresses, setAddresses] = useState([]); // To store fetched addresses
+  const [addresses, setAddresses] = useState([]); // To store fetched addresses
   const [dropdownOptions, setDropdownOptions] = useState([]); // Dropdown options
   const [selectedAddressId, setSelectedAddressId] = useState(null); // Selected address ID
   const router = useRouter();
-  
+
   // Fetch addresses from the API
-    useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('user')) || {};
-        if (!user?.token) router.push('/signin')
-        
-        const fetchAddresses = async () => {
-        try {
-            const myHeaders = new Headers();
-            myHeaders.append('Authorization', `Bearer ${user?.token}`);
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user")) || {};
+    if (!user?.token) router.push("/signin");
 
-            const requestOptions = {
-            method: 'GET',
-            headers: myHeaders,
-            redirect: 'follow',
-            };
+    const fetchAddresses = async () => {
+      try {
+        const myHeaders = new Headers();
+        myHeaders.append("Authorization", `Bearer ${user?.token}`);
 
-            const response = await fetch(
-            'https://upfrica-staging.herokuapp.com/api/v1/addresses',
-            requestOptions
-            );
-
-            if (!response.ok) {
-            throw new Error(`Error: ${response.status} ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            setAddresses(data.addresses);
-
-            // Map addresses to dropdown options
-            const options = data.addresses.map((address) => ({
-            id: address.id,
-            value: `${address.address_data.address_line_1}, ${address.address_data.town}, ${address.address_data.country}`,
-            }));
-          setDropdownOptions(options);
-          setSelectedAddressId(options?.[0]?.id)
-        } catch (error) {
-            console.error('Failed to fetch addresses:', error);
-        }
+        const requestOptions = {
+          method: "GET",
+          headers: myHeaders,
+          redirect: "follow",
         };
 
-        setTimeout(() => {
-      fetchAddresses();  
-    },0)
-    
+        const response = await fetch(
+          "https://upfrica-staging.herokuapp.com/api/v1/addresses",
+          requestOptions
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setAddresses(data.addresses);
+
+        // Map addresses to dropdown options
+        const options = data.addresses.map((address) => ({
+          id: address.id,
+          value: `${address.address_data.address_line_1}, ${address.address_data.town}, ${address.address_data.country}`,
+        }));
+        setDropdownOptions(options);
+        setSelectedAddressId(options?.[0]?.id);
+      } catch (error) {
+        console.error("Failed to fetch addresses:", error);
+      }
+    };
+
+    setTimeout(() => {
+      fetchAddresses();
+    }, 0);
 
     // Load basket from localStorage
-    const storedBasket = JSON.parse(localStorage.getItem('basket')) || [];
+    const storedBasket = JSON.parse(localStorage.getItem("basket")) || [];
     setBasket(storedBasket);
   }, []);
-
-
 
   const handleSelect = (id) => {
     setSelectedAddressId(id);
     // You can perform additional actions here, such as fetching more data based on the selected id
-    console.log('Selected address ID:', id);
+    console.log("Selected address ID:", id);
   };
-
 
   // Retrieve basket from localStorage on component mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedBasket = JSON.parse(localStorage.getItem('basket')) || [];
+    if (typeof window !== "undefined") {
+      const storedBasket = JSON.parse(localStorage.getItem("basket")) || [];
       setBasket(storedBasket);
     }
   }, []);
@@ -100,13 +94,11 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
     setIsOpen(!isOpen);
   };
 
-
-
   const placeOrder = async () => {
     // setIsLoading(true);
     // setIsLoading(false);
-    const busket = JSON.parse(localStorage.getItem('basket')) || [];
-    const user = JSON.parse(localStorage.getItem('user')) || {};
+    const busket = JSON.parse(localStorage.getItem("basket")) || [];
+    const user = JSON.parse(localStorage.getItem("user")) || {};
 
     if (!busket.length) return;
     const headers = {
@@ -125,7 +117,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
       return;
     }
     // const deepLink = getDeepLink("callback");
-    
+
     var data = {
       checkout: {
         address_id: selectedAddressId,
@@ -135,7 +127,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
             quantity: itemList[0]?.quantity,
           },
         ],
-        redirect_uri: 'upfrica-delta.vercel.app',
+        redirect_uri: "upfrica-delta.vercel.app",
         payment_method: "paystack",
       },
     };
@@ -155,13 +147,12 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
     )
       .then((response) => response.json())
       .then((result) => {
-        console.log(result)
-        localStorage.removeItem('basket');
+        console.log(result);
+        localStorage.removeItem("basket");
         if (true) {
           router.push(result?.paystack?.data?.authorization_url);
-        }
-        else {
-          onLogin(result?.stripe_url)
+        } else {
+          onLogin(result?.stripe_url);
         }
         // console.log(result?.stripe_url)
         // onLogin(result?.order?.stripe_url);
@@ -177,15 +168,15 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
   const formik = useFormik({
     initialValues: {
       setAsDefault: false,
-      full_name: '',
-      phone_number: '',
-      country: '',
-      address_line_1: '',
-      addressLine2: '',
-      postcode: '',
-      local_area: '',
-      town: '',
-      additionalInstructions: '',
+      full_name: "",
+      phone_number: "",
+      country: "",
+      address_line_1: "",
+      addressLine2: "",
+      postcode: "",
+      local_area: "",
+      town: "",
+      additionalInstructions: "",
       weekends: {
         saturdays: 0,
         sundays: 0,
@@ -195,33 +186,33 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
       // console.log(values)
       // const myHeaders = new Headers();
       // myHeaders.append("Authorization", `Bearer ${userInfo?.token}`);
-      const user = JSON.parse(localStorage.getItem('user'))
-      console.log(user)
+      const user = JSON.parse(localStorage.getItem("user"));
+      console.log(user);
       const myHeaders = new Headers();
       myHeaders.append("Authorization", `Bearer ${user.token}`);
       myHeaders.append("Content-Type", "application/json");
 
-      values['owner_id'] = userInfo?.user?.id;
+      values["owner_id"] = userInfo?.user?.id;
 
-      const raw = JSON.stringify({address:values});
-      console.log(raw)
-
+      const raw = JSON.stringify({ address: values });
+      console.log(raw);
 
       const requestOptions = {
         method: "POST",
         headers: myHeaders,
         body: raw,
-        redirect: "follow"
+        redirect: "follow",
       };
 
-      fetch("https://upfrica-staging.herokuapp.com/api/v1/addresses", requestOptions)
+      fetch(
+        "https://upfrica-staging.herokuapp.com/api/v1/addresses",
+        requestOptions
+      )
         .then((response) => response.json())
         .then((result) => console.log(result))
         .catch((error) => console.error(error));
-
-          },
+    },
   });
-
 
   return (
     <div>
@@ -257,16 +248,14 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
               Your item will be delivered to this default location. Please make
               sure the details are correct.
             </p>
-            {/* <CountryDropdown
-              className="border border-purple-500 focus:outline-none focus:ring focus:border-blue-500 px-2 py-2 rounded-md w-full"
-              value={country}
-              onChange={(val) => setCountry(val)}
-            /> */}
-                      { dropdownOptions?.length > 0 && <Addresses
-                          options={dropdownOptions}
-                          onSelect={handleSelect}
-                          placeholder={dropdownOptions[0].value}
-                      />}
+
+            {dropdownOptions?.length > 0 && (
+              <Addresses
+                options={dropdownOptions}
+                onSelect={handleSelect}
+                placeholder={dropdownOptions[0].value}
+              />
+            )}
             <div>
               <div
                 className="flex items-center cursor-pointer"
@@ -285,7 +274,6 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
               {/* Dropdown form */}
               {isOpen && (
                 <div className="mt-4 text-xl">
-                
                   <form onSubmit={formik.handleSubmit} className="space-y-4">
                     <div>
                       <div className="space-y-3">
@@ -303,10 +291,12 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                         <p>*The field can't be blank</p>
                       </div>
                     </div>
-          
+
                     {/* Full Name Field */}
                     <div className="space-y-1">
-                      <label className="block font-medium">*Full name (First and Last name)</label>
+                      <label className="block font-medium">
+                        *Full name (First and Last name)
+                      </label>
                       <input
                         type="text"
                         name="full_name"
@@ -316,10 +306,12 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                         onChange={formik.handleChange}
                       />
                     </div>
-          
+
                     {/* Phone Number Field */}
                     <div className="space-y-1">
-                      <label className="block font-medium">*Phone number to contact you if required</label>
+                      <label className="block font-medium">
+                        *Phone number to contact you if required
+                      </label>
                       <input
                         type="text"
                         name="phone_number"
@@ -329,7 +321,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                         onChange={formik.handleChange}
                       />
                     </div>
-          
+
                     {/* Country Dropdown */}
                     <div className="space-y-1">
                       <label className="block font-medium">*Country</label>
@@ -337,26 +329,30 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                         name="country"
                         className="border focus:outline-none focus:ring focus:border-blue-500 px-2 py-2 rounded-md w-full"
                         value={formik.values.country}
-                        onChange={(val) => setCountry(val)}
+                        onChange={(val) => formik.setFieldValue("country", val)} // Correctly setting the country value
                       />
                     </div>
-          
+
                     {/* Address Line 1 */}
                     <div className="space-y-1">
-                      <label className="block font-medium">*Address line 1 (or Company name)</label>
+                      <label className="block font-medium">
+                        *Address line 1 (or Company name)
+                      </label>
                       <input
                         type="text"
                         name="address_line_1"
                         className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Address line 1 (or Company name)"
-                        value={formik.values.addressLine1}
+                        value={formik.values.address_line_1}
                         onChange={formik.handleChange}
                       />
                     </div>
-          
+
                     {/* Address Line 2 */}
                     <div className="space-y-1">
-                      <label className="block font-medium">Address line 2 (optional)</label>
+                      <label className="block font-medium">
+                        Address line 2 (optional)
+                      </label>
                       <input
                         type="text"
                         name="addressLine2"
@@ -366,10 +362,12 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                         onChange={formik.handleChange}
                       />
                     </div>
-          
+
                     {/* Postcode */}
                     <div className="space-y-1">
-                      <label className="block font-medium">Postcode / GP GPS (optional)</label>
+                      <label className="block font-medium">
+                        Postcode / GP GPS (optional)
+                      </label>
                       <input
                         type="text"
                         name="postcode"
@@ -379,7 +377,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                         onChange={formik.handleChange}
                       />
                     </div>
-          
+
                     {/* Local Area */}
                     <div className="space-y-1">
                       <label className="block font-medium">Local area</label>
@@ -388,11 +386,11 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                         name="local_area"
                         className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Local area"
-                        value={formik.values.localArea}
+                        value={formik.values.local_area}
                         onChange={formik.handleChange}
                       />
                     </div>
-          
+
                     {/* Town/City */}
                     <div className="space-y-1">
                       <label className="block font-medium">*Town/City</label>
@@ -405,7 +403,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                         onChange={formik.handleChange}
                       />
                     </div>
-          
+
                     {/* Additional Instructions */}
                     <div className="space-y-1">
                       <label className="block font-medium">
@@ -418,7 +416,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                         onChange={formik.handleChange}
                       />
                     </div>
-          
+
                     {/* Weekend Delivery */}
                     <div>
                       <p>Weekend delivery: I can receive packages on:</p>
@@ -429,7 +427,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                             name="weekends.saturdays"
                             checked={formik.values.weekends.saturdays}
                             onChange={formik.handleChange}
-                          />{' '}
+                          />{" "}
                           <span className="text-xl font-bold">Saturdays</span>
                         </p>
                         <p>
@@ -438,19 +436,21 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                             name="weekends.sundays"
                             checked={formik.values.weekends.sundays}
                             onChange={formik.handleChange}
-                          />{' '}
+                          />{" "}
                           <span className="text-xl font-bold">Sundays</span>
                         </p>
                       </div>
                     </div>
-          
+
                     {/* Submit Button */}
-                    <button type="submit" className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md">
+                    <button
+                      type="submit"
+                      className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md"
+                    >
                       Submit
                     </button>
                   </form>
-                
-              </div>
+                </div>
               )}
             </div>
           </div>
@@ -514,7 +514,7 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                     <div>
                       <p>Pay before delivery</p>
                       <p>
-                        Estimated delivery:{' '}
+                        Estimated delivery:{" "}
                         <span className="text-purple-500">01 Oct - 04 Oct</span>
                       </p>
                     </div>
@@ -530,23 +530,23 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
                     <div className="space-y-2">
                       <p>Pay on collection</p>
                       <p className="text-gray-700">
-                        Collection date:{' '}
+                        Collection date:{" "}
                         <span className="text-purple-500">01 Oct - 04 Oct</span>
                       </p>
                       <p>
-                        The item will be reserved until{' '}
+                        The item will be reserved until{" "}
                         <span className="text-purple-500">06 Oct 24</span>
                       </p>
                       <div className="bg-gray-50 p-4 rounded-md">
                         <p className="text-xl flex gap-2 items-center">
                           <span>
                             <IoHome />
-                          </span>{' '}
+                          </span>{" "}
                           Upfrica Collection Point
                         </p>
                         <p>
-                          Shop 1, Manna Plaza <br /> Community 18 junction <br />{' '}
-                          Opposite Allied Filling Station <br />
+                          Shop 1, Manna Plaza <br /> Community 18 junction{" "}
+                          <br /> Opposite Allied Filling Station <br />
                           Spintex Road, Accra
                         </p>
                       </div>
@@ -574,10 +574,10 @@ const [addresses, setAddresses] = useState([]); // To store fetched addresses
               Continue
             </button>
           </div>
-        </div> 
-          </div>
+        </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
 export default Checkout;
