@@ -18,7 +18,7 @@ export default function Footer() {
 
   return (
     <div className="bg-black">
-      <footer className="container mx-auto p-10 text-white text-xl tracking-wide">
+      <footer className="container mx-auto py-5 px-4 2xl:px-0 text-white text-xl tracking-wide">
         <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-5 lg:gap-10">
           {/* First Section */}
           <nav className="space-y-4 sm:col-span-1 md:col-span-1 lg:col-span-1 text-base">
