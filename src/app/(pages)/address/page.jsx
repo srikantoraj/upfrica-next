@@ -1,10 +1,8 @@
 "use client";
 import Loading from "@/components/ui/Loading";
-import React, { useState, useEffect } from "react";
-import { FaDotCircle } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
 import { GoDotFill } from "react-icons/go";
 import { IoIosArrowForward } from "react-icons/io";
-
 
 // Custom hook for fetching addresses
 const useFetchAddresses = () => {
@@ -105,7 +103,6 @@ const AddressCard = ({ item: data, isEditing, toggleEdit }) => {
 
       const result = await response.json();
       setItem(result?.address);
-      
 
       console.log("Updated Address:", result); // Log the updated address returned from the API
 
@@ -152,18 +149,20 @@ const AddressCard = ({ item: data, isEditing, toggleEdit }) => {
 
   return (
     <div
-      className={`address-card bg-white p-5 border border-gray-300 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out ${
-        isEditing ? "h-auto" : "h-60"
-      }`}
+      className={`address-card bg-white p-5 border border-gray-300 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out ${isEditing ? "h-auto" : "h-60"
+        }`}
     >
       <h3 className="font-bold text-xl text-gray-800 mb-2">
         {item.id} {item.full_name}
       </h3>
-      <p className="text-gray-600 mb-1">{item?.address_data.address_line_1}</p>
+      <p className=""></p>
+      <p className="text-gray-600 mb-1">
+        {item?.address_data.address_line_1}</p>
       <p className="text-gray-600 mb-1">
         {item.address_data.town}, {item.address_data.postcode}
       </p>
       <p className="text-gray-600 mb-1">{item.address_data.country}</p>
+
       <p className="text-gray-600 mb-1">
         Phone: {item.address_data.phone_number}
       </p>
@@ -292,7 +291,7 @@ const AddressPage = () => {
     setActiveCardId((prevId) => (prevId === id ? null : id)); // Toggle active card
   };
 
-  if (loading) return <Loading/>;
+  if (loading) return <Loading />;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
   return (
