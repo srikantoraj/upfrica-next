@@ -16,7 +16,7 @@ const UserName = () => {
               {!user?.user?.username && <Link href="/signin">
                   <span className="text-purple-500">Sign in |</span>
               </Link>}
-              {user &&<span className="text-purple-500">{user?.user?.username} |</span>}
+              {user &&<span className="text-purple-500">{user?.user?.username}</span>}
               </h2>
     </div>
   )

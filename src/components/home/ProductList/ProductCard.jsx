@@ -1,4 +1,4 @@
-'use client'
+
 import { AiOutlineShoppingCart } from "react-icons/ai";
 import { FaHeart } from "react-icons/fa";
 import Link from "next/link"; 

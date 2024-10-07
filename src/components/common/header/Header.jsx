@@ -7,16 +7,17 @@ import Link from "next/link"; // Use Next.js's Link
 import UserMenu from "./UserMenu"; // Import the Client Component
 import UserName from "./UserName";
 import LogoutButton from "./LogoutButton";
+import ShopingCart from "./ShopingCart";
 
 export default function Header() {
 
   return (
-    
-    <div className="bg-white shadow">
-      
-      <div className="xl:flex lg:gap-4 lg:justify-between py-1 shadow-2xl bg-white px-2">
+
+    <div className="">
+
+      <div className="xl:flex lg:gap-4 lg:justify-between  shadow-2xl bg-white px-2 py-2">
         {/* Small & Medium Devices Layout */}
-        <div className="xl:hidden flex flex-col w-full">
+        <div className="xl:hidden flex flex-col w-full ">
           <div className="flex justify-between items-center w-full">
             <Link href="/">
               <img
@@ -24,15 +25,20 @@ export default function Header() {
                 src="https://d26ukeum83vx3b.cloudfront.net/assets/upfrica-com-logo-dark_170x-94d438d62a4c6b2c2c70fe1084c008f4584357ed2847dac5fc38818a0de6459d.webp"
                 alt="Upfrica Logo"
               />
+
             </Link>
-            <Link href="/products/new">
-              <button className="px-2 py-1 bg-purple-500 text-white rounded-md">
-                Sell
-              </button>
-            </Link>
-            <div className="flex gap-4">
-              <BiUser className="h-6 w-6 text-purple-500" />
-              {/* You can add additional icons or buttons here */}
+            <div className="flex  items-center">
+              <Link href="/products/new">
+                <button className="px-2 py-1 bg-purple-500 text-white rounded-md">
+                  Sell
+                </button>
+              </Link>
+              <ShopingCart />
+              <div className="flex gap-4">
+                <BiUser className="h-6 w-6 text-purple-500" />
+                {/* You can add additional icons or buttons here */}
+              </div>
+              <UserName />
             </div>
           </div>
 
@@ -69,7 +75,7 @@ export default function Header() {
           </div>
 
           {/* Search Section */}
-          <div className="lg:w-2/4 flex items-center border rounded-xl py-1 px-2 group">
+          <div className="lg:w-full flex items-center border rounded-xl py-1 px-2 group">
             <input
               className="w-full border-none focus:outline-none pl-3"
               type="text"
@@ -97,12 +103,14 @@ export default function Header() {
             </div>
           </div>
 
+          {/* Shopping Cart Icon */}
+          <ShopingCart />
+
           {/* User Section */}
           <div className="xl:w-2/6 flex items-center justify-end gap-4 text-base">
             <UserMenu />
             <div className="flex gap-2 tracking-wide items-center">
-              <UserName/>
-              {/* <LogoutButton/> */}
+              <UserName />
             </div>
           </div>
         </div>

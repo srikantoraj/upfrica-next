@@ -1,4 +1,3 @@
-// app/checkout/page.jsx
 "use client";
 import React, { useEffect, useState } from "react";
 import { CountryDropdown } from "react-country-region-selector";

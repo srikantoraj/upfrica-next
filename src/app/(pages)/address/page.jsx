@@ -100,7 +100,6 @@ const AddressCard = ({ item: data, isEditing, toggleEdit }) => {
       if (!response.ok) {
         throw new Error("Failed to update address.");
       }
-
       const result = await response.json();
       setItem(result?.address);
 
@@ -291,7 +290,7 @@ const AddressPage = () => {
     setActiveCardId((prevId) => (prevId === id ? null : id)); // Toggle active card
   };
 
-  if (loading) return <Loading />;
+  // if (loading) return <Loading />;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
   return (
