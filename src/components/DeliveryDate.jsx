@@ -12,7 +12,7 @@ const DeliveryDate = () => {
       };
 
   return (
-    <div className="p-2 border border-blue-400 w-1/2 rounded-md font-bold">
+    <div className="p-2 border border-blue-400 w-full md:w-1/2 rounded-md font-bold">
       <h1>
       Delivery date: 
       <span className="text-blue-600"> {formatDate(today)} - {formatDate(futureDate)} </span> 

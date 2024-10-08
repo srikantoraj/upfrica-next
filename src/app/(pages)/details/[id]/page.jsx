@@ -175,7 +175,7 @@ export default async function ProductDetails({ params }) {
     return (
       <>
             <Header />
-            <div className=" mx-10 container space-y-6 md:w-full lg:w-3/4 xl:w-4/5 px-2 lg:mx-auto">
+            <div className=" container space-y-6 md:w-full lg:w-3/4 xl:w-4/5 px-2 lg:mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-5 lg:mx-auto">
                     <Slider product_images={product_images} />
                     <TextSection product={product} />

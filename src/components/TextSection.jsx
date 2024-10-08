@@ -5,12 +5,14 @@ import { FaLocationPin } from "react-icons/fa6";
 import SalesEndSection from './SalesEndSection/SalesEndSection';
 import DeliveryDate from './DeliveryDate';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const TextSection = ({ product }) => {
-  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [basket, setBasket] = useState([]);
-  const [addToBasket, setAddToBasket] = useState(false);
+  // const [addToBasket, setAddToBasket] = useState(false);
   const router = useRouter();
+  console.log("basket", basket)
 
   const { id,
     title,
@@ -28,33 +30,33 @@ const TextSection = ({ product }) => {
   });
 
   useEffect(() => {
-    setInterval(() => {
-      const saleSatrtDate = new Date(sale_start_date);
-      const saleEndDate = new Date(sale_end_date);
 
-      // বর্তমানে কত সময় বাকি আছে, সেটা বের করতে
-      const currentDate = new Date();
+    const saleSatrtDate = new Date(sale_start_date);
+    const saleEndDate = new Date(sale_end_date);
 
-      // সেল শেষ হবার সময় এবং বর্তমান সময়ের মধ্যে পার্থক্য বের করা
-      const timeRemaining = currentDate - saleEndDate;
-      // const timeRemaining =    saleEndDate - currentDate;
+    // বর্তমানে কত সময় বাকি আছে, সেটা বের করতে
+    const currentDate = new Date();
 
-      const seconds = Math.floor((timeRemaining / 1000) % 60);
-      const minutes = Math.floor((timeRemaining / (1000 * 60)) % 60);
-      const hours = Math.floor((timeRemaining / (1000 * 60 * 60)) % 24);
-      const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+    // সেল শেষ হবার সময় এবং বর্তমান সময়ের মধ্যে পার্থক্য বের করা
+    const timeRemaining = currentDate - saleEndDate;
+    // const timeRemaining =    saleEndDate - currentDate;
 
-      // console.log(
-      //   `${days} days ${hours} hours ${minutes} minutes ${seconds} seconds remaining`
-      // );
+    const seconds = Math.floor((timeRemaining / 1000) % 60);
+    const minutes = Math.floor((timeRemaining / (1000 * 60)) % 60);
+    const hours = Math.floor((timeRemaining / (1000 * 60 * 60)) % 24);
+    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
 
-      setTimeRemaining({
-        days,
-        hours,
-        minutes,
-        seconds,
-      });
-    }, 1000);
+    // console.log(
+    //   `${days} days ${hours} hours ${minutes} minutes ${seconds} seconds remaining`
+    // );
+
+    setTimeRemaining({
+      days,
+      hours,
+      minutes,
+      seconds,
+    });
+
   }, []);
 
   useEffect(() => {
@@ -93,14 +95,11 @@ const TextSection = ({ product }) => {
 
     // Popup dekhano
     setBasket(basket); // basket update kora
-    setIsPopupVisible(true); // popup dekhabo
-    setAddToBasket(true);
+    setIsModalVisible(true); // Show the modal when clicked
+    // setAddToBasket(true);
 
     // ৩ সেকেন্ড পরে popup বন্ধ হবে
-    setTimeout(() => {
-      setIsPopupVisible(false);
-      ; // Cart page e redirect korbo
-    }, 30000); // ৩ সেকেন্ড পরে cart e redirect korbo
+
   };
 
   // Basket update kora when component loads
@@ -108,6 +107,14 @@ const TextSection = ({ product }) => {
     const basket = JSON.parse(localStorage.getItem("basket")) || [];
     setBasket(basket);
   }, []);
+
+
+  // Handle Close Modal
+  const handleCloseModal = () => {
+    setIsModalVisible(false); // Hide the modal when clicked on Close
+  };
+
+
   return (
     <>
       <div className="lg: ml-4 lg:mt-8 space-y-4 text-base">
@@ -144,59 +151,83 @@ const TextSection = ({ product }) => {
         <DeliveryDate />
         <p>Get a $1.41 credit for late delivery</p>
 
+        {/* add to product and show the modal  */}
         <div>
           {/* Add to Basket Button */}
-          {!addToBasket && (
-            <button
-              onClick={handleAddToBasket}
-              className="bg-[#F7C32E] w-3/4 p-2 rounded-3xl text-base font-bold"
-            >
-              Add to basket
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleAddToBasket}
+            className="bg-[#F7C32E] w-full lg:w-3/4 p-2 rounded-3xl text-base font-bold">
+            Add to Basket
+          </button>
 
-          {/* Popup */}
-          {isPopupVisible && (
-            <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-white shadow-lg p-6 rounded-lg w-80 z-50">
-              {/* Arrow for the popup */}
-              <div className="absolute top-[-8px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-white"></div>
+          {/* Modal */}
+          {isModalVisible && (
+            <div className="fixed left-0 top-0 z-50 w-full h-full bg-black bg-opacity-50 flex justify-center items-start pt-10">
+              <div className="bg-white rounded-lg shadow-lg w-11/12 md:w-1/3">
+                {/* Modal Header */}
+                <div className="flex justify-between items-center p-4 border-b">
+                  <h3 className="text-xl font-semibold">Basket Items</h3>
+                  <button onClick={handleCloseModal} className="text-gray-600 hover:text-gray-900">
+                    &times;
+                  </button>
+                </div>
 
-              {/* Title */}
-              <h3 className="font-bold text-lg mb-4 text-center">Basket Items</h3>
+                {/* Modal Body */}
+                <div className="p-4">
+                  <p className="text-green-500 font-semibold text-center">New product added!</p>
+                  <ul className="mt-4">
+                    {basket.length > 0 ? (
+                      basket.map((item, index) => (
+                        <li key={index} className="flex items-center justify-between border-b py-3">
+                          {/* Product Image */}
+                          <img src={item?.image[0]} alt={item.title} className="h-12 w-12 object-cover rounded mr-3" />
+                          {/* Product Title */}
+                          <span>{item.title}</span>
+                          {/* Product Price */}
+                          <span className="text-gray-600">
+                            {item.price.currency_iso} {(item.price.cents / 100).toFixed(2)}
+                          </span>
+                          {/* Product Quantity */}
+                          <span>Qty: {item.quantity}</span>
+                        </li>
+                      ))
+                    ) : (
+                      <p className="text-center text-gray-500">No items in the basket.</p>
+                    )}
+                  </ul>
+                </div>
 
-              {/* Message */}
-              <p className="text-green-500 font-semibold mb-4 text-center">New product added!</p>
+                {/* Modal Footer */}
+                <div className="flex justify-end p-4 border-t space-x-2">
+                  <Link href='/checkout'>
+                    <button
 
-              {/* List of items */}
-              <ul className="text-sm">
-                {basket.map((item, index) => (
-                  <li key={index} className="flex items-center justify-between border-b py-3">
-                    {/* Product Image */}
-                    <Image src={item?.image} alt={item?.title} className="h-12 w-12 object-cover rounded mr-3" />
+                      className="bg-[#F7C32E] text-white px-4 py-2 rounded-3xl hover:bg-yellow-600-600"
+                    >
+                      Checkout Item
+                    </button>
+                  </Link>
+                  <Link href='/cart'>
+                    <button
 
-                    {/* Product Details */}
-                    {/* <div className="flex-1">
-                      <span className="font-semibold text-gray-800">{item?.title}</span>
-                      <p className="text-sm text-gray-500">{item?.price} USD</p>
-                    </div> */}
-                  </li>
-                ))}
-              </ul>
+                      className="bg-blue-500 text-white px-4 py-2 rounded-3xl hover:bg-blue-600"
+                    >
+                      View Basket
+                    </button>
+                  </Link>
+
+
+                </div>
+
+              </div>
             </div>
           )}
 
-
-
-
         </div>
 
-        {/* {addToBusket && <button
-          onClick={() => router.push('/cart')}
-          className="bg-[#F7C32E] w-3/4 p-2 rounded-3xl text-base font-bold "
-        >
-          Visit basket
-        </button>} */}
-      </div>
+
+      </div >
     </>
   )
 }
