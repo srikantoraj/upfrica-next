@@ -68,7 +68,7 @@ const Categories = async () => {
   }
 
   return (
-    <div className="py-10 shadow  mb-2 lg:px-10 px-4 flex justify-center">
+    <div className="py-10 shadow  mb-2  flex justify-center">
       <div className="container">
         <div className="flex gap-4 md:gap-10 items-center">
           <h1 className="text-xl md:text-2xl font-extrabold tracking-wide">Shop by Category</h1>

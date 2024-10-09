@@ -10,12 +10,12 @@ export default function Home() {
   return (
     <>
       <Header />
-      <Categories/>
+      <Categories />
       <ProductList />
       <AboutSection />
-      <ProductList title="Selected for you"/>
-      <FAQ/>
-      <Footer/>
+      <ProductList title="Selected for you" />
+      <FAQ />
+      <Footer />
     </>
   );
 }
