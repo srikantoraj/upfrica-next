@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FaMinus, FaPencilAlt, FaPlus } from "react-icons/fa";
 import { IoMdNotifications, IoMdPhotos } from "react-icons/io";
 // import { IoMdNotifications } from "react-icons/io";
@@ -16,13 +16,49 @@ const AddNewProducts = () => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
+  // const [showDropdown, setShowDropdown] = useState(false);
   const [arrowshowDropdown, setArrowShowDropdown] = useState(false);
   const [brandArrow, setBrandArrow] = useState(false);
   const [approVal, setApproVal] = useState(false); // Dropdown visibility state
   const [selectedValue, setSelectedValue] = useState(""); // Selected value state
   const [brand, setBrand] = useState(false);
+  // const [brand, setBrand] = useState([]); // Categories for the dropdown
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false); // To control category dropdown
+  const [conditionDropdownOpen, setConditionDropdownOpen] = useState(false); // To control condition dropdown
+
+  const [categories, setCategories] = useState([]); // Categories for the dropdown
+  const [conditions, setConditions] = useState([]); // Categories for the dropdown
   // const [brandArrow, setArrowShowDropdown] = useState(false); // Dropdown visibility state
+
+  // Fetch data from the backend
+  useEffect( () => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("https://upfrica-staging.herokuapp.com/api/v1/categories"); // Replace with your API URL
+        const data = await response.json();
+        setCategories(data.categories); // Assuming data is an array of categories
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+
+    const fetchConditaions = async () => {
+      try {
+        const response = await fetch("https://upfrica-staging.herokuapp.com/api/v1/conditions"); // Replace with your API URL
+        const data = await response.json();
+        setConditions(data.conditions); // Assuming data is an array of categories
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+
+    fetchConditaions();
+    fetchCategories(); // Call the fetch function when component mounts
+  }, []); // Empty dependency array means this will run once when the component mounts
+
+
 
   // টগল করার ফাংশন
   const toggleForm = (e) => {
@@ -30,10 +66,7 @@ const AddNewProducts = () => {
     setIsOpen(!isOpen);
   };
 
-  // useEffect(()=>{
-  //   const  users = localStorage.getItem('users');
-  //   if(!users) router.push('/signin')
-  // },[])
+
 
   const editorRef = useRef(null);
   const log = () => {
@@ -78,24 +111,26 @@ const AddNewProducts = () => {
   const formik = useFormik({
     initialValues: {
       title: "",
-      condition_id: 1,
-      category_id: 2,
       description: "",
       product_quantity: 1,
       price_cents: 1,
       sale_price_cents: 0,
       postage_fee_cents: 0,
       secondary_postage_fee_cents: 0,
-      price_currency: "",
+      price_currency: "GHS",
       status: "",
     },
 
     onSubmit: async (values) => {
-      console.log(values)
-      // const user = JSON.parse(localStorage.getItem("user"));
-     
+      console.log(values,"values")
+      const user = JSON.parse(localStorage.getItem("user"));
+      console.log(user,"user")
+
+
+
       const product = values;
-      product["product_images"] = [images[0]?.data_url];
+      console.log(product,values)
+      // product["product_images"] = [images[0]?.data_url];
 
       const myHeaders = new Headers();
       myHeaders.append("Authorization", `Bearer ${user?.token}`);
@@ -107,7 +142,7 @@ const AddNewProducts = () => {
         product,
       };
 
-      console.log(JSON.stringify(productObj));
+      console.log((productObj));
 
       const requestOptions = {
         method: "POST",
@@ -651,7 +686,7 @@ const AddNewProducts = () => {
               onInit={(_evt, editor) => (editorRef.current = editor)}
               value={formik.values.description}
               onEditorChange={(description) =>
-                formik.setFieldValue( description)
+                formik.setFieldValue(description)
               }
               // initialValue=""
               init={{
@@ -689,6 +724,7 @@ const AddNewProducts = () => {
 
             <p className="">Add accurate and concise details of your product</p>
           </div>
+
           {/* *Category */}
           <div className="py-4">
             <h2 className="text-2xl font-bold mb-2">*Category</h2>
@@ -696,13 +732,13 @@ const AddNewProducts = () => {
             <hr className="border-gray-300 mb-4" />
             <div className="relative flex items-center justify-between border rounded-md group focus-within:border-purple-500">
               <input
-                className="w-full border-none focus:outline-none focus:ring-0 py-2 ps-3"
+                className="w-full border-none focus:outline-none focus:ring-0 py-2 ps-3 hover:cursor-pointer"
                 type="text"
                 placeholder="Search Upfrica BD"
-                value={formik.values.search} // Formik value
-                onClick={() => setShowDropdown(!showDropdown)} // Toggle dropdown on click
+                value={formik.values.category_name} // Formik value
+                onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)} // Toggle dropdown on click
                 onChange={formik.handleChange} // Handle input change
-                name="category_id" // Set the name for formik
+                name="category_name" // Set the name for formik
               />
               <button
                 type="button"
@@ -712,36 +748,26 @@ const AddNewProducts = () => {
               </button>
 
               {/* Dropdown list */}
-              {showDropdown && (
+              {categoryDropdownOpen && (
                 <div className="absolute top-full left-0 w-full bg-white border rounded shadow-lg mt-2 z-10">
                   <ul className="py-2">
-                    <li
-                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                      onClick={() => {
-                        formik.setFieldValue("search", "1"); // Set selected value to Formik field
-                        setShowDropdown(false); // Hide dropdown after selection
-                      }}
-                    >
-                      Option 1
-                    </li>
-                    <li
-                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                      onClick={() => {
-                        formik.setFieldValue("search", "2"); // Set selected value to Formik field
-                        setShowDropdown(false); // Hide dropdown after selection
-                      }}
-                    >
-                      Option 2
-                    </li>
-                    <li
-                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                      onClick={() => {
-                        formik.setFieldValue("search", "3"); // Set selected value to Formik field
-                        setShowDropdown(false); // Hide dropdown after selection
-                      }}
-                    >
-                      Option 3
-                    </li>
+                    {categories.length > 0 ? (
+                      categories.map((category) => (
+                        <li
+                          key={category.id} // Assuming each category has an id
+                          className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                          onClick={() => {
+                            formik.setFieldValue("category_id", category.id); // Set the selected value to Formik field
+                            formik.setFieldValue("category_name", category.name); // Set the selected value to Formik field
+                            setCategoryDropdownOpen(false); // Hide dropdown after selection
+                          }}
+                        >
+                          {category.name}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="px-4 py-2 text-gray-500">Loading...</li>
+                    )}
                   </ul>
                 </div>
               )}
@@ -749,6 +775,7 @@ const AddNewProducts = () => {
 
             <p className="">Select or tap on more</p>
           </div>
+
           {/* *Condition */}
           <div className="py-4">
             <h2 className="text-2xl font-bold mb-2">*Condition</h2>
@@ -760,16 +787,15 @@ const AddNewProducts = () => {
 
             <div className="relative flex items-center justify-between border rounded-md group focus-within:border-purple-500">
               <input
-                id="condition_id
-"
-                name="condition"
-                className="w-full border-none focus:outline-none focus:ring-0 py-2 ps-3"
+                id="condition_id"
+                className="w-full border-none focus:outline-none focus:ring-0 py-2 ps-3 hover:cursor-pointer"
                 type="text"
                 placeholder="Search Upfrica BD"
-                value={formik.values.condition} // Set Formik value
+                value={formik.values.condition_name} // Set Formik value
                 onChange={formik.handleChange}
                 readOnly // Input is read-only to prevent typing
-                onClick={() => setArrowShowDropdown(!arrowshowDropdown)} // Toggle dropdown
+                onClick={() => setConditionDropdownOpen(!conditionDropdownOpen)} // Toggle dropdown on click
+                name="condition_name"
               />
               {arrowshowDropdown ? (
                 <button className="h-[45px] px-6 rounded-tr-md rounded-br-md">
@@ -782,41 +808,32 @@ const AddNewProducts = () => {
               )}
 
               {/* Dropdown list */}
-              {arrowshowDropdown && (
+              {conditionDropdownOpen && (
                 <div className="absolute top-full left-0 w-full bg-white border rounded shadow-lg mt-2 z-10">
                   <ul className="py-2">
-                    <li
-                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                      onClick={() => {
-                        formik.setFieldValue("condition", "Option 1"); // Set selected value
-                        setArrowShowDropdown(false); // Hide dropdown after selection
-                      }}
-                    >
-                      Option 1
-                    </li>
-                    <li
-                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                      onClick={() => {
-                        formik.setFieldValue("condition", "Option 2"); // Set selected value
-                        setArrowShowDropdown(false); // Hide dropdown after selection
-                      }}
-                    >
-                      Option 2
-                    </li>
-                    <li
-                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                      onClick={() => {
-                        formik.setFieldValue("condition", "Option 3"); // Set selected value
-                        setArrowShowDropdown(false); // Hide dropdown after selection
-                      }}
-                    >
-                      Option 3
-                    </li>
+                    {conditions.length > 0 ? (
+                      conditions.map((condision) => (
+                        <li
+                          key={condision.id} // Assuming each category has an id
+                          className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                          onClick={() => {
+                            formik.setFieldValue("condition_id", condision.id); // Set the selected value to Formik field
+                            formik.setFieldValue("condition_name", condision.name); // Set the selected value to Formik field
+                            setConditionDropdownOpen(false); // Hide dropdown after selection
+                          }}
+                        >
+                          {condision.name}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="px-4 py-2 text-gray-500">Loading...</li>
+                    )}
                   </ul>
                 </div>
               )}
             </div>
           </div>
+
           {/* Brand  */}
           <div className="py-4">
             <h2 className="text-2xl font-bold mb-2">*Brand</h2>

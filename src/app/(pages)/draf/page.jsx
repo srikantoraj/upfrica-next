@@ -1,46 +1,54 @@
-"use client"
+"use client";
 import React, { useEffect, useState } from "react";
-import { CiEdit } from "react-icons/ci";
 import { FaLocationPin } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
+import { CiEdit } from "react-icons/ci";
 
 const DrafPage = () => {
-  const [products, setProducts] = useState([]);
-  const [status, setStatus] = useState("Draft");
-  const [isOpen, setIsOpen] = useState(false);
+  const [products, setProducts] = useState([]); // products state
+  const [status, setStatus] = useState("Draft"); // status state
+  const [isOpen, setIsOpen] = useState(false); // dropdown state
 
+  // Fetch products and conditions when component mounts
   useEffect(() => {
-    fetch("https://upfrica-staging.herokuapp.com/api/v1/products?page=1")
-      .then((res) => res.json())
-      .then((data) => setProducts(data.products));
-  }, []);
+    const fetchProducts = async () => {
+      try {
+        const myHeaders = new Headers();
+        myHeaders.append("Authorization", "Bearer 8p2rgKcPohFu8p2MMpSDrieL");
+
+        const requestOptions = {
+          method: "GET",
+          headers: myHeaders,
+          redirect: "follow",
+        };
+
+        // Fetching drafts data from the API
+        const response = await fetch("https://upfrica-staging.herokuapp.com/api/v1/products/drafts", requestOptions);
+        const result = await response.json(); // Parse as JSON
+        setProducts(result.products); // Set the fetched products in state
+        console.log(result.products); // Log the result to verify data
+      } catch (error) {
+        console.error("Error fetching products:", error); // Handle any errors
+      }
+    };
+
+    fetchProducts(); // Call the function when component mounts
+  }, []); // Empty dependency array means this runs only once
 
   return (
-    
     <div className="overflow-x-auto">
       <table className="min-w-full table-auto border-collapse border border-gray-300">
         <thead className="bg-gray-200 text-xl font-bold">
           <tr>
-            <th className="border border-gray-300 px-6 py-3 lg:w-1/12 text-left text-gray-700">
-              ID
-            </th>
-            <th className="border border-gray-300 px-6 py-3 lg:w-2/12  text-left text-gray-700">
-              Product
-            </th>
-            <th className="border border-gray-300 px-6 py-3 lg:w-9/12 text-left text-gray-700">
-              Details
-            </th>
+            <th className="border border-gray-300 px-6 py-3 lg:w-1/12 text-left text-gray-700">ID</th>
+            <th className="border border-gray-300 px-6 py-3 lg:w-2/12 text-left text-gray-700">Product</th>
+            <th className="border border-gray-300 px-6 py-3 lg:w-9/12 text-left text-gray-700">Details</th>
           </tr>
         </thead>
         <tbody>
-          {products.map((product) => (
-            <tr
-              key={product.id}
-              className="text-base  tracking-wide cursor-pointer"
-            >
-              <td className="border border-gray-300 px-6 py-2 md:py-8">
-                {product.id}
-              </td>
+          {products?.map((product) => (
+            <tr key={product.id} className="text-base tracking-wide cursor-pointer">
+              <td className="border border-gray-300 px-6 py-2 md:py-8">{product.id}</td>
               <td className="border border-gray-300 px-4">
                 <div className="md:flex justify-between items-center space-x-2">
                   {/* Dropdown for Draft/Published */}
@@ -78,11 +86,8 @@ const DrafPage = () => {
                   </div>
 
                   {/* Edit Button */}
-                  <p className="text-[#AF35F0] font-semibold cursor-pointer hover:underline flex  items-center gap-2">
-                    <span>
-                      <CiEdit className="h-6 w-6" />
-                    </span>
-                    Edit
+                  <p className="text-[#AF35F0] font-semibold cursor-pointer hover:underline flex items-center gap-2">
+                    <span><CiEdit className="h-6 w-6" /></span> Edit
                   </p>
 
                   {/* Delete Button */}
@@ -94,29 +99,18 @@ const DrafPage = () => {
               </td>
 
               <td className="border border-gray-300 px-6 py-4 text-base flex gap-5 ">
-                <img
-                  className="h-32 w-32"
-                  src="https://d3f8uk6yuqjl48.cloudfront.net/e9whfnyep44ir6z3kjkh4j5rdqw2"
-                  alt=""
-                />
+                {/* <img className="h-32 w-32" src={product.image || "https://via.placeholder.com/150"} alt={product.title || "Product Image"} /> */}
                 <div className="space-y-2">
-                  <p> {product?.title}</p>
+                  <p>{product?.title}</p>
                   <p className="flex gap-4 items-center">
                     <span>Price: ${product?.price?.cents}</span>
                     <span>Delivery: Free</span>
                   </p>
                   <p className="flex items-center space-x-2">
-                    <span>
-                      <FaLocationPin className="text-gray-400" />
-                    </span>
-                    <span>Madina, GH by Osman</span>
-                    <span>by Osman</span> |
-                    <span className="hover:text-red-500"> TechZone Hub </span> |
-                    <span className="hover:text-red-500"> Whatsap </span> |
-                    <span className="hover:text-red-500">
-                      {" "}
-                      bappy@gmail.com{" "}
-                    </span>
+                    <span><FaLocationPin className="text-gray-400" /></span>
+                    <span>{product?.user?.town}, {product?.user?.country}</span>
+                    <span>{product?.user?.first_name}</span> | <span className="hover:text-red-500">{product?.user?.username} </span> |
+                    <span className="hover:text-red-500"> Whatsap </span> | <span className="hover:text-red-500">{product?.user?.email} </span>
                   </p>
                   <p>3 days ago</p>
                 </div>
