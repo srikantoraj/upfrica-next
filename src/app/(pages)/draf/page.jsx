@@ -1,15 +1,23 @@
-"use client";
-import React, { useEffect, useState } from "react";
+"use client"
+
+import React, { useState, useEffect } from "react";
 import { FaLocationPin } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
 import { CiEdit } from "react-icons/ci";
+import Link from "next/link";
+
+
+
 
 const DrafPage = () => {
+
   const [products, setProducts] = useState([]); // products state
   const [status, setStatus] = useState("Draft"); // status state
   const [isOpen, setIsOpen] = useState(false); // dropdown state
 
-  // Fetch products and conditions when component mounts
+ 
+  
+  // Fetch products when the component mounts
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -22,18 +30,23 @@ const DrafPage = () => {
           redirect: "follow",
         };
 
-        // Fetching drafts data from the API
         const response = await fetch("https://upfrica-staging.herokuapp.com/api/v1/products/drafts", requestOptions);
-        const result = await response.json(); // Parse as JSON
-        setProducts(result.products); // Set the fetched products in state
-        console.log(result.products); // Log the result to verify data
+        const result = await response.json();
+        setProducts(result.products); // Set products in state
       } catch (error) {
-        console.error("Error fetching products:", error); // Handle any errors
+        console.error("Error fetching products:", error); // Handle errors
       }
     };
 
-    fetchProducts(); // Call the function when component mounts
-  }, []); // Empty dependency array means this runs only once
+    fetchProducts(); // Call the function
+  }, []);
+
+  // Edit button click handler
+  const handleEditClick = (id) => {
+    console.log(id);
+    
+   
+  };
 
   return (
     <div className="overflow-x-auto">
@@ -86,9 +99,16 @@ const DrafPage = () => {
                   </div>
 
                   {/* Edit Button */}
-                  <p className="text-[#AF35F0] font-semibold cursor-pointer hover:underline flex items-center gap-2">
-                    <span><CiEdit className="h-6 w-6" /></span> Edit
-                  </p>
+                  
+                  <Link
+                   href={`/products/new?id=${product.id}`}
+                    // onClick={()=>handleEditClick(product.id)}
+                    className="text-[#AF35F0] font-semibold cursor-pointer hover:underline flex items-center gap-2"
+                     // Edit button click handler
+                  >
+                    <span ><CiEdit className="h-5 w-5" /></span> Edit
+                  </Link>
+                  
 
                   {/* Delete Button */}
                   <span className="flex items-center space-x-1 text-blue-500 cursor-pointer hover:text-blue-700">
@@ -99,7 +119,6 @@ const DrafPage = () => {
               </td>
 
               <td className="border border-gray-300 px-6 py-4 text-base flex gap-5 ">
-                {/* <img className="h-32 w-32" src={product.image || "https://via.placeholder.com/150"} alt={product.title || "Product Image"} /> */}
                 <div className="space-y-2">
                   <p>{product?.title}</p>
                   <p className="flex gap-4 items-center">
