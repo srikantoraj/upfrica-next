@@ -1,4 +1,5 @@
 "use client"
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
@@ -80,39 +81,41 @@ const DetelsCategories = () => {
                         >
                             {/* Image Section */}
                             <div className="w-full sm:w-1/4">
-                                <img
-                                    src={
-                                        product.product_images && product.product_images.length > 0
-                                            ? product.product_images[0] // প্রথম ইমেজ প্রদর্শন
-                                            : "fallback-image-url.jpg" // ডিফল্ট ইমেজ URL
-                                    }
-                                    alt={product.title}
-                                    className="w-full h-52 lg:h-72 object-center rounded-md"
-                                />
+                                <Link href={`/details/${product.id}`}>
+
+                                    <img
+                                        src={
+                                            product.product_images && product.product_images.length > 0
+                                                ? product.product_images[0] // প্রথম ইমেজ প্রদর্শন
+                                                : "fallback-image-url.jpg" // ডিফল্ট ইমেজ URL
+                                        }
+                                        alt={product.title}
+                                        className="w-full h-52 lg:h-72 object-center rounded-md"
+                                    />
+                                </Link>
                             </div>
                             {/* Text Section */}
                             <div className="w-full sm:w-3/4 space-y-2">
                                 <h2 className="text-xl font-bold">{product.title
                                 }</h2>
-                                                {/* <p
-                                    className={`text-base ${
-                                    product.brandNew ? "text-green-500" : "text-red-500"
-                                    }`}
+                                <p
+                                    className={`text-base ${product.brandNew ? "text-green-500" : "text-red-500"
+                                        }`}
                                 >
                                     {product.brandNew ? "Brand New" : "Used"}
-                                </p> */}
+                                </p>
                                 <p className="text-xl md:text-2xl font-bold ">${product.price.cents}</p>
-                                {/* {product.oldPrice && (
-                    <p className="text-base text-gray-500 line-through">
-                      {product.oldPrice}
-                    </p>
-                  )} */}
+                                {product.oldPrice && (
+                                    <p className="text-base text-gray-500 line-through">
+                                        {product.oldPrice}
+                                    </p>
+                                )}
                                 <p className="text-base font-bold">Buy it now</p>
                                 <p className="text-base">
-                                    {/* Delivery: {product.deliveryPrice} */}
+                                    Delivery: {product?.deliveryPrice}
                                 </p>
                                 <p className="text-sm">
-                                    {/* Estimated Delivery: {product.deliveryDate} */}
+                                    Estimated Delivery: {product?.deliveryDate}
                                 </p>
                             </div>
                         </div>
