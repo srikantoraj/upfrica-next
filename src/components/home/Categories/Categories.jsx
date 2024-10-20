@@ -68,20 +68,20 @@ const Categories = async () => {
   }
 
   return (
-    <div className="py-10 shadow  mb-2  flex justify-center">
-      <div className="container">
+    <div className="py-10 shadow  mb-2 px-2">
+      <div className="container mx-auto">
         <div className="flex gap-4 md:gap-10 items-center">
           <h1 className="text-xl md:text-2xl font-extrabold tracking-wide">Shop by Category</h1>
           <IoIosArrowRoundForward className="h-14 w-14 pt-4 text-gray-700" />
         </div>
-        <div className="hidden xl:flex justify-around">
+        <div className="hidden xl:flex justify-around py-5">
           {categories.map((data) => (
             <CategoryItem key={data.id} data={data} />
           ))}
         </div>
        
-        <div className="xl:hidden overflow-x-auto">
-            <div className="flex whitespace-nowrap ">
+        <div className="xl:hidden overflow-x-auto py-5">
+            <div className="flex gap-2 whitespace-nowrap ">
                 {categories.map((data) => (
                 <CategoryItem key={data.id} data={data} />
                 ))}

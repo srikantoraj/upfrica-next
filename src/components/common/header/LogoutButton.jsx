@@ -5,11 +5,14 @@ import React from 'react'
 const LogoutButton = () => {
     const router = useRouter()
     const user = JSON.parse(localStorage.getItem('user')) || {};
+
+    
     
       const logOut = () => {
         localStorage.removeItem('user'); 
         router.push('/')
      }
+     
 
   return (
       <div>

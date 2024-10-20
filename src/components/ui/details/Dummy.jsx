@@ -3,6 +3,9 @@ import { FaHeart } from 'react-icons/fa';
 import { GoPerson } from "react-icons/go";
 import { MdLocalPhone } from 'react-icons/md';
 import parse from 'html-react-parser';
+
+
+
 const Dummy = ({title = "", description = ""}) => {
   return (
     <div><div className="grid md:grid-cols-2 gap-5 lg:gap-20 my-16 ">

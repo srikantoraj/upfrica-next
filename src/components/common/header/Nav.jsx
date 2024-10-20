@@ -1,18 +1,15 @@
-// src/components/NavSection.tsx
-'use client'
+
 import Link from "next/link";
-
-
 
 const Navbar = () => {
   const datas = [
-    { title: "Home", id: 1 },
-    { title: "Browse", id: 2 },
-    { title: "Deals", id: 3 },
-    { title: "Shops", id: 4 },
-    { title: "Categories", id: 5 },
-    { title: "How It Works", id: 6 },
-    { title: "UK Site", id: 7 },
+    { title: "Home", id: 1, url: "/" },
+    { title: "Browse", id: 2, url: "/browse" },
+    { title: "Deals", id: 3, url: "/todays-deals" },
+    { title: "Shops", id: 4, url: "/shops" },
+    { title: "Categories", id: 5, url: "/categories" },
+    { title: "How It Works", id: 6, url: "/works" },
+    { title: "UK Site", id: 7, url: "/uk-site" },
   ];
 
   return (
@@ -20,8 +17,8 @@ const Navbar = () => {
       <ul className="text-base font-bold flex gap-6 tracking-wide text-gray-600">
         {datas.map((data) => (
           <li key={data.id} className="hover:text-purple-500">
-            <Link href={`/drafPage/${data.id}`} legacyBehavior>
-              <a>{data.title}</a>
+            <Link href={data.url} legacyBehavior>
+              {data.title}
             </Link>
           </li>
         ))}

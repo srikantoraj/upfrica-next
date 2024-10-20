@@ -2,11 +2,12 @@ import React from "react";
 import Link from "next/link";
 
 export default function CategoryItem({ data }) {
-  const { image, name } = data;
+  const { image, name,slug } = data;
   if(!image) return; 
 
   return (
     <div className="min-w-32">
+      <Link href={`/categories/${slug}`}>
       <div className="flex flex-col items-center">
         {/* <Link href='/categories'> */}
           <img
@@ -17,6 +18,7 @@ export default function CategoryItem({ data }) {
         {/* </Link> */}
         <p className="text-sm lg:text-base tracking-wide">{name}</p>
       </div>
+      </Link>
     </div>
   );
 }

@@ -21,7 +21,7 @@ export default async function ProductList({title="Lightening Deals"}) {
         </h1>
         <IoIosArrowRoundForward className="h-14 w-14 pt-4 text-gray-700" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2 py-5">
         {products?.products && products.products.length > 0 && products.products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

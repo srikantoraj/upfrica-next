@@ -1,5 +1,5 @@
-"use client"
-import React, { useRef, useState } from "react";
+"use client";
+import React, { useEffect, useRef, useState } from "react";
 import { FaMinus, FaPencilAlt, FaPlus } from "react-icons/fa";
 import { IoMdNotifications, IoMdPhotos } from "react-icons/io";
 // import { IoMdNotifications } from "react-icons/io";
@@ -9,23 +9,102 @@ import ImageUploading from "react-images-uploading";
 import { Editor } from "@tinymce/tinymce-react";
 import { useFormik } from "formik";
 import Image from "next/image";
+import { useRouter, useParams } from "next/navigation";
+import { usePathname, useSearchParams } from 'next/navigation'
+
+
 const AddNewProducts = () => {
-  // ফর্ম টগল করার জন্য state
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
   const [arrowshowDropdown, setArrowShowDropdown] = useState(false);
   const [brandArrow, setBrandArrow] = useState(false);
   const [approVal, setApproVal] = useState(false); // Dropdown visibility state
   const [selectedValue, setSelectedValue] = useState(""); // Selected value state
   const [brand, setBrand] = useState(false);
-  // const [brandArrow, setArrowShowDropdown] = useState(false); // Dropdown visibility state
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false); // To control category dropdown
+  const [conditionDropdownOpen, setConditionDropdownOpen] = useState(false); // To control condition dropdown
+  const [categories, setCategories] = useState([]); // Categories for the dropdown
+  const [conditions, setConditions] = useState([]); // Categories for the dropdown
+
+
+  const params = useSearchParams();
+  const productId = params.get('id');
+  console.log(productId);
+
+  const user = JSON.parse(localStorage.getItem('user'))
+
+  console.log(user)
+
+  useEffect(() => {
+    if (productId) {
+      // API কল করা
+      const myHeaders = new Headers();
+      myHeaders.append("Authorization", `Bearer ${user?.token}`);
+      myHeaders.append("Content-Type", "application/json");
+      const requestOptions = {
+        method: "GET",
+        headers: myHeaders,
+
+        redirect: "follow"
+      };
+
+      fetch(`https://upfrica-staging.herokuapp.com/api/v1/products/${productId}`, requestOptions)
+        .then(response => response.json())
+        .then(data => {
+          console.log(data); // ডাটা স্টেটে সেট করা
+
+          // if (data) {
+          //   // সমস্ত ফিল্ড আপডেট করুন
+          //   formik.setFieldValue('title', data.title || '');
+          //   formik.setFieldValue('description', data.description || '');
+          //   formik.setFieldValue('image', data.image || '');
+          //   formik.setFieldValue('category', data.category || '');
+          //   formik.setFieldValue('condition', data.condition || '');
+          // }
+        })
+        .catch(error => {
+          console.error('Error fetching product:', error);
+        });
+    }
+  }, [productId]);
+
+  // Fetch data from the backend
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("https://upfrica-staging.herokuapp.com/api/v1/categories"); // Replace with your API URL
+        const data = await response.json();
+        setCategories(data.categories); // Assuming data is an array of categories
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+
+    const fetchConditaions = async () => {
+      try {
+        const response = await fetch("https://upfrica-staging.herokuapp.com/api/v1/conditions"); // Replace with your API URL
+        const data = await response.json();
+        setConditions(data.conditions); // Assuming data is an array of categories
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+
+    fetchConditaions();
+    fetchCategories(); // Call the fetch function when component mounts
+  }, []); // Empty dependency array means this will run once when the component mounts
+
+
 
   // টগল করার ফাংশন
   const toggleForm = (e) => {
     e.preventDefault();
     setIsOpen(!isOpen);
   };
+
+
 
   const editorRef = useRef(null);
   const log = () => {
@@ -37,10 +116,11 @@ const AddNewProducts = () => {
   // image uploading
   const [images, setImages] = React.useState([]);
   const [files, setFiles] = React.useState([]);
+  const [result, setResult] = React.useState(null);
   const maxNumber = 69;
 
-  const onChange = (imageList, addUpdateIndex) => {
-    formik.setFieldValue("product_images", imageList);
+  const onChange = async (imageList, addUpdateIndex) => {
+    // formik.setFieldValue("product_image", await convertImageListToBase64(imageList));
     // data for submit
     console.log(imageList, addUpdateIndex);
     setImages(imageList);
@@ -52,35 +132,75 @@ const AddNewProducts = () => {
     setFiles(imageList);
   };
 
+  // Utility function for converting images
+  const convertImageListToBase64 = (imageFiles) => {
+    return Promise.all(
+      imageFiles.map((imageFile) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(imageFile);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = (error) => reject(error);
+        });
+      })
+    );
+  };
+
   const formik = useFormik({
     initialValues: {
-      supplierLink: "",
-      content: "",
-      backupSupplier: "",
-      supplerName: "",
-      supplerNumber: "",
-      vPrice: "",
-      productPrice: "",
-      Vshipping: "",
-      L: "",
-      W: "",
-      H: "",
-      CBM: "",
-      rate: "",
-      cbm: "",
-      shoppingCost: "",
-      unitValue:"",
-      productCost: "",
-      totalCost: "",
       title: "",
-      images: [],
-      approval: "",
-      search: "",
-      condition: "",
-      brand: "",
+      description: "",
+      product_quantity: 1,
+      price_cents: 1,
+      sale_price_cents: 0,
+      postage_fee_cents: 0,
+      secondary_postage_fee_cents: 0,
+      price_currency: "GHS",
+      status: "",
+      
+
+
     },
-    onSubmit: (values) => {
-      console.log(values);
+
+    onSubmit: async (values) => {
+      console.log(values, "values")
+      const user = JSON.parse(localStorage.getItem("user"));
+      console.log(user, "user")
+
+
+
+      const product = values;
+      console.log(product, values)
+      // product["product_images"] = [images[0]?.data_url];
+
+      const myHeaders = new Headers();
+      myHeaders.append("Authorization", `Bearer ${user?.token}`);
+      myHeaders.append("Content-Type", "application/json");
+
+      product["user_id"] = user?.user?.id;
+
+      const productObj = {
+        product,
+      };
+
+      console.log((productObj));
+
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: JSON.stringify(productObj),
+      };
+
+      fetch(
+        "https://upfrica-staging.herokuapp.com/api/v1/products",
+        requestOptions
+      )
+        .then((response) => response.text())
+        .then((result) => {
+          console.log(result);
+          setResult(result);
+        })
+        .catch((error) => console.error(error));
     },
   });
   return (
@@ -253,7 +373,9 @@ const AddNewProducts = () => {
               </div>
             </div>
           </div>
+
           {/* Admin Inputs section  */}
+
           <div className="p-4 bg-white shadow-md rounded-xl">
             {/* Header Section */}
             <div className="flex items-center justify-between text-base font-bold">
@@ -295,6 +417,7 @@ const AddNewProducts = () => {
                     />
                   </div>
 
+                  {/*Backup Supplier Links */}
                   <div>
                     <label className="block  font-bold mb-2">
                       Backup Supplier Link
@@ -310,6 +433,7 @@ const AddNewProducts = () => {
                     />
                   </div>
 
+                  {/* Supplier name */}
                   <div>
                     <label className="block  font-bold mb-2">
                       Supplier name
@@ -325,6 +449,7 @@ const AddNewProducts = () => {
                     />
                   </div>
 
+                  {/* Supplier phone number */}
                   <div>
                     <label className="block  font-bold mb-2">
                       Supplier phone number
@@ -377,6 +502,7 @@ const AddNewProducts = () => {
                           />
                         </label>
                       </div>
+
                       <div>
                         <label htmlFor="Vshipping">
                           Vshipping
@@ -406,6 +532,7 @@ const AddNewProducts = () => {
                           />
                         </label>
                       </div>
+
                       <div>
                         <label htmlFor="W">
                           w
@@ -420,6 +547,7 @@ const AddNewProducts = () => {
                           />
                         </label>
                       </div>
+
                       <div>
                         <label htmlFor="H">
                           H
@@ -434,6 +562,7 @@ const AddNewProducts = () => {
                           />
                         </label>
                       </div>
+
                       <div>
                         <label htmlFor="1CBM">
                           1CBM
@@ -448,6 +577,7 @@ const AddNewProducts = () => {
                           />
                         </label>
                       </div>
+
                       <div>
                         <label htmlFor="Rate ($ to GHS)">
                           Rate ($ to GHS)
@@ -551,6 +681,7 @@ const AddNewProducts = () => {
             )}
           </div>
         </div>
+
         {/*  title from  */}
         <div className="my-4 bg-white shadow-md  rounded-md p-4 space-y-2">
           {/* title  */}
@@ -576,7 +707,7 @@ const AddNewProducts = () => {
               {formik.values.title.length} / 80
             </p>
           </div>
-        
+
           {/* *Item description */}
           <div>
             <h2 className="text-2xl font-bold mb-2">*Item description</h2>
@@ -594,11 +725,11 @@ const AddNewProducts = () => {
             <Editor
               apiKey="wlfjcowajns1o44b16c3vyk0lmxnctw5pehcbmo9070i2f4x"
               onInit={(_evt, editor) => (editorRef.current = editor)}
-              value={formik.values.content}
-              onEditorChange={(content) =>
-                formik.setFieldValue("content", content)
+              value={formik.values.description}
+              onEditorChange={(description) =>
+                formik.setFieldValue(description)
               }
-              initialValue="<p></p>"
+              // initialValue=""
               init={{
                 height: 200,
                 menubar: false,
@@ -634,6 +765,7 @@ const AddNewProducts = () => {
 
             <p className="">Add accurate and concise details of your product</p>
           </div>
+
           {/* *Category */}
           <div className="py-4">
             <h2 className="text-2xl font-bold mb-2">*Category</h2>
@@ -641,13 +773,13 @@ const AddNewProducts = () => {
             <hr className="border-gray-300 mb-4" />
             <div className="relative flex items-center justify-between border rounded-md group focus-within:border-purple-500">
               <input
-                className="w-full border-none focus:outline-none focus:ring-0 py-2 ps-3"
+                className="w-full border-none focus:outline-none focus:ring-0 py-2 ps-3 hover:cursor-pointer"
                 type="text"
                 placeholder="Search Upfrica BD"
-                value={formik.values.search} // Formik value
-                onClick={() => setShowDropdown(!showDropdown)} // Toggle dropdown on click
+                value={formik.values.category_name} // Formik value
+                onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)} // Toggle dropdown on click
                 onChange={formik.handleChange} // Handle input change
-                name="search" // Set the name for formik
+                name="category_name" // Set the name for formik
               />
               <button
                 type="button"
@@ -657,36 +789,26 @@ const AddNewProducts = () => {
               </button>
 
               {/* Dropdown list */}
-              {showDropdown && (
+              {categoryDropdownOpen && (
                 <div className="absolute top-full left-0 w-full bg-white border rounded shadow-lg mt-2 z-10">
                   <ul className="py-2">
-                    <li
-                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                      onClick={() => {
-                        formik.setFieldValue("search", "Option 1"); // Set selected value to Formik field
-                        setShowDropdown(false); // Hide dropdown after selection
-                      }}
-                    >
-                      Option 1
-                    </li>
-                    <li
-                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                      onClick={() => {
-                        formik.setFieldValue("search", "Option 2"); // Set selected value to Formik field
-                        setShowDropdown(false); // Hide dropdown after selection
-                      }}
-                    >
-                      Option 2
-                    </li>
-                    <li
-                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                      onClick={() => {
-                        formik.setFieldValue("search", "Option 3"); // Set selected value to Formik field
-                        setShowDropdown(false); // Hide dropdown after selection
-                      }}
-                    >
-                      Option 3
-                    </li>
+                    {categories.length > 0 ? (
+                      categories.map((category) => (
+                        <li
+                          key={category.id} // Assuming each category has an id
+                          className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                          onClick={() => {
+                            formik.setFieldValue("category_id", category.id); // Set the selected value to Formik field
+                            formik.setFieldValue("category_name", category.name); // Set the selected value to Formik field
+                            setCategoryDropdownOpen(false); // Hide dropdown after selection
+                          }}
+                        >
+                          {category.name}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="px-4 py-2 text-gray-500">Loading...</li>
+                    )}
                   </ul>
                 </div>
               )}
@@ -694,6 +816,7 @@ const AddNewProducts = () => {
 
             <p className="">Select or tap on more</p>
           </div>
+
           {/* *Condition */}
           <div className="py-4">
             <h2 className="text-2xl font-bold mb-2">*Condition</h2>
@@ -705,15 +828,15 @@ const AddNewProducts = () => {
 
             <div className="relative flex items-center justify-between border rounded-md group focus-within:border-purple-500">
               <input
-                id="condition"
-                name="condition"
-                className="w-full border-none focus:outline-none focus:ring-0 py-2 ps-3"
+                id="condition_id"
+                className="w-full border-none focus:outline-none focus:ring-0 py-2 ps-3 hover:cursor-pointer"
                 type="text"
                 placeholder="Search Upfrica BD"
-                value={formik.values.condition} // Set Formik value
+                value={formik.values.condition_name} // Set Formik value
                 onChange={formik.handleChange}
                 readOnly // Input is read-only to prevent typing
-                onClick={() => setArrowShowDropdown(!arrowshowDropdown)} // Toggle dropdown
+                onClick={() => setConditionDropdownOpen(!conditionDropdownOpen)} // Toggle dropdown on click
+                name="condition_name"
               />
               {arrowshowDropdown ? (
                 <button className="h-[45px] px-6 rounded-tr-md rounded-br-md">
@@ -726,41 +849,32 @@ const AddNewProducts = () => {
               )}
 
               {/* Dropdown list */}
-              {arrowshowDropdown && (
+              {conditionDropdownOpen && (
                 <div className="absolute top-full left-0 w-full bg-white border rounded shadow-lg mt-2 z-10">
                   <ul className="py-2">
-                    <li
-                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                      onClick={() => {
-                        formik.setFieldValue("condition", "Option 1"); // Set selected value
-                        setArrowShowDropdown(false); // Hide dropdown after selection
-                      }}
-                    >
-                      Option 1
-                    </li>
-                    <li
-                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                      onClick={() => {
-                        formik.setFieldValue("condition", "Option 2"); // Set selected value
-                        setArrowShowDropdown(false); // Hide dropdown after selection
-                      }}
-                    >
-                      Option 2
-                    </li>
-                    <li
-                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                      onClick={() => {
-                        formik.setFieldValue("condition", "Option 3"); // Set selected value
-                        setArrowShowDropdown(false); // Hide dropdown after selection
-                      }}
-                    >
-                      Option 3
-                    </li>
+                    {conditions.length > 0 ? (
+                      conditions.map((condision) => (
+                        <li
+                          key={condision.id} // Assuming each category has an id
+                          className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                          onClick={() => {
+                            formik.setFieldValue("condition_id", condision.id); // Set the selected value to Formik field
+                            formik.setFieldValue("condition_name", condision.name); // Set the selected value to Formik field
+                            setConditionDropdownOpen(false); // Hide dropdown after selection
+                          }}
+                        >
+                          {condision.name}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="px-4 py-2 text-gray-500">Loading...</li>
+                    )}
                   </ul>
                 </div>
               )}
             </div>
           </div>
+
           {/* Brand  */}
           <div className="py-4">
             <h2 className="text-2xl font-bold mb-2">*Brand</h2>
@@ -981,15 +1095,15 @@ const AddNewProducts = () => {
                 <div>
                   <h1 className="text-gray-700 text-base">Unit value</h1>
                   <div className="flex  md:items-center space-x-2  text-xl font-bold">
-                  <input
-        id="unitValue"
-        name="unitValue"
-        type="number"
-        onChange={formik.handleChange}
-        value={formik.values.unitValue}
-        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-        placeholder="0"
-      />
+                    <input
+                      id="unitValue"
+                      name="unitValue"
+                      type="number"
+                      onChange={formik.handleChange}
+                      value={formik.values.unitValue}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="0"
+                    />
                   </div>
                 </div>
                 <div>
@@ -1055,7 +1169,7 @@ const AddNewProducts = () => {
                         className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
                         onClick={() => {
                           setSelectedValue("Option 3");
-                          formik.setFieldValue("approval", "Option 3"); // Set value to Formik field
+                          formik.setFieldValue("approval", "Option 3");
                           setApproVal(false); // Close dropdown after selection
                         }}
                       >
@@ -1071,7 +1185,8 @@ const AddNewProducts = () => {
         <div className="flex justify-between text-xl font-bold p-4">
           <button
             type="submit"
-            className="bg-purple-500 text-white px-4 py-2 rounded-md">
+            className="bg-purple-500 text-white px-4 py-2 rounded-md"
+          >
             Save and continue
           </button>
           <button>Cancel</button>
