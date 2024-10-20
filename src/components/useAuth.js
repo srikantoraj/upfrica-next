@@ -17,7 +17,7 @@ const useAuth = () => {
       setUser(storedUser);
     } else {
       // Redirect to Sign-In page if user does not exist
-      router.push('/signin');
+      // router.push('/signin');
     }
   }, [router]);
 

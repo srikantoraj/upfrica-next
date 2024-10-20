@@ -45,13 +45,13 @@ const Shops = () => {
 
 
     return (
-        <div>
-            <div className="flex flex-col items-center bg-[#E3ECFB] py-20 rounded-lg shadow-lg mx-4">
-                <h1 className="text-3xl font-bold text-center  mb-2">Browse Online Shops</h1>
-                <p className="text-lg text-center text-gray-700 mb-4">
+        <div className='px-4'>
+            <div className="flex flex-col items-center  py-20  mx-4">
+                <h1 className="text-2xl lg:text-3xl font-bold text-center  mb-2">Browse Online Shops</h1>
+                <p className="text-base lg:text-lg text-center text-gray-700 mb-4">
                     Variety of Shops in Ghana, Nigeria and more selling at low prices.
                 </p>
-                <p className="text-lg text-center text-gray-700 ">
+                <p className="text-base lg:text-lg text-center text-gray-700 ">
                     Have something to sell? <span className="font-bold underline">Sell on Upfrica</span>
                 </p>
             </div>

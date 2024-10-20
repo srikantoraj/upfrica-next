@@ -5,7 +5,7 @@ const Navbar = () => {
   const datas = [
     { title: "Home", id: 1, url: "/" },
     { title: "Browse", id: 2, url: "/browse" },
-    { title: "Deals", id: 3, url: "/deals" },
+    { title: "Deals", id: 3, url: "/todays-deals" },
     { title: "Shops", id: 4, url: "/shops" },
     { title: "Categories", id: 5, url: "/categories" },
     { title: "How It Works", id: 6, url: "/works" },
