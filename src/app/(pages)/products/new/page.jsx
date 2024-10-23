@@ -30,7 +30,7 @@ const AddNewProducts = () => {
   const [conditions, setConditions] = useState([]); // Categories for the dropdown
   // const [brandArrow, setArrowShowDropdown] = useState(false); // Dropdown visibility state
 
-  // Fetch data from the backend
+  // Fetch data from the backend condition and categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -120,6 +120,20 @@ const AddNewProducts = () => {
       price_currency: "GHS",
       status: "",
     },
+
+    // title: title,
+    // slug: slug,
+    // user_id: user?.id,
+    // condition_id: 1,
+    // category_id: subCategoryId,
+    // description: description,
+    // product_quantity: +productQuantity,
+    // price_cents: +price,
+    // sale_price_cents: +salesPrice,
+    // postage_fee_cents: +postAgeFee,
+    // secondary_postage_fee_cents: +sndPostAgeFee,
+    // price_currency: currency,
+    // status: productStatus
 
     onSubmit: async (values) => {
       console.log(values, "values")
