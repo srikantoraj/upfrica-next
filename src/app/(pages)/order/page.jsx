@@ -90,7 +90,7 @@ const OrderPage = () => {
     };
 
     if (loading) {
-        return <div className="text-center">Loading...</div>; // Skeleton loader
+        return <div className="text-center">Loading....</div>; // Skeleton loader
     }
 
     if (error) {
