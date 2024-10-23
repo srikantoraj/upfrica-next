@@ -9,64 +9,26 @@ import ImageUploading from "react-images-uploading";
 import { Editor } from "@tinymce/tinymce-react";
 import { useFormik } from "formik";
 import Image from "next/image";
-import { useRouter, useParams } from "next/navigation";
-import { usePathname, useSearchParams } from 'next/navigation'
-
+import { Router, useRouter } from "next/navigation";
 
 const AddNewProducts = () => {
+  // ফর্ম টগল করার জন্য state
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  // const [showDropdown, setShowDropdown] = useState(false);
   const [arrowshowDropdown, setArrowShowDropdown] = useState(false);
   const [brandArrow, setBrandArrow] = useState(false);
   const [approVal, setApproVal] = useState(false); // Dropdown visibility state
   const [selectedValue, setSelectedValue] = useState(""); // Selected value state
   const [brand, setBrand] = useState(false);
+  // const [brand, setBrand] = useState([]); // Categories for the dropdown
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false); // To control category dropdown
   const [conditionDropdownOpen, setConditionDropdownOpen] = useState(false); // To control condition dropdown
+
   const [categories, setCategories] = useState([]); // Categories for the dropdown
   const [conditions, setConditions] = useState([]); // Categories for the dropdown
-
-
-  const params = useSearchParams();
-  const productId = params.get('id');
-  console.log(productId);
-
-  const user = JSON.parse(localStorage.getItem('user'))
-
-  console.log(user)
-
-  useEffect(() => {
-    if (productId) {
-      // API কল করা
-      const myHeaders = new Headers();
-      myHeaders.append("Authorization", `Bearer ${user?.token}`);
-      myHeaders.append("Content-Type", "application/json");
-      const requestOptions = {
-        method: "GET",
-        headers: myHeaders,
-
-        redirect: "follow"
-      };
-
-      fetch(`https://upfrica-staging.herokuapp.com/api/v1/products/${productId}`, requestOptions)
-        .then(response => response.json())
-        .then(data => {
-          console.log(data); // ডাটা স্টেটে সেট করা
-
-          // if (data) {
-          //   // সমস্ত ফিল্ড আপডেট করুন
-          //   formik.setFieldValue('title', data.title || '');
-          //   formik.setFieldValue('description', data.description || '');
-          //   formik.setFieldValue('image', data.image || '');
-          //   formik.setFieldValue('category', data.category || '');
-          //   formik.setFieldValue('condition', data.condition || '');
-          // }
-        })
-        .catch(error => {
-          console.error('Error fetching product:', error);
-        });
-    }
-  }, [productId]);
+  // const [brandArrow, setArrowShowDropdown] = useState(false); // Dropdown visibility state
 
   // Fetch data from the backend
   useEffect(() => {
@@ -157,9 +119,6 @@ const AddNewProducts = () => {
       secondary_postage_fee_cents: 0,
       price_currency: "GHS",
       status: "",
-      
-
-
     },
 
     onSubmit: async (values) => {
