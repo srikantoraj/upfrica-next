@@ -101,7 +101,7 @@ const DrafPage = () => {
                   {/* Edit Button */}
                   
                   <Link
-                   href={`/products/new?id=${product.id}`}
+                   href={`/products/new/${product.id}`}
                     // onClick={()=>handleEditClick(product.id)}
                     className="text-[#AF35F0] font-semibold cursor-pointer hover:underline flex items-center gap-2"
                      // Edit button click handler
