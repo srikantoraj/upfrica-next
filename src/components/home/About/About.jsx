@@ -4,7 +4,7 @@ import { FaHandHolding, FaHandHoldingHeart } from "react-icons/fa";
 export default function AboutSection() {
     return (
       
-<div className="xl:flex justify-center px-4">
+<div className="xl:flex justify-center">
     <div className="container grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ">
       <div className=" py-6 px-8  bg-green-100 border-2">
         <span>

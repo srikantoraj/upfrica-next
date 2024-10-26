@@ -14,7 +14,7 @@ export default async function ProductList({title="Lightening Deals"}) {
  
 
   return (
-    <div className="container  mx-auto px-4 py-10 bg-white ">
+    <div className="container  mx-auto  py-10 bg-white ">
       <div className="flex gap-10 items-center ">
         <h1 className="text-xl md:text-2xl font-extrabold tracking-wide">
           {title}

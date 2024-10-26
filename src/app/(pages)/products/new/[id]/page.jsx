@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaMinus, FaPencilAlt, FaPlus } from "react-icons/fa";
 import { IoMdNotifications, IoMdPhotos } from "react-icons/io";
 // import { IoMdNotifications } from "react-icons/io";
@@ -11,20 +11,104 @@ import Title from "@/components/inpute/Title";
 import Description from "@/components/inpute/Description";
 import Photo from "@/components/inpute/Photo";
 import SubmitButton from "@/components/inpute/SubmitButton";
+import useCategories from "@/components/api/data";
 
-
-
-const AddNewProducts = () => {
-
+const NewProduct = ({ params }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [produt, setProduct] = useState();
+  const [categorie, setCategorie] = useState([]);
+  const [condition, setCondition] = useState([]);
+  
+  const { id } = params || {}; // Safely destructure id
+//   console.log("Dynamic ID from params:", id); // দেখাচ্ছে ডাইনামিক id
+//   console.log("Type of ID from params:", typeof id); // দেখাচ্ছে id এর টাইপ
 
-  // টগল করার ফাংশন
+  const { categories,conditions } = useCategories();
+  console.log("Categories from useCategories:", categories); // দেখাচ্ছে 
+
+
+  useEffect(() => {
+    setCategorie(categories);
+    setCondition(condition)
+  }, [categories,conditions]);
+  
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setLoading(true);
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        const token = user?.token;
+  
+        if (!token) {
+          console.error("User is not authenticated");
+          setLoading(false);
+          return;
+        }
+  
+        const myHeaders = new Headers();
+        myHeaders.append("Authorization", `Bearer ${token}`);
+  
+        const response = await fetch(
+          `https://upfrica-staging.herokuapp.com/api/v1/products/${id}`,
+          {
+            method: "GET",
+            headers: myHeaders,
+          }
+        );
+  
+        if (!response.ok) {
+          throw new Error("Failed to fetch product");
+        }
+  
+        const data = await response.json();
+        console.log(data);
+        setProduct(data);
+  
+        // Matching category with product's category_id
+        const matchedCategory = categories.find(
+          (category) => category.id === data.category_id
+        );
+        const matchedCondition = conditions.find(
+          (condition) => condition.id === data.condition_id
+        );
+  
+        // Formik এ সেট করার সময় category_name এ matchedCategory.name সেট করা হচ্ছে
+        formik.setValues({
+          title: data.title || "",
+          description: data.description.body || "",
+          product_quantity: data.product_quantity || 1,
+          price_cents: data.price_cents || 1,
+          sale_price_cents: data.sale_price_cents || 0,
+          postage_fee_cents: data.postage_fee_cents || 0,
+          secondary_postage_fee_cents: data.secondary_postage_fee_cents || 0,
+          price_currency: data.price_currency || "GHS",
+          status: data.status || "",
+          category_name: matchedCategory ? matchedCategory.name : '', // Set category name if matched
+          condition_name: matchedCondition ? matchedCondition.name :  '',
+        });
+  
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        setLoading(false);
+      }
+    };
+  
+    if (id) {
+      fetchProduct();
+    }
+  }, [id, categories]);
+  
+
+//   console.log("products", produt);
+
   const toggleForm = (e) => {
     e.preventDefault();
     setIsOpen(!isOpen);
   };
 
-  //  use Formik 
+  // useFormik hook usage here, outside of any condition
   const formik = useFormik({
     initialValues: {
       title: "",
@@ -36,32 +120,19 @@ const AddNewProducts = () => {
       secondary_postage_fee_cents: 0,
       price_currency: "GHS",
       status: "",
+      category_id: "",
+      condition_id: "",
     },
-
-
-
     onSubmit: async (values) => {
-      console.log(values, "values")
       const user = JSON.parse(localStorage.getItem("user"));
-      console.log(user, "user")
-
-
-
-      const product = values;
-      console.log(product, values)
-      // product["product_images"] = [images[0]?.data_url];
+      const productData = values;
+      productData["user_id"] = user?.user?.id;
 
       const myHeaders = new Headers();
       myHeaders.append("Authorization", `Bearer ${user?.token}`);
       myHeaders.append("Content-Type", "application/json");
 
-      product["user_id"] = user?.user?.id;
-
-      const productObj = {
-        product,
-      };
-
-      console.log((productObj));
+      const productObj = { product: productData };
 
       const requestOptions = {
         method: "POST",
@@ -76,11 +147,11 @@ const AddNewProducts = () => {
         .then((response) => response.text())
         .then((result) => {
           console.log(result);
-          // setResult(result);
         })
         .catch((error) => console.error(error));
     },
   });
+
   return (
     <div className="flex justify-center pt-5 md:pt-20 bg-slate-50 px-2 md:px-4">
       <form
@@ -586,4 +657,4 @@ const AddNewProducts = () => {
   );
 };
 
-export default AddNewProducts;
+export default NewProduct;
