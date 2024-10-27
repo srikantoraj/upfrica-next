@@ -17,10 +17,11 @@ const Conditon = ({ formik }) => {
 
             <div className="relative flex items-center justify-between border rounded-md group focus-within:border-purple-500">
                 <input
+                    className="w-full border-none focus:outline-none focus:ring-0 py-2 ps-3 hover:cursor-pointer"
                     id="condition_id"
                     name="condition_name"
                     placeholder="Search Upfrica BD"
-                    value={formik.values.condition_name} // Set Formik value
+                    value={formik?.values?.condition_name} // Set Formik value
                     onClick={() => setConditionDropdownOpen(!conditionDropdownOpen)} // Toggle dropdown on click
                     onChange={formik.handleChange} // Handle input change
                     readOnly={true} // Input is read-only

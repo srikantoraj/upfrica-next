@@ -16,10 +16,11 @@ const Brand = ({formik}) => {
 
             <div className="relative flex items-center justify-between border rounded-md group focus-within:border-purple-500">
               <InputField
+                 className="w-full border-none focus:outline-none focus:ring-0 py-2 ps-3 hover:cursor-pointer"
                 id="brand"
                 name="brand"
                 placeholder="Search Upfrica BD"
-                value={formik.values.brand} // Set Formik value
+                value={formik?.values?.brand} // Set Formik value
                 onClick={() => setArrowShowDropdown(!arrowshowDropdown)} // Toggle dropdown
                 onChange={formik.handleChange} // Handle input change
                 readOnly={true} // Input is read-only

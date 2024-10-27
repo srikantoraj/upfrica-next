@@ -17,7 +17,7 @@ const Categore = ({formik}) => {
             className="w-full border-none focus:outline-none focus:ring-0 py-2 ps-3 hover:cursor-pointer"
             type="text"
             placeholder="Search Upfrica BD"
-            value={formik.values.category_name} // Formik value
+            value={formik?.values?.category_name} // Formik value
             onClick={(e) => {
               e.stopPropagation();
               const newState = !categoryDropdownOpen; // Toggle state

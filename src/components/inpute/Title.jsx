@@ -16,12 +16,12 @@ const Title = ({formik}) => {
                 id="title"
                 name="title"
                 type="text"
-                value={formik.values.title}
-                onChange={formik.handleChange}
+                value={formik?.values?.title}
+                onChange={formik?.handleChange}
                 placeholder="Type something here..."
             />
             <p className="text-gray-500 mt-2">
-                {formik.values.title.length} / 80
+                {formik?.values?.title?.length} / 80
             </p>
         </div>
     );
