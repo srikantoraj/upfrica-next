@@ -1,5 +1,5 @@
 import { Editor } from '@tinymce/tinymce-react';
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 const Description = ({ formik }) => {
   const editorRef = useRef(null);
