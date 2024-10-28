@@ -19,7 +19,12 @@ const Checkout = () => {
   const [addresses, setAddresses] = useState([]); // To store fetched addresses
   const [dropdownOptions, setDropdownOptions] = useState([]); // Dropdown options
   const [selectedAddressId, setSelectedAddressId] = useState(null); // Selected address ID
+  const [selectedPayment, setSelectedPayment] = useState('');
+  const [isLoading, setIsLoading] = useState(false); // লোডিং স্টেট
   const router = useRouter();
+
+
+  console.log(selectedPayment)
 
   // Fetch addresses from the API
   useEffect(() => {
@@ -93,7 +98,9 @@ const Checkout = () => {
     setIsOpen(!isOpen);
   };
 
-  const placeOrder = async () => {
+  const placeOrder = async (paymentMethod) => {
+    setIsLoading(true); // ফেচিং শুরু হলে লোডিং স্টেট অন
+    setSelectedPayment(() => paymentMethod);
     // setIsLoading(true);
     // setIsLoading(false);
     const busket = JSON.parse(localStorage.getItem("basket")) || [];
@@ -127,7 +134,7 @@ const Checkout = () => {
           },
         ],
         redirect_uri: "upfrica-delta.vercel.app",
-        payment_method: "paystack",
+        payment_method: paymentMethod,
       },
     };
 
@@ -146,23 +153,25 @@ const Checkout = () => {
     )
       .then((response) => response.json())
       .then((result) => {
+        setIsLoading(false); // সার্ভার রেসপন্স পেলে লোডিং বন্ধ
         console.log(result);
-        localStorage.removeItem("basket");
-        if (true) {
-          router.push(result?.paystack?.data?.authorization_url);
-        } else {
-          onLogin(result?.stripe_url);
+
+        if (paymentMethod == 'paystack') {
+          router.push(result.paystack.data.authorization_url);
         }
-        // console.log(result?.stripe_url)
-        // onLogin(result?.order?.stripe_url);
-        // setIsLoading(false);
-        // console.log(result)
+        // অন্যথায় stripe URL এ রিডাইরেক্ট করবে
+        else {
+          router.push(result.stripe_url);
+        }
+
       })
       .catch((error) => {
         console.log("error", error);
-        // setIsLoading(false);
+        setIsLoading(false);
       });
   };
+
+
 
   const formik = useFormik({
     initialValues: {
@@ -560,17 +569,24 @@ const Checkout = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="py-4 space-y-2 border">
-          <p className="text-center">
+        <div className="py-6 space-y-4 border rounded-lg shadow-lg bg-white lg:w-3/5 mx-auto">
+          <p className="text-center text-lg font-medium text-gray-700">
             You'll pick up one or more items in shop or at a collection point.
           </p>
-          <div className="flex justify-center items-center">
+          <div className="mt-4 space-y-5 text-center">
             <button
-              onClick={placeOrder}
-              className="text-xl font-bold bg-[#f7c32e] w-full md:w-1/3 py-2 md:rounded-3xl fixed bottom-0 sm:relative"
-              disabled={basket.length === 0}
+              onClick={() => placeOrder('paystack')}
+              className="text-lg font-semibold text-white bg-[#f7c32e] px-6 py-3 rounded-full hover:bg-[#d6a91d] transition duration-300 ease-in-out shadow-lg focus:outline-none mr-4"
+              disabled={isLoading}
             >
-              Continue
+              {isLoading && selectedPayment === 'paystack' ? 'Processing...' : 'Pay with Paystack'}
+            </button>
+            <button
+              onClick={() => placeOrder('stripe')}
+              className="text-lg font-semibold text-white bg-[#f7c32e] px-6 py-3 rounded-full hover:bg-[#d6a91d] transition duration-300 ease-in-out shadow-lg focus:outline-none"
+              disabled={isLoading}
+            >
+              {isLoading && selectedPayment === 'stripe' ? 'Processing...' : 'Pay with Stripe'}
             </button>
           </div>
         </div>
