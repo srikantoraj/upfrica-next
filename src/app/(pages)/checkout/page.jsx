@@ -579,14 +579,14 @@ const Checkout = () => {
               className="text-lg font-semibold text-white bg-[#f7c32e] px-6 py-3 rounded-full hover:bg-[#d6a91d] transition duration-300 ease-in-out shadow-lg focus:outline-none mr-4"
               disabled={isLoading}
             >
-              {isLoading && selectedPayment === 'paystack' ? 'Processing...' : 'Pay with Paystack'}
+              {isLoading && selectedPayment === 'paystack' ? 'Lodding...' : 'Pay with Paystack'}
             </button>
             <button
               onClick={() => placeOrder('stripe')}
               className="text-lg font-semibold text-white bg-[#f7c32e] px-6 py-3 rounded-full hover:bg-[#d6a91d] transition duration-300 ease-in-out shadow-lg focus:outline-none"
               disabled={isLoading}
             >
-              {isLoading && selectedPayment === 'stripe' ? 'Processing...' : 'Pay with Stripe'}
+              {isLoading && selectedPayment === 'stripe' ? 'Lodding...' : 'Pay with Stripe'}
             </button>
           </div>
         </div>

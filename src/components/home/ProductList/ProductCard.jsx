@@ -10,7 +10,7 @@ export default function ProductCard({ product }) {
   if (!product_images) return null;
 
   return (
-    <div className="border rounded-lg shadow-lg relative flex flex-col justify-between">
+    <div className="border rounded-lg  relative flex flex-col justify-between">
       {/* Card Image Section */}
       <div >
         <div className="relative" >

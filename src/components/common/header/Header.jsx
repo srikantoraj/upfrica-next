@@ -8,6 +8,7 @@ import UserMenu from "./UserMenu"; // Import the Client Component
 import UserName from "./UserName";
 import LogoutButton from "./LogoutButton";
 import ShopingCart from "./ShopingCart";
+import SearchInpute from "./SearchInpute";
 
 export default function Header() {
 
@@ -43,14 +44,15 @@ export default function Header() {
           </div>
 
           {/* Full Width Search Section */}
-          <div className="mt-4 w-full flex items-center border rounded-xl py-2 px-2">
+          {/* <div className="mt-4 w-full flex items-center border rounded-xl py-2 px-2">
             <input
               className="w-full border-none focus:outline-none focus:ring-0 pl-3"
               type="text"
               placeholder="Search Upfrica BD"
             />
             <IoMdSearch className="h-8 w-8 text-purple-500" />
-          </div>
+          </div> */}
+          <SearchInpute/>
 
           {/* Full Width WhatsApp Section */}
           <div className="mt-2 w-full flex items-center justify-center bg-gray-100 p-4">
@@ -75,14 +77,7 @@ export default function Header() {
           </div>
 
           {/* Search Section */}
-          <div className="lg:w-full flex items-center border rounded-xl py-1 px-2 group">
-            <input
-              className="w-full border-none focus:outline-none pl-3"
-              type="text"
-              placeholder="Search Upfrica BD"
-            />
-            <IoMdSearch className="h-8 w-8 text-purple-500" />
-          </div>
+          <SearchInpute />
 
           {/* WhatsApp Section */}
           <div className="xl:w-2/6 flex items-center justify-center bg-gray-100 p-2 rounded-md">
