@@ -1,92 +1,52 @@
-import React from "react";
+"use client"
+import React from 'react';
+import styled from 'styled-components';
 
-const Loading = () => {
+const Loader = () => {
   return (
-    <div
-      aria-label="Loading..."
-      role="status"
-      className="flex items-center space-x-2"
-    >
-      <svg
-        className="h-20 w-20 animate-spin stroke-gray-500"
-        viewBox="0 0 256 256"
-      >
-        <line
-          x1="128"
-          y1="32"
-          x2="128"
-          y2="64"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="24"
-        ></line>
-        <line
-          x1="195.9"
-          y1="60.1"
-          x2="173.3"
-          y2="82.7"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="24"
-        ></line>
-        <line
-          x1="224"
-          y1="128"
-          x2="192"
-          y2="128"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="24"
-        ></line>
-        <line
-          x1="195.9"
-          y1="195.9"
-          x2="173.3"
-          y2="173.3"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="24"
-        ></line>
-        <line
-          x1="128"
-          y1="224"
-          x2="128"
-          y2="192"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="24"
-        ></line>
-        <line
-          x1="60.1"
-          y1="195.9"
-          x2="82.7"
-          y2="173.3"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="24"
-        ></line>
-        <line
-          x1="32"
-          y1="128"
-          x2="64"
-          y2="128"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="24"
-        ></line>
-        <line
-          x1="60.1"
-          y1="60.1"
-          x2="82.7"
-          y2="82.7"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="24"
-        ></line>
-      </svg>
-      <span className="text-4xl font-medium text-gray-500">Loading...</span>
-    </div>
+    <StyledWrapper>
+      <div className="loader" />
+    </StyledWrapper>
   );
-};
+}
 
-export default Loading;
+const StyledWrapper = styled.div`
+  .loader {
+    display: block;
+    --height-of-loader: 4px;
+    --loader-color: #0071e2;
+    width: 100vw; /* Full width */
+    height: var(--height-of-loader);
+    border-radius: 0; /* No rounded corners for a top-bar look */
+    background-color: rgba(0, 0, 0, 0.2);
+    position: fixed; /* Stays at the top even when scrolling */
+    top: 0;
+    left: 0;
+    z-index: 1000; /* Ensures loader is above other content */
+  }
+
+  .loader::before {
+    content: "";
+    position: absolute;
+    background: var(--loader-color);
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    border-radius: 0;
+   animation: moving 2s ease-in-out infinite; /* Duration increased to 2s */
+  }
+
+  @keyframes moving {
+    50% {
+      width: 100%;
+    }
+    100% {
+      width: 0;
+      right: 0;
+      left: unset;
+    }
+  }
+`;
+
+export default Loader;

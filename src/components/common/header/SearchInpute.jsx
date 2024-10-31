@@ -51,7 +51,7 @@ const SearchInpute = () => {
                 onChange={(e) => setSearchText(e.target.value)}
                 onFocus={() => setDropdownVisible(!!results.length)}
             />
-            <IoMdSearch className="h-8 w-8 text-purple-500" />
+            <Link href={`/upsearch/${searchText}`}><IoMdSearch className="h-8 w-8 text-purple-500" /></Link>
 
             {dropdownVisible && results.length > 0 && (
                 <div className="absolute top-full mt-2 w-full">
