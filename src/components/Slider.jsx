@@ -20,9 +20,9 @@ const Slider = ({ product_images }) => {
   };
 
   return (
-    <div className="relative max-w-4xl mx-auto p-4">
+    <div className="">
       {product_images && product_images.length > 0 && (
-        <div className="image-container">
+        <div className="">
           <ReactImageMagnify
             {...{
               smallImage: {
@@ -35,15 +35,21 @@ const Slider = ({ product_images }) => {
                 width: 1200,
                 height: 1800,
               },
-              enlargedImagePosition: "over", // Sets the magnified image to hover over the main image
-              enlargedImageContainerStyle: { zIndex: 1000 }, // optional styling for magnified image container
+
+              enlargedImageContainerStyle: { zIndex: 4000, display: "flex", justifyContent: "center", },
+              lensStyle: {
+                backgroundColor: "rgba(0,0,0,0.3)", // লেন্সের ব্যাকগ্রাউন্ড স্টাইল
+              },
             }}
           />
         </div>
+
+
+
       )}
 
       {/* Prev/Next Arrows */}
-      <div className="absolute inset-0 flex items-center justify-between px-4">
+      {/* <div className="absolute inset-0 flex items-center justify-between px-4">
         <button
           className="bg-teal-100 text-teal-500 hover:text-orange-500 font-bold hover:shadow-lg rounded-full p-2"
           onClick={handlePrev}
@@ -56,10 +62,10 @@ const Slider = ({ product_images }) => {
         >
           <FaArrowRight className="text-2xl" />
         </button>
-      </div>
+      </div> */}
 
       {/* Dots for Navigation */}
-      <div className="absolute bottom-2 w-full flex items-center justify-center px-4">
+      {/* <div className="absolute bottom-2 w-full flex items-center justify-center px-4">
         {product_images.map((_, index) => (
           <button
             key={index}
@@ -69,7 +75,7 @@ const Slider = ({ product_images }) => {
             onClick={() => setCurrentImageIndex(index)}
           ></button>
         ))}
-      </div>
+      </div> */}
     </div>
   );
 };
