@@ -1,28 +1,29 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+import Slider from 'react-slick';
 import ReactImageMagnify from 'react-image-magnify';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 
-const Slider = ({ product_images }) => {
+const ImageSliderWithMagnify = ({ product_images }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const handlePrev = () => {
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === 0 ? product_images.length - 1 : prevIndex - 1
-    );
-  };
-
-  const handleNext = () => {
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === product_images.length - 1 ? 0 : prevIndex + 1
-    );
+  const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 3, // কতগুলো ছোট ইমেজ দেখানো হবে
+    slidesToScroll: 1,
+    centerMode: true,
+    centerPadding: '10px',
   };
 
   return (
-    <div className="">
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {product_images && product_images.length > 0 && (
-        <div className="">
+        <div>
+          {/* ReactImageMagnify দিয়ে বড় ইমেজ দেখানো */}
           <ReactImageMagnify
             {...{
               smallImage: {
@@ -32,52 +33,46 @@ const Slider = ({ product_images }) => {
               },
               largeImage: {
                 src: product_images[currentImageIndex],
-                width: 1200,
-                height: 1800,
+                width: 3000,
+                height: 2000,
               },
-
-              enlargedImageContainerStyle: { zIndex: 4000, display: "flex", justifyContent: "center", },
+              enlargedImageContainerStyle: {
+                zIndex: 4000,
+              },
               lensStyle: {
-                backgroundColor: "rgba(0,0,0,0.3)", // লেন্সের ব্যাকগ্রাউন্ড স্টাইল
+                backgroundColor: 'rgba(0,0,0,0.3)',
               },
             }}
           />
+
+          {/* শুধু তখনই স্লাইডার দেখানো হবে যখন একাধিক ইমেজ থাকবে */}
+          {product_images.length > 1 && (
+            <div style={{ marginTop: '20px', width: '80%', maxWidth: '600px' }}>
+              <Slider {...sliderSettings}>
+                {product_images.map((image, index) => (
+                  <div key={index} style={{ display: 'flex', justifyContent: 'center' }}>
+                    <img
+                      src={image}
+                      alt={`Product ${index + 1}`}
+                      style={{
+                        width: '80px',
+                        height: '80px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
+                      }}
+                      onClick={() => setCurrentImageIndex(index)} // ক্লিক করলে উপরে ইমেজ পরিবর্তন হবে
+                    />
+                  </div>
+                ))}
+              </Slider>
+            </div>
+          )}
         </div>
-
-
-
       )}
-
-      {/* Prev/Next Arrows */}
-      {/* <div className="absolute inset-0 flex items-center justify-between px-4">
-        <button
-          className="bg-teal-100 text-teal-500 hover:text-orange-500 font-bold hover:shadow-lg rounded-full p-2"
-          onClick={handlePrev}
-        >
-          <FaArrowLeft className="text-2xl" />
-        </button>
-        <button
-          className="bg-teal-100 text-teal-500 hover:text-orange-500 font-bold hover:shadow-lg rounded-full p-2"
-          onClick={handleNext}
-        >
-          <FaArrowRight className="text-2xl" />
-        </button>
-      </div> */}
-
-      {/* Dots for Navigation */}
-      {/* <div className="absolute bottom-2 w-full flex items-center justify-center px-4">
-        {product_images.map((_, index) => (
-          <button
-            key={index}
-            className={`w-4 h-4 rounded-full mx-1 transition-colors duration-200 ease-out hover:bg-teal-600 ${
-              currentImageIndex === index ? "bg-orange-600" : "bg-teal-300"
-            }`}
-            onClick={() => setCurrentImageIndex(index)}
-          ></button>
-        ))}
-      </div> */}
     </div>
   );
 };
 
-export default Slider;
+export default ImageSliderWithMagnify;
