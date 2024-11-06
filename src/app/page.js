@@ -10,20 +10,19 @@ import AboutSection from "@/components/home/About/About";
 import Link from "next/link";
 import User from "@/components/User";
 
-
 export default function Home() {
- 
   return (
     <>
       <Header />
       <Categories />
-      <ProductList />
-      <AboutSection />
-      <ProductList title="Selected for you" />
-      <FAQ />
+      <div className="px-4">
+        <ProductList />
+        <AboutSection />
+        <ProductList title="Selected for you" />
+        <FAQ />
+      </div>
       <Footer />
-      <User/>
-      
+      <User />
     </>
   );
 }

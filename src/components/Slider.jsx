@@ -46,8 +46,9 @@ const ImageSliderWithMagnify = ({ product_images }) => {
           />
 
           {/* শুধু তখনই স্লাইডার দেখানো হবে যখন একাধিক ইমেজ থাকবে */}
+          <div className='flex justify-center '>
           {product_images.length > 1 && (
-            <div style={{ marginTop: '20px', width: '80%', maxWidth: '600px' }}>
+            <div style={{ marginTop: '30px', width: '50%', maxWidth: '300px' }}>
               <Slider {...sliderSettings}>
                 {product_images.map((image, index) => (
                   <div key={index} style={{ display: 'flex', justifyContent: 'center' }}>
@@ -69,6 +70,7 @@ const ImageSliderWithMagnify = ({ product_images }) => {
               </Slider>
             </div>
           )}
+          </div>
         </div>
       )}
     </div>

@@ -177,17 +177,20 @@ export default async function ProductDetails({ params }) {
   return (
     <>
       <Header />
-      <div className=" container space-y-6 md:w-full lg:w-3/4 xl:w-4/5 px-2 lg:mx-auto">
+      <div className='px-4'>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-5 lg:mx-auto">
-          <Slider product_images={product_images} />
+        <div className=" container space-y-6 md:w-full lg:w-3/4 xl:w-4/5  lg:mx-auto">
 
-          <TextSection product={product} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-5 lg:mx-auto">
+            <Slider product_images={product_images} />
+
+            <TextSection product={product} />
+          </div>
+          <Dummy title={title} description={description || "This is a test description"} />
         </div>
-        <Dummy title={title} description={description || "This is a test description"} />
-      </div>
 
-      <ProductList title={'Recommended'} />
+        <ProductList title={'Recommended'} />
+      </div>
       <Footer />
     </>
 

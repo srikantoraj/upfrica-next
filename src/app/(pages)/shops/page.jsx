@@ -1,4 +1,5 @@
-import React from 'react';
+'use client'
+import React, { useEffect } from 'react';
 import { FaArrowRight } from 'react-icons/fa';
 
 
@@ -41,6 +42,22 @@ const Shops = () => {
             price: "$99.99"
         }
     ];
+
+//     useEffect(()=>{
+//         const shops = async () => {
+//             const res = await fetch('https://upfrica-staging.herokuapp.com/api/v1/shops/upfrica-uk')
+//             if (!res.ok) {
+//                 throw new Error('Failed to fetch categories');
+//             }
+        
+//             const data = await res.json();
+//             console.log('shopData',data)
+//         }
+//         shops()
+//     },[]
+
+
+// )
 
 
 
