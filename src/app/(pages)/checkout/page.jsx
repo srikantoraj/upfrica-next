@@ -153,18 +153,18 @@ const Checkout = () => {
     )
       .then((response) => response.json())
       .then((result) => {
-        setIsLoading(false); // সার্ভার রেসপন্স পেলে লোডিং বন্ধ
-        console.log(result);
-
-        if (paymentMethod == 'paystack') {
-          router.push(result.paystack.data.authorization_url);
+        console.log("API Result:", result);
+        setIsLoading(false);
+    
+        if (paymentMethod === 'paystack' && result.paystack?.data?.authorization_url) {
+            router.push(result.paystack.data.authorization_url);
+        } else if (result.stripe_url) {
+            router.push(result.stripe_url);
+        } else {
+            console.error("রিডাইরেক্ট URL পাওয়া যায়নি।");
         }
-        // অন্যথায় stripe URL এ রিডাইরেক্ট করবে
-        else {
-          router.push(result.stripe_url);
-        }
-
-      })
+    })
+    
       .catch((error) => {
         console.log("error", error);
         setIsLoading(false);
