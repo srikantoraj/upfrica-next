@@ -189,7 +189,7 @@ export default async function ProductDetails({ params }) {
           <Dummy title={title} description={description || "This is a test description"} />
         </div>
 
-        <ProductList title={'Recommended'} />
+        {/* <ProductList title={'Recommended'} /> */}
       </div>
       <Footer />
     </>
