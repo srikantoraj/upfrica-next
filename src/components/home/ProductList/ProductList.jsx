@@ -29,6 +29,7 @@ export default async function ProductList({ title = "Lightening Deals" }) {
     let productsData;
     try {
       productsData = JSON.parse(text);
+      console.log(productsData)
     } catch (error) {
       console.error("Error parsing JSON:", error);
       return (
