@@ -11,6 +11,9 @@ module.exports = {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      fontSize: {
+        'responsive': 'calc(1.575rem + 3.9vw)',
+      },
     },
   },
   plugins: [],
