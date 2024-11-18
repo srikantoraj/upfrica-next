@@ -5,51 +5,51 @@ import { IoIosArrowRoundForward } from 'react-icons/io';
 import CategoryItem from './CategoryItem';
 // import Slider from "react-slick";
 
- const settings = {
-    // dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1, // Default to 1 slide
-    slidesToScroll: 1,
-    arrows: true,
-    responsive: [
-      {
-        breakpoint: 640, // For small devices (sm)
-        settings: {
-          slidesToShow: 3, // Show 3 slides on sm devices
-          slidesToScroll: 2,
-        },
-      },
-      {
-        breakpoint: 768, // For medium devices (md)
-        settings: {
-          slidesToShow: 6, // Show 6 slides on md devices
-          slidesToScroll: 2,
-        },
-      },
-      {
-        breakpoint: 1024, // For medium devices (md)
-        settings: {
-          slidesToShow: 7, // Show 6 slides on md devices
-          slidesToScroll: 2,
-        },
-      },
-      {
-        breakpoint: 1280, // For medium devices (md)
-        settings: {
-          slidesToShow: 8, // Show 6 slides on md devices
-          slidesToScroll: 2,
-        },
-      },
-      {
-        breakpoint: 1536, // For medium devices (md)
-        settings: {
-          slidesToShow: 9, // Show 6 slides on md devices
-          slidesToScroll: 3,
-        },
-      },
-    ],
-  };
+//  const settings = {
+//     // dots: true,
+//     infinite: true,
+//     speed: 500,
+//     slidesToShow: 1, // Default to 1 slide
+//     slidesToScroll: 1,
+//     arrows: true,
+//     responsive: [
+//       {
+//         breakpoint: 640, // For small devices (sm)
+//         settings: {
+//           slidesToShow: 3, // Show 3 slides on sm devices
+//           slidesToScroll: 2,
+//         },
+//       },
+//       {
+//         breakpoint: 768, // For medium devices (md)
+//         settings: {
+//           slidesToShow: 6, // Show 6 slides on md devices
+//           slidesToScroll: 2,
+//         },
+//       },
+//       {
+//         breakpoint: 1024, // For medium devices (md)
+//         settings: {
+//           slidesToShow: 7, // Show 6 slides on md devices
+//           slidesToScroll: 2,
+//         },
+//       },
+//       {
+//         breakpoint: 1280, // For medium devices (md)
+//         settings: {
+//           slidesToShow: 8, // Show 6 slides on md devices
+//           slidesToScroll: 2,
+//         },
+//       },
+//       {
+//         breakpoint: 1536, // For medium devices (md)
+//         settings: {
+//           slidesToShow: 9, // Show 6 slides on md devices
+//           slidesToScroll: 3,
+//         },
+//       },
+//     ],
+//   };
 
 
 const Categories = async () => {

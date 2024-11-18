@@ -8,6 +8,7 @@ import UserMenu from "./UserMenu"; // Import the Client Component
 import UserName from "./UserName";
 import ShopingCart from "./ShopingCart";
 import SearchInpute from "./SearchInpute";
+import PhoneSlider from "./PhoneSlider";
 // import CustomSlider from "./CustomSlider";
 
 
@@ -17,7 +18,7 @@ export default function Header() {
   return (
 
     <div >
-      <div className="xl:flex lg:gap-4 lg:justify-between  shadow-2xl bg-white px-2 py-2">
+      <div className="xl:flex lg:gap-4 lg:justify-between   bg-white px-2 py-2">
         {/* Small & Medium Devices Layout */}
         <div className="lg:hidden flex flex-col w-full">
           <div className="flex justify-between items-center w-full py-2">
@@ -47,6 +48,7 @@ export default function Header() {
           {/* Full Width Search Section */}
           <SearchInpute />
 
+          <PhoneSlider/>
           {/* Swiper Slider Section (Visible Only on Mobile) */}
           {/* <CustomSlider /> */}
 
