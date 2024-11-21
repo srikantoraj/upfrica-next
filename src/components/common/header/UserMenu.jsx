@@ -62,13 +62,13 @@ export default function UserMenu() {
       {/* Modal */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 flex justify-end max-h-[600px] ring-0"
+          className="fixed inset-0  z-30 flex justify-end max-h-[700px] "
           role="dialog"
           aria-modal="true"
           id="user-menu"
         >
           <div
-            className="bg-white w-80 p-4 shadow-lg mt-16 mr-4 rounded-md ring-0 border-none border:ring:"
+            className="bg-white w-80 p-4 shadow-2xl mt-16 mr-4 rounded-md "
             ref={modalRef}
             tabIndex={-1}
           >
@@ -130,6 +130,18 @@ export default function UserMenu() {
                 <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
                   <IoMdCart className="h-5 w-5 text-gray-500" />
                   <span className="ml-2">Users</span>
+                </div>
+              </Link>
+              <Link href="/admin/users">
+                <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
+                  <IoMdCart className="h-5 w-5 text-gray-500" />
+                  <span className="ml-2">Homepage Items</span>
+                </div>
+              </Link>
+              <Link href="/admin/users">
+                <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
+                  <IoMdCart className="h-5 w-5 text-gray-500" />
+                  <span className="ml-2">Homepage Data</span>
                 </div>
               </Link>
               <Link href="/price-updated">
