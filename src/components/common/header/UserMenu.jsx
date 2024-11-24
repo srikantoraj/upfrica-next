@@ -17,13 +17,6 @@ export default function UserMenu() {
   const toggleModal = () => {
     setIsModalOpen(prev => !prev);
   };
-
-  // const [user, setUser] = useState(null);
-
-  // useEffect(() => {
-  //   const user = localStorage.getItem('user');
-  //   setUser(user)
-  // }, [])
   
   useEffect(() => {
     if (isModalOpen) {
