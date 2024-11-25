@@ -42,7 +42,7 @@ const SearchInpute = () => {
     }, [debouncedSearchText]);
 
     return (
-        <div className="relative lg:w-full flex items-center border rounded-xl py-1 px-2 group">
+        <div className="relative lg:w-full flex items-center border rounded-xl py-2 px-2 group">
             <input
                 className="w-full border-none focus:outline-none pl-3"
                 type="text"

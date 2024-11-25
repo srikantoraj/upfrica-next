@@ -85,6 +85,9 @@ export default function Header() {
             </p>
           </div>
 
+          {/* Shopping Cart Icon */}
+          <ShopingCart />
+
           {/* Sell Button */}
           <div className="flex items-center justify-center">
             <div className="border border-gray-400 rounded-md">
@@ -96,11 +99,10 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Shopping Cart Icon */}
-          <ShopingCart />
+          
 
           {/* User Section */}
-          <div className="xl:w-2/6 flex items-center justify-end gap-4 text-base">
+          <div className="xl:w-1/6 flex items-center justify-end gap-4 text-base">
             <UserMenu />
             <div className="flex gap-2 tracking-wide items-center">
               <UserName />

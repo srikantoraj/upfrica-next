@@ -7,6 +7,8 @@ import { MdHelp, MdSettings } from "react-icons/md";
 import Link from "next/link";
 import UserEmail from "./UserEmail";
 import { useRouter } from "next/navigation";
+import { FaRegUser } from "react-icons/fa";
+
 
 export default function UserMenu() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,8 +45,8 @@ export default function UserMenu() {
     <div onClick={()=>toggleModal()}>
       {/* User Icon and Menu Toggle */}
       <div ref={triggerRef}>
-        <FiUserPlus
-          className="h-6 w-6 text-purple-500 cursor-pointer"
+        <FaRegUser
+          className="h-7 w-7 text-purple-500 cursor-pointer"
           // onClick={toggleModal}
           aria-haspopup="true"
           aria-expanded={isModalOpen}
