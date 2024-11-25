@@ -153,18 +153,18 @@ const Checkout = () => {
     )
       .then((response) => response.json())
       .then((result) => {
-        console.log("API Result:", result);
-        setIsLoading(false);
-    
-        if (paymentMethod === 'paystack' && result.paystack?.data?.authorization_url) {
-            router.push(result.paystack.data.authorization_url);
-        } else if (result.stripe_url) {
-            router.push(result.stripe_url);
-        } else {
-            console.error("রিডাইরেক্ট URL পাওয়া যায়নি।");
+        setIsLoading(false); // সার্ভার রেসপন্স পেলে লোডিং বন্ধ
+        console.log(result);
+
+        if (paymentMethod == 'paystack') {
+          router.push(result.paystack.data.authorization_url);
         }
-    })
-    
+        // অন্যথায় stripe URL এ রিডাইরেক্ট করবে
+        else {
+          router.push(result.stripe_url);
+        }
+
+      })
       .catch((error) => {
         console.log("error", error);
         setIsLoading(false);
@@ -476,8 +476,8 @@ const Checkout = () => {
                 <div className="md:flex py-8 md:py-10 lg:py-8 border-t border-gray-50">
                   <div className="md:w-4/12 2xl:w-1/4 w-full">
                     <img
-                      src={product.image[0]}
-                      alt={product.title}
+                      src={product?.image[0]}
+                      alt={product?.title}
                       className="h-full object-center md:block hidden object-cover"
                     />
                     <img

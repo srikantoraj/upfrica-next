@@ -79,7 +79,7 @@ const Cart = () => {
               <div className="hidden md:flex border p-8 bg-white justify-between space-x-4 text-base">
                 <img
                   className="h-20 lg:h-32 w-20 lg:w-32 rounded-md object-cover"
-                  src={product.image[0]}
+                  src={product?.image?.[0] ?? 'https://via.placeholder.com/150'}
                   alt={product.title}
                 />
                 <p className="flex-1">
@@ -113,7 +113,7 @@ const Cart = () => {
                 <div className="col-span-1">
                   <img
                     className="h-20 w-20 rounded-md object-cover"
-                    src={product.image[0]}
+                    src={product?.image?.[0] ?? 'https://via.placeholder.com/150'}
                     alt={product.title}
                   />
                 </div>
@@ -148,9 +148,8 @@ const Cart = () => {
         <div className="flex justify-between mt-5">
           <button
             onClick={handleCheckout}
-            className={`text-base font-bold ${
-              basket.length > 0 ? 'bg-[#F7C32E] hover:bg-[#e6b42d]' : 'bg-gray-400 cursor-not-allowed'
-            } px-4 py-1 rounded-3xl`}
+            className={`text-base font-bold ${basket.length > 0 ? 'bg-[#F7C32E] hover:bg-[#e6b42d]' : 'bg-gray-400 cursor-not-allowed'
+              } px-4 py-1 rounded-3xl`}
             disabled={basket.length === 0}
           >
             Checkout

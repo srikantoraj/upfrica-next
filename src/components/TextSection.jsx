@@ -1,27 +1,49 @@
-'use client'
+'use client';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react'
-import { FaLocationPin } from "react-icons/fa6";
+import React, { useEffect, useState } from 'react';
+import { FaLocationPin } from 'react-icons/fa6';
 import SalesEndSection from './SalesEndSection/SalesEndSection';
 import DeliveryDate from './DeliveryDate';
 import Image from 'next/image';
 import Link from 'next/link';
+import { HiXMark } from 'react-icons/hi2';
+import { FaMinus, FaPlus } from 'react-icons/fa';
+
+const QuantityControl = ({ quantity, onDecrease, onIncrease }) => (
+  <div className="flex items-center text-base md:text-lg">
+    <button
+      onClick={onDecrease}
+      className="px-2 py-1 md:font-extrabold"
+      aria-label="Decrease quantity"
+    >
+      <FaMinus />
+    </button>
+    <span className="md:font-bold py-1 px-2">{quantity}</span>
+    <button
+      onClick={onIncrease}
+      className="px-2 py-1 font-extrabold"
+      aria-label="Increase quantity"
+    >
+      <FaPlus />
+    </button>
+  </div>
+);
 
 const TextSection = ({ product }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [basket, setBasket] = useState([]);
-  // const [addToBasket, setAddToBasket] = useState(false);
   const router = useRouter();
-  console.log("basket", basket)
 
-  const { id,
+  const {
+    id,
     title,
     price,
     postage_fee,
     sale_end_date,
     sale_start_date,
-    product_images
+    product_images,
   } = product;
+
   const [timeRemaining, setTimeRemaining] = useState({
     days: 0,
     hours: 0,
@@ -30,25 +52,17 @@ const TextSection = ({ product }) => {
   });
 
   useEffect(() => {
-
-    const saleSatrtDate = new Date(sale_start_date);
+    const saleStartDate = new Date(sale_start_date);
     const saleEndDate = new Date(sale_end_date);
 
-    // বর্তমানে কত সময় বাকি আছে, সেটা বের করতে
     const currentDate = new Date();
 
-    // সেল শেষ হবার সময় এবং বর্তমান সময়ের মধ্যে পার্থক্য বের করা
-    const timeRemaining = currentDate - saleEndDate;
-    // const timeRemaining =    saleEndDate - currentDate;
+    const timeRemaining = saleEndDate - currentDate;
 
     const seconds = Math.floor((timeRemaining / 1000) % 60);
     const minutes = Math.floor((timeRemaining / (1000 * 60)) % 60);
     const hours = Math.floor((timeRemaining / (1000 * 60 * 60)) % 24);
     const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-
-    // console.log(
-    //   `${days} days ${hours} hours ${minutes} minutes ${seconds} seconds remaining`
-    // );
 
     setTimeRemaining({
       days,
@@ -56,71 +70,60 @@ const TextSection = ({ product }) => {
       minutes,
       seconds,
     });
-
   }, []);
 
   useEffect(() => {
-    const storedBasket = JSON.parse(localStorage.getItem("basket")) || [];
+    const storedBasket = JSON.parse(localStorage.getItem('basket')) || [];
     setBasket(storedBasket);
   }, []);
 
   const handleAddToBasket = () => {
-    // Product er details
     const productData = {
       id: id,
       title: title,
       price: price,
-      quantity: 1, // Default 1 quantity initially
+      quantity: 1,
       image: product_images,
     };
 
-    // Existing basket theke data niye asha
-    const basket = JSON.parse(localStorage.getItem("basket")) || [];
+    const basket = JSON.parse(localStorage.getItem('basket')) || [];
 
-    // Check korbo je product already ase kina
     const existingProductIndex = basket.findIndex(
       (item) => item.id === productData.id
     );
 
     if (existingProductIndex >= 0) {
-      // Product already basket e thakle quantity increase korbo
       basket[existingProductIndex].quantity += 1;
     } else {
-      // Product basket e na thakle, basket e push korbo
       basket.push(productData);
     }
 
-    // localStorage e update korbo
-    localStorage.setItem("basket", JSON.stringify(basket));
+    localStorage.setItem('basket', JSON.stringify(basket));
 
-    // Popup dekhano
-    setBasket(basket); // basket update kora
-    setIsModalVisible(true); // Show the modal when clicked
-    // setAddToBasket(true);
-
-    // ৩ সেকেন্ড পরে popup বন্ধ হবে
-
-  };
-
-  // Basket update kora when component loads
-  useEffect(() => {
-    const basket = JSON.parse(localStorage.getItem("basket")) || [];
     setBasket(basket);
-  }, []);
-
-
-  // Handle Close Modal
-  const handleCloseModal = () => {
-    setIsModalVisible(false); // Hide the modal when clicked on Close
+    setIsModalVisible(true);
   };
 
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleQuantityChange = (index, change) => {
+    const newBasket = [...basket];
+    newBasket[index].quantity = Math.max(
+      1,
+      newBasket[index].quantity + change
+    );
+    setBasket(newBasket);
+    localStorage.setItem('basket', JSON.stringify(newBasket));
+  };
 
   return (
     <>
-      <div className="lg: ml-4 lg:mt-8 space-y-4 text-base">
+      <div className="lg:ml-4 lg:mt-8 space-y-4 text-base">
         <div className="text-xl md:text-2xl font-bold">{title}</div>
         <button className="border py-1 md:py-2 px-2 md:px-4 hover:bg-purple-500 hover:text-white md:text-xl text-purple-500 border-purple-500 rounded-lg">
-          {'Write a review'}
+          Write a review
         </button>
 
         <div className="flex items-center space-x-2">
@@ -132,104 +135,137 @@ const TextSection = ({ product }) => {
           </div>
         </div>
 
-        <p className="text-base font-bold">Price: <span className="text-xl">${price.cents}</span> each</p>
-        <p className="text-gray-600">RRP <span className="line-through">${price.cents}</span> You Save: $6.39 (3%)</p>
+        <p className="text-base font-bold">
+          Price: <span className="text-xl">${price?.cents / 100}</span> each
+        </p>
+        <p className="text-gray-600">
+          RRP <span className="line-through">${price?.cents / 100}</span> You
+          Save: $6.39 (3%)
+        </p>
 
         <SalesEndSection
           days={timeRemaining.days}
-          // hours={timeRemaining.hours}
           minutes={timeRemaining.minutes}
           seconds={timeRemaining.seconds}
         />
 
         <p>
-          <b>Collection:</b> Click & Collect - Select option at checkout
+          <b>Collection:</b> Click &amp; Collect - Select option at checkout
         </p>
 
-        <h1>Delivery: $ {postage_fee.cents / 100} </h1>
+        <h1>Delivery: $ {postage_fee?.cents / 100}</h1>
 
         <DeliveryDate />
         <p>Get a $1.41 credit for late delivery</p>
 
-        {/* add to product and show the modal  */}
+        {/* Add to Basket Button */}
         <div>
-          {/* Add to Basket Button */}
           <button
             type="button"
             onClick={handleAddToBasket}
-            className="bg-[#F7C32E] w-full lg:w-3/4 p-2 rounded-3xl text-base font-bold">
+            className="bg-[#F7C32E] w-full lg:w-3/4 p-2 rounded-3xl text-base font-bold"
+          >
             Add to Basket
           </button>
 
           {/* Modal */}
-          {isModalVisible && (
-            <div className="fixed left-0 top-0 z-50 w-full h-full bg-black bg-opacity-50 flex justify-center items-start pt-10">
-              <div className="bg-white rounded-lg shadow-lg w-11/12 md:w-1/3">
-                {/* Modal Header */}
-                <div className="flex justify-between items-center p-4 border-b">
-                  <h3 className="text-xl font-semibold">Basket Items</h3>
-                  <button onClick={handleCloseModal} className="text-gray-600 hover:text-gray-900">
-                    &times;
-                  </button>
-                </div>
+          <div
+            className={`fixed inset-0 bg-black bg-opacity-50 px-5 z-50 overflow-y-auto ${
+              isModalVisible ? 'opacity-100 visible' : 'opacity-0 invisible'
+            } transition-opacity duration-300`}
+            onClick={handleCloseModal}
+          >
+            <div
+              className={`bg-white rounded-lg shadow-lg  w-full md:w-2/3 lg:w-2/4 xl:w-1/4 p-4 mx-auto mt-10 transform ${
+                isModalVisible ? 'translate-y-0' : '-translate-y-full'
+              } transition-transform duration-300`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="flex justify-between items-center p-4 border-b">
+                <h3 className="text-xl md:text-2xl font-semibold">
+                  {basket.length} Items added to basket
+                </h3>
+                <button
+                  onClick={handleCloseModal}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  <HiXMark className="h-8 w-8" />
+                </button>
+              </div>
 
-                {/* Modal Body */}
-                <div className="p-4">
-                  <p className="text-green-500 font-semibold text-center">New product added!</p>
-                  <ul className="mt-4">
-                    {basket.length > 0 ? (
-                      basket.map((item, index) => (
-                        <li key={index} className="flex items-center justify-between border-b py-3">
-                          {/* Product Image */}
-                          <img src={item?.image[0]} alt={item.title} className="h-12 w-12 object-cover rounded mr-3" />
+              {/* Modal Body */}
+              <div className="p-4">
+                <ul className="mt-4">
+                  {basket.length > 0 ? (
+                    basket.map((item, index) => (
+                      <li
+                        key={index}
+                        className="md:grid md:grid-cols-5 flex gap-4 md:items-center justify-between border-b py-3 text-base md:text-xl"
+                      >
+                        {/* Product Image */}
+                        <div className="md:col-span-1">
+                          <img
+                            src={
+                              item?.image?.[0] ??
+                              'https://via.placeholder.com/150'
+                            }
+                            alt={item.title}
+                            className="h-14 w-14 object-cover rounded mr-3"
+                          />
+                        </div>
+
+                        <div className="md:col-span-4">
                           {/* Product Title */}
                           <span>{item.title}</span>
                           {/* Product Price */}
-                          <span className="text-gray-600">
-                            {item.price.currency_iso} {(item.price.cents / 100).toFixed(2)}
-                          </span>
-                          {/* Product Quantity */}
-                          <span>Qty: {item.quantity}</span>
-                        </li>
-                      ))
-                    ) : (
-                      <p className="text-center text-gray-500">No items in the basket.</p>
-                    )}
-                  </ul>
-                </div>
+                          <div className="md:flex gap-5 items-center mt-2">
+                            <p>
+                              Price : {item.price.currency_iso}{' '}
+                              {(item.price.cents / 100).toFixed(2)}
+                            </p>
+                            <p className="flex gap-2 text-base md:text-lg font-bold items-center">
+                              <span>Qty:</span>
+                              <QuantityControl
+                                quantity={item.quantity}
+                                onDecrease={() =>
+                                  handleQuantityChange(index, -1)
+                                }
+                                onIncrease={() =>
+                                  handleQuantityChange(index, 1)
+                                }
+                              />
+                            </p>
+                          </div>
+                        </div>
+                      </li>
+                    ))
+                  ) : (
+                    <p className="text-center text-gray-500">
+                      No items in the basket.
+                    </p>
+                  )}
+                </ul>
+              </div>
 
-                {/* Modal Footer */}
-                <div className="flex justify-end p-4 border-t space-x-2">
-                  <Link href='/checkout'>
-                    <button
-
-                      className="bg-[#F7C32E] text-white px-4 py-2 rounded-3xl hover:bg-yellow-600-600"
-                    >
-                      Checkout Item
-                    </button>
-                  </Link>
-                  <Link href='/cart'>
-                    <button
-
-                      className="bg-blue-500 text-white px-4 py-2 rounded-3xl hover:bg-blue-600"
-                    >
-                      View Basket
-                    </button>
-                  </Link>
-
-
-                </div>
-
+              {/* Modal Footer */}
+              <div className="flex justify-center p-4 space-x-2">
+                <Link href="/checkout">
+                  <button className="bg-[#F7C32E] text-white px-4 py-2 rounded-3xl hover:bg-yellow-600">
+                    Checkout Item
+                  </button>
+                </Link>
+                <Link href="/cart">
+                  <button className="px-4 py-2 rounded-3xl">View Basket</button>
+                </Link>
               </div>
             </div>
-          )}
-
+          </div>
+          {/* End of Modal */}
         </div>
-
-
-      </div >
+      </div>
     </>
-  )
-}
+  );
+};
 
-export default TextSection
+export default TextSection;
