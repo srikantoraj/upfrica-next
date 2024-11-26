@@ -14,7 +14,7 @@ const Navbar = () => {
 
   return (
     <div className="hidden lg:flex justify-center py-4 bg-white">
-      <ul className="text-base font-bold flex gap-6 tracking-wide text-gray-600">
+      <ul className="text-lg font-bold flex gap-6 tracking-wide text-gray-800">
         {datas.map((data) => (
           <li key={data.id} className="hover:text-purple-500">
             <Link href={data.url} legacyBehavior>

@@ -56,23 +56,6 @@ const Dummy = ({title = "", description = ""}) => {
               </div>
             </div>
           </div>
-          {/* <div className="space-y-4 py-4">
-            <h2 className="text-xl font-medium tracking-wide">
-              Customer Review
-            </h2>
-            <hr />
-            <div className="flex justify-center bg-[#f5f5f6] py-6 rounded-2xl">
-              <div className="text-base md:text-xl leading-8 text-center p-4">
-                <b>Be the first to review this product</b>
-                <br />
-                <span>
-                  (If you have recently purchased this product on Upfrica)
-                </span>
-                <br />
-                <small>Share your thoughts with other customers</small>
-              </div>
-            </div>
-          </div> */}
         </div>
         <div className="space-y-6 py-4">
           <h2 className="text-xl md:text-2xl font-medium tracking-wide">

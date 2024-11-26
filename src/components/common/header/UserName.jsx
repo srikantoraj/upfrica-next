@@ -27,7 +27,7 @@ const UserName = () => {
     }
   }, [router]);
 
-  console.log(user?.first_name)
+  // console.log(user?.first_name)
 
   return (
     <div>

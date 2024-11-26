@@ -9,20 +9,24 @@ import Categories from "@/components/home/Categories/Categories";
 import AboutSection from "@/components/home/About/About";
 import Link from "next/link";
 import User from "@/components/User";
+import Cover from "@/components/common/header/Cover";
+import EarlyDeals from "@/components/EarlyDeals";
+import Selling from "@/components/Selling";
 
 export default function Home() {
   return (
-    <>
+    <div className="bg-gray-200">
       <Header />
-      <Categories />
-      <div className="px-4">
+      <Cover/>
+      <EarlyDeals/>
+      {/* <Categories /> */}
         <ProductList />
+        <Selling/>
         <AboutSection />
         <ProductList title="Selected for you" />
         <FAQ />
-      </div>
       <Footer />
       <User />
-    </>
+    </div>
   );
 }

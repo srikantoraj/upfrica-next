@@ -211,7 +211,7 @@ const TextSection = ({ product }) => {
                               'https://via.placeholder.com/150'
                             }
                             alt={item.title}
-                            className="h-14 w-14 object-cover rounded mr-3"
+                            className="h-14 lg:h-20 w-14 lg:w-20 object-cover  mr-3 border rounded-md"
                           />
                         </div>
 
@@ -219,9 +219,10 @@ const TextSection = ({ product }) => {
                           {/* Product Title */}
                           <span>{item.title}</span>
                           {/* Product Price */}
-                          <div className="md:flex gap-5 items-center mt-2">
+                          <div className="flex gap-5 items-center mt-2">
                             <p>
-                              Price : {item.price.currency_iso}{' '}
+                              Price : C 
+                               {/* {item.price.currency_iso}{' '} */}
                               {(item.price.cents / 100).toFixed(2)}
                             </p>
                             <p className="flex gap-2 text-base md:text-lg font-bold items-center">
@@ -256,7 +257,7 @@ const TextSection = ({ product }) => {
                   </button>
                 </Link>
                 <Link href="/cart">
-                  <button className="px-4 py-2 rounded-3xl">View Basket</button>
+                  <button className="px-4 py-2 rounded-3xl  shadow-2xl border  hover:border-0">View Basket</button>
                 </Link>
               </div>
             </div>
