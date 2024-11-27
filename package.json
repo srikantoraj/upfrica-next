@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tinymce/tinymce-react": "^5.1.1",
+    "flowbite": "^2.5.2",
     "formik": "^2.4.6",
     "html-react-parser": "^5.1.16",
     "next": "14.2.13",

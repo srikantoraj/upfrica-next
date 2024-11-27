@@ -3,7 +3,7 @@ import { IoIosArrowRoundForward } from "react-icons/io";
 import ProductCard from "./ProductCard"; // Ensure correct casing based on your file system
 
 
-export default async function ProductList() {
+export default async function ProductList({title}) {
  
     const res = await fetch("https://upfrica-staging.herokuapp.com/api/v1/products", {
       next: { revalidate: 120 }, // Revalidate every 2 minutes
@@ -55,7 +55,7 @@ export default async function ProductList() {
       {/* ফেচ করা ডেটা UI তে প্রদর্শন */}
       {/* <pre>{JSON.stringify(productsData, null, 2)}</pre> */}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-5 py-0 md:py-10  space-y-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5 py-0 md:py-10  space-y-2">
         {productsData?.products &&
           productsData.products.length > 0 &&
           productsData.products.map((product) => (

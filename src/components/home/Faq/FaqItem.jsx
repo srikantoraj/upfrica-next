@@ -12,8 +12,8 @@ const FaqItem = ({ question, answer }) => {
   };
 
   return (
-    <div className="w-full md:w-3/5 mx-auto space-y-2">
-      <hr />
+    <div className="w-full  space-y-4 divide-y-2 divide-slate-300">
+      
       <div
         className="flex justify-between items-center cursor-pointer"
         onClick={toggleOpen}
@@ -26,7 +26,7 @@ const FaqItem = ({ question, answer }) => {
           }
         }}
       >
-        <span className="text-base font-bold">{question}</span>
+        <span className="text-xl">{question}</span>
         <span>
           {isOpen ? (
             <IoIosArrowUp className="text-2xl" aria-hidden="true" />
@@ -40,7 +40,7 @@ const FaqItem = ({ question, answer }) => {
           isOpen ? 'max-h-96' : 'max-h-0'
         }`}
       >
-        <div className="mt-4 text-base">{answer}</div>
+        <div className="mt-4 text-lg">{answer}</div>
       </div>
     </div>
   );

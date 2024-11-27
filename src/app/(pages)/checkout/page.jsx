@@ -99,14 +99,13 @@ const Checkout = () => {
   };
 
   const placeOrder = async (paymentMethod) => {
-    setIsLoading(true); // ফেচিং শুরু হলে লোডিং স্টেট অন
-    setSelectedPayment(() => paymentMethod);
-    // setIsLoading(true);
-    // setIsLoading(false);
+    setIsLoading(true); // লোডিং শুরু হচ্ছে
+
     const busket = JSON.parse(localStorage.getItem("basket")) || [];
     const user = JSON.parse(localStorage.getItem("user")) || {};
 
     if (!busket.length) return;
+
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${user?.token}`,
@@ -114,15 +113,14 @@ const Checkout = () => {
 
     let itemList = [];
     for (let item of busket) {
-      console.log({ product_id: item?.id, quantity: item?.quantity });
       let obj = { product_id: item?.id, quantity: item?.quantity };
       itemList.push(obj);
     }
 
     if (!selectedAddressId) {
+      setIsLoading(false); // যদি কোনো ঠিকানা না থাকে, লোডিং বন্ধ করা হচ্ছে
       return;
     }
-    // const deepLink = getDeepLink("callback");
 
     var data = {
       checkout: {
@@ -134,7 +132,7 @@ const Checkout = () => {
           },
         ],
         redirect_uri: "upfrica-delta.vercel.app",
-        payment_method: paymentMethod,
+        payment_method: paymentMethod,  // সঠিক পেমেন্ট পদ্ধতি পাঠানো হচ্ছে
       },
     };
 
@@ -145,31 +143,30 @@ const Checkout = () => {
       redirect: "follow",
     };
 
-    // _addLinkingListener();
-
     fetch(
       "https://upfrica-staging.herokuapp.com/api/v1/orders/checkout",
       requestOptions
     )
       .then((response) => response.json())
       .then((result) => {
-        setIsLoading(false); // সার্ভার রেসপন্স পেলে লোডিং বন্ধ
-        console.log(result);
+        setIsLoading(false); // সার্ভার রেসপন্স পাওয়ার পর লোডিং বন্ধ
 
-        if (paymentMethod == 'paystack') {
+        console.log("API Result:", result);
+
+        if (paymentMethod === 'paystack' && result.paystack?.data?.authorization_url) {
           router.push(result.paystack.data.authorization_url);
-        }
-        // অন্যথায় stripe URL এ রিডাইরেক্ট করবে
-        else {
+        } else if (result.stripe_url) {
           router.push(result.stripe_url);
+        } else {
+          console.error("No redirect URL found.");
         }
-
       })
       .catch((error) => {
-        console.log("error", error);
-        setIsLoading(false);
+        console.log("Error:", error);
+        setIsLoading(false); // যদি কোনো ত্রুটি ঘটে, লোডিং বন্ধ
       });
   };
+
 
 
 
@@ -476,8 +473,8 @@ const Checkout = () => {
                 <div className="md:flex py-8 md:py-10 lg:py-8 border-t border-gray-50">
                   <div className="md:w-4/12 2xl:w-1/4 w-full">
                     <img
-                      src={product?.image[0]}
-                      alt={product?.title}
+                      src={product.image[0]}
+                      alt={product.title}
                       className="h-full object-center md:block hidden object-cover"
                     />
                     <img
@@ -575,19 +572,26 @@ const Checkout = () => {
           </p>
           <div className="mt-4 space-y-5 text-center">
             <button
-              onClick={() => placeOrder('paystack')}
+              onClick={() => {
+                setSelectedPayment('paystack');  // পেমেন্ট পদ্ধতি সেট করা হচ্ছে
+                placeOrder('paystack');  // পেমেন্ট পদ্ধতি নিয়ে placeOrder ফাংশন কল করা হচ্ছে
+              }}
               className="text-lg font-semibold text-white bg-[#f7c32e] px-6 py-3 rounded-full hover:bg-[#d6a91d] transition duration-300 ease-in-out shadow-lg focus:outline-none mr-4"
               disabled={isLoading}
             >
-              {isLoading && selectedPayment === 'paystack' ? 'Lodding...' : 'Pay with Paystack'}
+              {isLoading && selectedPayment === 'paystack' ? 'Loading...' : 'Pay with Paystack'}
             </button>
             <button
-              onClick={() => placeOrder('stripe')}
+              onClick={() => {
+                setSelectedPayment('stripe');  // পেমেন্ট পদ্ধতি সেট করা হচ্ছে
+                placeOrder('stripe');  // পেমেন্ট পদ্ধতি নিয়ে placeOrder ফাংশন কল করা হচ্ছে
+              }}
               className="text-lg font-semibold text-white bg-[#f7c32e] px-6 py-3 rounded-full hover:bg-[#d6a91d] transition duration-300 ease-in-out shadow-lg focus:outline-none"
               disabled={isLoading}
             >
-              {isLoading && selectedPayment === 'stripe' ? 'Lodding...' : 'Pay with Stripe'}
+              {isLoading && selectedPayment === 'stripe' ? 'Loading...' : 'Pay with Stripe'}
             </button>
+
           </div>
         </div>
       </div>

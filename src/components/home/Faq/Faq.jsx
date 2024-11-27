@@ -22,12 +22,11 @@ const FAQ = () => {
       answer:
         'We will pay to your momo/bank account immediately after the customer has received their item.',
     },
-    // Add more FAQ items as needed
   ];
 
   return (
-    <div className="py-10 space-y-6  lg:w-[80%] mx-auto">
-      <div className="flex justify-center items-center gap-4 font-bold tracking-wide md:text-xl">
+    <div className="container py-10 space-y-6 w-full lg:w-1/2  mx-auto">
+      <div className="flex justify-center items-center gap-4 font-medium tracking-wide md:text-xl border-b-2 border-slate-300">
         <p>Selling</p>
         <p>Buying</p>
       </div>
