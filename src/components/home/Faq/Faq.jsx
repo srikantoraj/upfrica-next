@@ -25,8 +25,8 @@ const FAQ = () => {
   ];
 
   return (
-    <div className="container py-10 space-y-6 w-full lg:w-1/2  mx-auto">
-      <div className="flex justify-center items-center gap-4 font-medium tracking-wide md:text-xl border-b-2 border-slate-300">
+    <div className="container py-10 space-y-6 w-full lg:w-1/2  mx-auto px-6">
+      <div className="flex justify-center items-center gap-4 font-medium tracking-wide md:text-xl">
         <p>Selling</p>
         <p>Buying</p>
       </div>
