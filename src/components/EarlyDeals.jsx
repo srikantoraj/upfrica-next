@@ -75,7 +75,7 @@ const EarlyDeals = () => {
 
            
 
-            <div className='overflow-x-auto py-5'>
+            <div className='overflow-x-auto py-5 overflow-hidden'>
                 <div className="flex gap-4 whitespace-nowrap w-max">
                     {products.map((product) => (
                         <div
@@ -87,7 +87,7 @@ const EarlyDeals = () => {
                             <img
                                 src={product.image}
                                 alt={`Product ${product.id}`}
-                                className="w-full h-[80%] object-cover"
+                                className="w-full h-[80%] object-cover transform transition-all duration-1000 ease-in-out hover:scale-110 hover:translate-y-[-2px]"
                             />
 
                             {/* Bottom Section */}

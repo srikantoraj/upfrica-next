@@ -68,7 +68,7 @@ const Tranding = ({title}) => {
             <div className='text-xl md:text-3xl font-extrabold tracking-wide pb-4'>
                 <h1 className="">{title}</h1>
             </div>
-            <div className='overflow-x-auto py-5'>
+            <div className='overflow-x-auto py-5 overflow-hidden'>
                 <div className="flex gap-4 whitespace-nowrap w-max">
                     {products.map((product) => (
                         <div
@@ -80,7 +80,7 @@ const Tranding = ({title}) => {
                             <img
                                 src={product.image}
                                 alt={`Product ${product.id}`}
-                                className="w-full h-[80%] object-cover"
+                                className="w-full h-[80%] object-cover transform transition-all duration-1000 ease-in-out hover:scale-110 hover:translate-y-[-2px]"
                             />
 
                             {/* Bottom Section */}

@@ -27,7 +27,7 @@ const PhoneSlider = () => {
 
 
     return (
-        <div className="xl:hidden overflow-x-auto py-5">
+        <div className="xl:hidden overflow-x-auto py-5 scrollbar-hide">
             <div className="flex gap-4 whitespace-nowrap ">
                 {categories.map((data) => (
                     <div key={data.id}>

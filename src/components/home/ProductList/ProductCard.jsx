@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default function ProductCard({ product }) {
   // console.log(product)
-  const { product_images, id, title, price,secondary_postage_fee
+  const { product_images, id, title, price, secondary_postage_fee
   } = product;
   if (!product_images) return null;
 
@@ -15,13 +15,13 @@ export default function ProductCard({ product }) {
     <div className="shadow-md bg-white rounded-lg  relative flex flex-col justify-between w-full h-[500px]">
       {/* Card Image Section */}
       <div >
-        <div className="relative" >
+        <div className="relative overflow-hidden">
           {product_images.length > 0 && (
-            <Link href={`/details/${id}`} >
+            <Link href={`/details/${id}`}>
               <img
                 src={product_images[0]}
                 alt="Product"
-                className="h-[350px] w-full  object-cover rounded-lg"
+                className="h-[350px] w-full object-cover rounded-lg transform transition-all duration-1000 ease-in-out hover:scale-110 hover:translate-y-[-2px]"
               />
             </Link>
           )}
@@ -39,6 +39,10 @@ export default function ProductCard({ product }) {
             </button>
           </div>
         </div>
+
+
+
+
 
         <div className="px-4">
           {/* Title Section */}
