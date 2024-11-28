@@ -74,26 +74,37 @@ export default async function ProductDetails({ params }) {
 
   } = product || {};
 
+  const laptopDetails = [
+    {
+      Condition: "Renewed",
+      Brand: "Dell",
+      Type: "Laptops",
+      ModelName: "Dell Latitude 3380",
+      ScreenSizeInches: 13.3,
+      HardDiskSizeGB: 128,
+      CpuModelGHz: 2.0,
+      RamMemoryGB: 4,
+      OperatingSystem: "Windows 11",
+      Series: "Core i3",
+      Features: ["HDMI", "Bluetooth", "Camera", "WiFi Connection", "USB Ports"],
+      UpfricaItemID: "JERB7PX8",
+      ItemNumber: "0000003487",
+    },
+  ];
 
- 
- 
+
 
   return (
     <>
       <Header />
       <div className='px-4'>
-
-        <div className=" container space-y-6 md:w-full lg:w-3/4 xl:w-4/5  lg:mx-auto">
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-5 lg:mx-auto">
+        <div className=" container mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10  lg:mx-auto">
             <Slider product_images={product_images} />
-
             <TextSection product={product} />
           </div>
           <Dummy title={title} description={description || "This is a test description"} />
         </div>
-
-
       </div>
       <Footer />
     </>

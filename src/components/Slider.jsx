@@ -1,30 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
-import Slider from 'react-slick';
-import ReactImageMagnify from 'react-image-magnify';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
+import React from 'react';
+// import Slider from 'react-slick';
+// import ReactImageMagnify from 'react-image-magnify';
+// import 'slick-carousel/slick/slick.css';
+// import 'slick-carousel/slick/slick-theme.css';
 
 const ImageSliderWithMagnify = ({ product_images }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  // const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const sliderSettings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 3, // কতগুলো ছোট ইমেজ দেখানো হবে
-    slidesToScroll: 1,
-    centerMode: true,
-    centerPadding: '10px',
-  };
+  // const sliderSettings = {
+  //   dots: true,
+  //   infinite: true,
+  //   speed: 500,
+  //   slidesToShow: 3, // কতগুলো ছোট ইমেজ দেখানো হবে
+  //   slidesToScroll: 1,
+  //   centerMode: true,
+  //   centerPadding: '10px',
+  // };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {product_images && product_images.length > 0 && (
         <div>
+          <img className='h-[400px] w-[530px] object-fill bg-center'  src={product_images[0]} alt="" />
           {/* ReactImageMagnify দিয়ে বড় ইমেজ দেখানো */}
-          <ReactImageMagnify
+          {/* <ReactImageMagnify
             {...{
               smallImage: {
                 alt: `Product ${currentImageIndex + 1}`,
@@ -43,10 +44,10 @@ const ImageSliderWithMagnify = ({ product_images }) => {
                 backgroundColor: 'rgba(0,0,0,0.3)',
               },
             }}
-          />
+          /> */}
 
           {/* শুধু তখনই স্লাইডার দেখানো হবে যখন একাধিক ইমেজ থাকবে */}
-          <div className='flex justify-center '>
+          {/* <div className='flex justify-center '>
           {product_images.length > 1 && (
             <div style={{ marginTop: '30px', width: '50%', maxWidth: '300px' }}>
               <Slider {...sliderSettings}>
@@ -70,7 +71,7 @@ const ImageSliderWithMagnify = ({ product_images }) => {
               </Slider>
             </div>
           )}
-          </div>
+          </div> */}
         </div>
       )}
     </div>
