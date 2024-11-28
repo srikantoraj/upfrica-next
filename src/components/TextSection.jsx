@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { HiXMark } from 'react-icons/hi2';
 import { FaEdit, FaMinus, FaPlus, FaTrash, FaWhatsapp } from 'react-icons/fa';
+import LaptopDetels from './LaptopDetels';
 
 const QuantityControl = ({ quantity, onDecrease, onIncrease }) => (
   <div className="flex items-center text-base md:text-lg">
@@ -214,6 +215,13 @@ const TextSection = ({ product }) => {
             Add to Basket
           </button>
 
+          <hr className='my-4' />
+          <hr className='my-4' />
+          <hr className='my-4' />
+          <hr className='my-4' />
+         
+          <LaptopDetels />
+
           {/* Modal */}
           <div
             className={`fixed inset-0 bg-black bg-opacity-50 px-5 z-50 overflow-y-auto ${isModalVisible ? 'opacity-100 visible' : 'opacity-0 invisible'
@@ -308,7 +316,7 @@ const TextSection = ({ product }) => {
           </div>
           {/* End of Modal */}
 
-          <hr className='my-4' />
+          
         </div>
       </div>
     </>
