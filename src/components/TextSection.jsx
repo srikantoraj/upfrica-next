@@ -216,10 +216,8 @@ const TextSection = ({ product }) => {
           </button>
 
           <hr className='my-4' />
-          <hr className='my-4' />
-          <hr className='my-4' />
-          <hr className='my-4' />
-         
+
+
           <LaptopDetels />
 
           {/* Modal */}
@@ -316,7 +314,7 @@ const TextSection = ({ product }) => {
           </div>
           {/* End of Modal */}
 
-          
+
         </div>
       </div>
     </>

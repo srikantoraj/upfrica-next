@@ -23,7 +23,7 @@ const ImageSliderWithMagnify = ({ product_images }) => {
     <div  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {product_images && product_images.length > 0 && (
         <div>
-          <img className='h-[400px] w-[530px] object-fill bg-center'  src={product_images[0]} alt="" />
+          <img className='h-[500px] w-[100%] object-fill bg-center'  src={product_images[0]} alt="" />
           {/* ReactImageMagnify দিয়ে বড় ইমেজ দেখানো */}
           {/* <ReactImageMagnify
             {...{
