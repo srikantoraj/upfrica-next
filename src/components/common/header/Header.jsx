@@ -20,7 +20,7 @@ export default function Header() {
     <div >
       <div className="xl:flex lg:gap-4 lg:justify-between   bg-white px-2 py-2">
         {/* Small & Medium Devices Layout */}
-        <div className="lg:hidden flex flex-col w-full">
+        <div className="xl:hidden flex flex-col w-full">
           <div className="flex justify-between items-center w-full py-2">
             <Link href="/">
               <img
@@ -62,7 +62,7 @@ export default function Header() {
         </div>
 
         {/* Large Devices Layout */}
-        <div className="hidden lg:flex lg:w-full lg:gap-4 items-center">
+        <div className="hidden xl:flex lg:w-full lg:gap-4 items-center">
           {/* Profile Image */}
           <div className="lg:w-1/6 flex justify-start">
             <Link href="/">
@@ -78,7 +78,7 @@ export default function Header() {
           <SearchInpute />
 
           {/* WhatsApp Section */}
-          <div className="xl:w-2/6 flex items-center justify-center bg-gray-100 p-2 rounded-md">
+          <div className="xl:w-1/6 flex items-center justify-center bg-gray-100 py-2 rounded-md">
             <FaWhatsapp className="h-6 w-6 text-green-400" />
             <p className="text-purple-500 tracking-wide text-base">
               Join the WhatsApp Group

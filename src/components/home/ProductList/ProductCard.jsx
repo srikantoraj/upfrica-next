@@ -40,10 +40,6 @@ export default function ProductCard({ product }) {
           </div>
         </div>
 
-
-
-
-
         <div className="px-4">
           {/* Title Section */}
           <div className="mt-4 text-base lg:text-lg ">

@@ -2,6 +2,7 @@
 import Footer from '@/components/common/footer/Footer';
 import Header from '@/components/common/header/Header';
 import ProductList from '@/components/home/ProductList/ProductList';
+import RelatedProducts from '@/components/home/ProductList/RealtedProduct';
 import Slider from '@/components/Slider';
 import TextSection from '@/components/TextSection';
 import Dummy from '@/components/ui/details/Dummy';
@@ -22,6 +23,10 @@ async function getProductData(id) {
   const product = await res.json();
   return product;
 }
+
+
+  
+
 
 // Function to generate static paths for all products
 export async function generateStaticParams() {
@@ -64,15 +69,15 @@ export async function generateMetadata({ params }) {
 // The main component to render product details
 export default async function ProductDetails({ params }) {
   const { id } = params;
-
   // Fetch the product data
   const product = await getProductData(id);
   const {
     product_images,
     title,
     description,
-
+    
   } = product || {};
+
 
   const laptopDetails = [
     {
@@ -93,6 +98,9 @@ export default async function ProductDetails({ params }) {
   ];
 
 
+  
+
+
 
   return (
     <>
@@ -104,6 +112,7 @@ export default async function ProductDetails({ params }) {
             <TextSection product={product} />
           </div>
           <Dummy title={title} description={description || "This is a test description"} />
+          <RelatedProducts productId={id}/>
         </div>
       </div>
       <Footer />
