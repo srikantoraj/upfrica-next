@@ -144,33 +144,102 @@ const TextSection = ({ product }) => {
         <hr className="my-4" />
         <LaptopDetels />
 
+        
         {/* Modal */}
-        <div className={`fixed inset-0 bg-black bg-opacity-50 px-5 z-50 overflow-y-auto ${isModalVisible ? 'opacity-100 visible' : 'opacity-0 invisible'} transition-opacity duration-300`} onClick={handleCloseModal}>
-          <div className={`bg-white rounded-lg shadow-lg w-full md:w-2/3 lg:w-2/4 xl:w-1/4 p-4 mx-auto mt-10 transform ${isModalVisible ? 'translate-y-0' : '-translate-y-full'} transition-transform duration-300`} onClick={(e) => e.stopPropagation()}>
+        <div
+          className={`fixed inset-0 bg-black bg-opacity-50 px-5 z-50 overflow-y-auto ${isModalVisible ? 'opacity-100 visible' : 'opacity-0 invisible'
+            } transition-opacity duration-300`}
+          onClick={handleCloseModal}
+        >
+          <div
+            className={`bg-gray-50 rounded-lg shadow-lg  w-full md:w-2/3 lg:w-2/4 xl:w-1/4 p-4 mx-auto mt-10 transform ${isModalVisible ? 'translate-y-0' : '-translate-y-full'
+              } transition-transform duration-300`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
             <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-xl md:text-2xl font-semibold">{basket.length} Items added to basket</h3>
-              <button onClick={handleCloseModal} className="text-gray-600 hover:text-gray-900">
+              <h3 className="text-xl md:text-2xl font-semibold">
+                {basket.length} Items added to basket
+              </h3>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-600 hover:text-gray-900"
+              >
                 <HiXMark className="h-8 w-8" />
               </button>
             </div>
 
-            <div className="p-4 flex flex-col gap-4">
-              {basket.map((item, index) => (
-                <div key={index} className="flex justify-between items-center">
-                  <Image src={item.image[0]?.url} alt={item.title} width={50} height={50} />
-                  <span className="font-medium">{item.title}</span>
-                  <QuantityControl quantity={item.quantity} onIncrease={() => handleQuantityChange(index, 1)} onDecrease={() => handleQuantityChange(index, -1)} />
-                </div>
-              ))}
-              <hr />
-              <div className="pt-4 text-right font-bold">
-                <span>Total: ${(basket.reduce((total, item) => total + item.price * item.quantity, 0) / 100).toFixed(2)}</span>
-              </div>
+            {/* Modal Body */}
+            <div className="p-4">
+              <ul className="mt-4">
+                {basket.length > 0 ? (
+                  basket.map((item, index) => (
+                    <li
+                      key={index}
+                      className="md:grid md:grid-cols-5 flex gap-4 md:items-center justify-between border-b py-3 text-base md:text-xl"
+                    >
+                      {/* Product Image */}
+                      <div className="md:col-span-1">
+                        <img
+                          src={
+                            item?.image?.[0] ??
+                            'https://via.placeholder.com/150'
+                          }
+                          alt={item.title}
+                          className="h-14 w-14 object-cover rounded mr-3"
+                        />
+                      </div>
+
+                      <div className="md:col-span-4">
+                        {/* Product Title */}
+                        <span>{item.title}</span>
+                        {/* Product Price */}
+                        <div className="md:flex gap-5 items-center mt-2">
+                          <p>
+                            Price : {item.price.currency_iso}{' '}
+                            {(item.price.cents / 100).toFixed(2)}
+                          </p>
+                          <p className="flex gap-2 text-base md:text-lg font-bold items-center">
+                            <span>Qty:</span>
+                            <QuantityControl
+                              quantity={item.quantity}
+                              onDecrease={() =>
+                                handleQuantityChange(index, -1)
+                              }
+                              onIncrease={() =>
+                                handleQuantityChange(index, 1)
+                              }
+                            />
+                          </p>
+                        </div>
+                      </div>
+                    </li>
+                  ))
+                ) : (
+                  <p className="text-center text-gray-500">
+                    No items in the basket.
+                  </p>
+                )}
+              </ul>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-center p-4 space-x-2">
+              <Link href="/checkout">
+                <button className="bg-[#F7C32E] text-white px-4 py-2 rounded-3xl hover:bg-yellow-600">
+                  Checkout Item
+                </button>
+              </Link>
+              <Link href="/cart">
+                <button className="px-4 py-2 rounded-3xl border bg-white shadow-md">View Basket</button>
+              </Link>
             </div>
           </div>
         </div>
+        {/* End of Modal */}
       </div>
     </div>
+
   );
 };
 

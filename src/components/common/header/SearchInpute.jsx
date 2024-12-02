@@ -42,9 +42,9 @@ const SearchInpute = () => {
     }, [debouncedSearchText]);
 
     return (
-        <div className="relative xl:w-full flex items-center border rounded-xl py-2 px-2 group">
+        <div className="relative xl:w-full flex items-center border rounded-xl  px-2 group bg-gray-100">
             <input
-                className="w-full border-none focus:outline-none pl-3"
+                className="w-full border-none focus:outline-none pl-3 bg-gray-100"
                 type="text"
                 placeholder="Search Upfrica BD"
                 value={searchText}

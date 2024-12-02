@@ -61,7 +61,10 @@ const EarlyDeals = () => {
         },
     ];
 
-    // console.log(products);
+    
+      
+      
+      
 
     return (
         <div className="container mx-auto bg-white shadow-md overflow-x-auto py-10 mb-2 p-5">
@@ -73,15 +76,13 @@ const EarlyDeals = () => {
                 <p>Deals</p>
             </div>
 
-           
-
             <div className='overflow-x-auto py-5 overflow-hidden'>
                 <div className="flex gap-4 whitespace-nowrap w-max">
                     {products.map((product) => (
                         <div
                             key={product.id}
                             className="border shadow-lg rounded-lg overflow-hidden"
-                            style={{ height: "220px", width: "150px" }}
+                            style={{ height: "220px" }}
                         >
                             {/* Product Image */}
                             <img

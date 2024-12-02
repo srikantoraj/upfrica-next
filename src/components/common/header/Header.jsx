@@ -20,7 +20,7 @@ export default function Header() {
     <div >
       <div className="xl:flex lg:gap-4 lg:justify-between   bg-white px-2 py-2">
         {/* Small & Medium Devices Layout */}
-        <div className="xl:hidden flex flex-col w-full">
+        <div className="xl:hidden flex flex-col w-full ">
           <div className="flex justify-between items-center w-full py-2">
             <Link href="/">
               <img
