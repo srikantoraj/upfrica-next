@@ -1,4 +1,5 @@
-import React from 'react';
+"use client"
+import React, { useState } from 'react';
 import { FaCheck, FaRocket, FaTimes, FaUserTie } from "react-icons/fa";
 import { BiLightningCharge } from 'react-icons/bi';
 import { BsLightningChargeFill } from 'react-icons/bs';
@@ -7,8 +8,17 @@ import { FaRegCircleXmark } from 'react-icons/fa6';
 import { RiSendPlaneFill } from "react-icons/ri";
 
 const Price = () => {
+    
+    const [selectedValue, setSelectedValue] = useState("1 Week"); // Default value
+
+    const handleToggle = () => {
+      // Toggle between "1 Week" and "10 Month"
+      setSelectedValue((prevValue) => (prevValue === "1 Week" ? "10 Month" : "1 Week"));
+    };
+
     const plans = [
         {
+            id:1,
             name: "Free Plan",
             price: 0,
             features: [
@@ -26,6 +36,7 @@ const Price = () => {
             ],
         },
         {
+            id:2,
             name: "Basic Plan",
             price: 100,
             features: [
@@ -43,6 +54,7 @@ const Price = () => {
             ],
         },
         {
+            id:3,
             name: "Standard Plan",
             price: 300,
             features: [
@@ -61,6 +73,7 @@ const Price = () => {
             ],
         },
         {
+            id:4,
             name: "Premium Plan",
             price: 450,
             features: [
@@ -113,6 +126,14 @@ const Price = () => {
         },
     ];
 
+    const handleClick = (id) => {
+        const selected = plans.find(item => item.id === id); // ক্লিক করা আইটেম খুঁজে বের করে
+        console.log(selected);
+        console.log(selectedValue)
+      };
+
+      
+
     return (
         <div className='bg-gray-50 pb-10  lg:px-0'>
             <div className=' text-center space-y-2 lg:space-y-8'>
@@ -128,6 +149,7 @@ const Price = () => {
                         <input
                             type="checkbox"
                             className="sr-only peer"
+                            onChange={handleToggle}
                         />
                         <div className="relative w-16 h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-4   rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white  after:rounded-full after:h-7 after:w-7 after:transition-all  peer-checked:bg-[#8710D8]"></div>
                         <span className="ms-3 text-base  text-gray-900 dark:text-gray-300 font-bold">
@@ -195,7 +217,7 @@ const Price = () => {
                         </ul>
 
                         {/* Button */}
-                        <button className={`mt-6 py-2 px-4 font-bold rounded-lg text-lg  md:text-xl ${plan.name === "Standard Plan" ? "bg-[#8710D8] hover:bg-purple-700" : "bg-black hover:bg-gray-800"} text-white`}>
+                        <button onClick={()=>handleClick(plan.id)} className={`mt-6 py-2 px-4 font-bold rounded-lg text-lg  md:text-xl ${plan.name === "Standard Plan" ? "bg-[#8710D8] hover:bg-purple-700" : "bg-black hover:bg-gray-800"} text-white`}>
                             Select Plan
                         </button>
                     </div>
