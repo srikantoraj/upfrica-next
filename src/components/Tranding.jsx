@@ -3,7 +3,7 @@ import React from 'react';
 import { IoIosArrowRoundForward } from 'react-icons/io';
 import { FaShoppingCart } from "react-icons/fa";
 
-const Tranding = ({title}) => {
+const Tranding = ({ title }) => {
     const products = [
         {
             id: 1,
@@ -69,12 +69,12 @@ const Tranding = ({title}) => {
                 <h1 className="">{title}</h1>
             </div>
             <div className='overflow-x-auto py-5 overflow-hidden'>
-            <div className="flex justify-around gap-4 whitespace-nowrap ">
+                <div className="flex gap-4 justify-around whitespace-nowrap w-max  md:w-full">
                     {products.map((product) => (
                         <div
                             key={product.id}
                             className="border shadow-lg rounded-lg overflow-hidden"
-                            style={{ height: "220px"}}
+                            style={{ height: "220px" }}
                         >
                             {/* Product Image */}
                             <img
