@@ -77,7 +77,7 @@ const EarlyDeals = () => {
             </div>
 
             <div className='overflow-x-auto py-5 overflow-hidden'>
-                <div className="flex gap-4 whitespace-nowrap w-max">
+                <div className="flex justify-around whitespace-nowrap ">
                     {products.map((product) => (
                         <div
                             key={product.id}

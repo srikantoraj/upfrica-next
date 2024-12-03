@@ -69,12 +69,12 @@ const Tranding = ({title}) => {
                 <h1 className="">{title}</h1>
             </div>
             <div className='overflow-x-auto py-5 overflow-hidden'>
-                <div className="flex gap-4 whitespace-nowrap w-max">
+            <div className="flex justify-around gap-4 whitespace-nowrap ">
                     {products.map((product) => (
                         <div
                             key={product.id}
                             className="border shadow-lg rounded-lg overflow-hidden"
-                            style={{ height: "220px", width: "150px" }}
+                            style={{ height: "220px"}}
                         >
                             {/* Product Image */}
                             <img

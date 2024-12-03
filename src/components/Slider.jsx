@@ -1,12 +1,15 @@
 'use client';
-
-import React from 'react';
+import React, { useState } from "react";
+import "react-image-lightbox/style.css";
+import Lightbox from "react-image-lightbox";
 // import Slider from 'react-slick';
 // import ReactImageMagnify from 'react-image-magnify';
 // import 'slick-carousel/slick/slick.css';
 // import 'slick-carousel/slick/slick-theme.css';
 
 const ImageSliderWithMagnify = ({ product_images }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
   // const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // const sliderSettings = {
@@ -20,12 +23,65 @@ const ImageSliderWithMagnify = ({ product_images }) => {
   // };
 
   return (
-    <div  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div className="flex flex-col items-center mt-5  w-full">
+      {/* Main Image */}
       {product_images && product_images.length > 0 && (
-        <div>
-          <img className='h-[500px] w-[100%] object-fill bg-center'  src={product_images[0]} alt="" />
-          {/* ReactImageMagnify দিয়ে বড় ইমেজ দেখানো */}
-          {/* <ReactImageMagnify
+        <div className="mb-4">
+          <img
+            className="lg:h-[700px] w-full object-cover cursor-pointer rounded-md"
+            src={product_images[photoIndex]}
+            alt={`Product ${photoIndex}`}
+            onClick={() => setIsOpen(true)}
+          />
+        </div>
+      )}
+
+      {/* Thumbnail Images */}
+      {product_images && product_images.length > 1 && (
+        <div className="grid grid-cols-4 gap-2">
+          {product_images.map((img, index) => (
+            <img
+              key={index}
+              className={`h-[75px] w-[75px] object-cover rounded-md cursor-pointer border-2 ${photoIndex === index ? "border-purple-500" : "border-gray-300"
+                }`}
+              src={img}
+              alt={`Thumbnail ${index}`}
+              onClick={() => setPhotoIndex(index)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {isOpen && (
+        <Lightbox
+          mainSrc={product_images[photoIndex]}
+          nextSrc={product_images[(photoIndex + 1) % product_images.length]}
+          prevSrc={
+            product_images[
+            (photoIndex + product_images.length - 1) % product_images.length
+            ]
+          }
+          onCloseRequest={() => setIsOpen(false)}
+          onMovePrevRequest={() =>
+            setPhotoIndex(
+              (photoIndex + product_images.length - 1) % product_images.length
+            )
+          }
+          onMoveNextRequest={() =>
+            setPhotoIndex((photoIndex + 1) % product_images.length)
+          }
+        />
+      )}
+    </div>
+  );
+};
+
+export default ImageSliderWithMagnify;
+
+
+{/* ReactImageMagnify দিয়ে বড় ইমেজ দেখানো */ }
+{/* <ReactImageMagnify
             {...{
               smallImage: {
                 alt: `Product ${currentImageIndex + 1}`,
@@ -46,8 +102,8 @@ const ImageSliderWithMagnify = ({ product_images }) => {
             }}
           /> */}
 
-          {/* শুধু তখনই স্লাইডার দেখানো হবে যখন একাধিক ইমেজ থাকবে */}
-          {/* <div className='flex justify-center '>
+{/* শুধু তখনই স্লাইডার দেখানো হবে যখন একাধিক ইমেজ থাকবে */ }
+{/* <div className='flex justify-center '>
           {product_images.length > 1 && (
             <div style={{ marginTop: '30px', width: '50%', maxWidth: '300px' }}>
               <Slider {...sliderSettings}>
@@ -72,10 +128,3 @@ const ImageSliderWithMagnify = ({ product_images }) => {
             </div>
           )}
           </div> */}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default ImageSliderWithMagnify;
