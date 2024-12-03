@@ -8,17 +8,18 @@ import { FaRegCircleXmark } from 'react-icons/fa6';
 import { RiSendPlaneFill } from "react-icons/ri";
 
 const Price = () => {
-    
+
     const [selectedValue, setSelectedValue] = useState("1 Week"); // Default value
+    const [cart, setCart] = useState(null)
 
     const handleToggle = () => {
-      // Toggle between "1 Week" and "10 Month"
-      setSelectedValue((prevValue) => (prevValue === "1 Week" ? "10 Month" : "1 Week"));
+        // Toggle between "1 Week" and "10 Month"
+        setSelectedValue((prevValue) => (prevValue === "1 Week" ? "10 Month" : "1 Week"));
     };
 
     const plans = [
         {
-            id:1,
+            id: 1,
             name: "Free Plan",
             price: 0,
             features: [
@@ -36,7 +37,7 @@ const Price = () => {
             ],
         },
         {
-            id:2,
+            id: 2,
             name: "Basic Plan",
             price: 100,
             features: [
@@ -54,7 +55,7 @@ const Price = () => {
             ],
         },
         {
-            id:3,
+            id: 3,
             name: "Standard Plan",
             price: 300,
             features: [
@@ -73,7 +74,7 @@ const Price = () => {
             ],
         },
         {
-            id:4,
+            id: 4,
             name: "Premium Plan",
             price: 450,
             features: [
@@ -127,18 +128,40 @@ const Price = () => {
     ];
 
     const handleClick = (id) => {
-        const selected = plans.find(item => item.id === id); // ক্লিক করা আইটেম খুঁজে বের করে
-        console.log(selected);
-        console.log(selectedValue)
-      };
+        const selected = plans.find((item) => item?.id === id); // ক্লিক করা প্ল্যান খুঁজে বের করা
+        if (selected) {
+ 
+            setCart(selected); // কার্টে সেট করা (যদি প্রয়োজন হয়)
+        }
+    };
 
-      
+    const handleAdded = (id) =>{
+        const selected = plans.find((item) => item?.id === id); // ক্লিক করা প্ল্যান খুঁজে বের করা
+        if (selected) {
+            const result = {
+                selectedValue,
+                id: selected?.id,
+                name: selected?.name, // প্ল্যানের নাম
+                price: selected?.price, // প্ল্যানের দাম
+                features: selected?.features, // ফিচারগুলোর তালিকা
+            };
+            setCart(result); // কার্টে সেট করা (যদি প্রয়োজন হয়)
+            console.log(result); // সম্পূর্ণ অবজেক্ট কনসোলে দেখানো
+        }
+        
+    }
+
+
+
+    //   console.log(typeof(cart))
+
+
 
     return (
         <div className='bg-gray-50 pb-10  lg:px-0'>
             <div className=' text-center space-y-2 lg:space-y-8'>
                 <p className='text-lg lg:text-xl font-bold text-[#8710D8]'>Pricing</p>
-                <h1 className='text-2xl lg:text-[56px] font-bold tracking-wide'>Plan That Fit Your Scale
+                <h1 className='text-2xl md:text-4xl lg:text-[56px] font-bold tracking-wide'>Plan That Fit Your Scale
                 </h1>
                 <p className='text-lg lg:text-xl text-[#747579] tracking-wide'>Simple, transparent pricing that grows with you. Try any plan free for 30 days</p>
                 <div className='py-4 lg:py-10'>
@@ -158,11 +181,13 @@ const Price = () => {
                     </label>
                 </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 container mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 container mx-auto px-8">
                 {plans.map((plan, index) => (
                     <div
+
                         key={index}
-                        className={`bg-white rounded-2xl shadow-xl p-6 flex flex-col justify-between ${plan.name === "Standard Plan" ? "border-2 border-[#8710D8]" : ""}`}
+                        className={`bg-white rounded-2xl shadow-xl p-6 flex flex-col justify-between ${plan?.id === cart?.id ? "border-2 border-[#8710D8]" : ""}`}
+                        onClick={() => handleClick(plan.id)}
                     >
                         {/* Header Section */}
                         <div className="flex items-center justify-between">
@@ -173,22 +198,30 @@ const Price = () => {
                                     <span className="text-xl text-gray-500">/ per account</span>
                                 </div>
                             </div>
-
-                            <div className={`${plan.name === "Standard Plan" ? "bg-purple-200 p-4" : "bg-gray-200 p-4"} rounded-full`}>
+                            <div
+                                className={`${plan.name === cart?.name
+                                        ? "bg-purple-200 text-[#8710D8] p-4"
+                                        : "bg-gray-200 text-black p-4"
+                                    } rounded-full flex items-center justify-center`}
+                            >
                                 {plan.name === "Standard Plan" ? (
-                                    <span className=''>
-                                        <FaRocket className="text-2xl h-6 w-6 text-[#8710D8]" /> {/* Rocket Icon for Standard Plan */}
-                                    </span>
+                                    <FaRocket
+                                        className={`text-2xl h-6 w-6 ${plan.name === cart?.name ? "text-[#8710D8]" : "text-black"
+                                            }`}
+                                    /> /* Rocket Icon for Standard Plan */
                                 ) : plan.name === "Premium Plan" ? (
-                                    <span className=''>
-                                        <RiSendPlaneFill className="text-2xl h-6 w-6 text-black" /> {/* User Tie Icon for Premium Plan */}
-                                    </span>
+                                    <RiSendPlaneFill
+                                        className={`text-2xl h-6 w-6 ${plan.name === cart?.name ? "text-[#8710D8]" : "text-black"
+                                            }`}
+                                    /> /* Send Plane Icon for Premium Plan */
                                 ) : (
-                                    <span className=''>
-                                        <BsLightningChargeFill className="text-black text-2xl h-6 w-6" /> {/* Lightning Charge Icon for others */}
-                                    </span>
+                                    <BsLightningChargeFill
+                                        className={`text-2xl h-6 w-6 ${plan.name === cart?.name ? "text-[#8710D8]" : "text-black"
+                                            }`}
+                                    /> /* Lightning Charge Icon for others */
                                 )}
                             </div>
+
                         </div>
 
 
@@ -217,7 +250,7 @@ const Price = () => {
                         </ul>
 
                         {/* Button */}
-                        <button onClick={()=>handleClick(plan.id)} className={`mt-6 py-2 px-4 font-bold rounded-lg text-lg  md:text-xl ${plan.name === "Standard Plan" ? "bg-[#8710D8] hover:bg-purple-700" : "bg-black hover:bg-gray-800"} text-white`}>
+                        <button onClick={() => handleAdded(plan.id)}  className={`mt-6 py-2 px-4 font-bold rounded-lg text-lg  md:text-xl ${plan?.id === cart?.id ? "bg-[#8710D8] hover:bg-purple-700" : "bg-black hover:bg-gray-800"} text-white`}>
                             Select Plan
                         </button>
                     </div>
@@ -236,7 +269,7 @@ const Price = () => {
                 </div>
                 <div className="container mx-auto  py-10">
                     {/* Responsive grid layout */}
-                    <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 px-8">
                         {data.map((item) => (
                             <div
                                 key={item.id}
@@ -258,7 +291,7 @@ const Price = () => {
                 <button className='flex gap-1 items-center bg-[#A435F0] text-white font-bold text-base lg:text-xl px-6 py-3 rounded-md'>
                     Contact Us
                     <span><IoArrowForwardCircleOutline className='h-6 w-6' /></span>
-                    </button>
+                </button>
             </div>
 
         </div>
