@@ -9,21 +9,30 @@ import Categories from "@/components/home/Categories/Categories";
 import AboutSection from "@/components/home/About/About";
 import Link from "next/link";
 import User from "@/components/User";
-
+import Cover from "@/components/common/header/Cover";
+import EarlyDeals from "@/components/EarlyDeals";
+import Selling from "@/components/Selling";
+import Tranding from "@/components/Tranding";
+import SellectedItem from "@/components/SellectedItem";
 
 export default function Home() {
- 
   return (
-    <>
+    <div className="bg-gray-100">
       <Header />
-      <Categories />
+      <Cover />
+      <EarlyDeals />
       <ProductList />
-      <AboutSection />
-      <ProductList title="Selected for you" />
+      <Selling />
+      <Tranding title="Trending in Women’s Fashion" />
+      <SellectedItem />
+      <Selling color="green" />
+      <Tranding title="New arrivals" />
+      <Categories />
+      {/* <AboutSection /> */}
+      {/* <ProductList title="Selected for you" /> */}
       <FAQ />
       <Footer />
-      <User/>
-      
-    </>
+      <User />
+    </div>
   );
 }

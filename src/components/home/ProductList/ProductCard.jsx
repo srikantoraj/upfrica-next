@@ -1,25 +1,27 @@
 
 import { AiOutlineShoppingCart } from "react-icons/ai";
-import { FaHeart } from "react-icons/fa";
-import Link from "next/link"; 
+import { FaBolt, FaHeart } from "react-icons/fa";
+import Link from "next/link";
 
 
 
 export default function ProductCard({ product }) {
-  const { product_images, id, title, price } = product;
+  // console.log(product)
+  const { product_images, id, title, price, secondary_postage_fee
+  } = product;
   if (!product_images) return null;
 
   return (
-    <div className="border rounded-lg  relative flex flex-col justify-between">
+    <div className="shadow-md bg-white rounded-lg  relative flex flex-col justify-between w-full h-[500px]">
       {/* Card Image Section */}
       <div >
-        <div className="relative" >
+        <div className="relative overflow-hidden">
           {product_images.length > 0 && (
-            <Link href={`/details/${id}`} >
+            <Link href={`/details/${id}`}>
               <img
-                src={product_images[0]} 
+                src={product_images[0]}
                 alt="Product"
-                className="w-full h-72 object-cover rounded-lg"
+                className="h-[350px] w-full object-cover rounded-lg transform transition-all duration-1000 ease-in-out hover:scale-110 hover:translate-y-[-2px]"
               />
             </Link>
           )}
@@ -31,7 +33,8 @@ export default function ProductCard({ product }) {
 
           {/* Sales Button at the bottom-left */}
           <div className="absolute bottom-2 left-2">
-            <button className="bg-purple-500 text-white px-3 py-1 rounded-lg text-sm">
+            <button className="bg-[#d6293e] text-white px-3 py-1 rounded-full text-base flex gap-1 items-center">
+              <span><FaBolt /></span>
               Sales
             </button>
           </div>
@@ -39,17 +42,24 @@ export default function ProductCard({ product }) {
 
         <div className="px-4">
           {/* Title Section */}
-          <div className="mt-4">
-            <h2 className="text-base font-bold text-gray-800">
-              {title.length > 30 ? `${title.substring(0, 15)}...` : title}
+          <div className="mt-4 text-base lg:text-lg ">
+            <h2 className=" text-gray-800">
+              {title.length > 30 ? `${title.substring(0, 20)}...` : title}
             </h2>
+            <p className="text-purple-500">1083 + sold recently</p>
           </div>
         </div>
       </div>
       <div>
-        <hr className="my-2 mx-4" />
+        <hr className="" />
         <div className="flex justify-between items-center p-4">
-          <p className="text-lg font-semibold text-gray-700">${price.cents}</p>
+          <div className="flex gap-1 items-center">
+
+            <p className="text-lg font-bold text-gray-700">${price.cents}</p>
+            <p className="text-lg  text-gray-700 line-through">${secondary_postage_fee
+              .cents}</p>
+
+          </div>
           <span className="border-2 rounded">
             <AiOutlineShoppingCart className="h-6 w-6 text-purple-500 bg-slate-200 m-1" />
           </span>

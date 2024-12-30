@@ -74,34 +74,34 @@ const Cart = () => {
         </h1>
         {basket.length > 0 ? (
           basket.map((product, index) => (
-            <div key={index}>
+            <div key={index} className="border-b last:border-none p-4 bg-white">
+
               {/* Large Device Card */}
-              <div className="hidden md:flex border p-8 bg-white justify-between space-x-4 text-base">
-                <img
-                  className="h-20 lg:h-32 w-20 lg:w-32 rounded-md object-cover"
-                  src={product.image[0]}
-                  alt={product.title}
-                />
-                <p className="flex-1">
-                  {product.title.length > 15
-                    ? `${product.title.substring(0, 50)} ...`
-                    : product.title}
-                </p>
-                <div>
+              <div className="hidden md:flex  space-x-4 text-base">
+                <div className="flex-shrink-0">
+                  <img
+                    className="h-24 w-24 lg:h-32 lg:w-32 rounded-md object-cover"
+                    src={product?.image?.[0] ?? 'https://via.placeholder.com/150'}
+                    alt={product.title}
+                  />
+                </div>
+                <div className="flex-grow">
+                  <p className="text-lg font-semibold line-clamp-2 text-gray-900 underline">{product.title}</p>
+                  <p className="text-base text-gray-600">Variation</p>
+                </div>
+                <div className="flex  flex-col items-end">
                   <QuantityControl
                     quantity={product.quantity}
                     onDecrease={() => handleQuantityChange(index, -1)}
                     onIncrease={() => handleQuantityChange(index, 1)}
                   />
-                  <div className="text-center text-base mt-2">
-                    <p className="font-bold">
-                      {product.price.currency_iso} {(product.price.cents / 100).toFixed(2)}
-                    </p>
-                  </div>
+                  <p className="mt-2 text-xl font-bold">
+                    {product.price.currency_iso} {(product.price.cents / 100).toFixed(2)}
+                  </p>
                 </div>
-                <div className="flex justify-center items-end">
+                <div className=" flex flex-col justify-end">
                   <MdDeleteOutline
-                    className="w-8 h-8 text-gray-800 cursor-pointer hover:text-red-500"
+                    className="w-8 h-8 text-gray-800 cursor-pointer hover:text-red-500 "
                     onClick={() => handleRemoveProduct(index)}
                     aria-label="Remove product"
                   />
@@ -109,48 +109,45 @@ const Cart = () => {
               </div>
 
               {/* Small Device Card */}
-              <div className="md:hidden border p-4 bg-white grid grid-cols-4 gap-2">
+              <div className="md:hidden grid grid-cols-3 gap-4">
                 <div className="col-span-1">
                   <img
                     className="h-20 w-20 rounded-md object-cover"
-                    src={product.image[0]}
+                    src={product?.image?.[0] ?? 'https://via.placeholder.com/150'}
                     alt={product.title}
                   />
                 </div>
-                <div className="col-span-3">
-                  <p className="underline">{product.title}</p>
+                <div className="col-span-2">
+                  <p className="text-lg font-semibold line-clamp-2 text-gray-900">{product.title}</p>
+                  <p className="text-sm text-gray-600">Variation</p>
                   <div className="flex justify-between items-center mt-2">
                     <QuantityControl
                       quantity={product.quantity}
                       onDecrease={() => handleQuantityChange(index, -1)}
                       onIncrease={() => handleQuantityChange(index, 1)}
                     />
-                    <div className="text-center text-base">
-                      <p>
-                        {product.price.currency_iso} {(product.price.cents / 100).toFixed(2)}
-                      </p>
+                    <div className="text-sm font-bold">
+                      {product.price.currency_iso} {(product.price.cents / 100).toFixed(2)}
                     </div>
-                    <div className="flex justify-center items-end">
-                      <MdDeleteOutline
-                        className="w-6 h-6 text-gray-800 cursor-pointer hover:text-red-500"
-                        onClick={() => handleRemoveProduct(index)}
-                        aria-label="Remove product"
-                      />
-                    </div>
+                    <MdDeleteOutline
+                      className="w-6 h-6 text-gray-800 cursor-pointer hover:text-red-500"
+                      onClick={() => handleRemoveProduct(index)}
+                      aria-label="Remove product"
+                    />
                   </div>
                 </div>
               </div>
             </div>
           ))
+
         ) : (
           <p className="text-center text-gray-600">Your basket is empty.</p>
         )}
         <div className="flex justify-between mt-5">
           <button
             onClick={handleCheckout}
-            className={`text-base font-bold ${
-              basket.length > 0 ? 'bg-[#F7C32E] hover:bg-[#e6b42d]' : 'bg-gray-400 cursor-not-allowed'
-            } px-4 py-1 rounded-3xl`}
+            className={`text-base font-bold ${basket.length > 0 ? 'bg-[#F7C32E] hover:bg-[#e6b42d]' : 'bg-gray-400 cursor-not-allowed'
+              } px-4 py-1 rounded-3xl`}
             disabled={basket.length === 0}
           >
             Checkout
