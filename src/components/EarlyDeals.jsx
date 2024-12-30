@@ -61,10 +61,10 @@ const EarlyDeals = () => {
         },
     ];
 
-    
-      
-      
-      
+
+
+
+
 
     return (
         <div className="container mx-auto bg-white shadow-md overflow-x-auto py-10 mb-2 p-5">
@@ -76,37 +76,38 @@ const EarlyDeals = () => {
                 <p>Deals</p>
             </div>
 
-            <div className='overflow-x-auto py-5 overflow-hidden'>
-                <div className="flex gap-4 justify-around whitespace-nowrap w-max  md:w-full">
+            <div className="py-5 overflow-x-auto">
+                <div className="flex gap-4 justify-between whitespace-nowrap">
                     {products.map((product) => (
                         <div
                             key={product.id}
-                            className="border shadow-lg rounded-lg overflow-hidden"
-                            style={{ height: "220px" }}
+                            className="border shadow-lg rounded-lg flex-shrink-0 w-[160px] lg:w-[180px] lg:h-[220px] "
+                            // style={{ height: "220px", width: "180px" }} // Card Dimensions
                         >
                             {/* Product Image */}
                             <img
                                 src={product.image}
                                 alt={`Product ${product.id}`}
-                                className="w-full h-[80%] object-cover transform transition-all duration-1000 ease-in-out hover:scale-110 hover:translate-y-[-2px]"
+                                className="w-full h-[80%] object-cover"
                             />
 
                             {/* Bottom Section */}
                             <div className="flex items-center justify-between px-2 py-1 bg-gray-100 h-[20%]">
                                 {/* Prices */}
-                                <div className='flex gap-2'>
+                                <div className="flex gap-2">
                                     <p className="text-base font-bold text-gray-800">${product.newPrice}</p>
                                     <p className="text-base text-gray-500 line-through">${product.oldPrice}</p>
                                 </div>
                                 {/* Shopping Cart Icon */}
-                                <button className="p-1 border-black border-2 rounded ">
-                                    <FaShoppingCart className='text-purple-500' size={20} />
+                                <button className="p-1 border-black border-2 rounded">
+                                    <FaShoppingCart className="text-purple-500" size={20} />
                                 </button>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
+
 
         </div>
     );
