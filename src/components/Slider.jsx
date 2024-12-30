@@ -1,7 +1,6 @@
 'use client';
 import React, { useState } from "react";
-import "react-image-lightbox/style.css";
-import Lightbox from "react-image-lightbox";
+
 // import Slider from 'react-slick';
 // import ReactImageMagnify from 'react-image-magnify';
 // import 'slick-carousel/slick/slick.css';
