@@ -4,13 +4,13 @@ import { FaMinus, FaPencilAlt, FaPlus } from "react-icons/fa";
 import { IoMdNotifications, IoMdPhotos } from "react-icons/io";
 // import { IoMdNotifications } from "react-icons/io";
 import { useFormik } from "formik";
-import Categore from "@/components/inpute/Categore";
-import Conditon from "@/components/inpute/Conditon";
-import Brand from "@/components/inpute/Brand";
 import Title from "@/components/inpute/Title";
 import Description from "@/components/inpute/Description";
+import Categore from "@/components/inpute/Categore";
+import Conditon from "@/components/inpute/Conditon";
 import Photo from "@/components/inpute/Photo";
 import SubmitButton from "@/components/inpute/SubmitButton";
+
 
 
 
