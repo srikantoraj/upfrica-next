@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import React from 'react';
 
 const Selling = ({color}) => {
@@ -10,7 +11,9 @@ const Selling = ({color}) => {
                 <p className='text-lg md:text-xl font-bold'>No sale No Fee. From Electronic and tech to fashion, make money across categories.</p>
             </div>
             <div className='col-span-1'>
+                <Link href={'/products/new'}>
                 <button className='font-bold text-black bg-white px-8 py-2 rounded-full'>Start selling</button>
+                </Link>
             </div>
         </div>
     );

@@ -174,7 +174,7 @@ const ProductGallery = ({ images = [] }) => {
   };
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center ">
       {/* Main Image Container */}
       <div
         className="relative w-full lg:max-w-xl  overflow-hidden border rounded shadow-sm"
