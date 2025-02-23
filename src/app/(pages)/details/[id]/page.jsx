@@ -25,7 +25,7 @@ async function getProductData(id) {
 }
 
 
-  
+
 
 
 // Function to generate static paths for all products
@@ -75,7 +75,7 @@ export default async function ProductDetails({ params }) {
     product_images,
     title,
     description,
-    
+
   } = product || {};
 
 
@@ -98,7 +98,7 @@ export default async function ProductDetails({ params }) {
   ];
 
 
-  
+
 
 
 
@@ -107,12 +107,12 @@ export default async function ProductDetails({ params }) {
       <Header />
       <div className='px-4'>
         <div className=" container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10  lg:mx-auto">
-            <Slider product_images={product_images} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:mx-auto py-10">
+            <Slider images={product_images} />
             <TextSection product={product} />
           </div>
           <Dummy title={title} description={description || "This is a test description"} />
-          <RelatedProducts productId={id}/>
+          <RelatedProducts productId={id} />
         </div>
       </div>
       <Footer />
