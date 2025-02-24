@@ -19,10 +19,10 @@ const MultiPriceBoxes = () => {
         {pricingOptions.map((option, index) => (
           <div
             key={index}
-            className="border rounded-lg p-4 text-center shadow-sm hover:shadow-md transition-shadow"
+            className="border rounded-lg p-4 text-center shadow-sm hover:shadow-md transition-shadow font-medium"
           >
-            <div className="text-base lg:text-lg font-medium">{option.label}</div>
-            <div className="mt-2 text-xl font-medium ">{option.price} each</div>
+            <div className="text-base lg:text-base ">{option.label}</div>
+            <div className="mt-2 text-2xl ">{option.price} each</div>
           </div>
         ))}
       </div>

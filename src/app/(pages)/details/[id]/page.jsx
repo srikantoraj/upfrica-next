@@ -105,9 +105,9 @@ export default async function ProductDetails({ params }) {
   return (
     <>
       <Header />
-      <div className='px-4'>
+      <div>
         <div className=" container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:mx-auto py-10 ">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 py-10 ">
             <Slider images={product_images} />
             <TextSection product={product} />
           </div>

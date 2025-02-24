@@ -829,14 +829,15 @@ import Link from 'next/link';
 import LaptopDetels from './LaptopDetels';
 import RatingSection from './RatingSection';
 import MultiPriceBoxes from './MultiPriceBoxes';
+import { TiShoppingCart } from "react-icons/ti";
 
 const QuantityControl = ({ quantity, onDecrease, onIncrease }) => (
-  <div className="flex items-center text-base md:text-lg">
-    <button onClick={onDecrease} className="px-2 py-1 md:font-extrabold" aria-label="Decrease quantity">
+  <div className="flex items-center text-lg">
+    <button onClick={onDecrease} className="px-2 py-1 font-bold" aria-label="Decrease quantity">
       <FaMinus />
     </button>
-    <span className="md:font-mediam py-1 px-2">{quantity}</span>
-    <button onClick={onIncrease} className="px-2 py-1 font-extrabold" aria-label="Increase quantity">
+    <span className="py-1 px-2">{quantity}</span>
+    <button onClick={onIncrease} className="px-2 py-1 font-bold" aria-label="Increase quantity">
       <FaPlus />
     </button>
   </div>
@@ -896,14 +897,13 @@ const TextSection = ({ product }) => {
   };
 
   return (
-    <div className="space-y-4 p-4 lg:ml-4 text-lg">
-      <div className="space-y-3">
-        {/* Product Title */}
-        <div className="text-xl font-mediam">{title}</div>
+    <div className="space-y-6 p-6 lg:ml-6 text-lg">
+      <div className="space-y-2">
+        {/* Product Title with larger header */}
+        <div className="text-3xl font-medium text-gray-900">{title}</div>
 
         {/* Seller info */}
-        <div className="text-base lg:text-lg font-normal text-purple-500 leading-relaxed">
-          {/* Replace the plain <a> with Next.js Link */}
+        <div className="text-lg font-normal text-purple-500 leading-relaxed">
           <Link
             href="/shops/online-shopping-accra"
             className="space-x-2"
@@ -913,13 +913,10 @@ const TextSection = ({ product }) => {
             <span className="font-normal space-x-2">
               <b className="text-black">5633 sold&nbsp;</b>Visit the
             </span>{" "}
-            <b className="font-extrabold text-blue-600">Upfrica GH Shop</b>{" "}
+            <b className="font-bold text-blue-600">Upfrica GH Shop</b>{" "}
             <span>Shop</span>
           </Link>
-
-          {/* Location */}
-          <b className="">
-            &nbsp;
+          <b className="ml-2">
             <i className="fa fa-map-marker m-0 p-0 mr-1" />
             <Link href="/products?utf8=✓&town=Osu" className="hover:underline">
               Osu
@@ -929,20 +926,17 @@ const TextSection = ({ product }) => {
               GH
             </Link>
           </b>
-
-          {/* Rating Section */}
         </div>
         <RatingSection />
-
-        <hr />
+        <hr className="border-gray-300" />
       </div>
 
       {/* Price Information */}
-      <div className="space-y-3">
-        <p className="text-base lg:text-lg font-mediam">
-          Price: <span className="text-xl lg:text-3xl">${(price?.cents / 100).toFixed(2)}</span> each
+      <div className="space-y-2">
+        <p className="text-xl font-medium text-gray-800">
+          Price: <span className="text-3xl font-bold">${(price?.cents / 100).toFixed(2)}</span> each
         </p>
-        <p className="text-gray-600 text-lg leading-relaxed">
+        <p className="text-gray-600 text-lg">
           was <span className="line-through">${(price?.cents / 100).toFixed(2)}</span> You Save: $6.39 (3%)
         </p>
 
@@ -952,72 +946,90 @@ const TextSection = ({ product }) => {
           minutes={timeRemaining.minutes}
           seconds={timeRemaining.seconds}
         />
-
-        <p className="text-base lg:text-xl font-mediam">Condition: used</p>
-
-        {/* Multi-price boxes */}
-        <MultiPriceBoxes />
       </div>
 
       {/* Add to Basket and Buy Now buttons */}
-      <div className="pb-4 space-y-4">
+      <div className="pb-6 space-y-2">
+        <p className="text-lg font-medium">Condition: Used</p>
+        <MultiPriceBoxes />
         <button
           onClick={handleAddToBasket}
-          className="bg-[#F7C32E] w-full p-2 rounded-3xl text-base font-mediam"
+          className="bg-yellow-300 w-full p-2 rounded-3xl text-lg font-bold hover:bg-yellow-400 transition"
         >
           Add to Basket
         </button>
         <button
           onClick={handleAddToBasket}
-          className="w-full p-2 rounded-3xl text-base font-mediam border border-yellow-300"
+          className="w-full p-2 rounded-3xl text-lg font-bold border border-yellow-300 hover:bg-yellow-50 transition"
         >
           Buy Now
         </button>
 
         {/* Additional details */}
-        <div className=" pt-4 mt-4">
-          <div className="space-y-3 text-base lg:text-xl">
-            <div className="flex justify-between">
-              <span className="font-mediam">Pickup:</span>
-              <span>Available at our downtown store.</span>
+        <div className="pt-6 mt-6 border-gray-200">
+          <div className="space-y-4 text-xl">
+            <div className="flex items-center space-x-2">
+              <span className="font-normal text-black">Pickup:</span>
+              <span className="font-medium text-gray-400">Available at our downtown store.</span>
             </div>
-            <div className="flex justify-between">
-              <span className="font-mediam">Delivery:</span>
-              <span>Free home delivery within Accra.</span>
+            <div className="flex items-center space-x-2">
+              <span className="font-normal text-black">Delivery:</span>
+              <span className="font-bold text-black">$50</span>
             </div>
-            <div className="flex justify-between">
-              <span className="font-mediam">Delivery Date:</span>
-              <span>Expected between 26 Feb - 01 Mar.</span>
+            <div className="flex items-center space-x-2">
+              <span className="font-normal text-black">Delivery Date:</span>
+              <span className="font-bold text-black"> <span className='text-purple-500'>26 Feb - 01 Mar</span> if order today</span>
             </div>
-            <div className="flex justify-between">
-              <span className="font-mediam">Returns:</span>
-              <span>Easy 30-day return policy.</span>
+            <div className="flex items-center space-x-2">
+              <span className="font-normal text-black">Returns:</span>
+              <span className="font-medium text-gray-400">No return accepted</span>
             </div>
-            <div className="flex justify-between">
-              <span className="font-mediam">Payment:</span>
-              <span>Secure payment via Visa, MasterCard, and PayPal.</span>
+
+            <div className="flex items-center space-x-2">
+              <span className="font-normal text-black">Payment:</span>
+              <div className="flex items-center space-x-2">
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
+                  alt="Visa"
+                  className="h-10 w-auto p-2 border-[3px] rounded-md border-black shadow-md"
+                />
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
+                  alt="MasterCard"
+                  className="h-10 w-auto p-2 border-[3px] rounded-md border-black shadow-md"
+                />
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="font-mediam">Buy Now, Pay Later:</span>
-              <span>Flexible installment options available.</span>
+
+
+            <div className="">
+              <span className="font-bold text-black flex gap-2">
+              <TiShoppingCart className='h-6 w-6 text-green-400' />
+                Buy Now, Pay Later.
+              </span>
+              <div className='space-y-2 mt-3'>
+              <p className="font-medium text-gray-400">3 payments of $100.10 with <span className='text-black'>Upfica</span>. <span>Learn more</span></p>
+              <p className="font-medium text-gray-400">18+,TC apply offer subject to status</p>
+              </div>
             </div>
           </div>
         </div>
 
+
+
+
         {/* Modal */}
         <div
-          className={`fixed inset-0 bg-black bg-opacity-50 px-5 z-50 overflow-y-auto ${isModalVisible ? 'opacity-100 visible' : 'opacity-0 invisible'
-            } transition-opacity duration-300`}
+          className={`fixed inset-0 bg-black bg-opacity-50 px-5 z-50 overflow-y-auto ${isModalVisible ? 'opacity-100 visible' : 'opacity-0 invisible'} transition-opacity duration-300`}
           onClick={handleCloseModal}
         >
           <div
-            className={`bg-gray-50 rounded-lg shadow-lg w-full md:w-2/3 lg:w-2/4 xl:w-1/4 p-4 mx-auto mt-10 transform ${isModalVisible ? 'translate-y-0' : '-translate-y-full'
-              } transition-transform duration-300`}
+            className={`bg-white rounded-lg shadow-lg w-full md:w-2/3 lg:w-2/4 xl:w-1/4 p-6 mx-auto mt-10 transform ${isModalVisible ? 'translate-y-0' : '-translate-y-full'} transition-transform duration-300`}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-xl md:text-2xl font-mediam">
+            {/* Modal Header with larger font size */}
+            <div className="flex justify-between items-center pb-4 border-b">
+              <h3 className="text-3xl font-bold">
                 {basket.length} Items added to basket
               </h3>
               <button onClick={handleCloseModal} className="text-gray-600 hover:text-gray-900">
@@ -1026,39 +1038,35 @@ const TextSection = ({ product }) => {
             </div>
 
             {/* Modal Body */}
-            <div className="p-4">
-              <ul className="mt-4">
+            <div className="py-4">
+              <ul className="space-y-4">
                 {basket.length > 0 ? (
                   basket.map((item, index) => (
                     <li
                       key={index}
-                      className="md:grid md:grid-cols-5 flex gap-4 md:items-center justify-between border-b py-3 text-base md:text-xl"
+                      className="flex flex-col md:grid md:grid-cols-5 gap-4 items-center border-b pb-3 text-lg"
                     >
-                      {/* Product Image */}
                       <div className="md:col-span-1">
                         <img
                           src={item?.image?.[0] ?? 'https://via.placeholder.com/150'}
                           alt={item.title}
-                          className="h-14 w-14 object-cover rounded mr-3"
+                          className="h-16 w-16 object-cover rounded"
                         />
                       </div>
-                      <div className="md:col-span-4">
-                        {/* Product Title */}
-                        <span>{item.title}</span>
-                        {/* Product Price and Quantity */}
-                        <div className="md:flex gap-5 items-center mt-2">
-                          <p>
-                            Price : {item.price.currency_iso}{' '}
-                            {(item.price.cents / 100).toFixed(2)}
+                      <div className="md:col-span-4 w-full">
+                        <div className="font-medium text-gray-800">{item.title}</div>
+                        <div className="flex flex-wrap gap-5 items-center mt-2">
+                          <p className="text-gray-700">
+                            Price: {item.price.currency_iso} {(item.price.cents / 100).toFixed(2)}
                           </p>
-                          <p className="flex gap-2 text-base md:text-lg font-mediam items-center">
-                            <span>Qty:</span>
+                          <div className="flex items-center text-lg font-medium">
+                            <span className="mr-2">Qty:</span>
                             <QuantityControl
                               quantity={item.quantity}
                               onDecrease={() => handleQuantityChange(index, -1)}
                               onIncrease={() => handleQuantityChange(index, 1)}
                             />
-                          </p>
+                          </div>
                         </div>
                       </div>
                     </li>
@@ -1070,14 +1078,16 @@ const TextSection = ({ product }) => {
             </div>
 
             {/* Modal Footer */}
-            <div className="flex justify-center p-4 space-x-2">
+            <div className="flex justify-center pt-4 space-x-4">
               <Link href="/checkout">
-                <button className="bg-[#F7C32E] text-white px-4 py-2 rounded-3xl hover:bg-yellow-600">
+                <button className="bg-yellow-500 text-white px-4 py-2 rounded-3xl hover:bg-yellow-600">
                   Checkout Item
                 </button>
               </Link>
               <Link href="/cart">
-                <button className="px-4 py-2 rounded-3xl border bg-white shadow-md">View Basket</button>
+                <button className="px-4 py-2 rounded-3xl border bg-white shadow-md">
+                  View Basket
+                </button>
               </Link>
             </div>
           </div>
@@ -1089,4 +1099,6 @@ const TextSection = ({ product }) => {
 };
 
 export default TextSection;
+
+
 
