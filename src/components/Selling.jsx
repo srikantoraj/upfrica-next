@@ -1,18 +1,28 @@
 import Link from 'next/link';
 import React from 'react';
 
-const Selling = ({color}) => {
+const Selling = ({ color }) => {
     return (
-        <div className={`container mx-auto grid md:grid-cols-3 py-10 md:py-16 px-4 text-white rounded-[40px] my-1 space-y-4 ${
-            color  ? "bg-[#0A8800]" : "bg-black"
-        }`}>
-            <div className='col-span-2 space-y-2'>
-                <h1 className='text-xl lg:text-4xl font-bold'>Selling locally? It's a free listing too!</h1>
-                <p className='text-lg md:text-xl font-bold'>No sale No Fee. From Electronic and tech to fashion, make money across categories.</p>
+        <div
+            className={`container mx-auto grid md:grid-cols-3 items-center py-12 md:py-16 px-6 md:px-14 text-white rounded-[40px] my-6 md:my-10 gap-8 ${color ? 'bg-[#0A8800]' : 'bg-black'
+                }`}
+        >
+            {/* Text Section */}
+            <div className="md:col-span-2 space-y-4 text-center md:text-left">
+                <h1 className="text-2xl md:text-4xl font-extrabold leading-snug">
+                    Selling Locally? List for Free!
+                </h1>
+                <p className="text-lg md:text-2xl font-medium leading-relaxed">
+                    No sale, no fee. From electronics and tech to fashion, start making money across various categories today.
+                </p>
             </div>
-            <div className='col-span-1'>
-                <Link href={'/products/new'}>
-                <button className='font-bold text-black bg-white px-8 py-2 rounded-full'>Start selling</button>
+
+            {/* Button Section */}
+            <div className="flex md:justify-end justify-center">
+                <Link href="/products/new">
+                    <button className="font-semibold text-black bg-white px-8 md:px-10 py-3 md:py-4 rounded-full text-base md:text-lg transition-transform transform hover:scale-105 hover:shadow-lg">
+                        Start Selling
+                    </button>
                 </Link>
             </div>
         </div>

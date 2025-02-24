@@ -61,45 +61,44 @@ const Tranding = ({ title }) => {
         },
     ];
 
-    // console.log(products);
-
     return (
-        <div className="container mx-auto bg-white shadow-md overflow-x-auto py-10 mb-2 p-5">
-            <div className='text-xl md:text-3xl font-extrabold tracking-wide pb-4'>
-                <h1 className="">{title}</h1>
+        <div className="container mx-auto bg-white shadow-md py-10 mb-2 p-5">
+            {/* Header */}
+            <div className="text-xl md:text-3xl font-extrabold tracking-wide pb-4">
+                <h1>{title}</h1>
             </div>
-            <div className='overflow-x-auto py-5 overflow-hidden'>
-                <div className="flex gap-4 justify-around whitespace-nowrap w-max  md:w-full">
+
+            {/* Horizontal Scroll Container */}
+            <div className="overflow-x-auto pb-4">
+                <div className="flex space-x-4">
                     {products.map((product) => (
                         <div
                             key={product.id}
-                            className="border shadow-lg rounded-lg overflow-hidden"
-                            style={{ height: "220px" }}
+                            className="border shadow-lg rounded-lg overflow-hidden flex flex-col min-w-[200px] h-[220px]"
                         >
                             {/* Product Image */}
-                            <img
-                                src={product.image}
-                                alt={`Product ${product.id}`}
-                                className="w-full h-[80%] object-cover transform transition-all duration-1000 ease-in-out hover:scale-110 hover:translate-y-[-2px]"
-                            />
+                            <div className="flex-grow overflow-hidden">
+                                <img
+                                    src={product.image}
+                                    alt={`Product ${product.id}`}
+                                    className="w-full h-full object-cover transform transition-all duration-1000 ease-in-out hover:scale-110 hover:-translate-y-2"
+                                />
+                            </div>
 
                             {/* Bottom Section */}
-                            <div className="flex items-center justify-between px-2 py-1 bg-gray-100 h-[20%]">
-                                {/* Prices */}
-                                <div className='flex gap-2'>
+                            <div className="flex items-center justify-between px-2 py-1 bg-gray-100">
+                                <div className="flex gap-2">
                                     <p className="text-base font-bold text-gray-800">${product.newPrice}</p>
                                     <p className="text-base text-gray-500 line-through">${product.oldPrice}</p>
                                 </div>
-                                {/* Shopping Cart Icon */}
-                                <button className="p-1 border-black border-2 rounded ">
-                                    <FaShoppingCart className='text-purple-500' size={20} />
+                                <button className="p-1 border-2 border-black rounded">
+                                    <FaShoppingCart className="text-purple-500" size={20} />
                                 </button>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
-
         </div>
     );
 };
