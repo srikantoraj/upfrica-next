@@ -3,7 +3,7 @@ import { FaImage } from "react-icons/fa";
 
 const SearchBox = () => {
     return (
-        <div className="relative w-full md:w-[60vw] xl:w-[60vw]">
+        <div className="relative w-full sm:w-[40vw] md:w-[50vw] xl:w-[60vw]">
             <input
                 type="text"
                 placeholder="Search for products or images..."

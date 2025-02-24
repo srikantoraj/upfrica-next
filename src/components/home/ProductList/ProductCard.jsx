@@ -8,7 +8,7 @@ export default function ProductCard({ product }) {
   if (!product_images) return null;
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col justify-between h-[500px] font-sans">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col justify-between h-[350px] font-sans">
       {/* Image Section */}
       <div className="relative">
         {product_images.length > 0 && (
@@ -16,7 +16,7 @@ export default function ProductCard({ product }) {
             <img
               src={product_images[0]}
               alt={title}
-              className="w-full h-[350px] object-cover transition-transform duration-500 ease-in-out hover:scale-105"
+              className="w-full h-[200px] object-cover transition-transform duration-500 ease-in-out hover:scale-105"
             />
           </Link>
         )}
