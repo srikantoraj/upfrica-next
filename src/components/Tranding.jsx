@@ -62,7 +62,7 @@ const Tranding = ({ title }) => {
     ];
 
     return (
-        <div className="container mx-auto bg-white shadow-md py-10 mb-2 p-5">
+        <div className="container mx-auto bg-white shadow-md py-10 mb-2 p-5 rounded-lg">
             {/* Header */}
             <div className="text-xl md:text-3xl font-extrabold tracking-wide pb-4">
                 <h1>{title}</h1>

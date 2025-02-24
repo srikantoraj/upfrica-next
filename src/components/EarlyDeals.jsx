@@ -159,7 +159,7 @@ const EarlyDeals = () => {
     ];
 
     return (
-        <div className="mx-auto bg-white py-5 mb-2 px-5">
+        <div className="container bg-white py-5 mb-2 px-5 rounded-lg">
             {/* Header */}
             <div className="flex items-center gap-4 pb-4">
                 <h1 className="text-xl md:text-3xl font-extrabold tracking-wide">Early Black Friday</h1>

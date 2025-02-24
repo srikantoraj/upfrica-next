@@ -47,7 +47,7 @@ const SellectedItem = async () => {
     }
 
     return (
-      <div className="container mx-auto px-6 py-12 bg-white">
+      <div className="container mx-auto px-6 py-12 bg-white rounded-lg">
         {/* Section Title */}
         <div className="mb-6">
           <h1 className="text-xl md:text-3xl font-extrabold tracking-wide text-gray-900">

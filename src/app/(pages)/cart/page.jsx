@@ -1,165 +1,191 @@
-// app/cart/page.jsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { MdDeleteOutline } from 'react-icons/md';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // Import useRouter from next/navigation
-
-// Reusable Quantity Control Component
-const QuantityControl = ({ quantity, onDecrease, onIncrease }) => (
-  <div className="flex items-center text-base">
-    <button
-      onClick={onDecrease}
-      className="px-4 py-1 font-extrabold border bg-gray-100 hover:bg-gray-200"
-      aria-label="Decrease quantity"
-    >
-      -
-    </button>
-    <span className="font-bold bg-white py-1 px-4 border">{quantity}</span>
-    <button
-      onClick={onIncrease}
-      className="px-4 border py-1 font-extrabold bg-gray-100 hover:bg-gray-200"
-      aria-label="Increase quantity"
-    >
-      +
-    </button>
-  </div>
-);
 
 const Cart = () => {
   const [basket, setBasket] = useState([]);
-  const router = useRouter(); // Initialize useRouter
+  const [promoCode, setPromoCode] = useState('');
+  const [shippingCost] = useState(10); // Fixed shipping cost
+  const router = useRouter();
 
-  // Load basket data from localStorage on component mount
   useEffect(() => {
     const storedBasket = JSON.parse(localStorage.getItem('basket')) || [];
     setBasket(storedBasket);
   }, []);
 
-  // Handle quantity changes for products
-  const handleQuantityChange = (index, change) => {
+  const handleQuantityChange = (index, newQuantity) => {
     const newBasket = [...basket];
-    newBasket[index].quantity = Math.max(1, newBasket[index].quantity + change);
+    newBasket[index].quantity = Math.max(1, newQuantity);
     setBasket(newBasket);
     localStorage.setItem('basket', JSON.stringify(newBasket));
   };
 
-  // Handle removal of products from the basket
   const handleRemoveProduct = (index) => {
     const newBasket = basket.filter((_, i) => i !== index);
     setBasket(newBasket);
     localStorage.setItem('basket', JSON.stringify(newBasket));
   };
 
-  // Handle navigation to Checkout or Sign-In based on user authentication
   const handleCheckout = () => {
-    // Retrieve user information from localStorage
     const user = JSON.parse(localStorage.getItem('user'));
-
-    if (user) {
-      // If user exists, navigate to the Checkout page
-      router.push('/checkout');
-    } else {
-      // If user does not exist, navigate to the Sign-In page
-      router.push('/signin');
-    }
+    user ? router.push('/checkout') : router.push('/signin');
   };
 
+  const subtotal = basket.reduce(
+    (sum, item) => sum + (item.price.cents / 100) * item.quantity,
+    0
+  );
+  const total = subtotal + shippingCost;
+
   return (
-    <div className="lg:flex justify-center bg-gray-100 px-4 py-10">
-      <div className="w-full lg:w-4/5 2xl:w-1/2 pt-10 space-y-5">
-        <h1 className="text-xl xl:text-2xl font-bold tracking-wide p-2 border bg-white shadow-xl text-center">
-          Shopping Basket
-        </h1>
-        {basket.length > 0 ? (
-          basket.map((product, index) => (
-            <div key={index} className="border-b last:border-none p-4 bg-white">
+    <div className="container mx-auto mt-12 px-4 sm:px-6 lg:px-8">
+      <div className="sm:flex shadow-md my-10 bg-gray-100 rounded-lg">
+        {/* Cart Items Section */}
+        <div className="w-full sm:w-3/5 bg-white p-6 sm:p-10 rounded-lg sm:rounded-r-none">
+          <div className="flex justify-between border-b pb-6">
+            <h1 className="font-bold text-3xl">Shopping Cart</h1>
+            <h2 className="font-semibold text-xl text-gray-700">
+              {basket.length} {basket.length === 1 ? 'Item' : 'Items'}
+            </h2>
+          </div>
 
-              {/* Large Device Card */}
-              <div className="hidden md:flex  space-x-4 text-base">
-                <div className="flex-shrink-0">
+          {basket.length > 0 ? (
+            basket.map((product, index) => (
+              <div
+                key={index}
+                className="md:flex items-stretch py-6 border-b border-gray-200 last:border-b-0"
+              >
+                {/* Product Image */}
+                <div className="md:w-1/4 w-full mb-4 md:mb-0">
                   <img
-                    className="h-24 w-24 lg:h-32 lg:w-32 rounded-md object-cover"
-                    src={product?.image?.[0] ?? 'https://via.placeholder.com/150'}
+                    src={
+                      product?.image?.[0] || 'https://via.placeholder.com/150'
+                    }
                     alt={product.title}
+                    className="h-full w-full object-cover rounded-md"
                   />
                 </div>
-                <div className="flex-grow">
-                  <p className="text-lg font-semibold line-clamp-2 text-gray-900 underline">{product.title}</p>
-                  <p className="text-base text-gray-600">Variation</p>
-                </div>
-                <div className="flex  flex-col items-end">
-                  <QuantityControl
-                    quantity={product.quantity}
-                    onDecrease={() => handleQuantityChange(index, -1)}
-                    onIncrease={() => handleQuantityChange(index, 1)}
-                  />
-                  <p className="mt-2 text-xl font-bold">
-                    {product.price.currency_iso} {(product.price.cents / 100).toFixed(2)}
+                {/* Product Details */}
+                <div className="md:pl-6 md:w-3/4 w-full flex flex-col justify-center">
+                  <p className="text-sm text-gray-500 mb-1">
+                    SKU: {product.sku || 'N/A'}
                   </p>
-                </div>
-                <div className=" flex flex-col justify-end">
-                  <MdDeleteOutline
-                    className="w-8 h-8 text-gray-800 cursor-pointer hover:text-red-500 "
-                    onClick={() => handleRemoveProduct(index)}
-                    aria-label="Remove product"
-                  />
-                </div>
-              </div>
-
-              {/* Small Device Card */}
-              <div className="md:hidden grid grid-cols-3 gap-4">
-                <div className="col-span-1">
-                  <img
-                    className="h-20 w-20 rounded-md object-cover"
-                    src={product?.image?.[0] ?? 'https://via.placeholder.com/150'}
-                    alt={product.title}
-                  />
-                </div>
-                <div className="col-span-2">
-                  <p className="text-lg font-semibold line-clamp-2 text-gray-900">{product.title}</p>
-                  <p className="text-sm text-gray-600">Variation</p>
-                  <div className="flex justify-between items-center mt-2">
-                    <QuantityControl
-                      quantity={product.quantity}
-                      onDecrease={() => handleQuantityChange(index, -1)}
-                      onIncrease={() => handleQuantityChange(index, 1)}
-                    />
-                    <div className="text-sm font-bold">
-                      {product.price.currency_iso} {(product.price.cents / 100).toFixed(2)}
-                    </div>
-                    <MdDeleteOutline
-                      className="w-6 h-6 text-gray-800 cursor-pointer hover:text-red-500"
+                  <div className="flex items-center justify-between w-full">
+                    <p className="text-lg font-semibold text-gray-800">
+                      {product.title}
+                    </p>
+                    <select
+                      value={product.quantity}
+                      onChange={(e) =>
+                        handleQuantityChange(index, parseInt(e.target.value))
+                      }
+                      className="py-2 px-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      aria-label="Select quantity"
+                    >
+                      {[...Array(10).keys()].map((num) => (
+                        <option key={num + 1} value={num + 1}>
+                          {num + 1}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-center justify-between pt-4">
+                    <button
                       onClick={() => handleRemoveProduct(index)}
-                      aria-label="Remove product"
-                    />
+                      className="text-base underline text-red-500 hover:text-red-600 transition-colors"
+                    >
+                      Remove
+                    </button>
+                    <p className="text-lg font-medium text-gray-900">
+                      {product.price.currency_iso}{' '}
+                      {((product.price.cents / 100) * product.quantity).toFixed(
+                        2
+                      )}
+                    </p>
                   </div>
                 </div>
               </div>
-            </div>
-          ))
+            ))
+          ) : (
+            <p className="text-center text-gray-600 py-8">
+              Your basket is empty.
+            </p>
+          )}
 
-        ) : (
-          <p className="text-center text-gray-600">Your basket is empty.</p>
-        )}
-        <div className="flex justify-between mt-5">
-          <button
-            onClick={handleCheckout}
-            className={`text-base font-bold ${basket.length > 0 ? 'bg-[#F7C32E] hover:bg-[#e6b42d]' : 'bg-gray-400 cursor-not-allowed'
-              } px-4 py-1 rounded-3xl`}
-            disabled={basket.length === 0}
+          <Link
+            href="/"
+            className="inline-flex items-center font-semibold text-indigo-600 text-base mt-6 hover:underline"
           >
-            Checkout
-          </button>
-          <Link href="/">
-            <div
-              className="text-base font-bold border bg-gray-100 hover:bg-gray-200 px-4 py-1 rounded-3xl"
-              aria-label="Continue shopping"
+            <svg
+              className="fill-current mr-2 text-indigo-600 w-4"
+              viewBox="0 0 448 512"
             >
-              Continue shopping
-            </div>
+              <path d="M134.059 296H436c6.627 0 12-5.373 12-12v-56c0-6.627-5.373-12-12-12H134.059v-46.059c0-21.382-25.851-32.09-40.971-16.971L7.029 239.029c-9.373 9.373-9.373 24.569 0 33.941l86.059 86.059c15.119 15.119 40.971 4.411 40.971-16.971V296z" />
+            </svg>
+            Continue Shopping
           </Link>
+        </div>
+
+        {/* Order Summary Section */}
+        <div
+          id="summary"
+          className="w-full sm:w-2/5 p-6 sm:p-10 bg-gray-50 rounded-lg sm:rounded-l-none"
+        >
+          <h1 className="font-bold text-2xl border-b pb-4 text-gray-800">
+            Order Summary
+          </h1>
+          <div className="flex justify-between mt-6 mb-6">
+            <span className="font-medium text-base text-gray-700">
+              Items ({basket.length})
+            </span>
+            <span className="font-medium text-base text-gray-900">
+              ${subtotal.toFixed(2)}
+            </span>
+          </div>
+          <div className="mb-6">
+            <label className="font-medium text-base text-gray-700 block mb-2">
+              Shipping
+            </label>
+            <select className="block p-3 w-full text-base text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500">
+              <option>Standard shipping - $10.00</option>
+            </select>
+          </div>
+          <div className="mb-6">
+            <label
+              htmlFor="promo"
+              className="font-medium text-base text-gray-700 block mb-2"
+            >
+              Promo Code
+            </label>
+            <input
+              type="text"
+              id="promo"
+              placeholder="Enter your code"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value)}
+              className="p-3 w-full text-base border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+          <button className=" transition-colors px-6 py-3 text-base font-medium  uppercase rounded-md w-full border bg-white">
+            Apply
+          </button>
+          <div className="border-t mt-6 pt-6">
+            <div className="flex font-semibold justify-between text-base text-gray-700 mb-4">
+              <span>Total cost</span>
+              <span className="text-gray-900">${total.toFixed(2)}</span>
+            </div>
+            <button
+              onClick={handleCheckout}
+              className={`bg-yellow-300 py-3 text-base font-semibold text-white uppercase w-full rounded-md ${
+                basket.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              disabled={basket.length === 0}
+            >
+              Checkout
+            </button>
+          </div>
         </div>
       </div>
     </div>

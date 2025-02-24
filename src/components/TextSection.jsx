@@ -1004,12 +1004,12 @@ const TextSection = ({ product }) => {
 
             <div className="">
               <span className="font-bold text-black flex gap-2">
-              <TiShoppingCart className='h-6 w-6 text-green-400' />
+                <TiShoppingCart className='h-6 w-6' />
                 Buy Now, Pay Later.
               </span>
               <div className='space-y-2 mt-3'>
-              <p className="font-medium text-gray-400">3 payments of $100.10 with <span className='text-black'>Upfica</span>. <span>Learn more</span></p>
-              <p className="font-medium text-gray-400">18+,TC apply offer subject to status</p>
+                <p className="font-medium text-gray-400">3 payments of $100.10 with <span className='text-black'>Upfica</span>. <span>Learn more</span></p>
+                <p className="font-medium text-gray-400">18+,TC apply offer subject to status</p>
               </div>
             </div>
           </div>
@@ -1020,11 +1020,22 @@ const TextSection = ({ product }) => {
 
         {/* Modal */}
         <div
-          className={`fixed inset-0 bg-black bg-opacity-50 px-5 z-50 overflow-y-auto ${isModalVisible ? 'opacity-100 visible' : 'opacity-0 invisible'} transition-opacity duration-300`}
+          className={`fixed inset-0 bg-black bg-opacity-50 px-5 z-50 overflow-y-auto 
+        ${isModalVisible ? 'opacity-100 visible' : 'opacity-0 invisible'} 
+        transition-opacity duration-300`}
           onClick={handleCloseModal}
         >
           <div
-            className={`bg-white rounded-lg shadow-lg w-full md:w-2/3 lg:w-2/4 xl:w-1/4 p-6 mx-auto mt-10 transform ${isModalVisible ? 'translate-y-0' : '-translate-y-full'} transition-transform duration-300`}
+            className={`
+          bg-white rounded-lg shadow-lg
+          w-full sm:w-2/3 md:w-3/4 lg:w-2/4 xl:w-2/5 2xl:w-1/3
+          max-w-3xl 
+          p-6 sm:p-8
+          mx-auto mt-10 
+          transform 
+          ${isModalVisible ? 'translate-y-0' : '-translate-y-full'}
+          transition-transform duration-300
+        `}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header with larger font size */}
@@ -1057,7 +1068,8 @@ const TextSection = ({ product }) => {
                         <div className="font-medium text-gray-800">{item.title}</div>
                         <div className="flex flex-wrap gap-5 items-center mt-2">
                           <p className="text-gray-700">
-                            Price: {item.price.currency_iso} {(item.price.cents / 100).toFixed(2)}
+                            Price: {item.price.currency_iso}{' '}
+                            {(item.price.cents / 100).toFixed(2)}
                           </p>
                           <div className="flex items-center text-lg font-medium">
                             <span className="mr-2">Qty:</span>
@@ -1080,7 +1092,7 @@ const TextSection = ({ product }) => {
             {/* Modal Footer */}
             <div className="flex justify-center pt-4 space-x-4">
               <Link href="/checkout">
-                <button className="bg-yellow-500 text-white px-4 py-2 rounded-3xl hover:bg-yellow-600">
+                <button className="bg-yellow-300 text-white px-4 py-2 rounded-3xl hover:bg-yellow-600">
                   Checkout Item
                 </button>
               </Link>
@@ -1092,6 +1104,8 @@ const TextSection = ({ product }) => {
             </div>
           </div>
         </div>
+
+
         {/* End of Modal */}
       </div>
     </div>

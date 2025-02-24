@@ -36,7 +36,7 @@ export default async function ProductList({ title }) {
   }
 
   return (
-    <div className=" mx-auto bg-white p-5 md:py-10 font-sans">
+    <div className=" container bg-white p-5 md:py-10 font-sans rounded-lg">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-4 pb-4">
