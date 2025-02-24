@@ -1,15 +1,10 @@
-// components/home/Categore/Categore.tsx
-// 'use client';
 import React from 'react';
 import { IoIosArrowRoundForward } from 'react-icons/io';
 import CategoryItem from './CategoryItem';
 
-
-
-
-
 const Categories = async () => {
-  const res = await fetch('https://upfrica-staging.herokuapp.com/api/v1/categories', {
+  const res = await fetch('https://upfrica.com/api/v1/categories', {
+    next: { revalidate: 300 }, // Cache for 5 minutes
   });
 
   if (!res.ok) {
@@ -17,36 +12,51 @@ const Categories = async () => {
   }
 
   const data = await res.json();
-  const categories = data.categories;
+  let categories = data.categories;
+
+  // Filter out categories that don't have an image
+  categories = categories.filter((category) => category.image);
 
   if (!categories || categories.length === 0) {
-    return <p className="text-center">No categories available.</p>;
+    return <p className="text-center text-lg font-medium">No categories available.</p>;
   }
 
   return (
-    <div className="py-10 bg-white shadow-md  mb-2  container mx-auto p-5">
-      <div className="">
-        <div className="flex gap-4 md:gap-10 items-center">
-          <h1 className="text-xl md:text-3xl font-extrabold tracking-wide">Shop by Category</h1>
-          <IoIosArrowRoundForward className="h-14 w-14 pt-4 text-gray-700" />
-        </div>
-        <div className="hidden xl:flex justify-around py-5">
+    <div className="container mx-auto px-6 md:px-10 py-12 bg-white shadow-md rounded-lg">
+      {/* Header Section */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-gray-900">
+          Shop by Category
+        </h1>
+        <IoIosArrowRoundForward className="h-12 w-12 text-gray-700" />
+      </div>
+
+      {/* Horizontal Scrollable Categories */}
+      <div className="overflow-x-auto whitespace-nowrap py-4">
+        <div className="flex gap-4 md:gap-6" style={{ scrollbarWidth: 'none' }}>
           {categories.map((data) => (
-            <CategoryItem key={data.id} data={data} />
+            <div
+              key={data.id}
+              className="min-w-[180px] md:min-w-[220px] h-[180px] md:h-[220px] flex flex-col items-center justify-center bg-gray-100 rounded-lg shadow-md p-4"
+            >
+              {/* Category Image */}
+              <img
+                src={data.image}
+                alt={data.name}
+                className="w-full h-[120px] md:h-[150px] object-cover rounded-lg"
+              />
+
+              {/* Truncated Category Name */}
+              <p className="text-sm md:text-base font-medium text-center mt-2 truncate w-full">
+                {data.name}
+              </p>
+            </div>
           ))}
         </div>
-       
-        <div className="xl:hidden overflow-x-auto py-5">
-            <div className="flex gap-2 whitespace-nowrap">
-                {categories.map((data) => (
-                <CategoryItem key={data.id} data={data} />
-                ))}
-            </div>
-        </div>
-
       </div>
     </div>
   );
 };
 
 export default Categories;
+

@@ -8,7 +8,7 @@ export default function ProductCard({ product }) {
   if (!product_images) return null;
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col justify-between h-[350px] font-sans">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col justify-between h-[370px] font-sans">
       {/* Image Section */}
       <div className="relative">
         {product_images.length > 0 && (
@@ -16,7 +16,7 @@ export default function ProductCard({ product }) {
             <img
               src={product_images[0]}
               alt={title}
-              className="w-full h-[200px] object-cover transition-transform duration-500 ease-in-out hover:scale-105"
+              className="w-full h-[230px] object-cover transition-transform duration-500 ease-in-out hover:scale-105"
             />
           </Link>
         )}
@@ -37,8 +37,8 @@ export default function ProductCard({ product }) {
 
       {/* Product Details */}
       <div className="px-4 py-3">
-        <h2 className="text-lg font-semibold text-gray-900">
-          {title.length > 30 ? `${title.substring(0, 20)}...` : title}
+        <h2 className="text-lg font-semibold text-gray-900 truncate w-full overflow-hidden">
+          {title}
         </h2>
         <p className="text-sm text-gray-500">1083+ sold recently</p>
       </div>

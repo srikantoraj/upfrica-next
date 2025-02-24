@@ -37,7 +37,7 @@ export default function Header() {
         <div className="mt-3 md:hidden">
           <SearchBox />
           <PhoneSlider />
-          <div className="mt-2 flex items-center justify-center bg-gray-100 p-3 rounded-md">
+          <div className="mt-2 flex items-center justify-center bg-gray-100 p-3 py-3 lg:py-4 rounded-md">
             <FaWhatsapp className="text-green-500 h-6 w-6" />
             <span className="text-purple-500 text-sm font-medium ml-2">
               Join the WhatsApp Group
@@ -61,7 +61,7 @@ export default function Header() {
             </div>
           </div>
           <div className="flex items-center space-x-6">
-            <div className="flex items-center bg-gray-100 py-2 px-4 rounded-md">
+            <div className="flex items-center bg-gray-100 py-3 px-4 rounded-md">
               <FaWhatsapp className="text-green-500 h-6 w-6" />
               <span className="text-purple-500 text-sm font-medium ml-2">
                 Join the WhatsApp Group
