@@ -1,50 +1,39 @@
 // src/components/Footer.tsx
-
 import Image from "next/image";
 import Link from "next/link";
 import { FaCartPlus, FaWhatsapp } from "react-icons/fa";
 import { MdOutlineEmail, MdSell } from "react-icons/md";
 
 export default function Footer() {
-  const datas = [
-    { title: "Home", id: 1 },
-    { title: "Browse", id: 2 },
-    { title: "Deals", id: 3 },
-    { title: "Shops", id: 4 },
-    { title: "Categories", id: 5 },
-    { title: "How It Works", id: 6 },
-    { title: "UK Site", id: 7 },
-  ];
-
   return (
     <div className="bg-black">
-      <footer className="container mx-auto py-5 px-4 2xl:px-0 text-white text-xl tracking-wide">
-        <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-5 lg:gap-10">
-          {/* First Section */}
-          <nav className="space-y-4 sm:col-span-1 md:col-span-1 lg:col-span-1 text-base">
-            <h6 className="text-2xl font-bold">Upfrica - BD</h6>
-            <p>
-              Online Shopping in Ghana, Nigeria, UK for quality items at
-              discounted prices - Sell, deliver, process payments and grow your
-              business - Buy & sell African products, electronics, machines &
-              related products.
+      <footer className="container mx-auto py-10 px-4 2xl:px-0 text-white">
+        {/* Main Footer Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
+          {/* Branding & Contact Section */}
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">Upfrica - BD</h2>
+            <p className="text-sm text-gray-300">
+              Online Shopping in Ghana, Nigeria, UK for quality items at discounted prices.
+              Sell, deliver, process payments, and grow your business.
+              Buy &amp; sell African products, electronics, machines &amp; related products.
             </p>
-            <p className="flex gap-1 items-center cursor-pointer">
-              <FaWhatsapp className="h-6 w-6" />
-              <span>+44 7466800672</span>
-            </p>
-            <p className="flex gap-1 items-center cursor-pointer">
-              <MdOutlineEmail className="h-6 w-6" />
-              <span>email us</span>
-            </p>
-          </nav>
+            <div className="space-y-2">
+              <p className="flex items-center gap-2 text-sm text-gray-300 hover:text-purple-500 cursor-pointer">
+                <FaWhatsapp className="w-5 h-5" /> +44 7466800672
+              </p>
+              <p className="flex items-center gap-2 text-sm text-gray-300 hover:text-purple-500 cursor-pointer">
+                <MdOutlineEmail className="w-5 h-5" /> email us
+              </p>
+            </div>
+          </div>
 
-          {/* Remaining Sections */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 sm:gap-4 md:grid-cols-4 lg:grid-cols-4 gap-10 sm:pt-2 text-base py-4 lg:col-span-4">
+          {/* Navigation Sections */}
+          <div className="lg:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-10">
             {/* Page Section */}
-            <nav className="space-y-4">
-              <h6 className="text-2xl font-bold tracking-wide">Page</h6>
-              <ul className="space-y-4">
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold tracking-wide">Page</h3>
+              <ul className="space-y-2 text-sm">
                 <li className="hover:text-purple-500">
                   <Link href="/deals">Deals</Link>
                 </li>
@@ -58,18 +47,15 @@ export default function Footer() {
                   <Link href="/contact">Contact Us</Link>
                 </li>
                 <li className="hover:text-purple-500">
-                  <Link href="/blog">New and Blog</Link>
-                </li>
-                <li className="hover:text-purple-500">
-                  <Link href="/deals">Deals</Link>
+                  <Link href="/blog">News &amp; Blog</Link>
                 </li>
               </ul>
-            </nav>
+            </div>
 
-            {/* Link Section */}
-            <nav className="space-y-4">
-              <h6 className="text-2xl font-bold tracking-wide">Link</h6>
-              <ul className="space-y-4">
+            {/* Links Section */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold tracking-wide">Links</h3>
+              <ul className="space-y-2 text-sm">
                 <li className="hover:text-purple-500">
                   <Link href="/signup">Sign up</Link>
                 </li>
@@ -86,12 +72,12 @@ export default function Footer() {
                   <Link href="/support">Support</Link>
                 </li>
               </ul>
-            </nav>
+            </div>
 
             {/* Countries Section */}
-            <nav className="space-y-4">
-              <h6 className="text-2xl font-bold tracking-wide">Countries</h6>
-              <ul className="space-y-4">
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold tracking-wide">Countries</h3>
+              <ul className="space-y-2 text-sm">
                 <li className="hover:text-purple-500">
                   <Link href="/ghana">Ghana</Link>
                 </li>
@@ -105,70 +91,72 @@ export default function Footer() {
                   <Link href="/global">Global</Link>
                 </li>
               </ul>
-            </nav>
+            </div>
 
             {/* Quick Links Section */}
-            <nav className="space-y-4">
-              <h6 className="text-2xl font-bold tracking-wide">Quick Links</h6>
-              <ul className="space-y-4">
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold tracking-wide">Quick Links</h3>
+              <ul className="space-y-2 text-sm">
                 <li className="hover:text-purple-500">
-                  <Link className="flex items-center " href="/sales">
-                  <span className="mr-2"><MdSell /></span>
-                  Sales on Upfrica</Link>
+                  <Link href="/sales" className="flex items-center">
+                    <MdSell className="mr-2 w-5 h-5" /> Sales on Upfrica
+                  </Link>
                 </li>
                 <li className="hover:text-purple-500">
-                  <Link href="/sales">sales</Link>
-                </li>
-                <li className="hover:text-purple-500 ">
-                  <Link className="flex items-center " href="/orders">
-                  <span className="mr-2"><FaCartPlus /></span>
-                  Orders
+                  <Link href="/orders" className="flex items-center">
+                    <FaCartPlus className="mr-2 w-5 h-5" /> Orders
                   </Link>
                 </li>
                 <li className="hover:text-purple-500">
                   <Link href="/dashboard">Dashboard</Link>
                 </li>
               </ul>
-            </nav>
+            </div>
           </div>
         </div>
 
         {/* Payment & Security Section */}
-        <div className="my-10 md:my-4 lg:col-span-1 py-10 leading-8 space-y-3">
-        <h2 className="text-xl font-bold">Ghana HQ</h2>
-          <p>
-            Upfrica - African Marketplace BD. All rights reserved.
-          </p>
-          <p className="text-xl font-bold">Payment & Security</p>
-          <div className="flex gap-2 mt-2">
-            <Image
-              className="h-10 w-14 rounded"
-              src="https://d26ukeum83vx3b.cloudfront.net/assets/momo-f05ddc4de74168553b74a880e7f960a1a9854e3110b5696256500f4d8f3ee1fa.jpeg"
-              alt="Mobile Money"
-              width={56} // Adjust based on actual image dimensions
-              height={40}
-            />
-            <Image
-              className="h-10 w-14 rounded"
-              src="https://d26ukeum83vx3b.cloudfront.net/assets/visa-d303de42ebf4fbc0e8fd0e3b7f92f203822cdbbc123bc27214283acdd1fdafa7.svg"
-              alt="Visa"
-              width={56}
-              height={40}
-            />
-            <Image
-              className="h-10 w-14 rounded"
-              src="https://d26ukeum83vx3b.cloudfront.net/assets/mastercard-23b4badc9b2f83763ca268da7a89378d3a9732066d23f7683ecf24b5bde0f06f.svg"
-              alt="Mastercard"
-              width={56}
-              height={40}
-            />
-            <Image
-              className="h-10 w-14 rounded"
-              src="https://d26ukeum83vx3b.cloudfront.net/assets/expresscard-95d23c429de33f9f60a52390d788eae22f1f625648b4e587e87449c8304bd357.svg"
-              alt="ExpressCard"
-              width={56}
-              height={40}
-            />
+        <div className="mt-10 border-t border-gray-700 pt-6">
+          <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center">
+            <div className="mb-4 md:mb-0">
+              <h3 className="text-xl font-bold">Ghana HQ</h3>
+              <p className="text-sm text-gray-400">
+                Upfrica - African Marketplace BD. All rights reserved.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold mb-2">Payment &amp; Security</h3>
+              <div className="flex gap-4">
+                <Image
+                  className="rounded"
+                  src="https://d26ukeum83vx3b.cloudfront.net/assets/momo-f05ddc4de74168553b74a880e7f960a1a9854e3110b5696256500f4d8f3ee1fa.jpeg"
+                  alt="Mobile Money"
+                  width={56}
+                  height={40}
+                />
+                <Image
+                  className="rounded"
+                  src="https://d26ukeum83vx3b.cloudfront.net/assets/visa-d303de42ebf4fbc0e8fd0e3b7f92f203822cdbbc123bc27214283acdd1fdafa7.svg"
+                  alt="Visa"
+                  width={56}
+                  height={40}
+                />
+                <Image
+                  className="rounded"
+                  src="https://d26ukeum83vx3b.cloudfront.net/assets/mastercard-23b4badc9b2f83763ca268da7a89378d3a9732066d23f7683ecf24b5bde0f06f.svg"
+                  alt="Mastercard"
+                  width={56}
+                  height={40}
+                />
+                <Image
+                  className="rounded"
+                  src="https://d26ukeum83vx3b.cloudfront.net/assets/expresscard-95d23c429de33f9f60a52390d788eae22f1f625648b4e587e87449c8304bd357.svg"
+                  alt="ExpressCard"
+                  width={56}
+                  height={40}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </footer>

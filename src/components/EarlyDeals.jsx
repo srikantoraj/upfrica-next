@@ -53,61 +53,47 @@ const EarlyDeals = () => {
             oldPrice: 900,
             newPrice: 850,
         },
-        {
-            id: 9,
-            image: "https://www.upfrica.com/rails/active_storage/representations/redirect/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBM2NwQVE9PSIsImV4cCI6bnVsbCwicHVyIjoiYmxvYl9pZCJ9fQ==--6e34a5d3c8818ad35367d7f68981415bb6d00eab/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaDdDRG9MWm05eWJXRjBTU0lKYW5CbFp3WTZCa1ZVT2hOeVpYTnBlbVZmZEc5ZlptbHNiRnNIYVFJc0FXa0NMQUU2REdOdmJuWmxjblE2Q1hkbFluQT0iLCJleHAiOm51bGwsInB1ciI6InZhcmlhdGlvbiJ9fQ==--9131f2cc4e102d7d1c165a6edf8ccf37bd2eafc6/rice-cooker-5litre-high-quality-commercial-digital-ricecooker.png",
-            oldPrice: 1700,
-            newPrice: 1500,
-        },
+     
     ];
 
-    
-      
-      
-      
-
     return (
-        <div className="container mx-auto bg-white shadow-md overflow-x-auto py-10 mb-2 p-5">
-            <div className='text-xl md:text-3xl font-extrabold tracking-wide pb-4'>
-                <span className="flex gap-10 items-center">
-                    <h1 className="">Early Black Friday </h1>
-                    <IoIosArrowRoundForward className="h-10 w-10  text-gray-700" />
-                </span>
-                <p>Deals</p>
+        <div className=" mx-auto bg-white py-5 mb-2 px-5">
+            {/* Header */}
+            <div className="flex items-center gap-4 pb-4">
+                <h1 className="text-xl md:text-3xl font-extrabold tracking-wide">Early Black Friday</h1>
+                <IoIosArrowRoundForward className="h-10 w-10 text-gray-700" />
             </div>
+            {/* <p className="mb-6">Deals</p> */}
 
-            <div className='overflow-x-auto py-5 overflow-hidden'>
-                <div className="flex gap-4 justify-around whitespace-nowrap w-max  md:w-full">
-                    {products.map((product) => (
-                        <div
-                            key={product.id}
-                            className="border shadow-lg rounded-lg overflow-hidden"
-                            style={{ height: "220px" }}
-                        >
-                            {/* Product Image */}
+            {/* Products Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {products.map((product) => (
+                    <div
+                        key={product.id}
+                        className="border shadow-lg rounded-lg overflow-hidden h-56 flex flex-col"
+                    >
+                        {/* Product Image */}
+                        <div className="flex-grow overflow-hidden">
                             <img
                                 src={product.image}
                                 alt={`Product ${product.id}`}
-                                className="w-full h-[80%] object-cover transform transition-all duration-1000 ease-in-out hover:scale-110 hover:translate-y-[-2px]"
+                                className="w-full h-full object-cover transform transition-all duration-500 ease-in-out hover:scale-105"
                             />
-
-                            {/* Bottom Section */}
-                            <div className="flex items-center justify-between px-2 py-1 bg-gray-100 h-[20%]">
-                                {/* Prices */}
-                                <div className='flex gap-2'>
-                                    <p className="text-base font-bold text-gray-800">${product.newPrice}</p>
-                                    <p className="text-base text-gray-500 line-through">${product.oldPrice}</p>
-                                </div>
-                                {/* Shopping Cart Icon */}
-                                <button className="p-1 border-black border-2 rounded ">
-                                    <FaShoppingCart className='text-purple-500' size={20} />
-                                </button>
-                            </div>
                         </div>
-                    ))}
-                </div>
-            </div>
 
+                        {/* Bottom Section */}
+                        <div className="flex items-center justify-between px-2 py-1 bg-gray-100">
+                            <div className="flex gap-2">
+                                <p className="text-base font-bold text-gray-800">${product.newPrice}</p>
+                                <p className="text-base text-gray-500 line-through">${product.oldPrice}</p>
+                            </div>
+                            <button className="p-1 border border-gray-300 rounded hover:bg-gray-200">
+                                <FaShoppingCart className="text-purple-500" size={20} />
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };

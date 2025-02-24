@@ -50,7 +50,7 @@ export default function UserMenu() {
       {/* User Icon and Menu Toggle */}
       <div ref={triggerRef}>
         <FaRegUser
-          className="h-7 w-7 text-purple-500 cursor-pointer"
+          className="h-5 w-5 text-purple-500 cursor-pointer"
           // onClick={toggleModal}
           aria-haspopup="true"
           aria-expanded={isModalOpen}

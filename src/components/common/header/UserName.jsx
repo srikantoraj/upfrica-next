@@ -16,7 +16,7 @@ const UserName = () => {
         if (parsedUser.user) {
           setUser(parsedUser.user); // state-এ ব্যবহারকারীর ডেটা সেট
         } else {
-          router.push('/signin'); // user ডেটা না থাকলে /signin-এ পাঠানো
+          // router.push('/signin'); // user ডেটা না থাকলে /signin-এ পাঠানো
         }
       } catch (error) {
         console.error('Error parsing user data:', error);
@@ -32,10 +32,10 @@ const UserName = () => {
   return (
     <div>
       <h2>
-        <span className="font-bold">Hello,</span>
+       
         {!user ? (
           <Link href="/signin">
-            <span className="text-purple-500">Sign in |</span>
+            <span className="text-purple-500">Sign in </span>
           </Link>
         ) : (
           <>
