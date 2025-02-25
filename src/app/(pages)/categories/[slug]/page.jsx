@@ -76,7 +76,7 @@ const DetelsCategories = () => {
     if (slug) {
       const fetchCategoryData = async () => {
         try {
-          const response = await fetch(`https://upfrica-staging.herokuapp.com/api/v1/categories/${slug}/products`);
+          const response = await fetch(`https://upfrica.com/api/v1/categories/${slug}/products`);
           const data = await response.json();
           setCategoryData(data.products);
         } catch (error) {

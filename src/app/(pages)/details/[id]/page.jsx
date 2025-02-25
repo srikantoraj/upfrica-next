@@ -3,6 +3,7 @@ import Footer from '@/components/common/footer/Footer';
 import Header from '@/components/common/header/Header';
 import ProductList from '@/components/home/ProductList/ProductList';
 import RelatedProducts from '@/components/home/ProductList/RealtedProduct';
+import ProductDetailSection from '@/components/ProductDetailSection/ProductDetailSection';
 import Slider from '@/components/Slider';
 import TextSection from '@/components/TextSection';
 import Dummy from '@/components/ui/details/Dummy';
@@ -107,10 +108,11 @@ export default async function ProductDetails({ params }) {
       <Header />
       <div>
         <div className=" container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 py-10 ">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-5 py-10 ">
             <Slider images={product_images} />
             <TextSection product={product} />
-          </div>
+          </div> */}
+          <ProductDetailSection product={product} />
           <Dummy title={title} description={description || "This is a test description"} />
           <RelatedProducts productId={id} />
         </div>
