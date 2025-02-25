@@ -5,6 +5,7 @@ import { FaShoppingCart, FaWhatsapp } from 'react-icons/fa';
 import { IoMdSearch } from 'react-icons/io';
 import UserName from './UserName';
 import UserMenu from './UserMenu';
+import { AiOutlineShoppingCart } from 'react-icons/ai';
 
 const ShopingCart = () => {
     const [hasProductsInCart, setHasProductsInCart] = useState(false);
@@ -29,7 +30,7 @@ const ShopingCart = () => {
                 <Link href='/cart'>
 
                     <div className="relative flex items-center mx-4">
-                        <FaShoppingCart className="h-6 lg:h-8 w-6 lg:w-8 text-purple-500" />
+                        <AiOutlineShoppingCart className="w-8 h-8 text-purple-500" />
 
                         {/* যদি প্রোডাক্ট সংখ্যা 0 এর বেশি হয়, তাহলে ব্যাজ দেখান */}
                         {basketCount > 0 && (

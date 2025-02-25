@@ -105,6 +105,7 @@ import Link from 'next/link';
 import React from 'react';
 import { IoIosArrowRoundForward } from 'react-icons/io';
 import { FaShoppingCart } from "react-icons/fa";
+import { AiOutlineShoppingCart } from 'react-icons/ai';
 
 const EarlyDeals = () => {
     const products = [
@@ -189,7 +190,7 @@ const EarlyDeals = () => {
                                 <p className="text-base text-gray-500 line-through">${product.oldPrice}</p>
                             </div>
                             <button className="p-1 border border-gray-300 rounded hover:bg-gray-200">
-                                <FaShoppingCart className="text-purple-500" size={20} />
+                                <AiOutlineShoppingCart className="w-6 h-6 text-purple-500" />
                             </button>
                         </div>
                     </div>
