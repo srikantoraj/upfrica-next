@@ -138,7 +138,7 @@ export default function BasketModal({
           <button className="bg-[#8710D8] text-white rounded-3xl hover:bg-purple-700 w-full p-2 font-bold">
             Checkout
           </button>
-          <button className="px-4 py-2 rounded-3xl border bg-white shadow hover:shadow-md border-[#f7c32e] w-full font-bold">
+          <button className="px-4 py-2 rounded-3xl border bg-white shadow hover:shadow-md border-[#8710D8] w-full font-bold">
             <Link href="/cart">View Basket</Link>
             {/* View Basket */}
           </button>

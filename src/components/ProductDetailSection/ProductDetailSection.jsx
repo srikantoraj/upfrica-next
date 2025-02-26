@@ -654,7 +654,7 @@ export default function ProductDetailSection({ product }) {
                                 </h1>
                                 <div className="text-base md:text-lg lg:text-xl text-gray-600">
                                     <b>4480 sold</b> — Visit the{" "}
-                                    <b className="text-blue-600">Upfrica GH</b> Shop — Accra, GH
+                                    <b className="text-[#8710D8]">Upfrica GH</b> Shop — Accra, GH
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <span className="text-yellow-500 text-base md:text-lg lg:text-xl">
@@ -716,13 +716,13 @@ export default function ProductDetailSection({ product }) {
                                     <button className="bg-[#8710D8] hover:bg- text-white px-4 py-2   text-base md:text-lg font-bold rounded-3xl">
                                         Buy Now
                                     </button>
-                                    <button onClick={handleAddToBasket} className="border border-[#f7c32e] px-4 py-2  hover:bg-yellow-50 text-base md:text-lg rounded-3xl">
+                                    <button onClick={handleAddToBasket} className="border border-[#8710D8] px-4 py-2  hover:bg-yellow-50 text-base md:text-lg rounded-3xl">
                                         Add to Basket
                                     </button>
-                                    <button className="border border-[#f7c32e]  px-4 py-2  hover:bg-yellow-50 text-base md:text-lg rounded-3xl">
+                                    <button className="border border-[#8710D8]  px-4 py-2  hover:bg-yellow-50 text-base md:text-lg rounded-3xl">
                                         Buy Now Pay Later (BNPL)
                                     </button>
-                                    <button className="border border-[#f7c32e] px-4 py-2  hover:bg-yellow-50 text-base md:text-lg rounded-3xl">
+                                    <button className="border border-[#8710D8] px-4 py-2  hover:bg-yellow-50 text-base md:text-lg rounded-3xl">
                                         <i className="fa-regular fa-heart mr-1" />
                                         Add to Watchlist
                                     </button>
@@ -932,7 +932,7 @@ export default function ProductDetailSection({ product }) {
                                 </h1>
                                 <div className="text-base md:text-lg lg:text-xl text-gray-600">
                                     <b>4480 sold</b> — Visit the{" "}
-                                    <b className="text-blue-600">Upfrica GH</b> Shop, Accra, GH
+                                    <b className="text-[#8710D8]">Upfrica GH</b> Shop, Accra, GH
                                 </div>
                                 <div className="flex items-center space-x-2 text-base md:text-lg lg:text-xl text-yellow-300 mt-2">
                                     <li className="flex items-center text-base font-light mr-3 text-black">
@@ -1008,13 +1008,13 @@ export default function ProductDetailSection({ product }) {
                                     <button className="w-full bg-[#8710D8] text-white py-2  hover:bg-purple-700 text-base md:text-lg  rounded-3xl font-bold">
                                         Buy Now
                                     </button>
-                                    <button onClick={handleAddToBasket} className="w-full  border-[#f7c32e] py-2  text-base md:text-lg rounded-3xl font-bold border-[2px]">
+                                    <button onClick={handleAddToBasket} className="w-full  border-[#8710D8] py-2  text-base md:text-lg rounded-3xl font-bold border-[2px]">
                                         Add to Basket
                                     </button>
-                                    <button className="w-full  border-[#f7c32e] py-2  text-base md:text-lg rounded-3xl font-bold border-[2px]">
+                                    <button className="w-full  border-[#8710D8] py-2  text-base md:text-lg rounded-3xl font-bold border-[2px]">
                                         Buy Now Pay Later(BNPL)
                                     </button>
-                                    <button className="w-full  border-[#f7c32e] py-2  text-base md:text-lg rounded-3xl font-bold border-[2px]">
+                                    <button className="w-full  border-[#8710D8] py-2  text-base md:text-lg rounded-3xl font-bold border-[2px]">
                                         <i className="fa-regular fa-heart" />
                                         <span>Add to Watchlist</span>
                                     </button>

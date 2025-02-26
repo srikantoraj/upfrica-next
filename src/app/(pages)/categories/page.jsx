@@ -58,9 +58,9 @@ const Categories = () => {
 
     return (
         <div className="bg-gray-100">
-            <div className="flex flex-col items-center justify-center py-20">
+            <div className="flex flex-col items-center justify-center py-6 lg:py-20 p-4">
                 {/* Heading */}
-                <h1 className="text-4xl font-bold mb-6">Shop by Categories</h1>
+                <h1 className="text-2xl lg:text-4xl font-bold mb-6">Shop by Categories</h1>
 
                 {/* Search Input Field */}
                 {/* <input
@@ -69,23 +69,23 @@ const Categories = () => {
           className="border border-gray-300 p-3 rounded-full w-2/6 shadow-md
                      focus:outline-none focus:border-purple-500"
         /> */}
-                <div className="relative w-full sm:w-2/6">
+                <div className="relative w-full sm:w-3/12">
                     {/* The search input */}
                     <input
                         type="text"
                         placeholder="Search categories..."
                         className="border border-gray-300 p-3 rounded-full w-full shadow-md 
-                   focus:outline-none focus:border-purple-500 pr-10"
+                   focus:outline-none focus:border-[#8710D8] pr-10 text-lg ps-4"
                     // pr-10 gives space for the icon on the right
                     />
 
                     {/* The icon, absolutely positioned to the right */}
                     <FaSearch
-                            className="absolute top-1/2 right-4 
+                        className="absolute top-1/2 right-4 
                                 transform -translate-y-1/2 
                                 text-gray-400 hover:text-gray-600 
                                 cursor-pointer h-6 w-6"
-                            aria-hidden="true"
+                        aria-hidden="true"
                     />
                 </div>
             </div>
