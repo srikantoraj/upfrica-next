@@ -4,7 +4,7 @@ import { FaBolt, FaHeart } from "react-icons/fa";
 import Link from "next/link";
 
 export default function ProductCard({ product }) {
-  const { product_images, id, title, price, secondary_postage_fee } = product;
+  const { product_images, id, title, price_cents } = product;
   if (!product_images) return null;
 
   return (
@@ -47,8 +47,8 @@ export default function ProductCard({ product }) {
       <div className="border-t">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <p className="text-lg font-bold text-gray-900">${price.cents}</p>
-            <p className="text-sm text-gray-500 line-through">${secondary_postage_fee.cents}</p>
+            <p className="text-lg font-bold text-gray-900">${parseInt(price_cents)/100}</p>
+            <p className="text-sm text-gray-500 line-through">${"0.00"}</p>
           </div>
           <Link href={`/details/${id}`}>
             <div className="p-2 border rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
