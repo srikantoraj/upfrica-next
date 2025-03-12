@@ -98,11 +98,6 @@ export default async function ProductDetails({ params }) {
     },
   ];
 
-
-
-
-
-
   return (
     <>
       <Header />
@@ -113,7 +108,7 @@ export default async function ProductDetails({ params }) {
             <TextSection product={product} />
           </div> */}
           <ProductDetailSection product={product} />
-          <Dummy title={title} description={description || "This is a test description"} />
+          {/* <Dummy title={title} description={description || "This is a test description"} /> */}
           <RelatedProducts productId={id} />
         </div>
       </div>

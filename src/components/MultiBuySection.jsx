@@ -14,7 +14,7 @@ export default function MultiBuySection() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   return (
-    <div className="flex space-x-2 overflow-x-auto mt-2 scrollbar-thin">
+    <div className="flex space-x-2 overflow-x-auto mt-2 scrollbar-hide">
       {multiBuyOptions.map((option, idx) => {
         // 3) Conditionally add black border + bold if this item is active
         const isActive = idx === activeIndex;
