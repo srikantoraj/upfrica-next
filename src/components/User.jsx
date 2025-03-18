@@ -1,11 +1,11 @@
 "use client"
 import React from 'react';
 import Link from 'next/link'; // Link component is missing in your code
-import useAuth from './useAuth';
+// import useAuth from './useAuth';
 
 const User = () => {
-    const user = useAuth();
-
+    // const user = useAuth();
+    const user = null;
     // Check if the user does not exist, then return the sign-in section
     if (!user) {
         return (

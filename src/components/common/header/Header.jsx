@@ -8,6 +8,7 @@ import UserName from "./UserName";
 import ShopingCart from "./ShopingCart";
 import SearchBox from "./SearchBox";
 import PhoneSlider from "./PhoneSlider";
+import Image from "next/image";
 
 export default function Header() {
   return (
@@ -15,8 +16,9 @@ export default function Header() {
       <div className=" px-4 py-3">
         <div className="flex items-center justify-between md:hidden">
           <Link href="/">
-            <img
+            <Image
               className="h-8 w-auto"
+              fill
               src="https://d26ukeum83vx3b.cloudfront.net/assets/upfrica-com-logo-dark_170x-94d438d62a4c6b2c2c70fe1084c008f4584357ed2847dac5fc38818a0de6459d.webp"
               alt="Upfrica Logo"
             />
