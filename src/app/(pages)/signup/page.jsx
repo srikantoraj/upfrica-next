@@ -26,13 +26,14 @@ const SignUp = () => {
       city: "Dhaka",
       country: "BD",
       terms_of_service: true,
+      time_zone: "UTC"
     },
     onSubmit: async (values) => {
       setSubmissionStatus(null);
       setErrorMessage(null);
       try {
         const response = await fetch(
-          "https://upfrica-staging.herokuapp.com/api/v1/users.json",
+          "https://media.upfrica.com/api/signup/",
           {
             method: "POST",
             headers: {
@@ -47,7 +48,7 @@ const SignUp = () => {
         localStorage.setItem('user', JSON.stringify(data));
 
         if (response.ok) {
-          console.log(data);
+          console.log("data",data);
           setSubmissionStatus("Signup successful! Redirecting...");
           // Redirect to a different page after successful signup, e.g., login
           setTimeout(() => {

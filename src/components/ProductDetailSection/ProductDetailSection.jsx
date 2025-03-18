@@ -491,8 +491,12 @@ import { FaArrowRightLong } from "react-icons/fa6";
 import { MdArrowRightAlt } from "react-icons/md";
 import { HiMiniXMark, HiXMark } from "react-icons/hi2";
 import Link from "next/link";
-import { FaHeart, FaMinus, FaPlus } from "react-icons/fa";
+import { FaHeart, FaMinus, FaPlus, FaRegHeart } from "react-icons/fa";
 import BasketModal from "../BasketModal";
+import { ImInfo } from "react-icons/im";
+import PaymentMethod from "../PaymentMethod";
+import PaymentDeliveryReturns from "../PaymentDeliveryReturns";
+import DescriptionAndReviews from "../DescriptionAndReviews";
 
 const QuantityControl = ({ quantity, onDecrease, onIncrease }) => (
     <div className="flex items-center text-lg">
@@ -507,11 +511,12 @@ const QuantityControl = ({ quantity, onDecrease, onIncrease }) => (
 );
 
 export default function ProductDetailSection({ product }) {
+    
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [basket, setBasket] = useState([]);
 
     console.log("produc", product)
-   
+
 
 
     const handleThumbClick = (imageUrl) => {
@@ -566,6 +571,12 @@ export default function ProductDetailSection({ product }) {
         setBasket(newBasket);
         localStorage.setItem('basket', JSON.stringify(newBasket));
     };
+
+    const handleRemoveProduct = (index) => {
+        const newBasket = basket.filter((_, i) => i !== index);
+        setBasket(newBasket);
+        localStorage.setItem("basket", JSON.stringify(newBasket));
+      };
 
 
     return (
@@ -648,7 +659,7 @@ export default function ProductDetailSection({ product }) {
 
                         {/* MOBILE CTA (hidden on xl) */}
                         <section className="block xl:hidden mt-5">
-                            <div className="bg-white shadow rounded p-4 space-y-4">
+                            <div className="bg-white   lg:p-4 space-y-4">
                                 <h1 className="text-base md:text-lg lg:text-xl font-bold text-gray-800">
                                     Gravity-Defying Performance: The Future of Sneakers
                                 </h1>
@@ -692,7 +703,7 @@ export default function ProductDetailSection({ product }) {
                                 </div>
 
                                 {/* Multi-buy */}
-                                <div className="flex space-x-2 overflow-x-auto mt-2 scrollbar-thin">
+                                {/* <div className="flex space-x-2 overflow-x-auto mt-2 scrollbar-thin">
                                     <div className="border p-2 text-center min-w-[120px]">
                                         <span className="block text-base md:text-lg lg:text-xl text-gray-700">
                                             Buy 1
@@ -709,7 +720,24 @@ export default function ProductDetailSection({ product }) {
                                             ₵265 each
                                         </b>
                                     </div>
-                                </div>
+                                    <div className="border p-2 text-center min-w-[120px]">
+                                        <span className="block text-base md:text-lg lg:text-xl text-gray-700">
+                                            Buy 1
+                                        </span>
+                                        <b className="text-base md:text-lg lg:text-xl">
+                                            ₵285 each
+                                        </b>
+                                    </div>
+                                    <div className="border p-2 text-center min-w-[120px]">
+                                        <span className="block text-base md:text-lg lg:text-xl text-gray-700">
+                                            Buy 2
+                                        </span>
+                                        <b className="text-base md:text-lg lg:text-xl">
+                                            ₵265 each
+                                        </b>
+                                    </div>
+                                </div> */}
+                                <MultiBuySection />
 
                                 {/* Buttons */}
                                 <div className="grid gap-2">
@@ -729,7 +757,7 @@ export default function ProductDetailSection({ product }) {
                                 </div>
 
                                 {/* Delivery, Payment, etc. */}
-                                <div className="mt-4 space-y-2">
+                                {/* <div className="mt-4 space-y-2">
                                     <div className="flex text-base md:text-lg lg:text-xl text-gray-700">
                                         <small className="w-1/4 font-semibold">Pickup:</small>
                                         <div className="w-3/4">
@@ -775,150 +803,12 @@ export default function ProductDetailSection({ product }) {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div> */}
+                                <PaymentDeliveryReturns/>
                             </div>
                         </section>
 
-                        {/* Description, Reviews, etc. */}
-                        <div className="pt-6">
-                            <h5 className="text-base md:text-lg lg:text-xl font-semibold mb-4 border-b pb-2 text-gray-800">
-                                Future of Sneakers in Ghana Best Sale Price: Upfrica
-                            </h5>
-                            <p className="leading-relaxed text-base md:text-lg lg:text-xl text-gray-700 mb-3">
-                                Gravity-Defying Performance: The Future of Sneakers... Order online
-                                today for fast delivery or collect from the seller in Accra, GH
-                            </p>
-                            <p className="leading-relaxed text-base md:text-lg lg:text-xl text-gray-700 mb-4">
-                                Step into the future of footwear with these high-performance sneakers,
-                                designed for ultimate comfort, style, and durability...
-                            </p>
-                            <hr className="border-gray-200" />
-
-                            {/* Seller Info */}
-                            <div className="mt-4 bg-white  rounded p-4">
-                                <div className="flex items-center space-x-3 mb-2">
-                                    <img
-                                        className="w-14 h-14 rounded-full"
-                                        src="https://img.kwcdn.com/supplier-public-tag/1f66680860/7a1dec98-d11b-460c-89e2-25cc4703fa53_300x300.jpeg"
-                                        alt="avatar"
-                                    />
-                                    <div>
-                                        <h6 className="mb-1 text-base md:text-lg lg:text-xl font-semibold text-gray-800">
-                                            Homeappliances
-                                        </h6>
-                                        <ul className="flex space-x-2 text-sm text-gray-600">
-                                            <li>1 follower</li>
-                                            <li className="text-green-600">55 Items</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div className="flex space-x-2 text-base md:text-lg lg:text-xl">
-                                    <button className="border px-4 py-1 rounded hover:bg-gray-100">
-                                        <i className="bi bi-heart mr-2" />
-                                        Save seller
-                                    </button>
-                                    <a
-                                        href="/shops/home-appliances-ghana"
-                                        className="border px-4 py-1 rounded hover:bg-gray-100"
-                                    >
-                                        Shop all items
-                                    </a>
-                                </div>
-                                <div className="mt-3">
-                                    <p
-                                        id="phone"
-                                        className="cursor-pointer bg-blue-50 border text-center py-2 rounded text-sm md:text-base lg:text-lg text-blue-700 hover:bg-blue-100"
-                                    >
-                                        <i className="bi bi-telephone mr-1" />
-                                        Click to view number
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Customer Reviews */}
-                            <div className="mt-6">
-                                <h3 className="text-base md:text-lg lg:text-xl font-semibold text-gray-800 mb-3 border-b pb-1">
-                                    Verified Customer Review
-                                </h3>
-                                <div className="mt-3 bg-gray-50 p-4 rounded">
-                                    <div className="flex items-center mb-2">
-                                        <img
-                                            className="w-10 h-10 rounded-full mr-3"
-                                            src="https://d26ukeum83vx3b.cloudfront.net/assets/fallback/unknown-profile.jpg"
-                                            alt="Avatar"
-                                        />
-                                        <div className="text-sm md:text-base lg:text-lg">
-                                            <h6 className="font-semibold text-gray-700">Esther</h6>
-                                            <p className="text-gray-500 text-xs md:text-sm">
-                                                Reviewed in Ghana on 22:16 Sep 11, 2023
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center text-yellow-500 text-base md:text-lg lg:text-xl">
-                                        ★★★★★
-                                        <span className="ml-2 text-sm md:text-base lg:text-lg font-semibold text-gray-700">
-                                            Thank You!
-                                        </span>
-                                    </div>
-                                    <p className="text-sm md:text-base lg:text-lg text-gray-700 mt-2">
-                                        Good product and timely product delivery. Good communication.
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Write a Review */}
-                            <div className="mt-6 bg-white p-4 rounded">
-                                <h3 className="text-base md:text-lg lg:text-xl font-semibold text-gray-800 mb-3">
-                                    Write a Review
-                                </h3>
-                                <form>
-                                    <div className="mb-3">
-                                        <label className="block mb-1 font-medium text-gray-700 text-sm md:text-base lg:text-lg">
-                                            Rating
-                                        </label>
-                                        <select className="w-full border p-2 rounded text-sm md:text-base lg:text-lg focus:outline-none focus:border-blue-500">
-                                            <option value="5">★★★★★ (5/5)</option>
-                                            <option value="4">★★★★☆ (4/5)</option>
-                                            <option value="3">★★★☆☆ (3/5)</option>
-                                            <option value="2">★★☆☆☆ (2/5)</option>
-                                            <option value="1">★☆☆☆☆ (1/5)</option>
-                                        </select>
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="block mb-1 font-medium text-gray-700 text-sm md:text-base lg:text-lg">
-                                            Headline
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className="w-full border p-2 rounded text-sm md:text-base lg:text-lg focus:outline-none focus:border-blue-500"
-                                            placeholder="Sum it up in a few words"
-                                        />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="block mb-1 font-medium text-gray-700 text-sm md:text-base lg:text-lg">
-                                            Comments
-                                        </label>
-                                        <textarea
-                                            rows={4}
-                                            className="w-full border p-2 rounded text-sm md:text-base lg:text-lg focus:outline-none focus:border-blue-500"
-                                            placeholder="Write a review and share details of your experience..."
-                                        />
-                                    </div>
-                                    <button
-                                        type="submit"
-                                        className="bg-blue-600 text-white px-4 py-2 rounded text-sm md:text-base lg:text-lg font-medium hover:bg-blue-700"
-                                    >
-                                        Post review
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-
-                        {/* Disclaimer */}
-                        <div className="bg-gray-100 p-4 mt-6 rounded leading-relaxed text-base md:text-lg lg:text-xl text-gray-700">
-                            <strong>Legal Disclaimer:</strong> The Seller takes full
-                            responsibility for this listing... [truncated]
-                        </div>
+                       <DescriptionAndReviews/>
                     </div>
                     {/* END LEFT CONTENT */}
 
@@ -926,7 +816,7 @@ export default function ProductDetailSection({ product }) {
                     <aside className="order-2 hidden xl:block xl:col-span-5">
                         <div className="sticky top-20 space-y-4">
                             {/* CTA Card */}
-                            <div className="bg-white p-5">
+                            <div className=" p-5">
                                 <h1 className="text-base md:text-lg lg:text-xl font-bold text-gray-800 mb-2 leading-7">
                                     {title}
                                 </h1>
@@ -952,30 +842,32 @@ export default function ProductDetailSection({ product }) {
                                 <hr className="my-3 border-gray-200" />
 
                                 {/* price  */}
-                                <div className="mb-3">
-                                    <span className="text-xl md:text-2xl lg:text-3xl font-semibold text-gray-800">
-                                        ₵{price.cents}
-                                    </span>
-                                    <span className="ml-1 text-base md:text-lg lg:text-xl text-gray-500">
-                                        each
-                                    </span>
+                                <div className="mb-4 space-y-2">
+                                    <div>
+                                        <span className="text-xl md:text-2xl lg:text-3xl font-semibold text-gray-800">
+                                            ₵{price.cents}
+                                        </span>
+                                        <span className="ml-1 text-base md:text-lg lg:text-xl text-gray-500">
+                                            each
+                                        </span>
+                                    </div>
                                     <div className="text-sm md:text-base lg:text-lg text-gray-500">
                                         was <del>₵400</del> — You Save: ₵200 (2%)
                                     </div>
-                                    <div className="mt-1">
-                                        <span className="text-xs px-2 py-1 bg-red-700 text-white rounded">
+                                    <div className="mt-1 text-sm md:text-base">
+                                        <span className=" px-2 py-1 bg-red-700 text-white rounded">
                                             <i className="fa fa-bolt" /> Sales
                                         </span>
-                                        <small className="ml-2 text-red-700 font-medium">
+                                        <span className="ml-2 text-red-700 font-medium ">
                                             ends in 32 days 09:58:49
-                                        </small>
+                                        </span>
                                     </div>
                                 </div>
 
                                 {/* condition  */}
-                                <div className="flex items-center mb-2 space-x-1">
+                                <div className="flex items-center py-3 space-x-1 text-base lg:text-xl">
                                     {/* "Condition:" label, styled lightly */}
-                                    <span className="text-base font-light">
+                                    <span className="font-light">
                                         Condition:
                                     </span>
 
@@ -985,18 +877,19 @@ export default function ProductDetailSection({ product }) {
                                     </span>
 
                                     {/* Info icon (using a button or span for accessibility) */}
-                                    <button
+                                    {/* <button
                                         // If you have a modal, you'd do onClick or data attributes here
                                         data-bs-toggle="modal"
                                         data-bs-target="#conditionModal"
                                         className="ml-1 inline-flex items-center justify-center 
-                                        w-5 h-5 rounded-full border border-gray-800 
+                                        w-6 h-6 rounded-full border-[3px] border-gray-800 
                                         text-gray-800 text-xs font-semibold 
                                         hover:bg-gray-100 focus:outline-none"
                                         aria-label="Info"
                                     >
                                         i
-                                    </button>
+                                    </button> */}
+                                    <ImInfo />
                                 </div>
 
 
@@ -1008,90 +901,27 @@ export default function ProductDetailSection({ product }) {
                                     <button className="w-full bg-[#8710D8] text-white py-2  hover:bg-purple-700 text-base md:text-lg  rounded-3xl font-bold">
                                         Buy Now
                                     </button>
-                                    <button onClick={handleAddToBasket} className="w-full  border-[#8710D8] py-2  text-base md:text-lg rounded-3xl font-bold border-[2px]">
+                                    <button onClick={handleAddToBasket} className="w-full  border-[#8710D8] hover:bg-[#f7c32e] hover:border-[#f7c32e]  py-2  text-base md:text-lg rounded-3xl font-bold border-[2px]">
                                         Add to Basket
                                     </button>
-                                    <button className="w-full  border-[#8710D8] py-2  text-base md:text-lg rounded-3xl font-bold border-[2px]">
-                                        Buy Now Pay Later(BNPL)
+                                    <button className="w-full text-center flex  items-center justify-center gap-2 border-[#8710D8] py-2  text-base md:text-lg hover:bg-[#f7c32e] hover:border-[#f7c32e] rounded-3xl font-bold border-[2px]">
+                                        Buy Now Pay Later(BNPL) <ImInfo className="h-5 w-5" />
+
                                     </button>
-                                    <button className="w-full  border-[#8710D8] py-2  text-base md:text-lg rounded-3xl font-bold border-[2px]">
-                                        <i className="fa-regular fa-heart" />
+                                    <button className="w-full flex items-center justify-center gap-2  border-[#8710D8] py-2  text-base md:text-lg hover:bg-[#f7c32e]  hover:border-[#f7c32e] rounded-3xl font-bold border-[2px]">
+                                        <span><FaRegHeart /></span>
                                         <span>Add to Watchlist</span>
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Pickup / Delivery / Payments */}
-                            <div className="bg-white p-5 text-base md:text-lg text-gray-700 space-y-3">
-                                <div className="flex">
-                                    <span className="w-1/4 font-semibold text-gray-800">Pickup:</span>
-                                    <div className="w-3/4">
-                                        Free pickup in person from Accra, Ghana
-                                        <br />
-                                        <a href="#" className="underline text-blue-600">
-                                            See details
-                                        </a>{" "}
-                                        <i className="bi bi-info-circle"></i>
-                                    </div>
-                                </div>
-                                <div className="flex">
-                                    <span className="w-1/4  text-gray-800">Delivery:</span>
-                                    <div className="w-3/4">
-                                        Fast Delivery Available: <b>Tue, 25 Feb</b> - <b>Thu, 27 Feb</b>
-                                        <br />
-                                        <span className="text-sm md:text-base lg:text-lg text-gray-500">
-                                            if ordered today
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="flex">
-                                    <span className="w-1/4  text-gray-800">Returns:</span>
-                                    <div className="w-3/4">
-                                        The seller won't accept returns.
-                                        <span className="info-icon ml-1">i</span>
-                                    </div>
-                                </div>
-                                <div className="flex">
-                                    <span className="w-1/4  text-gray-800">Payments:</span>
-                                    <div className="w-2/4 flex space-x-2">
-                                        <div className="border p-2 rounded flex items-center justify-center w-20 h-12">
-                                            <img
-                                                className="max-h-6"
-                                                src="https://uploads-eu-west-1.insided.com/mtngroup-en/attachment/96f3ec28-bc42-49ee-be5d-6ed5345e516c_thumb.png"
-                                                alt="MTN MOMO"
-                                            />
-                                        </div>
-                                        <div className="border p-2 rounded flex items-center justify-center w-20 h-12">
-                                            <img
-                                                className="max-h-6"
-                                                src="https://lh3.googleusercontent.com/z4nOBXDSMJ2zwyW9Nd1KHYEJgbhuqnVLvAGUXh0uEUn8f9QHnPYUY_64oYwOxRsDx26SEb5PgZJzLJRU6RwToFL00Wq--pBGmAwe=s0"
-                                                alt="MTN MOMO"
-                                            />
-                                        </div>
-                                        <div className="border p-2 rounded flex items-center justify-center w-20 h-12">
-                                            <img
-                                                className="max-h-6"
-                                                src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg"
-                                                alt="MTN MOMO"
-                                            />
-                                        </div>
-                                        <div className="border p-2 rounded flex items-center justify-center w-20 h-12">
-                                            <img
-                                                className="max-h-6"
-                                                src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Mastercard_2019_logo.svg"
-                                                alt="MTN MOMO"
-                                            />
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
+                            <PaymentDeliveryReturns />
                         </div>
                     </aside>
                     {/* END RIGHT CONTENT */}
 
                     {/* basket  Modal  section */}
-                    <BasketModal isModalVisible={isModalVisible} handleCloseModal={handleCloseModal} basket={basket} handleQuantityChange={handleQuantityChange}/>
+                    <BasketModal isModalVisible={isModalVisible} handleCloseModal={handleCloseModal} basket={basket} handleQuantityChange={handleQuantityChange} handleRemoveProduct={handleRemoveProduct} />
                 </div>
             </div>
         </section>

@@ -8,7 +8,7 @@ export default function ProductCard({ product }) {
   if (!product_images) return null;
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col justify-between h-[370px] font-sans">
+    <div className="bg-white rounded-lg shadow overflow-hidden flex flex-col justify-between h-[370px] font-sans">
       {/* Image Section */}
       <div className="relative">
         {product_images.length > 0 && (
