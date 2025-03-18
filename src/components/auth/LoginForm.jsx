@@ -11,14 +11,14 @@ const LoginForm = () => {
 
   const formik = useFormik({
     initialValues: {
-      email: 'srikantorajbongshi139@gmail.com',
-      password: '@srikanto12345',
+      email: 'upfricasite@gmail.com',
+      password: 'casford262',
     },
     onSubmit: async (values, { setSubmitting, setErrors }) => {
       console.log('Form Data:', values);
       try {
         const response = await fetch(
-          'https://upfrica-staging.herokuapp.com/api/v1/auth.json',
+          'https://media.upfrica.com/api/login/',
           {
             method: 'POST',
             headers: {
