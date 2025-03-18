@@ -511,6 +511,7 @@ const QuantityControl = ({ quantity, onDecrease, onIncrease }) => (
 );
 
 export default function ProductDetailSection({ product }) {
+    
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [basket, setBasket] = useState([]);
 
@@ -570,6 +571,12 @@ export default function ProductDetailSection({ product }) {
         setBasket(newBasket);
         localStorage.setItem('basket', JSON.stringify(newBasket));
     };
+
+    const handleRemoveProduct = (index) => {
+        const newBasket = basket.filter((_, i) => i !== index);
+        setBasket(newBasket);
+        localStorage.setItem("basket", JSON.stringify(newBasket));
+      };
 
 
     return (
@@ -914,7 +921,7 @@ export default function ProductDetailSection({ product }) {
                     {/* END RIGHT CONTENT */}
 
                     {/* basket  Modal  section */}
-                    <BasketModal isModalVisible={isModalVisible} handleCloseModal={handleCloseModal} basket={basket} handleQuantityChange={handleQuantityChange} />
+                    <BasketModal isModalVisible={isModalVisible} handleCloseModal={handleCloseModal} basket={basket} handleQuantityChange={handleQuantityChange} handleRemoveProduct={handleRemoveProduct} />
                 </div>
             </div>
         </section>
