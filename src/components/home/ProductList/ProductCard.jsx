@@ -16,10 +16,10 @@ export default function ProductCard({ product }) {
           <Link href={`/gh/others/${slug}/`}>
             {/* Wrapping with an anchor tag for accessibility */}
             <span className="block relative w-full h-full">
-              <Image
+              <img
                 src={product_images[0]}
                 alt={title}
-                fill
+                
                 className="object-cover transition-transform duration-500 ease-in-out hover:scale-105"
               />
             </span>
