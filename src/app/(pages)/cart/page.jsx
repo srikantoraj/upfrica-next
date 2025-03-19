@@ -432,12 +432,41 @@ const Cart = () => {
             Apply
           </button>
 
-          <div className="border-t mt-6 pt-6">
+          <div className="border-t mt-6 py-4">
             <div className="flex font-semibold justify-between text-base sm:text-lg text-gray-700 mb-4">
               <span>Total cost</span>
               <span className="text-gray-900">${total.toFixed(2)}</span>
             </div>
+
+            {/* checkout  button  */}
+
+            {/* বড় স্ক্রিনে দেখানোর জন্য আগের Checkout বাটন */}
             <button
+              onClick={handleCheckout}
+              className={`bg-[#8710D8] hidden sm:block py-3 text-base sm:text-lg font-semibold text-white  w-full rounded-md
+    ${basket.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}
+  `}
+              disabled={basket.length === 0}
+            >
+              Checkout
+            </button>
+
+            {/* শুধুমাত্র মোবাইল স্ক্রিনে (sm এর নিচে) দেখানোর জন্য ফিক্সড Checkout বাটন */}
+            <div className="sm:hidden fixed bottom-0 left-0 w-full bg-white  z-50 ">
+              <button
+                onClick={handleCheckout}
+                className={`bg-[#8710D8] py-3 text-base font-semibold text-white  w-full rounded-md
+      ${basket.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}
+    `}
+                disabled={basket.length === 0}
+              >
+                Checkout
+              </button>
+            </div>
+
+
+
+            {/* <button
               onClick={handleCheckout}
               className={`bg-[#8710D8] py-3 text-base sm:text-lg font-semibold text-white uppercase w-full rounded-md
                 ${basket.length === 0 ? "opacity-50 cursor-not-allowed" : ""}
@@ -445,7 +474,7 @@ const Cart = () => {
               disabled={basket.length === 0}
             >
               Checkout
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
