@@ -17,12 +17,13 @@ export default function ProductCard({ product }) {
         {product_images.length > 0 && (
           <Link href={`/${country}/${category?.slug}/${slug}/`}>
             {/* Wrapping with an anchor tag for accessibility */}
-            <span className="block relative w-full h-full">
+            <span className="block relative w-[230px] h-[230px]">
               <img
                 src={product_images[0]}
                 alt={title}
-                
-                className="object-cover transition-transform duration-500 ease-in-out hover:scale-105"
+                width={230}
+                height={230}
+                className="w-full h-full object-cover transition-transform duration-500 ease-in-out hover:scale-105"
               />
             </span>
           </Link>
