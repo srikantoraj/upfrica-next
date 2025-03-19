@@ -5,7 +5,9 @@ import { FaBolt, FaHeart } from "react-icons/fa";
 import Link from "next/link";
 
 export default function ProductCard({ product }) {
-  const { product_images, title, price_cents, slug } = product;
+  const { product_images, title, price_cents, category, slug, seller_country } = product;
+  const country = seller_country?.toLowerCase() || 'gh';
+
   if (!product_images) return null;
 
   return (
@@ -13,7 +15,7 @@ export default function ProductCard({ product }) {
       {/* Image Section */}
       <div className="relative w-full h-[230px]">
         {product_images.length > 0 && (
-          <Link href={`/gh/others/${slug}/`}>
+          <Link href={`/${country}/${category?.slug}/${slug}/`}>
             {/* Wrapping with an anchor tag for accessibility */}
             <span className="block relative w-full h-full">
               <img
@@ -59,7 +61,7 @@ export default function ProductCard({ product }) {
               ${"0.00"}
             </p>
           </div>
-          <Link href={`/gh/others/${slug}/`}>
+          <Link href={`/${country}/${category?.slug}/${slug}/`}>
            
               <div className="p-2 border rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
                 <AiOutlineShoppingCart className="w-6 h-6 text-purple-500" />

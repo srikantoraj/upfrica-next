@@ -16,9 +16,9 @@ export default function Header() {
       <div className=" px-4 py-3">
         <div className="flex items-center justify-between md:hidden">
           <Link href="/">
-            <Image
-              className="h-8 w-auto"
-              fill
+            <img
+              className="h-auto w-[80px] md:w-[100px] ml-4"
+              
               src="https://d26ukeum83vx3b.cloudfront.net/assets/upfrica-com-logo-dark_170x-94d438d62a4c6b2c2c70fe1084c008f4584357ed2847dac5fc38818a0de6459d.webp"
               alt="Upfrica Logo"
             />
@@ -41,9 +41,10 @@ export default function Header() {
           <PhoneSlider />
           <div className="mt-2 flex items-center justify-center bg-gray-100 p-3 py-3 lg:py-4 rounded-md">
             <FaWhatsapp className="text-green-500 h-6 w-6" />
-            <span className="text-purple-500 text-sm font-medium ml-2">
+            <span className="text-purple-500 text-sm font-medium ml-2 md:hidden">
               Join the WhatsApp Group
             </span>
+            
           </div>
         </div>
 
@@ -62,11 +63,11 @@ export default function Header() {
               <SearchBox />
             </div>
           </div>
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center bg-gray-100 py-3 px-4 rounded-md">
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center bg-gray-100 py-3 px-3 rounded-md">
               <FaWhatsapp className="text-green-500 h-6 w-6" />
               <span className="text-purple-500 text-sm font-medium ml-2">
-                Join the WhatsApp Group
+                Join WhatsApp
               </span>
             </div>
             <ShopingCart />

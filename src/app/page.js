@@ -17,7 +17,7 @@ import SellectedItem from "@/components/SellectedItem";
 export default function Home() {
   return (
     <div className="bg-gray-100">
-      {/* <Header /> */}
+      <Header />
       {/* <Cover /> */}
       <EarlyDeals />
       <ProductList />
