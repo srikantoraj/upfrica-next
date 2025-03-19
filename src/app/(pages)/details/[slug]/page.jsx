@@ -10,8 +10,8 @@ import Dummy from '@/components/ui/details/Dummy';
 import React from 'react';
 // import ReactImageMagnify from 'react-image-magnify';
 
-async function getProductData(id) {
-  const res = await fetch(`https://upfrica-staging.herokuapp.com/api/v1/products/${id}`, {
+async function getProductData(slug) {
+  const res = await fetch(`https://media.upfrica.com/api/products/${slug}/`, {
     // Cache the response for better performance
     cache: 'no-store', // Use 'no-store' if data changes frequently
   });
@@ -29,25 +29,10 @@ async function getProductData(id) {
 
 
 
-// Function to generate static paths for all products
-export async function generateStaticParams() {
-  const res = await fetch('https://upfrica-staging.herokuapp.com/api/v1/products');
-
-  if (!res.ok) {
-    throw new Error('Failed to fetch products for static paths');
-  }
-
-  const products = await res.json();
-
-  return products.products.map((product) => ({
-    id: product.id.toString(),
-  }));
-}
-
 // Function to generate dynamic metadata for each product page
 export async function generateMetadata({ params }) {
-  const { id } = params;
-  const product = await getProductData(id);
+  const { slug } = params;
+  const product = await getProductData(slug);
 
   function removeSpecificTags(input) {
     if (typeof input !== 'string') {
@@ -61,7 +46,7 @@ export async function generateMetadata({ params }) {
 
   return {
     title: `${product.title}  - ${product?.user?.country}`, // Ensure 'product.name' exists
-    description: removeSpecificTags(product?.description?.body),     // Ensure 'product.description.body' exists
+    description: product?.description?.body,     // Ensure 'product.description.body' exists
     // You can add more metadata here if needed
 
   };
@@ -69,9 +54,9 @@ export async function generateMetadata({ params }) {
 
 // The main component to render product details
 export default async function ProductDetails({ params }) {
-  const { id } = params;
+  const { slug } = params;
   // Fetch the product data
-  const product = await getProductData(id);
+  const product = await getProductData(slug);
   const {
     product_images,
     title,
@@ -109,7 +94,7 @@ export default async function ProductDetails({ params }) {
           </div> */}
           <ProductDetailSection product={product} />
           {/* <Dummy title={title} description={description || "This is a test description"} /> */}
-          <RelatedProducts productId={id} />
+          <RelatedProducts productId={slug} />
         </div>
       </div>
       <Footer />

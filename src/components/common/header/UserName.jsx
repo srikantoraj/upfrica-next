@@ -20,10 +20,10 @@ const UserName = () => {
         }
       } catch (error) {
         console.error('Error parsing user data:', error);
-        router.push('/signin'); // JSON.parse সমস্যা হলে সাইন ইন পেজে পাঠানো
+        // router.push('/signin'); // JSON.parse সমস্যা হলে সাইন ইন পেজে পাঠানো
       }
     } else {
-      router.push('/signin'); // লোকালস্টোরেজে কিছুই না থাকলে সাইন ইন পেজে পাঠানো
+      // router.push('/signin'); // লোকালস্টোরেজে কিছুই না থাকলে সাইন ইন পেজে পাঠানো
     }
   }, [router]);
 

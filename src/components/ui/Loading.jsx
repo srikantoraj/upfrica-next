@@ -14,7 +14,7 @@ const StyledWrapper = styled.div`
   .loader {
     display: block;
     --height-of-loader: 4px;
-    --loader-color: #0071e2;
+    --loader-color: #9061f9;
     width: 100vw; /* Full width */
     height: var(--height-of-loader);
     border-radius: 0; /* No rounded corners for a top-bar look */

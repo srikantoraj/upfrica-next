@@ -123,8 +123,8 @@ export default function BasketModal({
 
                     {/* Price */}
                     <p className="text-sm sm:text-base md:text-lg font-medium text-gray-900">
-                      {product.price.currency_iso}{" "}
-                      {((product.price.cents / 100) * product.quantity).toFixed(2)}
+                      {product.price_cents}{" "}
+                      {((product.price_cents / 100) * product.quantity).toFixed(2)}
                     </p>
                   </div>
                 </div>
