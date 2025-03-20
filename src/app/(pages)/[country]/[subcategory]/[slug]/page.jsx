@@ -11,6 +11,7 @@ import React from 'react';
 // import ReactImageMagnify from 'react-image-magnify';
 
 async function getProductData(slug) {
+    
     const res = await fetch(`https://media.upfrica.com/api/products/${slug}/`, {
         // Cache the response for better performance
         cache: 'no-store', // Use 'no-store' if data changes frequently

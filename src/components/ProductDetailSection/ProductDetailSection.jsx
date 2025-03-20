@@ -27,7 +27,7 @@ const QuantityControl = ({ quantity, onDecrease, onIncrease }) => (
 );
 
 export default function ProductDetailSection({ product }) {
-    
+   
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [basket, setBasket] = useState([]);
 

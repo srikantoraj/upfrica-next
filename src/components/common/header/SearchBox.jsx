@@ -2,6 +2,7 @@ import { IoMdSearch } from "react-icons/io";
 import { FaImage } from "react-icons/fa";
 
 const SearchBox = () => {
+    
     return (
         <div className="relative w-full md:w-[40vw]  xl:w-[50vw]">
             <input
