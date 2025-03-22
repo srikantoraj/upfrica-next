@@ -117,7 +117,7 @@ const SearchBox = () => {
 
       try {
         const response = await fetch(
-          `http://media.upfrica.com/api/products/search/?q=${debouncedSearchText}`
+          `https://media.upfrica.com/api/products/search/?q=${debouncedSearchText}`
         );
         const data = await response.json();
         setResults(data || []);
