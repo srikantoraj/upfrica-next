@@ -27,9 +27,11 @@ const QuantityControl = ({ quantity, onDecrease, onIncrease }) => (
 );
 
 export default function ProductDetailSection({ product }) {
-   
+
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [basket, setBasket] = useState([]);
+    const [isOpen, setIsOpen] = useState(false);
+    const [photoIndex, setPhotoIndex] = useState(0);
 
     console.log("produc", product)
 
@@ -92,7 +94,7 @@ export default function ProductDetailSection({ product }) {
         const newBasket = basket.filter((_, i) => i !== index);
         setBasket(newBasket);
         localStorage.setItem("basket", JSON.stringify(newBasket));
-      };
+    };
 
 
     return (
@@ -146,18 +148,28 @@ export default function ProductDetailSection({ product }) {
 
 
                                 {/* Main image container: limited max width & centered */}
-                                <div className="border rounded overflow-hidden bg-white w-full mx-auto max-w-sm md:max-w-md lg:max-w-lg">
+                                {/* <div className="border rounded overflow-hidden bg-white w-full mx-auto max-w-sm md:max-w-md lg:max-w-lg">
                                     <img
                                         className="w-full h-auto object-cover"
                                         src={product_images[0]}
                                         alt="Main Product"
                                     />
-                                </div>
+                                </div> */}
+                                {product_images && product_images.length > 0 && (
+                                    <div className="border rounded overflow-hidden bg-white w-full mx-auto max-w-sm md:max-w-md lg:max-w-lg">
+                                        <img
+                                            className="w-full h-auto object-cover"
+                                            src={product_images[photoIndex]}
+                                            alt={`Product ${photoIndex}`}
+                                            onClick={() => setIsOpen(true)}
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             {/* Thumbnails */}
                             <div className="mt-3 flex space-x-3 overflow-x-auto scrollbar-thin">
-                                {product_images.map((imgUrl, idx) => (
+                                {/* {product_images.map((imgUrl, idx) => (
                                     <button
                                         key={idx}
                                         onClick={() => handleThumbClick(imgUrl)}
@@ -169,7 +181,22 @@ export default function ProductDetailSection({ product }) {
                                             alt={`Thumb ${idx + 1}`}
                                         />
                                     </button>
-                                ))}
+                                ))} */}
+
+                                {product_images && product_images.length > 1 && (
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {product_images.map((img, index) => (
+                                            <img
+                                                key={index}
+                                                className={`h-[75px] w-[75px] object-cover rounded-md cursor-pointer border-2 ${photoIndex === index ? "border-purple-500" : "border-gray-300"
+                                                    }`}
+                                                src={img}
+                                                alt={`Thumbnail ${index}`}
+                                                onClick={() => setPhotoIndex(index)}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </section>
 
@@ -320,11 +347,11 @@ export default function ProductDetailSection({ product }) {
                                         </div>
                                     </div>
                                 </div> */}
-                                <PaymentDeliveryReturns/>
+                                <PaymentDeliveryReturns />
                             </div>
                         </section>
 
-                       <DescriptionAndReviews/>
+                        <DescriptionAndReviews />
                     </div>
                     {/* END LEFT CONTENT */}
 
