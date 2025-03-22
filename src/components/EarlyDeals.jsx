@@ -141,7 +141,7 @@ const EarlyDeals = async () => {
                                 </p>
                                 {product.sale_price_cents > 0 && (
                                     <p className="text-base text-gray-500 line-through">
-                                        GHS {(product.sale_price_cents / 100).toFixed(2)}
+                                         {(product.sale_price_cents / 100).toFixed(2)}
                                     </p>
                                 )}
                             </div>
