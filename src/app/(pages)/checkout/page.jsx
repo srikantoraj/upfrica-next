@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { CountryDropdown } from "react-country-region-selector";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { IoHome } from "react-icons/io5";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Addresses from "@/components/Addresses";
 import useAuth from "@/components/useAuth";
 import { Formik, useFormik } from "formik";
@@ -22,9 +22,12 @@ const Checkout = () => {
   const [selectedPayment, setSelectedPayment] = useState('');
   const [isLoading, setIsLoading] = useState(false); // লোডিং স্টেট
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const cartId = searchParams.get("cart_id"); // ✅ Get cart_id from URL
 
 
-  console.log(selectedPayment)
+  // console.log(selectedPayment)
 
   // Fetch addresses from the API
   useEffect(() => {
@@ -98,76 +101,126 @@ const Checkout = () => {
     setIsOpen(!isOpen);
   };
 
-  const placeOrder = async (paymentMethod) => {
-    setIsLoading(true); // লোডিং শুরু হচ্ছে
+  // const placeOrder = async (paymentMethod) => {
+  //   setIsLoading(true); // লোডিং শুরু হচ্ছে
 
-    const busket = JSON.parse(localStorage.getItem("basket")) || [];
+  //   const busket = JSON.parse(localStorage.getItem("basket")) || [];
+  //   const user = JSON.parse(localStorage.getItem("user")) || {};
+
+  //   if (!busket.length) return;
+
+  //   const headers = {
+  //     "Content-Type": "application/json",
+  //     Authorization: `Bearer ${user?.token}`,
+  //   };
+
+  //   let itemList = [];
+  //   for (let item of busket) {
+  //     let obj = { product_id: item?.id, quantity: item?.quantity };
+  //     itemList.push(obj);
+  //   }
+
+  //   if (!selectedAddressId) {
+  //     setIsLoading(false); // যদি কোনো ঠিকানা না থাকে, লোডিং বন্ধ করা হচ্ছে
+  //     return;
+  //   }
+
+  //   var data = {
+  //     checkout: {
+  //       address_id: selectedAddressId,
+  //       products: [
+  //         {
+  //           id: itemList[0].product_id,
+  //           quantity: itemList[0]?.quantity,
+  //         },
+  //       ],
+  //       redirect_uri: "upfrica-delta.vercel.app",
+  //       payment_method: paymentMethod,  // সঠিক পেমেন্ট পদ্ধতি পাঠানো হচ্ছে
+  //     },
+  //   };
+
+  //   var requestOptions = {
+  //     method: "POST",
+  //     headers: headers,
+  //     body: JSON.stringify(data),
+  //     redirect: "follow",
+  //   };
+
+  //   fetch(
+  //     "https://upfrica-staging.herokuapp.com/api/v1/orders/checkout",
+  //     requestOptions
+  //   )
+  //     .then((response) => response.json())
+  //     .then((result) => {
+  //       setIsLoading(false); // সার্ভার রেসপন্স পাওয়ার পর লোডিং বন্ধ
+
+  //       console.log("API Result:", result);
+
+  //       if (paymentMethod === 'paystack' && result.paystack?.data?.authorization_url) {
+  //         router.push(result.paystack.data.authorization_url);
+  //       } else if (result.stripe_url) {
+  //         router.push(result.stripe_url);
+  //       } else {
+  //         console.error("No redirect URL found.");
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.log("Error:", error);
+  //       setIsLoading(false); // যদি কোনো ত্রুটি ঘটে, লোডিং বন্ধ
+  //     });
+  // };
+
+
+
+  const placeOrder = async (paymentMethod) => {
+    const basket = JSON.parse(localStorage.getItem("basket")) || [];
     const user = JSON.parse(localStorage.getItem("user")) || {};
 
-    if (!busket.length) return;
+    const selectedAddressId = 7; // ✅ Replace with your own logic to get selected address
 
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${user?.token}`,
-    };
-
-    let itemList = [];
-    for (let item of busket) {
-      let obj = { product_id: item?.id, quantity: item?.quantity };
-      itemList.push(obj);
-    }
-
-    if (!selectedAddressId) {
-      setIsLoading(false); // যদি কোনো ঠিকানা না থাকে, লোডিং বন্ধ করা হচ্ছে
+    if (!basket.length || !selectedAddressId || !cartId) {
+      console.warn("Missing data");
       return;
     }
 
-    var data = {
-      checkout: {
-        address_id: selectedAddressId,
-        products: [
-          {
-            id: itemList[0].product_id,
-            quantity: itemList[0]?.quantity,
-          },
-        ],
-        redirect_uri: "upfrica-delta.vercel.app",
-        payment_method: paymentMethod,  // সঠিক পেমেন্ট পদ্ধতি পাঠানো হচ্ছে
-      },
+    setIsLoading(true);
+
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Token ${user?.token}`,
     };
 
-    var requestOptions = {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify(data),
-      redirect: "follow",
+    const data = {
+      cart_id: Number(cartId),
+      address: selectedAddressId,
+      payment_method_id: paymentMethod,
     };
 
-    fetch(
-      "https://upfrica-staging.herokuapp.com/api/v1/orders/checkout",
-      requestOptions
-    )
-      .then((response) => response.json())
-      .then((result) => {
-        setIsLoading(false); // সার্ভার রেসপন্স পাওয়ার পর লোডিং বন্ধ
+    console.log(data)
 
-        console.log("API Result:", result);
-
-        if (paymentMethod === 'paystack' && result.paystack?.data?.authorization_url) {
-          router.push(result.paystack.data.authorization_url);
-        } else if (result.stripe_url) {
-          router.push(result.stripe_url);
-        } else {
-          console.error("No redirect URL found.");
-        }
-      })
-      .catch((error) => {
-        console.log("Error:", error);
-        setIsLoading(false); // যদি কোনো ত্রুটি ঘটে, লোডিং বন্ধ
+    try {
+      const response = await fetch("https://media.upfrica.com/api/cart/checkout/", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(data),
       });
+
+      const result = await response.json();
+      setIsLoading(false);
+      console.log("Result:", result);
+
+      if (result?.payment_url) {
+        router.push(result.payment_url);
+      } else if (result?.stripe_url) {
+        router.push(result.stripe_url);
+      } else {
+        alert("Order placed, but no redirect link.");
+      }
+    } catch (err) {
+      console.error("Checkout Error:", err);
+      setIsLoading(false);
+    }
   };
-
-
 
 
   const formik = useFormik({

@@ -1,7 +1,4 @@
-
-
 "use client";
-
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -32,10 +29,55 @@ const Cart = () => {
     localStorage.setItem("basket", JSON.stringify(newBasket));
   };
 
-  const handleCheckout = () => {
+  console.log("basket",basket)
+
+
+  const handleCheckout = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
-    user ? router.push("/checkout") : router.push("/signin");
+
+    if (!user) {
+      router.push('/signin')
+    } else {
+      // ✅ Convert basket to API format
+      const items = basket.map((item) => ({
+        product:  item.id , // handle all possible key names
+        quantity: item.quantity,
+      }));
+
+      console.log(items, user)
+ 
+
+      try {
+        const response = await fetch("https://media.upfrica.com/api/cart/add/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            // If auth needed, add token:
+            "Authorization": `Token ${user?.token}`
+          },
+          body: JSON.stringify({ items }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to add to cart");
+        }
+
+        const result = await response.json();
+        console.log("Cart API response:", result);
+        
+        if (response.ok) {
+          router.push(`/checkout?cart_id=${result?.cart_id}`)
+        }
+        // 🔁 Redirect user based on login
+        
+
+      } catch (error) {
+        console.error("Checkout error:", error);
+        alert("Something went wrong. Please try again.");
+      }
+    }
   };
+
 
   const subtotal = basket.reduce(
     (sum, item) => sum + (item.price_cents / 100) * item.quantity,
@@ -44,7 +86,7 @@ const Cart = () => {
   const total = subtotal + shippingCost;
 
   return (
-    <div className="container mx-auto mt-12 ">
+    <div className="container mt-12 ">
       {/* Outer container: Switches to flex row at sm: */}
       <div className="sm:flex flex-col sm:flex-row lg:shadow-md my-10 bg-gray-100 rounded-lg overflow-hidden">
         {/* Left side (Cart Items) */}
@@ -230,17 +272,6 @@ const Cart = () => {
               </button>
             </div>
 
-
-
-            {/* <button
-              onClick={handleCheckout}
-              className={`bg-[#8710D8] py-3 text-base sm:text-lg font-semibold text-white uppercase w-full rounded-md
-                ${basket.length === 0 ? "opacity-50 cursor-not-allowed" : ""}
-              `}
-              disabled={basket.length === 0}
-            >
-              Checkout
-            </button> */}
           </div>
         </div>
       </div>
