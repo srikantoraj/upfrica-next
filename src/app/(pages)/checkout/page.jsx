@@ -272,6 +272,16 @@ const Checkout = () => {
     },
   });
 
+  // You can place this inside the same file or extract if reused
+  const LoadingDots = ({ color = "white" }) => (
+    <div className="flex space-x-1 justify-center items-center h-5">
+      <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce [animation-delay:-0.3s]`}></div>
+      <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce [animation-delay:-0.15s]`}></div>
+      <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce`}></div>
+    </div>
+  );
+
+
   return (
     <div>
       {/* Header */}
@@ -623,7 +633,7 @@ const Checkout = () => {
           <p className="text-center text-lg font-medium text-gray-700">
             You'll pick up one or more items in shop or at a collection point.
           </p>
-          <div className="mt-4 space-y-5 text-center">
+          {/* <div className="mt-4 space-y-5 text-center">
             <button
               onClick={() => {
                 setSelectedPayment('paystack');  // পেমেন্ট পদ্ধতি সেট করা হচ্ছে
@@ -645,7 +655,40 @@ const Checkout = () => {
               {isLoading && selectedPayment === 'stripe' ? 'Loading...' : 'Pay with Stripe'}
             </button>
 
+          </div> */}
+
+          <div className="mt-4 md:flex justify-center items-center space-y-5 md:space-y-0 text-center mx-auto w-2/3 md:w-full">
+            <button
+              onClick={() => {
+                setSelectedPayment('paystack');
+                placeOrder('paystack');
+              }}
+              className="text-lg font-semibold text-white bg-[#f7c32e] px-6 py-3 rounded-full hover:bg-[#d6a91d] transition duration-300 ease-in-out shadow-lg focus:outline-none mr-4 flex justify-center items-center gap-2"
+              disabled={isLoading}
+            >
+              {isLoading && selectedPayment === 'paystack' ? (
+                <LoadingDots color="white" />
+              ) : (
+                "Pay with Paystack"
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                setSelectedPayment('stripe');
+                placeOrder('stripe');
+              }}
+              className="text-lg font-semibold text-white bg-[#f7c32e] px-6 py-3  rounded-full hover:bg-[#d6a91d] transition duration-300 ease-in-out shadow-lg focus:outline-none flex justify-center items-center gap-2"
+              disabled={isLoading}
+            >
+              {isLoading && selectedPayment === 'stripe' ? (
+                <LoadingDots color="white" />
+              ) : (
+                "Pay with Stripe"
+              )}
+            </button>
           </div>
+
         </div>
       </div>
     </div>

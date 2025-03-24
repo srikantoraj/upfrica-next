@@ -10,6 +10,8 @@ const Cart = () => {
   const [promoCode, setPromoCode] = useState("");
   const [shippingCost] = useState(10); // Fixed shipping cost
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
 
   useEffect(() => {
     const storedBasket = JSON.parse(localStorage.getItem("basket")) || [];
@@ -29,7 +31,7 @@ const Cart = () => {
     localStorage.setItem("basket", JSON.stringify(newBasket));
   };
 
-  console.log("basket",basket)
+  console.log("basket", basket)
 
 
   const handleCheckout = async () => {
@@ -40,12 +42,13 @@ const Cart = () => {
     } else {
       // ✅ Convert basket to API format
       const items = basket.map((item) => ({
-        product:  item.id , // handle all possible key names
+        product: item.id, // handle all possible key names
         quantity: item.quantity,
       }));
 
       console.log(items, user)
- 
+
+      setIsLoading(true); // ✅ Start loading
 
       try {
         const response = await fetch("https://media.upfrica.com/api/cart/add/", {
@@ -64,16 +67,17 @@ const Cart = () => {
 
         const result = await response.json();
         console.log("Cart API response:", result);
-        
+        setIsLoading(false); // ✅ Stop loading
+
         if (response.ok) {
           router.push(`/checkout?cart_id=${result?.cart_id}`)
         }
         // 🔁 Redirect user based on login
-        
+
 
       } catch (error) {
         console.error("Checkout error:", error);
-        alert("Something went wrong. Please try again.");
+        setIsLoading(false); // ✅ Stop loading on error
       }
     }
   };
@@ -168,7 +172,7 @@ const Cart = () => {
 
                     {/* Price */}
                     <p className="text-base sm:text-lg md:text-xl font-medium text-gray-900">
-                      {product.price_cents}{" "}
+                      ₵ {/* {product.price_cents}{" "} */}
                       {(
                         (product.price_cents / 100) *
                         product.quantity
@@ -249,7 +253,7 @@ const Cart = () => {
             {/* checkout  button  */}
 
             {/* বড় স্ক্রিনে দেখানোর জন্য আগের Checkout বাটন */}
-            <button
+            {/* <button
               onClick={handleCheckout}
               className={`bg-[#8710D8] hidden sm:block py-3 text-base sm:text-lg font-semibold text-white  w-full rounded-md
     ${basket.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}
@@ -257,10 +261,27 @@ const Cart = () => {
               disabled={basket.length === 0}
             >
               Checkout
+            </button> */}
+
+            <button
+              onClick={handleCheckout}
+              className={`bg-[#8710D8] hidden sm:flex justify-center items-center py-3 text-base sm:text-lg font-semibold text-white w-full rounded-md 
+    ${basket.length === 0 || isLoading ? 'opacity-50 cursor-not-allowed' : ''}
+  `}
+              disabled={basket.length === 0 || isLoading}
+            >
+              {isLoading ? (
+                <div className="flex space-x-2 justify-center items-center h-6">
+                  <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                  <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                  <div className="h-2 w-2 bg-white rounded-full animate-bounce"></div>
+                </div>
+              ) : "Checkout"}
             </button>
 
+
             {/* শুধুমাত্র মোবাইল স্ক্রিনে (sm এর নিচে) দেখানোর জন্য ফিক্সড Checkout বাটন */}
-            <div className="sm:hidden fixed bottom-0 left-0 w-full bg-white  z-50 ">
+            {/* <div className="sm:hidden fixed bottom-0 left-0 w-full bg-white  z-50 ">
               <button
                 onClick={handleCheckout}
                 className={`bg-[#8710D8] py-3 text-base font-semibold text-white  w-full rounded-md
@@ -270,7 +291,26 @@ const Cart = () => {
               >
                 Checkout
               </button>
+            </div> */}
+
+            <div className="sm:hidden fixed bottom-0 left-0 w-full bg-white z-50">
+              <button
+                onClick={handleCheckout}
+                className={`bg-[#8710D8] flex justify-center items-center py-3 text-base font-semibold text-white w-full rounded-md 
+      ${basket.length === 0 || isLoading ? 'opacity-50 cursor-not-allowed' : ''}
+    `}
+                disabled={basket.length === 0 || isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex space-x-2 items-center h-6">
+                    <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div className="h-2 w-2 bg-white rounded-full animate-bounce"></div>
+                  </div>
+                ) : "Checkout"}
+              </button>
             </div>
+
 
           </div>
         </div>
