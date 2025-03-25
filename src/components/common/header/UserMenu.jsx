@@ -23,7 +23,7 @@ export default function UserMenu() {
   const toggleModal = () => {
     setIsModalOpen(prev => !prev);
   };
-  
+
   useEffect(() => {
     if (isModalOpen) {
       modalRef.current?.focus();
@@ -42,11 +42,12 @@ export default function UserMenu() {
   }, [isModalOpen]);
 
   const logOut = () => {
-    localStorage.removeItem('user'); 
+    localStorage.removeItem('user');
     router.push('/')
   }
+  
   return (
-    <div onClick={()=>toggleModal()}>
+    <div onClick={() => toggleModal()}>
       {/* User Icon and Menu Toggle */}
       <div ref={triggerRef}>
         <FaRegUser
@@ -72,7 +73,7 @@ export default function UserMenu() {
             tabIndex={-1}
           >
             {/* User Info */}
-          <UserEmail/>
+            <UserEmail />
             <hr className="my-2" />
 
             {/* Menu Items */}
@@ -155,7 +156,7 @@ export default function UserMenu() {
             {/* Sign Out */}
             <div
               className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded"
-              onClick={() => {logOut()}}
+              onClick={() => { logOut() }}
             >
               <CiPower className="h-5 w-5 text-red-500" />
               <span className="ml-2 text-red-500">Sign Out</span>

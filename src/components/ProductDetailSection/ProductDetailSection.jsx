@@ -158,7 +158,7 @@ export default function ProductDetailSection({ product }) {
                                 {product_images && product_images.length > 0 && (
                                     <div className="border rounded overflow-hidden bg-white w-full mx-auto max-w-sm md:max-w-md lg:max-w-lg">
                                         <img
-                                            className="w-full h-auto object-cover"
+                                            className="w-[400px] lg:w-[510px] h-[400px] lg:h-[510px] object-cover"
                                             src={product_images[photoIndex]}
                                             alt={`Product ${photoIndex}`}
                                             onClick={() => setIsOpen(true)}

@@ -1,11 +1,16 @@
 "use client"
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link'; // Link component is missing in your code
 // import useAuth from './useAuth';
 
 const User = () => {
+    const [user, setUser] = useState(null);
+
+    useEffect   (() => {
+        setUser(localStorage.getItem("user"));
+    }, []);
     // const user = useAuth();
-    const user = null;
+    // const user = localStorage.getItem("user");
     // Check if the user does not exist, then return the sign-in section
     if (!user) {
         return (
@@ -21,7 +26,7 @@ const User = () => {
     }
 
     // If user exists, return null or any other content
-    return null; 
+    return null;
 };
 
 export default User;
