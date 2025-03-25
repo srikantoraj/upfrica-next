@@ -95,7 +95,7 @@ const SearchBox = () => {
         onChange={(e) => setSearchText(e.target.value)}
         onFocus={() => results.length > 0 && setDropdownVisible(true)}
         placeholder="Search for products..."
-        className="w-full pl-10 pr-12 py-2 mt-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg"
+        className="w-full pl-10 pr-12 py-2 mt-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 tracking-wide text-lg"
       />
 
       {/* Right X button appears when there is text */}
@@ -115,12 +115,16 @@ const SearchBox = () => {
             ) : (
               results.map((item) => {
                 const country = item.seller_country?.toLowerCase() || 'gh';
-                const categorySlug = item.category?.slug || 'category';
+                const town = item.seller_town?.toLowerCase() || 'accra';
+                const condition = item.condition?.slug || 'new';
                 const slug = item.slug || 'product';
 
                 return (
                   <Link
-                    href={`/${country}/${categorySlug}/${slug}/`}
+                    // href={`/${country}/${categorySlug}/${slug}/`
+                    href={`/${country}/${slug}/${condition}/${town}/`
+                    
+                    }
                     key={item.id}
                     className="block hover:bg-gray-100 p-3"
                     onClick={() => setDropdownVisible(false)}

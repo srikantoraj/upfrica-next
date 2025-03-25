@@ -5,8 +5,9 @@ import { FaBolt, FaHeart } from "react-icons/fa";
 import Link from "next/link";
 
 export default function ProductCard({ product }) {
-  const { product_images, title, price_cents, category, slug, seller_country } = product;
+  const { product_images, title, price_cents, category, slug, seller_country, condition, seller_town } = product;
   const country = seller_country?.toLowerCase() || 'gh';
+  const town = seller_town?.toLowerCase() || 'accra';
 
   if (!product_images) return null;
 
@@ -15,7 +16,7 @@ export default function ProductCard({ product }) {
       {/* Image Section */}
       <div className="relative w-full h-[230px]">
         {product_images.length > 0 && (
-          <Link href={`/${country}/${category?.slug}/${slug}/`}>
+          <Link href={`/${country}/${slug}/${condition?.slug}/${town}/`}>
             {/* Wrapping with an anchor tag for accessibility */}
             <span className="block relative w-[230px] h-[230px]">
               <img

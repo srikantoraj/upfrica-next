@@ -57,11 +57,12 @@ const MenFashion = async ({ title }) => {
                             <div className="flex-grow overflow-hidden">
                                 {(() => {
                                     const country = product.seller_country?.toLowerCase() || 'gh';
-                                    const categorySlug = product.category?.slug || 'category';
+                                    const town = product.seller_town?.toLowerCase() || 'accra';
+                                    const condition = product.condition?.slug || 'new';
                                     const slug = product.slug || 'product';
 
                                     return (
-                                        <Link href={`/${country}/${categorySlug}/${slug}/`}>
+                                        <Link href={`/${country}/${slug}/${condition}/${town}/`}>
                                             <img
                                                 src={product.product_images?.[0]}
                                                 alt={product.title}

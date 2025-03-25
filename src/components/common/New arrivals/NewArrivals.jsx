@@ -55,7 +55,8 @@ const NewArrivals = async ({ title }) => {
                             {/* Product Image */}
                             <div className="flex-grow overflow-hidden">
                                 {product.product_images?.length > 0 && (
-                                    <Link href={`/${product.seller_country?.toLowerCase() || 'gh'}/${product.category?.slug || 'category'}/${product.slug || 'product'}/`}>
+                                    
+                                    <Link href={`/${product.seller_country?.toLowerCase() || 'gh'}/${product.slug || 'product'}/${product?.condition?.slug || 'new'}/${product.seller_town?.toLowerCase() || 'arraca'}/`}>
                                         <img
                                             src={product.product_images[0]}
                                             alt={product.title}
