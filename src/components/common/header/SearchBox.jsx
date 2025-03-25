@@ -36,7 +36,10 @@ const SearchBox = () => {
         );
         const data = await response.json();
         const fetchedResults = data?.results || [];
+        console.log(fetchResults);
+        
         setResults(fetchedResults);
+        
         setDropdownVisible(fetchedResults.length > 0);
       } catch (error) {
         console.error("Error fetching search results:", error);
