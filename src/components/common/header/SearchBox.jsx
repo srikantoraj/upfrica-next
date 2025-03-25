@@ -36,7 +36,9 @@ const SearchBox = () => {
         );
         const data = await response.json();
         const fetchedResults = data?.results || [];
-        console.log(fetchResults);
+        // console.log(fetchResults);
+        console.log("data",data);
+        
         
         setResults(fetchedResults);
         
@@ -73,7 +75,7 @@ const SearchBox = () => {
 
       {dropdownVisible && results.length > 0 && (
         <div className="absolute top-full mt-2 w-full z-20">
-          <div className="bg-white border shadow-lg rounded-md max-h-[300px] overflow-y-auto">
+          <div className="bg-white border shadow-lg rounded-md max-h-[100vh] overflow-y-auto">
             {results.map((item) => {
               const country = item.seller_country?.toLowerCase() || 'gh';
               const categorySlug = item.category?.slug || 'category';

@@ -11,8 +11,11 @@ import User from "@/components/User";
 import Cover from "@/components/common/header/Cover";
 import EarlyDeals from "@/components/EarlyDeals";
 import Selling from "@/components/Selling";
-import Tranding from "@/components/Tranding";
+import Tranding from "@/components/WomenFasion";
 import SellectedItem from "@/components/SellectedItem";
+import NewArrivals from "@/components/common/New arrivals/NewArrivals";
+import WomenFasion from "@/components/WomenFasion";
+import MenFashion from "@/components/men fashion/MenFashion";
 
 export default function Home() {
   return (
@@ -22,10 +25,11 @@ export default function Home() {
       <EarlyDeals />
       <ProductList />
       <Selling />
-      <Tranding title="Trending in Women’s Fashion" />
+      <WomenFasion title="Trending in Women’s Fashion" />
       <SellectedItem />
+      <MenFashion title="Trending in Men’s Fashion" />
       <Selling color="green" />
-      <Tranding title="New arrivals" />
+      <NewArrivals title="New arrivals" />
       <Categories />
       {/* <AboutSection /> */}
       {/* <ProductList title="Selected for you" /> */}

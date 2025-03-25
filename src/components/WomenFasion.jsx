@@ -3,7 +3,7 @@ import React from 'react';
 import { IoIosArrowRoundForward } from 'react-icons/io';
 import { FaShoppingCart } from "react-icons/fa";
 
-const Tranding = async ({ title }) => {
+const WomenFasion = async ({ title }) => {
     // const products = [
     //     {
     //         id: 1,
@@ -173,4 +173,4 @@ const Tranding = async ({ title }) => {
     );
 };
 
-export default Tranding;
+export default WomenFasion;

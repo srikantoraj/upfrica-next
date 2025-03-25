@@ -33,7 +33,7 @@ export default function ProductDetailSection({ product }) {
     const [isOpen, setIsOpen] = useState(false);
     const [photoIndex, setPhotoIndex] = useState(0);
 
-    console.log("produc", product)
+    // console.log("produc", product)
 
 
 
@@ -168,7 +168,7 @@ export default function ProductDetailSection({ product }) {
                             </div>
 
                             {/* Thumbnails */}
-                            <div className="mt-3 flex space-x-3 overflow-x-auto scrollbar-thin">
+                            <div className="mt-3 flex space-x-3 overflow-x-auto scrollbar-thin ">
                                 {/* {product_images.map((imgUrl, idx) => (
                                     <button
                                         key={idx}
@@ -184,7 +184,7 @@ export default function ProductDetailSection({ product }) {
                                 ))} */}
 
                                 {product_images && product_images.length > 1 && (
-                                    <div className="grid grid-cols-4 gap-2">
+                                    <div className="flex  space-x-4 ">
                                         {product_images.map((img, index) => (
                                             <img
                                                 key={index}

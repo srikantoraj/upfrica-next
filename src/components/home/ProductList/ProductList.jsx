@@ -39,12 +39,15 @@ export default async function ProductList({ title }) {
     <div className=" container bg-white p-5 md:py-10 font-sans rounded-lg">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-4 pb-4">
+        {/* <div className="flex items-center gap-4 pb-4">
           <h1 className="text-xl md:text-3xl font-extrabold text-gray-900 tracking-wide">
             Trending in <br className="hidden lg:inline" /> Machines Today
           </h1>
           <IoIosArrowRoundForward className="h-10 w-10 text-gray-700" />
-        </div>
+        </div> */}
+         <h1 className="text-xl md:text-3xl font-extrabold tracking-wide text-gray-900">
+            Selected for You
+          </h1>
         <p className="text-xl font-normal text-gray-500">All with Free Delivery</p>
       </div>
 
