@@ -11,7 +11,7 @@ export default function BasketModal({
   handleQuantityChange,
   handleRemoveProduct,
 }) {
-  
+
   return (
     <div
       className={`
@@ -79,7 +79,7 @@ export default function BasketModal({
                     <p className="text-sm sm:text-base md:text-lg font-semibold text-gray-800">
                       {product.title}
                     </p>
-                    <select
+                    {/* <select
                       value={product.quantity}
                       onChange={(e) =>
                         handleQuantityChange(index, parseInt(e.target.value))
@@ -94,7 +94,24 @@ export default function BasketModal({
                           {num + 1}
                         </option>
                       ))}
+                    </select> */}
+                    <select
+                      value={product.quantity}
+                      onChange={(e) =>
+                        handleQuantityChange(index, parseInt(e.target.value, 10))
+                      }
+                      className="py-1 px-2 border border-gray-300 rounded-md 
+             focus:outline-none focus:ring-1 focus:ring-indigo-500
+             text-xs sm:text-sm"
+                      aria-label="Select quantity"
+                    >
+                      {[...Array(10).keys()].map((num) => (
+                        <option key={num + 1} value={num + 1}>
+                          {num + 1}
+                        </option>
+                      ))}
                     </select>
+
                   </div>
 
                   {/* Favorites / Remove / Price */}
