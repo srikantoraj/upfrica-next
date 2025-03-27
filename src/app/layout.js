@@ -2,7 +2,7 @@
 import "./globals.css";
 import { Inter, Montserrat } from 'next/font/google';
 
-// Load fonts with subsets for better performance
+
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' });
 
