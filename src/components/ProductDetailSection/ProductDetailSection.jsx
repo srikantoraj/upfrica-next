@@ -466,14 +466,14 @@ export default function ProductDetailSection({ product }) {
                                     <button className="w-full bg-[#8710D8] text-white py-2  hover:bg-purple-700 text-base md:text-lg  rounded-3xl font-bold">
                                         Buy Now
                                     </button>
-                                    <button onClick={handleAddToBasket} className="w-full  border-[#8710D8] hover:bg-[#f7c32e] hover:border-[#f7c32e]  py-2  text-base md:text-lg rounded-3xl font-bold border-[2px]">
+                                    <button onClick={handleAddToBasket} className="w-full  border-[#f7c32e] hover:bg-[#f7c32e] hover:border-[#f7c32e]  py-2  text-base md:text-lg rounded-3xl font-bold border-[1px]">
                                         Add to Basket
                                     </button>
-                                    <button className="w-full text-center flex  items-center justify-center gap-2 border-[#8710D8] py-2  text-base md:text-lg hover:bg-[#f7c32e] hover:border-[#f7c32e] rounded-3xl font-bold border-[2px]">
+                                    <button className="w-full text-center flex  items-center justify-center gap-2 border-[#f7c32e] py-2  text-base md:text-lg hover:bg-[#f7c32e] hover:border-[#f7c32e] rounded-3xl font-bold border-[1px]">
                                         Buy Now Pay Later(BNPL) <ImInfo className="h-5 w-5" />
 
                                     </button>
-                                    <button className="w-full flex items-center justify-center gap-2  border-[#8710D8] py-2  text-base md:text-lg hover:bg-[#f7c32e]  hover:border-[#f7c32e] rounded-3xl font-bold border-[2px]">
+                                    <button className="w-full flex items-center justify-center gap-2  border-[#f7c32e] py-2  text-base md:text-lg hover:bg-[#f7c32e]  hover:border-[#f7c32e] rounded-3xl font-bold border-[1px]">
                                         <span><FaRegHeart /></span>
                                         <span>Add to Watchlist</span>
                                     </button>
