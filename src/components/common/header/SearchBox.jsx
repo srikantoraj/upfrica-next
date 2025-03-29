@@ -115,14 +115,13 @@ const SearchBox = () => {
             ) : (
               results.map((item) => {
                 const country = item.seller_country?.toLowerCase() || 'gh';
-                const town = item.seller_town?.toLowerCase() || 'accra';
-                const condition = item.condition?.slug || 'new';
                 const slug = item.slug || 'product';
+                const seo_slug = item.seo_slug || 'product';
 
                 return (
                   <Link
                     // href={`/${country}/${categorySlug}/${slug}/`
-                    href={`/${country}/${slug}/${condition}/${town}/`
+                    href={`/${country}/${seo_slug}/`
                     
                     }
                     key={item.id}

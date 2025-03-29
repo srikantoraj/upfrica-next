@@ -59,10 +59,10 @@ const MenFashion = async ({ title }) => {
                                     const country = product.seller_country?.toLowerCase() || 'gh';
                                     const town = product.seller_town?.toLowerCase() || 'accra';
                                     const condition = product.condition?.slug || 'new';
-                                    const slug = product.slug || 'product';
+                                    const seo_slug = product.seo_slug || 'product';
 
                                     return (
-                                        <Link href={`/${country}/${slug}/${condition}/${town}/`}>
+                                        <Link href={`/${country}/${seo_slug}/`}>
                                             <img
                                                 src={product.product_images?.[0]}
                                                 alt={product.title}
@@ -93,29 +93,6 @@ const MenFashion = async ({ title }) => {
                 </div>
             </div>
         </div>
-        // <div className="container mx-auto p-4">
-        //     <h1 className="text-2xl font-bold mb-4">Trending Products</h1>
-        //     <div className="flex overflow-x-auto space-x-4">
-        //         {products.map((product) => (
-        //             <div key={product.id} className="min-w-[200px] border rounded shadow p-2">
-        //                 <img
-        //                     src={product.product_images?.[0]}
-        //                     alt={product.title}
-        //                     className="w-full h-40 object-cover"
-        //                 />
-        //                 <h2 className="text-sm font-semibold mt-2">{product.title}</h2>
-        //                 <p className="text-gray-700 font-bold mt-1">
-        //                     {(product.sale_price_cents ?? product.price_cents) / 100} GHS
-        //                 </p>
-        //                 {product.sale_price_cents > 0 && (
-        //                     <p className="text-sm line-through text-gray-400">
-        //                         {product.price_cents / 100} GHS
-        //                     </p>
-        //                 )}
-        //             </div>
-        //         ))}
-        //     </div>
-        // </div>
     );
 };
 
