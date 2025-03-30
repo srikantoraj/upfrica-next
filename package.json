@@ -10,11 +10,13 @@
   },
   "dependencies": {
     "@next/font": "^14.2.15",
+    "@reduxjs/toolkit": "^2.6.1",
     "@tinymce/tinymce-react": "^5.1.1",
     "flowbite": "^2.5.2",
     "formik": "^2.4.6",
-    "html-react-parser": "^5.1.16",
+    "html-react-parser": "^5.2.2",
     "next": "14.2.13",
+    "next-redux-wrapper": "^8.1.0",
     "or": "^0.2.0",
     "react": "^18",
     "react-country-region-selector": "^3.6.1",
@@ -25,6 +27,7 @@
     "react-image-magnify": "^2.7.4",
     "react-images-uploading": "^3.1.7",
     "react-native-modal": "^13.0.1",
+    "react-redux": "^9.2.0",
     "sharp": "^0.33.5",
     "styled-components": "^6.1.13"
   },

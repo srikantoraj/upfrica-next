@@ -3,11 +3,16 @@ import Image from "next/image";
 import { AiOutlineShoppingCart } from "react-icons/ai";
 import { FaBolt, FaHeart } from "react-icons/fa";
 import Link from "next/link";
+import { convertPrice } from "@/app/utils/utils";
+import { useSelector } from "react-redux";
 
 export default function ProductCard({ product }) {
-  const { product_images, title, price_cents, category, slug,seo_slug, seller_country, condition, seller_town } = product;
+  const { product_images, title, price_cents, price_currency, category, slug,seo_slug, seller_country, condition, seller_town } = product;
   const country = seller_country?.toLowerCase() || 'gh';
   const town = seller_town?.toLowerCase() || 'accra';
+  const exchangeRates = useSelector((state) => state.exchangeRates.rates);
+  const convertedPrice = convertPrice(price_cents / 100, price_currency,'GHS', exchangeRates);
+  console.log('Converted Price:', convertedPrice);
 
   if (!product_images) return null;
 
@@ -57,11 +62,14 @@ export default function ProductCard({ product }) {
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <p className="text-lg font-bold text-gray-900">
-              ${parseInt(price_cents, 10) / 100}
+              {price_currency}{parseInt(price_cents) / 100}
             </p>
-            <p className="text-sm text-gray-500 line-through">
-              ${"0.00"}
+            <p className="text-lg font-bold text-gray-900">
+              GHS {convertedPrice?.toFixed(2)}
             </p>
+            {/* <p className="text-sm text-gray-500 line-through">
+              {"GHS"}{"0.00"}
+            </p> */}
           </div>
           <Link href={`/${country}/${category?.slug}/${slug}/`}>
            

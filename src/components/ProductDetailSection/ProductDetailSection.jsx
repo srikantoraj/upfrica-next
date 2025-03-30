@@ -47,6 +47,7 @@ export default function ProductDetailSection({ product }) {
     const {
         id,
         title,
+        description,
         price_cents,
         price_currency,
         postage_fee,
@@ -378,7 +379,7 @@ export default function ProductDetailSection({ product }) {
                             </div>
                         </section>
 
-                        <DescriptionAndReviews />
+                        <DescriptionAndReviews details={ description} />
                     </div>
                     {/* END LEFT CONTENT */}
 

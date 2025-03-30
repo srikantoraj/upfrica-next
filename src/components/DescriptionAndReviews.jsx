@@ -1,4 +1,5 @@
 "use client";
+import parse from 'html-react-parser';
 import React, { useState } from "react";
 import { MdOutlinePhone } from "react-icons/md";
 import CustomerReviewsSection from "./CustomerReviewsSection";
@@ -8,7 +9,7 @@ import CustomerReviewsSection from "./CustomerReviewsSection";
  * displays your “description and reviews” section
  * in a polished, responsive layout.
  */
-export default function DescriptionAndReviews() {
+export default function DescriptionAndReviews({ details }) {
     // Toggle phone number
     const [showPhone, setShowPhone] = useState(false);
     const phoneText = showPhone ? "(+233)0533675791" : "Click to view number";
@@ -74,16 +75,14 @@ export default function DescriptionAndReviews() {
 
             {/* Description Text */}
             <section className="mt-10 leading-relaxed text-sm md:text-base lg:text-lg">
-                <p className="mb-3">
-                    Gravity-Defying Performance: The Future of Sneakers.. at everyday low prices. Order
-                    online today for fast delivery or collect from the seller in Accra, GH
-                </p>
-                <p className="mb-3">
-                    Step into the future of footwear with these high-performance sneakers, designed for
-                    ultimate comfort, style, and durability. Engineered with cutting-edge technology, these
-                    sneakers offer lightweight support and exceptional grip, making them perfect for both
-                    casual wear and intense workouts.
-                </p>
+              
+                
+                    <div dangerouslySetInnerHTML={{ __html: details }} className='py-3' />
+                
+              
+                    {/* {parse(details)} */}
+              
+
                 <ul className="list-disc ml-5 my-3 space-y-1">
                     <li>Ergonomic Design – Sleek, modern look with a breathable mesh upper</li>
                     <li>Shock-Absorbing Sole – Advanced cushioning reduces impact</li>
