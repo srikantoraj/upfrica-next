@@ -12,7 +12,7 @@ export default function ProductCard({ product }) {
   const town = seller_town?.toLowerCase() || 'accra';
   const exchangeRates = useSelector((state) => state.exchangeRates.rates);
   const convertedPrice = convertPrice(price_cents / 100, price_currency,'GHS', exchangeRates);
-  console.log('Converted Price:', convertedPrice);
+  // console.log('Converted Price:', convertedPrice);
 
   if (!product_images) return null;
 
@@ -61,9 +61,9 @@ export default function ProductCard({ product }) {
       <div className="border-t">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <p className="text-lg font-bold text-gray-900">
+            {/* <p className="text-lg font-bold text-gray-900">
               {price_currency}{parseInt(price_cents) / 100}
-            </p>
+            </p> */}
             <p className="text-lg font-bold text-gray-900">
               GHS {convertedPrice?.toFixed(2)}
             </p>

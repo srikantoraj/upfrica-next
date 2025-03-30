@@ -1,49 +1,21 @@
-
 "use client";
 import React, { useEffect, useState } from "react";
 import MultiBuySection from "../MultiBuySection";
-import { FaArrowRightLong } from "react-icons/fa6";
 import { MdArrowRightAlt } from "react-icons/md";
-import { HiMiniXMark, HiXMark } from "react-icons/hi2";
-import Link from "next/link";
 import { FaHeart, FaMinus, FaPlus, FaRegHeart } from "react-icons/fa";
 import BasketModal from "../BasketModal";
 import { ImInfo } from "react-icons/im";
-import PaymentMethod from "../PaymentMethod";
 import PaymentDeliveryReturns from "../PaymentDeliveryReturns";
 import DescriptionAndReviews from "../DescriptionAndReviews";
+import { useSelector } from "react-redux";
+import { convertPrice } from "@/app/utils/utils";
 
-const QuantityControl = ({ quantity, onDecrease, onIncrease }) => (
-    <div className="flex items-center text-lg">
-        <button onClick={onDecrease} className="px-2 py-1 font-bold" aria-label="Decrease quantity">
-            <FaMinus />
-        </button>
-        <span className="py-1 px-2">{quantity}</span>
-        <button onClick={onIncrease} className="px-2 py-1 font-bold" aria-label="Increase quantity">
-            <FaPlus />
-        </button>
-    </div>
-);
 
 export default function ProductDetailSection({ product }) {
-    console.log(product);
-
-
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [basket, setBasket] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
     const [photoIndex, setPhotoIndex] = useState(0);
-
-    // console.log("produc", product)
-
-
-
-    // const handleThumbClick = (imageUrl) => {
-    //     setSelectedImage(imageUrl);
-    // };
-
-    // const { id, title, price_cents, price_currency, postage_fee, sale_end_date, sale_start_date, product_images } = product || {};
-
     const {
         id,
         title,
@@ -59,7 +31,8 @@ export default function ProductDetailSection({ product }) {
         category,             // nested object – use category.name, etc.
     } = product || {};
 
-
+    const exchangeRates = useSelector((state) => state.exchangeRates.rates);
+    const convertedPrice = convertPrice(price_cents / 100, price_currency, 'GHS', exchangeRates);
 
     const [timeRemaining, setTimeRemaining] = useState({
         days: 0,
@@ -101,13 +74,6 @@ export default function ProductDetailSection({ product }) {
     };
 
     const handleCloseModal = () => setIsModalVisible(false);
-
-    // const handleQuantityChange = (index, change) => {
-    //     const newBasket = [...basket];
-    //     newBasket[index].quantity = Math.max(1, newBasket[index].quantity + change);
-    //     setBasket(newBasket);
-    //     localStorage.setItem('basket', JSON.stringify(newBasket));
-    // };
 
     const handleQuantityChange = (index, newQuantity) => {
         setBasket((prevBasket) =>
@@ -419,15 +385,13 @@ export default function ProductDetailSection({ product }) {
                                 <div className="mb-4 space-y-2">
                                     <div>
                                         <span className="text-xl md:text-2xl lg:text-3xl font-semibold text-gray-800">
-                                        ₵{price_cents} {price_currency}
+                                            ₵{convertedPrice?.toFixed(2)}
                                         </span>
                                         {/* <span className="ml-1 text-base md:text-lg lg:text-xl text-gray-500">
                                             each
                                         </span> */}
                                     </div>
-                                    {/* <div className="text-sm md:text-base lg:text-lg text-gray-500">
-                                        was <del>₵400</del> — You Save: ₵200 (2%)
-                                    </div> */}
+                                    
                                     <div className="mt-1 text-sm md:text-base">
                                         <span className=" px-2 py-1 bg-red-700 text-white rounded">
                                             <i className="fa fa-bolt" /> Sales
@@ -450,13 +414,6 @@ export default function ProductDetailSection({ product }) {
 
                                     <ImInfo />
                                 </div>
-
-
-                                {/* <div className="mt-3 text-base md:text-lg">
-                                    <p>Price: ₵{price_cents} {price_currency}</p>
-                                    <p>Condition: {condition?.name}</p>
-                                    <p>Category: {category?.name}</p>
-                                </div> */}
 
 
                                 {/* Multi-buy */}
