@@ -133,32 +133,32 @@ export default function ProductDetailSection({ product }) {
                     <div className="order-1 xl:col-span-7 ">
                         {/* Breadcrumb */}
                         <div className="flex items-center space-x-2 mb-4 overflow-x-auto whitespace-nowrap scrollbar-thin">
-                            <span className="font-medium text-base md:text-lg lg:text-xl text-gray-600">
+                            <span className="font-medium text-base md:text-sm lg:text-sm text-gray-600">
                                 Upfrica UK
                             </span>
                             <span className="text-blue-600">&gt;</span>
                             <a
-                                className="inline-block text-base md:text-lg lg:text-xl text-blue-600 hover:underline"
+                                className="inline-block text-base md:text-sm lg:text-sm text-blue-600 hover:underline"
                                 href="/categories/home-appliances-furniture"
                             >
                                 Fashion
                             </a>
                             <span className="text-blue-600">&gt;</span>
                             <a
-                                className="inline-block text-base md:text-lg lg:text-xl text-blue-600 hover:underline"
+                                className="inline-block text-base md:text-sm lg:text-sm text-blue-600 hover:underline"
                                 href="/categories/kitchen-appliances"
                             >
                                 Footwear
                             </a>
                             <span className="text-blue-600">&gt;</span>
                             <a
-                                className="inline-block text-base md:text-lg lg:text-xl text-blue-600 hover:underline"
+                                className="inline-block text-base md:text-sm lg:text-sm text-blue-600 hover:underline"
                                 href="/categories/popcorn-makers"
                             >
                                 Sneakers
                             </a>
                             <span className="text-blue-600">&gt;</span>
-                            <span className="inline-block font-semibold text-base md:text-lg lg:text-xl text-black truncate">
+                            <span className="inline-block font-semibold text-base md:text-sm lg:text-sm text-black truncate ">
                                 Gravity-Defying Performance: The Future of Sneakers
                             </span>
                         </div>
@@ -230,8 +230,8 @@ export default function ProductDetailSection({ product }) {
                         {/* MOBILE CTA (hidden on xl) */}
                         <section className="block xl:hidden mt-5">
                             <div className="bg-white   lg:p-4 space-y-4">
-                                <h1 className="text-base md:text-lg lg:text-xl font-bold text-gray-800">
-                                    Gravity-Defying Performance: The Future of Sneakers
+                                <h1 className="text-base md:text-lg lg:text-xl font-bold text-gray-800 product-title ">
+                                {title}
                                 </h1>
                                 <div className="text-base md:text-lg lg:text-xl text-gray-600">
                                     <b>4480 sold</b> — Visit the{" "}
@@ -314,13 +314,13 @@ export default function ProductDetailSection({ product }) {
                                     <button className="bg-[#8710D8] hover:bg- text-white px-4 py-2   text-base md:text-lg font-bold rounded-3xl">
                                         Buy Now
                                     </button>
-                                    <button onClick={handleAddToBasket} className="border border-[#8710D8] px-4 py-2  hover:bg-yellow-50 text-base md:text-lg rounded-3xl">
+                                    <button onClick={handleAddToBasket} className="border border-[#f7c32e] px-4 py-2  hover:bg-yellow-50 text-base md:text-lg rounded-3xl">
                                         Add to Basket
                                     </button>
-                                    <button className="border border-[#8710D8]  px-4 py-2  hover:bg-yellow-50 text-base md:text-lg rounded-3xl">
+                                    <button className="border border-[#f7c32e]  px-4 py-2  hover:bg-yellow-50 text-base md:text-lg rounded-3xl">
                                         Buy Now Pay Later (BNPL)
                                     </button>
-                                    <button className="border border-[#8710D8] px-4 py-2  hover:bg-yellow-50 text-base md:text-lg rounded-3xl">
+                                    <button className="border border-[#f7c32e] px-4 py-2  hover:bg-yellow-50 text-base md:text-lg rounded-3xl">
                                         <i className="fa-regular fa-heart mr-1" />
                                         Add to Watchlist
                                     </button>
@@ -387,7 +387,7 @@ export default function ProductDetailSection({ product }) {
                         <div className="sticky top-20 space-y-4">
                             {/* CTA Card */}
                             <div className=" p-5">
-                                <h1 className="text-base md:text-lg lg:text-xl font-bold text-gray-800 mb-2 leading-7">
+                                <h1 className="text-base md:text-lg lg:text-xl font-bold text-gray-800 mb-2 leading-7 product-title">
                                     {title}
                                 </h1>
                                 {/* <div className="text-base md:text-lg lg:text-xl text-gray-600">
