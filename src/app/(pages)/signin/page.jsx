@@ -6,7 +6,8 @@ import logo from '@/public/images/logo.png'; // Ensure the logo image is present
 import Link from 'next/link';
 import LocalStorageComponent from '@/components/LocalStorageComponent';
 
-const LoginPage= () => {
+
+const LoginPage = () => {
   return (
     <div className="max-w-screen-2xl flex justify-center items-center mx-auto lg:p-10 p-4 min-h-screen">
       <div className="bg-white container grid lg:grid-cols-2 py-10 lg:px-20 shadow-xl border rounded-md">

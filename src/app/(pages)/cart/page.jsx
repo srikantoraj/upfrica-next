@@ -341,13 +341,13 @@
 
 
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FaHeart } from "react-icons/fa";
 import { HiMiniXMark } from "react-icons/hi2";
 import { useSelector, useDispatch } from "react-redux";
-import { removeFromBasket, updateQuantity } from "../../store/slices/basketSlice";
+import { setBasket, removeFromBasket, updateQuantity } from "../../store/slices/basketSlice";
 
 const Cart = () => {
   const basket = useSelector((state) => state.basket.items);
@@ -356,6 +356,13 @@ const Cart = () => {
   const [shippingCost] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("basket")) || [];
+    dispatch(setBasket(stored));
+  }, []);
+  
 
   const handleQuantityChange = (id, quantity) => {
     dispatch(updateQuantity({ id, quantity }));
