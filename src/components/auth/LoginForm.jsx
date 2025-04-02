@@ -4,10 +4,14 @@ import React from 'react';
 import { useFormik } from 'formik';
 import PasswordInput from '@/components/ui/PasswordInput';
 import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
+import { setUser } from '@/app/store/slices/userSlice'; // Adjust the import path as necessary
 
 
 const LoginForm = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
+
 
   const formik = useFormik({
     initialValues: {
@@ -32,6 +36,7 @@ const LoginForm = () => {
         console.log('Response Data:', data);
 
         if (response.ok) {
+          dispatch(setUser(data));
           localStorage.setItem('user', JSON.stringify(data));
           router.push('/');
         } else {

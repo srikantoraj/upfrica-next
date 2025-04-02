@@ -4,10 +4,12 @@ import React, { useEffect, useState } from 'react'
 import { FaRegUser } from 'react-icons/fa';
 import { FiUserPlus } from 'react-icons/fi';
 import UserName from './UserName';
+import { useSelector } from 'react-redux';
 
 const UserEmail = () => {
   const [user, setUser] = useState(null);
-
+  const userData = useSelector((state) => state.user.user);
+  const token = useSelector((state) => state.user.token);
   useEffect(() => {
     const user = localStorage.getItem('user');
     setUser(user)
@@ -17,8 +19,8 @@ const UserEmail = () => {
       <div className="flex items-center">
         <FaRegUser
           className="h-7 w-7 text-purple-500 cursor-pointer" />
-        {!user && <span className="ml-2 font-bold">Please login!</span>}
-        {user && <span className="ml-2 font-bold">{user?.user?.email}</span>}
+        {!userData && <span className="ml-2 font-bold">Please login!</span>}
+        {userData && <span className="ml-2 font-bold">{userData?.name}</span>}
       </div>
       <UserName />
     </div>
