@@ -112,7 +112,8 @@ const EarlyDeals = async () => {
                         {/* Product Image */}
                         <div className="flex-grow overflow-hidden">
                             <Link
-                                href={`/${(product.seller_country).toLowerCase() || 'gh'}/${product?.seo_slug}/`}
+                                // href={`/${(product.seller_country).toLowerCase() || 'gh'}/${product?.seo_slug}/`}
+                                href={`/${(product?.seller_country || 'gh').toLowerCase()}/${product?.seo_slug}/`}
                                 passHref
                             >
                                 <img

@@ -7,13 +7,18 @@ import BasketModal from "../BasketModal";
 import { ImInfo } from "react-icons/im";
 import PaymentDeliveryReturns from "../PaymentDeliveryReturns";
 import DescriptionAndReviews from "../DescriptionAndReviews";
-import { useSelector } from "react-redux";
+// import { useSelector } from "react-redux";
 import { convertPrice } from "@/app/utils/utils";
+import { useDispatch, useSelector } from "react-redux";
+import { addToBasket, updateQuantity, removeFromBasket } from "../../app/store/slices/basketSlice";
+
 
 
 export default function ProductDetailSection({ product }) {
+    const dispatch = useDispatch();
+    const basket = useSelector((state) => state.basket.items) || [];
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [basket, setBasket] = useState([]);
+    // const [basket, setBasket] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
     const [photoIndex, setPhotoIndex] = useState(0);
     const {
@@ -55,39 +60,51 @@ export default function ProductDetailSection({ product }) {
         });
     }, [sale_start_date, sale_end_date]);
 
-    useEffect(() => {
-        const storedBasket = JSON.parse(localStorage.getItem('basket')) || [];
-        setBasket(storedBasket);
-    }, []);
+    // useEffect(() => {
+    //     const storedBasket = JSON.parse(localStorage.getItem('basket')) || [];
+    //     setBasket(storedBasket);
+    // }, []);
 
     const handleAddToBasket = () => {
         const productData = { id, title, price_cents, quantity: 1, image: product_images };
-        const currentBasket = JSON.parse(localStorage.getItem('basket')) || [];
-        const existingProductIndex = currentBasket.findIndex((item) => item.id === productData.id);
+        // const currentBasket = JSON.parse(localStorage.getItem('basket')) || [];
+        // const existingProductIndex = currentBasket.findIndex((item) => item.id === productData.id);
 
-        if (existingProductIndex >= 0) currentBasket[existingProductIndex].quantity += 1;
-        else currentBasket.push(productData);
+        // if (existingProductIndex >= 0) currentBasket[existingProductIndex].quantity += 1;
+        // else currentBasket.push(productData);
 
-        localStorage.setItem('basket', JSON.stringify(currentBasket));
-        setBasket(currentBasket);
+        // localStorage.setItem('basket', JSON.stringify(currentBasket));
+        // setBasket(currentBasket);
+        // setIsModalVisible(true);
+        dispatch(addToBasket(productData));
         setIsModalVisible(true);
     };
 
     const handleCloseModal = () => setIsModalVisible(false);
 
-    const handleQuantityChange = (index, newQuantity) => {
-        setBasket((prevBasket) =>
-            prevBasket.map((item, i) =>
-                i === index ? { ...item, quantity: newQuantity } : item
-            )
-        );
+    // const handleQuantityChange = (index, newQuantity) => {
+    //     setBasket((prevBasket) =>
+    //         prevBasket.map((item, i) =>
+    //             i === index ? { ...item, quantity: newQuantity } : item
+    //         )
+    //     );
+    // };
+
+    const handleQuantityChange = (id, quantity) => {
+        dispatch(updateQuantity({ id, quantity }));
     };
 
 
-    const handleRemoveProduct = (index) => {
-        const newBasket = basket.filter((_, i) => i !== index);
-        setBasket(newBasket);
-        localStorage.setItem("basket", JSON.stringify(newBasket));
+
+
+    // const handleRemoveProduct = (index) => {
+    //     const newBasket = basket.filter((_, i) => i !== index);
+    //     setBasket(newBasket);
+    //     localStorage.setItem("basket", JSON.stringify(newBasket));
+    // };
+
+    const handleRemoveProduct = (id) => {
+        dispatch(removeFromBasket(id));
     };
 
 
@@ -345,7 +362,7 @@ export default function ProductDetailSection({ product }) {
                             </div>
                         </section>
 
-                        <DescriptionAndReviews details={ description} />
+                        <DescriptionAndReviews details={description} />
                     </div>
                     {/* END LEFT CONTENT */}
 
@@ -391,7 +408,7 @@ export default function ProductDetailSection({ product }) {
                                             each
                                         </span> */}
                                     </div>
-                                    
+
                                     <div className="mt-1 text-sm md:text-base">
                                         <span className=" px-2 py-1 bg-red-700 text-white rounded">
                                             <i className="fa fa-bolt" /> Sales
@@ -404,10 +421,10 @@ export default function ProductDetailSection({ product }) {
 
                                 {/* condition  */}
                                 <div className="flex items-center py-3 space-x-1 text-base lg:text-xl">
-                                   
+
                                     <span className="font-light">
                                         Condition:
-                                    </span>                               
+                                    </span>
                                     <span className="font-semibold">
                                         {condition?.name}
                                     </span>
@@ -444,7 +461,15 @@ export default function ProductDetailSection({ product }) {
                     {/* END RIGHT CONTENT */}
 
                     {/* basket  Modal  section */}
-                    <BasketModal isModalVisible={isModalVisible} handleCloseModal={handleCloseModal} basket={basket} handleQuantityChange={handleQuantityChange} handleRemoveProduct={handleRemoveProduct} />
+                    {/* <BasketModal isModalVisible={isModalVisible} handleCloseModal={handleCloseModal} basket={basket} handleQuantityChange={handleQuantityChange} handleRemoveProduct={handleRemoveProduct} /> */}
+                    <BasketModal
+                        isModalVisible={isModalVisible}
+                        handleCloseModal={handleCloseModal}
+                        basket={basket}
+                        handleQuantityChange={(id, qty) => handleQuantityChange(id, qty)}
+                        handleRemoveProduct={(id) => handleRemoveProduct(id)}
+                    />
+
                 </div>
             </div>
         </section>

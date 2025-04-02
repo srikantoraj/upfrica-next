@@ -98,7 +98,7 @@ export default function BasketModal({
                     <select
                       value={product.quantity}
                       onChange={(e) =>
-                        handleQuantityChange(index, parseInt(e.target.value, 10))
+                        handleQuantityChange(product.id, parseInt(e.target.value, 10))
                       }
                       className="py-1 px-2 border border-gray-300 rounded-md 
              focus:outline-none focus:ring-1 focus:ring-indigo-500
@@ -128,7 +128,7 @@ export default function BasketModal({
                       </button>
 
                       <button
-                        onClick={() => handleRemoveProduct(index)}
+                        onClick={() => handleRemoveProduct(product.id)}
                         type="button"
                         className="inline-flex items-center text-xs sm:text-sm font-medium 
                  text-red-600 hover:underline"

@@ -6,7 +6,7 @@ import useAuth from './useAuth';
 
 const User = () => {
 
-    const user = useAuth()
+    const user = null
     // const [user, setUser] = useState(null);
 
     // useEffect   (() => {

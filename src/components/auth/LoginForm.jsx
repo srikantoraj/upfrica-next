@@ -4,6 +4,8 @@ import React from 'react';
 import { useFormik } from 'formik';
 import PasswordInput from '@/components/ui/PasswordInput';
 import { useRouter } from 'next/navigation';
+import { setUser } from '@/app/store/slices/userSlice';
+import { useDispatch } from 'react-redux';
 
 
 const LoginForm = () => {
@@ -29,11 +31,12 @@ const LoginForm = () => {
         );
 
         const data = await response.json();
-        console.log('Response Data:', data);
+        console.log('Response Data:', data.user.email);
 
         if (response.ok) {
           localStorage.setItem('user', JSON.stringify(data));
-          router.push('/');
+          // useDispatch(setUser(data?.profile));
+          // router.push('/');
         } else {
           // Handle server-side validation errors
           setErrors({ email: data.message || 'Login failed' });
