@@ -11,6 +11,7 @@ import DescriptionAndReviews from "../DescriptionAndReviews";
 import { convertPrice } from "@/app/utils/utils";
 import { useDispatch, useSelector } from "react-redux";
 import { addToBasket, updateQuantity, removeFromBasket } from "../../app/store/slices/basketSlice";
+import RecentlyViewed from "../recentlyViewed";
 
 
 
@@ -110,6 +111,8 @@ export default function ProductDetailSection({ product }) {
 
     return (
         <section className="pt-6 md:pt-8 lg:pt-10">
+            {/* This component will update localStorage with the current product */}
+            <RecentlyViewed product={product} />
             <div data-sticky-container>
                 {/* Main grid: left col (xl:7) & right col (xl:5) */}
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">

@@ -16,15 +16,19 @@ import SellectedItem from "@/components/SellectedItem";
 import NewArrivals from "@/components/common/New arrivals/NewArrivals";
 import WomenFasion from "@/components/WomenFasion";
 import MenFashion from "@/components/men fashion/MenFashion";
+import RecentlyViewedList from "@/components/home/ProductList/RecentlyViewedList";
 
 export default function Home() {
   return (
     <div className="bg-gray-100">
       <Header />
       {/* <Cover /> */}
+     
       <EarlyDeals />
-      <ProductList />
+      <ProductList title={'Selected by Upfrica'} />
       <Selling />
+      <RecentlyViewedList />
+      
       <WomenFasion title="Trending in Women’s Fashion" />
       <SellectedItem />
       <MenFashion title="Trending in Men’s Fashion" />
