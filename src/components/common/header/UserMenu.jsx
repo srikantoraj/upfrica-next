@@ -12,6 +12,10 @@ import { BsBarChartSteps, BsCalendar3, BsFillBookmarkHeartFill, BsFillPersonLine
 import { IoInformationCircleOutline } from "react-icons/io5";
 import { FaHouseChimney } from "react-icons/fa6";
 import { CiPower } from "react-icons/ci";
+import { useDispatch } from 'react-redux';
+import { clearUser } from "../../../app/store/slices/userSlice"; // adjust path if needed
+
+
 
 
 export default function UserMenu() {
@@ -19,6 +23,7 @@ export default function UserMenu() {
   const modalRef = useRef(null);
   const triggerRef = useRef(null);
   const router = useRouter()
+  const dispatch = useDispatch();
 
   const toggleModal = () => {
     setIsModalOpen(prev => !prev);
@@ -41,11 +46,14 @@ export default function UserMenu() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isModalOpen]);
 
+
   const logOut = () => {
-    localStorage.removeItem('user');
-    router.push('/')
+    // localStorage.removeItem('user');   // optional if you're using Redux only
+    dispatch(clearUser());             // ✅ clear Redux state
+    router.push('/');
   }
-  
+
+
   return (
     <div onClick={() => toggleModal()}>
       {/* User Icon and Menu Toggle */}
@@ -156,7 +164,7 @@ export default function UserMenu() {
             {/* Sign Out */}
             <div
               className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded"
-              onClick={() => { logOut() }}
+              onClick={logOut}
             >
               <CiPower className="h-5 w-5 text-red-500" />
               <span className="ml-2 text-red-500">Sign Out</span>

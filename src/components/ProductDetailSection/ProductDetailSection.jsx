@@ -11,7 +11,8 @@ import DescriptionAndReviews from "../DescriptionAndReviews";
 import { convertPrice } from "@/app/utils/utils";
 import { useDispatch, useSelector } from "react-redux";
 import { addToBasket, updateQuantity, removeFromBasket } from "../../app/store/slices/basketSlice";
-import RecentlyViewed from "../recentlyViewed";
+import RecentlyViewed from "../RecentlyViewed";
+// import RecentlyViewed from "../recentlyViewed";
 
 
 

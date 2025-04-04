@@ -39,7 +39,7 @@ const LoginForm = () => {
           dispatch(setUser(data));
           localStorage.setItem('user', JSON.stringify(data));
           // useDispatch(setUser(data?.profile));
-          // router.push('/');
+          router.push('/');
         } else {
           // Handle server-side validation errors
           setErrors({ email: data.message || 'Login failed' });
