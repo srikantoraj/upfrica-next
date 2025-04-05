@@ -52,6 +52,7 @@ const User = () => {
     
 
     // If no user, show sign-in section
+    
     if (!user) {
         return (
             <div className="fixed bottom-0 left-0 right-0 bg-black bg-opacity-95 shadow-lg text-white z-50">

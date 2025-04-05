@@ -62,35 +62,16 @@ export default function ProductDetailSection({ product }) {
         });
     }, [sale_start_date, sale_end_date]);
 
-    // useEffect(() => {
-    //     const storedBasket = JSON.parse(localStorage.getItem('basket')) || [];
-    //     setBasket(storedBasket);
-    // }, []);
 
     const handleAddToBasket = () => {
         const productData = { id, title, price_cents, quantity: 1, image: product_images };
-        // const currentBasket = JSON.parse(localStorage.getItem('basket')) || [];
-        // const existingProductIndex = currentBasket.findIndex((item) => item.id === productData.id);
 
-        // if (existingProductIndex >= 0) currentBasket[existingProductIndex].quantity += 1;
-        // else currentBasket.push(productData);
-
-        // localStorage.setItem('basket', JSON.stringify(currentBasket));
-        // setBasket(currentBasket);
-        // setIsModalVisible(true);
         dispatch(addToBasket(productData));
         setIsModalVisible(true);
     };
 
     const handleCloseModal = () => setIsModalVisible(false);
 
-    // const handleQuantityChange = (index, newQuantity) => {
-    //     setBasket((prevBasket) =>
-    //         prevBasket.map((item, i) =>
-    //             i === index ? { ...item, quantity: newQuantity } : item
-    //         )
-    //     );
-    // };
 
     const handleQuantityChange = (id, quantity) => {
         dispatch(updateQuantity({ id, quantity }));
@@ -99,11 +80,6 @@ export default function ProductDetailSection({ product }) {
 
 
 
-    // const handleRemoveProduct = (index) => {
-    //     const newBasket = basket.filter((_, i) => i !== index);
-    //     setBasket(newBasket);
-    //     localStorage.setItem("basket", JSON.stringify(newBasket));
-    // };
 
     const handleRemoveProduct = (id) => {
         dispatch(removeFromBasket(id));

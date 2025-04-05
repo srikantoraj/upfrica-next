@@ -50,6 +50,10 @@ export default function UserMenu() {
   const logOut = () => {
     // localStorage.removeItem('user');   // optional if you're using Redux only
     dispatch(clearUser());             // ✅ clear Redux state
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('user');
+      // localStorage.removeItem('token');
+    }
     router.push('/');
   }
 

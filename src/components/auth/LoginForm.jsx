@@ -6,6 +6,8 @@ import PasswordInput from '@/components/ui/PasswordInput';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { setUser } from '@/app/store/slices/userSlice'; // Adjust the import path as necessary
+import Link from 'next/link';
+import { setToken } from '../../app/store/slices/tokenSlice';
 
 
 const LoginForm = () => {
@@ -33,12 +35,15 @@ const LoginForm = () => {
         );
 
         const data = await response.json();
-        console.log('Response Data:', data.user.email);
+        console.log('Response Data:', data.token);
 
         if (response.ok) {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem("token", data?.token);
+            localStorage.setItem("user", JSON.stringify(data?.user));
+          } 
           dispatch(setUser(data));
-          localStorage.setItem('user', JSON.stringify(data));
-          // useDispatch(setUser(data?.profile));
+          dispatch(setToken(data?.token));
           router.push('/');
         } else {
           // Handle server-side validation errors
@@ -101,12 +106,12 @@ const LoginForm = () => {
           </label>
         </div>
         <div>
-          <a
-            href="#"
+          <Link
+            href="/password/new"
             className="text-xl text-purple-500 hover:text-purple-700"
           >
             Forgot password?
-          </a>
+          </Link>
         </div>
       </div>
 

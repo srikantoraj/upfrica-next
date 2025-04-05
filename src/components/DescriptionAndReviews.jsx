@@ -3,6 +3,7 @@ import parse from 'html-react-parser';
 import React, { useState } from "react";
 import { MdOutlinePhone } from "react-icons/md";
 import CustomerReviewsSection from "./CustomerReviewsSection";
+import CreateReves from './CreateReves';
 
 /**
  * A reusable React + Tailwind CSS component that
@@ -75,13 +76,13 @@ export default function DescriptionAndReviews({ details }) {
 
             {/* Description Text */}
             <section className="mt-10 leading-relaxed text-sm md:text-base lg:text-lg">
-              
-                
-                    <div dangerouslySetInnerHTML={{ __html: details }} className='py-3' />
-                
-              
-                    {/* {parse(details)} */}
-              
+
+
+                <div dangerouslySetInnerHTML={{ __html: details }} className='py-3' />
+
+
+                {/* {parse(details)} */}
+
 
                 <ul className="list-disc ml-5 my-3 space-y-1">
                     <li>Ergonomic Design – Sleek, modern look with a breathable mesh upper</li>
@@ -151,32 +152,7 @@ export default function DescriptionAndReviews({ details }) {
                 <h3 className="text-lg md:text-xl lg:text-2xl font-medium border-b pb-2 mb-4">
                     Verified Customer Review
                 </h3>
-                {/* Ratings Summary */}
-                {/* <div className="bg-gray-100 p-4 rounded-md mb-6">
-                    <div className="flex flex-col md:flex-row items-center gap-4">
-                        <div className="md:w-1/3 text-center">
-                            <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-1">5.0</h3>
-                            <p className="text-xs md:text-sm lg:text-base text-gray-600">
-                                Based on 3 Customer Reviews
-                            </p>
-                            <div className="mt-1 text-yellow-400 text-lg md:text-xl">★★★★★</div>
-                        </div>
-                        <div className="md:w-2/3 flex flex-col space-y-2">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2/3 bg-yellow-100 h-2 rounded">
-                                    <div className="bg-yellow-400 h-2 rounded" style={{ width: "95%" }}></div>
-                                </div>
-                                <span className="text-xs md:text-sm lg:text-base text-gray-700">85%</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-2/3 bg-yellow-100 h-2 rounded">
-                                    <div className="bg-yellow-400 h-2 rounded" style={{ width: "75%" }}></div>
-                                </div>
-                                <span className="text-xs md:text-sm lg:text-base text-gray-700">75%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div> */}
+
                 <div className="bg-gray-100 p-4 rounded-md mb-6">
                     <div className="flex flex-col md:flex-row items-center gap-4">
                         <div className="md:w-1/3 text-center">
@@ -208,69 +184,7 @@ export default function DescriptionAndReviews({ details }) {
             </section>
 
             {/* Write a Review */}
-            <section className="mt-12">
-                <h3 className="text-lg md:text-xl lg:text-2xl font-medium border-b pb-3">
-                    Write a Review
-                </h3>
-                <form className="mt-6 space-y-6">
-                    {/* Hidden Inputs */}
-                    <input type="hidden" name="authenticity_token" value="..." />
-                    <input type="hidden" name="review[reviewer_id]" value="1" />
-                    <input type="hidden" name="review[product_id]" value="155" />
-
-                    {/* Rating */}
-                    <div>
-                        <label className="block text-[#A435F0] mb-1  text-sm md:text-base lg:text-lg">
-                            Select stars for your rating. The higher the better
-                        </label>
-                        <select
-                            className="w-full border rounded p-2 text-sm md:text-base"
-                            name="review[rating]"
-                            id="review_rating"
-                        >
-                            <option value="5">★★★★★ (5/5)</option>
-                            <option value="4">★★★★☆ (4/5)</option>
-                            <option value="3">★★★☆☆ (3/5)</option>
-                            <option value="2">★★☆☆☆ (2/5)</option>
-                            <option value="1">★☆☆☆☆ (1/5)</option>
-                        </select>
-                    </div>
-
-                    {/* Headline */}
-                    <div>
-                        <label className="block text-[#A435F0]  mb-1  text-sm md:text-base lg:text-lg">
-                            Headline
-                        </label>
-                        <input
-                            className="w-full border rounded p-2 text-sm md:text-base"
-                            placeholder="Sum it up in a few words"
-                            type="text"
-                            name="review[title]"
-                        />
-                    </div>
-
-                    {/* Comment */}
-                    <div>
-                        <label className="block mb-1 font-semibold text-sm md:text-base lg:text-lg">
-                            Review
-                        </label>
-                        <textarea
-                            className="w-full border rounded p-2 text-sm md:text-base"
-                            rows={5}
-                            placeholder="Write a review and share details of your own experience"
-                            name="review[comment]"
-                        ></textarea>
-                    </div>
-
-                    {/* Submit */}
-                    <button
-                        type="submit"
-                        className="bg-[#A435F0] text-white px-4 lg:px-8 py-2 lg:py-3 rounded font-semibold text-sm md:text-base"
-                    >
-                        Post review
-                    </button>
-                </form>
-            </section>
+            <CreateReves />
 
             {/* Disclaimer */}
             <section className="bg-gray-100 p-4 mt-12 rounded-md text-sm md:text-base lg:text-lg leading-relaxed">
