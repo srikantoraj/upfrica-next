@@ -111,17 +111,18 @@ const EarlyDeals = async () => {
                     >
                         {/* Product Image */}
                         <div className="flex-grow overflow-hidden">
-                            <Link
-                                href={`/${(product.seller_country).toLowerCase() || 'gh'}/${product.slug}/${product.condition?.slug || 'new'}/${(product.seller_town).toLowerCase() || 'accra'}/`}
-                                passHref
-                            >
-                                <img
-                                    src={product.product_images[0] || "https://via.placeholder.com/150"}
-                                    alt={product.title}
-                                    className="w-full h-full object-cover transform transition-all duration-500 ease-in-out hover:scale-105"
-                                />
-                            </Link>
-                        </div>
+  <Link
+    href={`/${(product?.seller_country || 'gh').toLowerCase()}/${product?.slug}/${product?.condition?.slug || 'new'}/${(product?.seller_town || 'accra').toLowerCase()}/`}
+    passHref
+  >
+    <img
+      src={product?.product_images?.[0] || "https://via.placeholder.com/150"}
+      alt={product?.title || 'Product image'}
+      className="w-full h-full object-cover transform transition-all duration-500 ease-in-out hover:scale-105"
+    />
+  </Link>
+</div>
+
 
                         {/* <Link href={`/${product.seller_country}/${product.category?.slug}/${product.slug}/`} passHref>
                             <div className="relative w-full h-40 cursor-pointer">
