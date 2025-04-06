@@ -237,6 +237,43 @@ const CreateReves = () => {
     return errors;
   };
 
+  // const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+  //   const payload = {
+  //     title: values.title,
+  //     rating: parseInt(values.rating),
+  //     comment: values.comment,
+  //     questions: {
+  //       quality: values.quality,
+  //       value: values.value,
+  //     },
+  //   };
+
+  //   try {
+  //     const response = await fetch(
+  //       "https://media.upfrica.com/api/products/redmi-power-bank-18w-fast-power-charger/reviews/",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(payload),
+  //       }
+  //     );
+
+  //     if (!response.ok) {
+  //       throw new Error("Failed to post review");
+  //     }
+
+  //     alert("Review submitted successfully!");
+  //     resetForm();
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("Something went wrong while submitting.");
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
+
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     const payload = {
       title: values.title,
@@ -247,7 +284,12 @@ const CreateReves = () => {
         value: values.value,
       },
     };
-
+  
+    // Token localStorage থেকে নেওয়া
+    const token = localStorage.getItem("token");
+    console.log("token",token);
+    
+  
     try {
       const response = await fetch(
         "https://media.upfrica.com/api/products/redmi-power-bank-18w-fast-power-charger/reviews/",
@@ -255,15 +297,16 @@ const CreateReves = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` // 🔥 এখানে token পাঠানো হচ্ছে
           },
           body: JSON.stringify(payload),
         }
       );
-
+  
       if (!response.ok) {
         throw new Error("Failed to post review");
       }
-
+  
       alert("Review submitted successfully!");
       resetForm();
     } catch (error) {
@@ -273,6 +316,8 @@ const CreateReves = () => {
       setSubmitting(false);
     }
   };
+  
+
 
   return (
     <section className="mt-12">
