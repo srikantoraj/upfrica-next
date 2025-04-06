@@ -7,9 +7,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Addresses from "@/components/Addresses";
 import useAuth from "@/components/useAuth";
 import { Formik, useFormik } from "formik";
+import { useSelector } from "react-redux";
 
 const Checkout = () => {
   const userInfo = useAuth();
+  const { user, token } = useSelector((state) => state.auth);
   //  console.log(userInfo)
   const [country, setCountry] = useState("Bangladesh");
   const [isOpen, setIsOpen] = useState(false);
@@ -31,13 +33,12 @@ const Checkout = () => {
 
   // Fetch addresses from the API
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user")) || {};
-    if (!user?.token) router.push("/signin");
+   
 
     const fetchAddresses = async () => {
       try {
         const myHeaders = new Headers();
-        myHeaders.append("Authorization", `Bearer ${user?.token}`);
+        myHeaders.append("Authorization", `Token ${token}`);
 
         const requestOptions = {
           method: "GET",
@@ -46,7 +47,7 @@ const Checkout = () => {
         };
 
         const response = await fetch(
-          "https://upfrica-staging.herokuapp.com/api/v1/addresses",
+          "https://media.upfrica.com/v1/addresses",
           requestOptions
         );
 

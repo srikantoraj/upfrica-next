@@ -3,7 +3,7 @@ import parse from 'html-react-parser';
 import React, { useState } from "react";
 import { MdOutlinePhone } from "react-icons/md";
 import CustomerReviewsSection from "./CustomerReviewsSection";
-import CreateReves from './CreateReves';
+import CreateReves from './CreateReviews';
 
 /**
  * A reusable React + Tailwind CSS component that

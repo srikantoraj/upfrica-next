@@ -55,11 +55,12 @@
 'use client'
 import React from 'react';
 import { useSelector } from 'react-redux';
-import Link from 'next/link';
+import Link from 'next/link'; 
 
 const UserName = () => {
   // Redux store theke user data anchi
-  const user = useSelector((state) => state.user.user);
+  const user = useSelector((state) => state.auth.user);
+
 
   return (
     <div>
@@ -70,7 +71,7 @@ const UserName = () => {
           </Link>
         ) : (
           <>
-            <span className="text-purple-500 font-bold">{user.email}</span> <br />
+            <span className="text-purple-500 font-bold">{user?.first_name}</span> <br />
             <span className='font-bold'>Welcome back</span>
           </>
         )}
