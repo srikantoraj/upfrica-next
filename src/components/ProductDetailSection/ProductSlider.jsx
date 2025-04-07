@@ -95,7 +95,7 @@ const ProductSlider = ({ images = [] }) => {
         style={{
           maxWidth: "588px",
           maxHeight: "588px",
-          background: bgGradient,
+          /*background: bgGradient,*/
           transition: "background 0.3s ease-in-out",
         }}
         onMouseMove={handleMouseMove}
@@ -172,7 +172,7 @@ const ProductSlider = ({ images = [] }) => {
             ))}
           </div>
 
-          <div className="flex-grow flex items-center justify-center relative" style={{ background: bgGradient }}>
+          <div className="flex-grow flex items-center justify-center relative" /*style={{ background: bgGradient }}*/>
             <button
               className="absolute top-4 right-4 text-white text-3xl bg-black bg-opacity-50 p-2 rounded-full"
               onClick={closeModal}
