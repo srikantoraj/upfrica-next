@@ -17,7 +17,7 @@ const ProfileCard = () => {
                     src={user.profileImage}
                     alt={`${user.name}'s profile`}
                 />
-                <h2 className="mt-4 text-xl font-semibold">{user.name}</h2>
+                <h2 className="mt-4  font-semibold">{user.name}</h2>
                 <p className="text-gray-600">Welcome back</p>
             </div>
             <hr className="my-6" />
