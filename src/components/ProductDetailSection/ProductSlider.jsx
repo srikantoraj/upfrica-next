@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Modal from "react-modal";
 
-const ProductSlider = ({ images = [] }) => {
+const ProductSlider = ({ images = [], selectedColor }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [zoomPosition, setZoomPosition] = useState(null);
@@ -68,6 +68,17 @@ const ProductSlider = ({ images = [] }) => {
     if (safeImage) extractGradient(safeImage);
   }, [selectedIndex]);
 
+  useEffect(() => {
+    const listener = (e) => {
+      const color = e.detail;
+      const matchIndex = safeImages.findIndex(img => img.toLowerCase().includes(color));
+      if (matchIndex !== -1) setSelectedIndex(matchIndex);
+    };
+
+    window.addEventListener("updateSelectedColor", listener);
+    return () => window.removeEventListener("updateSelectedColor", listener);
+  }, [safeImages]);
+
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
   const nextImage = () => setSelectedIndex((prev) => (prev + 1) % safeImages.length);
@@ -95,7 +106,6 @@ const ProductSlider = ({ images = [] }) => {
         style={{
           maxWidth: "588px",
           maxHeight: "588px",
-          /*background: bgGradient,*/
           transition: "background 0.3s ease-in-out",
         }}
         onMouseMove={handleMouseMove}
@@ -172,7 +182,7 @@ const ProductSlider = ({ images = [] }) => {
             ))}
           </div>
 
-          <div className="flex-grow flex items-center justify-center relative" /*style={{ background: bgGradient }}*/>
+          <div className="flex-grow flex items-center justify-center relative">
             <button
               className="absolute top-4 right-4 text-white text-3xl bg-black bg-opacity-50 p-2 rounded-full"
               onClick={closeModal}

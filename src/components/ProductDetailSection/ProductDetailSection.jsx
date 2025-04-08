@@ -28,11 +28,15 @@ const QuantityControl = ({ quantity, onDecrease, onIncrease }) => (
 );
 
 export default function ProductDetailSection({ product }) {
+  const colors = ["Oak", "Dark Walnut", "White", "Dark", "Grey", "Green", "Red", "Purple", "Black Walnut"];
+  const sizes = ["2-Seater", "4-Seater", "6-Seater", "8-Seater", "10-Seater", "12-Seater", "20-Seater"];
+  const [selectedColor, setSelectedColor] = useState(colors[0]);
+  const [selectedSize, setSelectedSize] = useState(sizes[0]);
+  const sku = `SKU-${selectedSize}-${selectedColor.replace(/\s+/g, '-').toUpperCase()}`;
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [basket, setBasket] = useState([]);
   const [quantity, setQuantity] = useState(1);
-  const [selectedColor, setSelectedColor] = useState("Oak");
-  const [selectedSize, setSelectedSize] = useState("4-Seater");
 
   const {
     id,
@@ -67,6 +71,13 @@ export default function ProductDetailSection({ product }) {
     const storedBasket = JSON.parse(localStorage.getItem("basket")) || [];
     setBasket(storedBasket);
   }, []);
+
+  useEffect(() => {
+    // Send selectedColor to ProductSlider via custom event
+    window.dispatchEvent(new CustomEvent("updateSelectedColor", {
+      detail: selectedColor.toLowerCase()
+    }));
+  }, [selectedColor]);
 
   const handleAddToBasket = () => {
     const productData = {
@@ -121,14 +132,65 @@ export default function ProductDetailSection({ product }) {
               <span className="font-semibold text-gray-700 truncate">{title}</span>
             </div>
 
-            {/* Replaced old slider with ProductSlider */}
+
+
+{/* Product image carousel */}
             <section className="mt-2">
               <ProductSlider images={product_images} />
             </section>
 
+{/* rest of your original layout... */}
             <section className="block xl:hidden mt-5">
               <div className="bg-white p-4 space-y-4">
                 <h1 className="heading-lg">{title}</h1>
+
+{/*variation starts*/}
+                <div className="space-y-4 my-4">
+  {/* Color Selector */}
+  <div>
+    <p className="text-sm font-medium text-gray-700 mb-1">Color</p>
+    <div className="flex flex-wrap gap-2">
+      {colors.map((color, idx) => (
+        <button
+          key={idx}
+          onClick={() => setSelectedColor(color)}
+          className={`px-4 py-2 border rounded-full text-sm ${
+            selectedColor === color
+              ? "border-black font-semibold"
+              : "border-gray-300 text-gray-700"
+          }`}
+        >
+          {color}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  {/* Size Selector */}
+  <div>
+    <div className="flex items-center justify-between">
+      <p className="text-sm font-medium text-gray-700 mb-1">Size</p>
+      <span className="text-sm text-gray-400">{sku}</span>
+    </div>
+    <div className="flex flex-wrap gap-2">
+      {sizes.map((size, idx) => (
+        <button
+          key={idx}
+          onClick={() => setSelectedSize(size)}
+          className={`px-4 py-2 border rounded-full text-sm ${
+            selectedSize === size
+              ? "border-black font-semibold"
+              : "border-gray-300 text-gray-700"
+          }`}
+        >
+          {size}
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
+{/*variation ends*/}
+
                 <div className="text-sm text-gray-500">
                   <b>4480 sold</b> — Visit the <b className="text-[#8710D8]">Upfrica GH</b> Shop — Accra, GH
                 </div>
@@ -177,8 +239,57 @@ export default function ProductDetailSection({ product }) {
                 <span className="underline text-blue-600">595 Reviews</span>
                 <span className="text-green-600">✅ Verified Seller</span>
               </div>
-
               <hr className="my-3 border-gray-200" />
+
+
+              {/*variation starts*/}
+              <div className="space-y-4 my-4">
+  {/* Color Selector */}
+  <div>
+    <p className="text-sm font-medium text-gray-700 mb-1">Color</p>
+    <div className="flex flex-wrap gap-2">
+      {colors.map((color, idx) => (
+        <button
+          key={idx}
+          onClick={() => setSelectedColor(color)}
+          className={`px-4 py-2 border rounded-full text-sm ${
+            selectedColor === color
+              ? "border-black font-semibold"
+              : "border-gray-300 text-gray-700"
+          }`}
+        >
+          {color}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  {/* Size Selector */}
+  <div>
+    <div className="flex items-center justify-between">
+      <p className="text-sm font-medium text-gray-700 mb-1">Size</p>
+      <span className="text-sm text-gray-400">{sku}</span>
+    </div>
+    <div className="flex flex-wrap gap-2">
+      {sizes.map((size, idx) => (
+        <button
+          key={idx}
+          onClick={() => setSelectedSize(size)}
+          className={`px-4 py-2 border rounded-full text-sm ${
+            selectedSize === size
+              ? "border-black font-semibold"
+              : "border-gray-300 text-gray-700"
+          }`}
+        >
+          {size}
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
+{/*variation ends*/}
+
+<hr className="my-3 border-gray-200" />
 
               <div className="gap-4">
                 <span className="text-3xl font-bold text-green-700 tracking-tight">{price_currency} {price_cents}</span>
@@ -205,7 +316,7 @@ export default function ProductDetailSection({ product }) {
                   </button>
                 </div>
               </div>
-<hr className="my-3 border-gray-200" />
+
               <div className="text-sm text-gray-700 flex items-center gap-1">
                 Condition: <span className="font-semibold">{condition?.name}</span>
                 <InfoPopover
