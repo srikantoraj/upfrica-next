@@ -30,6 +30,9 @@ const QuantityControl = ({ quantity, onDecrease, onIncrease }) => (
 export default function ProductDetailSection({ product }) {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [basket, setBasket] = useState([]);
+  const [quantity, setQuantity] = useState(1);
+  const [selectedColor, setSelectedColor] = useState("Oak");
+  const [selectedSize, setSelectedSize] = useState("4-Seater");
 
   const {
     id,
@@ -66,11 +69,20 @@ export default function ProductDetailSection({ product }) {
   }, []);
 
   const handleAddToBasket = () => {
-    const productData = { id, title, price_cents, quantity: 1, image: product_images };
+    const productData = {
+      id,
+      title,
+      price_cents,
+      quantity,
+      image: product_images,
+      color: selectedColor,
+      size: selectedSize
+    };
+
     const currentBasket = JSON.parse(localStorage.getItem("basket")) || [];
     const existingProductIndex = currentBasket.findIndex((item) => item.id === productData.id);
 
-    if (existingProductIndex >= 0) currentBasket[existingProductIndex].quantity += 1;
+    if (existingProductIndex >= 0) currentBasket[existingProductIndex].quantity += quantity;
     else currentBasket.push(productData);
 
     localStorage.setItem("basket", JSON.stringify(currentBasket));
@@ -129,7 +141,7 @@ export default function ProductDetailSection({ product }) {
                 <hr className="border-gray-200" />
 
                 <div>
-                  <span className="text-2xl font-bold text-green-700 tracking-tight">₵{price_cents}</span>
+                  <span className="text-2xl font-bold text-green-700 tracking-tight">{price_currency} {price_cents}</span>
                   <del className="ml-2 text-sm text-gray-400">₵400</del>
                   <p className="text-sm text-gray-500">You Save: ₵200 (2%)</p>
                 </div>
@@ -153,7 +165,7 @@ export default function ProductDetailSection({ product }) {
           </div>
 
           <aside className="order-2 hidden xl:block xl:col-span-5">
-            <div className="sticky top-20 space-y-4 p-5">
+            <div className="sticky top-0 space-y-4 p-5">
               <h1 className="heading-lg">{title}</h1>
               <div className="text-sm text-gray-600">
                 Seller: {seller_town} – Visit the <b className="text-[#8710D8]">Upfrica GH</b> Shop
@@ -165,15 +177,41 @@ export default function ProductDetailSection({ product }) {
                 <span className="underline text-blue-600">595 Reviews</span>
                 <span className="text-green-600">✅ Verified Seller</span>
               </div>
+
               <hr className="my-3 border-gray-200" />
 
-              <div>
-                <span className="text-3xl font-bold text-green-700 tracking-tight">₵{price_cents}</span>
-                <p className="text-sm text-red-700 font-medium mt-1">Sales ends in 32 days</p>
+              <div className="gap-4">
+                <span className="text-3xl font-bold text-green-700 tracking-tight">{price_currency} {price_cents}</span>
+                <span className="ml-4 text-sm text-red-700 font-medium mt-1">Sales ends in 32 days</span>
               </div>
 
+              <div className="flex items-center gap-4 mb-6">
+                <span className="text-sm font-medium text-gray-800">In stock</span>
+                <div className="flex items-center rounded-md border border-gray-300 overflow-hidden w-fit">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-10 h-10 text-lg font-semibold text-gray-500 hover:text-black focus:outline-none"
+                  >
+                    –
+                  </button>
+                  <div className="w-12 h-10 flex items-center justify-center border-x text-lg font-medium text-black">
+                    {quantity}
+                  </div>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-10 h-10 text-lg font-semibold text-gray-500 hover:text-black focus:outline-none"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+<hr className="my-3 border-gray-200" />
               <div className="text-sm text-gray-700 flex items-center gap-1">
-                Condition: <span className="font-semibold">{condition?.name}</span> <ImInfo />
+                Condition: <span className="font-semibold">{condition?.name}</span>
+                <InfoPopover
+                  content="Displays all eventCard details fully expanded rather than a short summary."
+                  link="/help-center/full-event-details"
+                />
               </div>
 
               <MultiBuySection />
