@@ -62,7 +62,7 @@ export default async function ProductDetails({ params }) {
             <Header />
             <div className="container mx-auto">
                 <ProductDetailSection product={product} />
-                <RelatedProducts productId={productSlug} />
+                <RelatedProducts productSlug={product?.slug} />
             </div>
             <Footer />
         </>

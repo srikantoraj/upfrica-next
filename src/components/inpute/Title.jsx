@@ -1,7 +1,7 @@
 import React from 'react';
-import InputField from '../InuteFiled';
+import InputField from '../InputField';
 
-const Title = ({formik}) => {
+const Title = ({ formik }) => {
     return (
         <div>
             <h2 className="text-2xl font-bold mb-2">Your Title Here</h2>

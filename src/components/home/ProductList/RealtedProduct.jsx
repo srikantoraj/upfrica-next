@@ -1,15 +1,16 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
-import ProductCard from "./ProductCard";
+import RelatedProductCard from "./RelatedProductCard";
+import RelatedProductCardSkeleton from "./RelatedProductCardSkeleton"; // Import the skeleton component
 
-const FetchProductData = ({productId}) => {
-  const [product, setProduct] = useState(null);
+const FetchProductData = ({ productSlug }) => {
+  const [products, setProducts] = useState([]); // renamed for clarity
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const url = `https://upfrica-staging.herokuapp.com/api/v1/products/${productId}?currency=usd,gbp`;
+    const url = `https://media.upfrica.com/api/products/${productSlug}/related/`;
+    console.log(url);
 
     const requestOptions = {
       method: "GET",
@@ -26,8 +27,8 @@ const FetchProductData = ({productId}) => {
         return response.json();
       })
       .then((result) => {
-        console.log(result)
-        setProduct(result);
+        console.log(result?.results);
+        setProducts(result?.results || []);
         setLoading(false);
       })
       .catch((error) => {
@@ -35,27 +36,31 @@ const FetchProductData = ({productId}) => {
         setError(error);
         setLoading(false);
       });
-  }, []);
-
-  console.log(product)
+  }, [productSlug]);
 
   if (loading) {
-    return <p>Loading product details...</p>;
+    return (
+      <div className="grid md:grid-cols-4 py-10 gap-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <RelatedProductCardSkeleton key={index} />
+        ))}
+      </div>
+    );
   }
 
   if (error) {
     return <p>Error fetching product details: {error.message}</p>;
   }
 
-  if (!product) {
+  if (!products.length) {
     return <p>Product not found.</p>;
   }
 
-  // Render specific product details
   return (
-    <div className="grid md:grid-cols-4 py-10">
-      <ProductCard product={product}/>
-      {/* <h1>realated data</h1> */}
+    <div className="grid md:grid-cols-4 py-10 gap-4">
+      {products.map((product) => (
+        <RelatedProductCard key={product.id} product={product} />
+      ))}
     </div>
   );
 };
