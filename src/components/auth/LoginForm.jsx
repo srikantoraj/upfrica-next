@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { setUser } from '@/app/store/slices/userSlice'; // Adjust the import path as necessary
 import Link from 'next/link';
-import { setToken } from '../../app/store/slices/tokenSlice';
+
 
 
 const LoginForm = () => {
@@ -38,12 +38,7 @@ const LoginForm = () => {
         console.log('Response Data:', data.token);
 
         if (response.ok) {
-          if (typeof window !== 'undefined') {
-            localStorage.setItem("token", data?.token);
-            localStorage.setItem("user", JSON.stringify(data?.user));
-          } 
           dispatch(setUser(data));
-          dispatch(setToken(data?.token));
           router.push('/');
         } else {
           // Handle server-side validation errors
@@ -116,13 +111,26 @@ const LoginForm = () => {
       </div>
 
       {/* Login Button */}
-      <button
+      {!formik.isSubmitting && <button
         type="submit"
         className="w-full text-xl px-4 py-2 bg-[#A435F0] text-white rounded-md font-bold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
         disabled={formik.isSubmitting}
       >
-        {formik.isSubmitting ? 'Logging in...' : 'Log In'}
-      </button>
+        Log In
+  
+      </button>}
+      {formik.isSubmitting && <button
+        type="submit"
+        className="w-full text-xl px-4 py-2 bg-[#A435F0] text-white rounded-md font-bold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+        disabled={formik.isSubmitting}
+      >
+        <div className="flex space-x-2 justify-center items-center h-6">
+          <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+          <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+          <div className="h-2 w-2 bg-white rounded-full animate-bounce" />
+        </div>
+
+      </button>}
 
       {/* Help Button */}
       <button

@@ -8,8 +8,8 @@ import { useSelector } from 'react-redux';
 
 const UserEmail = () => {
   const [user, setUser] = useState(null);
-  const userData = useSelector((state) => state.user.user);
-  const token = useSelector((state) => state.user.token);
+  const { user: userData, token } = useSelector((state) => state.auth);
+  // const token = useSelector((state) => state.user.token);
   useEffect(() => {
     const user = localStorage.getItem('user');
     setUser(user)

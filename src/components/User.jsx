@@ -43,15 +43,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 
 const User = () => {
-    // const dispatch = useDispatch()
-    // Get user from Redux store
-    const user = useSelector((state) => state.user.user);
-    console.log(user);
-    
-    // dispatch(()=>setUser(user))
-    
-
-    // If no user, show sign-in section
+    const { user } = useSelector((state) => state.auth);
     
     if (!user) {
         return (
