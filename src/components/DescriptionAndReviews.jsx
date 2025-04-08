@@ -10,10 +10,10 @@ import CreateReves from './CreateReviews';
  * displays your “description and reviews” section
  * in a polished, responsive layout.
  */
-export default function DescriptionAndReviews({ details }) {
+export default function DescriptionAndReviews({ details, user }) {
     // Toggle phone number
     const [showPhone, setShowPhone] = useState(false);
-    const phoneText = showPhone ? "(+233)0533675791" : "Click to view number";
+    const phoneText = showPhone ? user?.phone_number : "Click to view number";
 
     return (
         <main className="mx-auto max-w-screen-xl px-4 py-8 text-gray-800">
@@ -92,7 +92,7 @@ export default function DescriptionAndReviews({ details }) {
                     <li>Stylish &amp; Versatile – Perfect for sports or everyday fashion</li>
                 </ul>
                 <p className="font-medium">
-                    <b>Seller location:</b> Accra, Ghana
+                    <b>Seller location:</b> {user?.town} - {user?.country}
                 </p>
             </section>
 
@@ -109,7 +109,7 @@ export default function DescriptionAndReviews({ details }) {
                             />
                             <div>
                                 <h6 className="text-sm md:text-base lg:text-lg font-medium mb-1">
-                                    Homeappliances
+                                   {user?.username}
                                 </h6>
                                 <ul className="flex items-center gap-4 text-xs md:text-sm text-gray-600">
                                     <li>1 follower</li>
