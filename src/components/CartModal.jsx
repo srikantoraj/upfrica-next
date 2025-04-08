@@ -87,7 +87,7 @@ const CartModal = ({
             </button>
           </Link>
           <Link href="/cart">
-            <button className="px-4 py-2 rounded-3xl border bg-white shadow-md">
+            <button className="px-4 py-2 rounded-3xl btn-base btn-outline bg-white shadow-md">
               View Basket
             </button>
           </Link>

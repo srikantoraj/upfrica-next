@@ -54,25 +54,36 @@ const EarlyDeals = async () => {
 
             {/* Horizontal Scroll Container */}
             <div className="flex space-x-4 overflow-x-auto pb-4">
-                {productsData.results
-                    .filter(product => product.product_images && product.product_images.length >0)
-                    .map((product) => (
-                        <div
-                            key={product.id}
-                            className="border shadow-lg rounded-lg overflow-hidden h-56 flex flex-col min-w-[200px]"
-                        >
-                            {/* Product Image */}
-                            <div className="flex-grow overflow-hidden">
-                                <Link
-                                    href={`/${(product?.seller_country || 'gh').toLowerCase()}/${product?.seo_slug}/`}
-                                    passHref
-                                >
-                                    <img
-                                        src={product.product_images[0]}
-                                        alt={product.title}
-                                        className="w-full h-full object-cover transform transition-all duration-500 ease-in-out hover:scale-105"
-                                    />
-                                </Link>
+                {productsData.results.map((product) => (
+                    <div
+                        key={product.id}
+                        className="border shadow-lg rounded-lg overflow-hidden h-56 flex flex-col min-w-[200px]"
+                    >
+                        {/* Product Image */}
+                        <div className="flex-grow overflow-hidden">
+  <Link
+    href={`/${(product?.seller_country || 'gh').toLowerCase()}/${product?.seo_slug}/`}
+    passHref
+  >
+    <img
+      src={product?.product_images?.[0] || "https://via.placeholder.com/150"}
+      alt={product?.title || 'Product image'}
+      className="w-full h-full object-cover transform transition-all duration-500 ease-in-out hover:scale-105"
+    />
+  </Link>
+</div>
+
+
+                        {/* <Link href={`/${product.seller_country}/${product.category?.slug}/${product.slug}/`} passHref>
+                            <div className="relative w-full h-40 cursor-pointer">
+                                <Image
+                                    src={product.product_images[0] || "https://via.placeholder.com/150"}
+                                    alt={product.title}
+                                    layout="fill"
+                                    objectFit="cover"
+                                    className="rounded-lg transform transition-all duration-500 ease-in-out hover:scale-105"
+                                    priority
+                                />
                             </div>
 
                             {/* Bottom Section */}

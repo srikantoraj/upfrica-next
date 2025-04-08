@@ -173,7 +173,7 @@ export default function BasketModal({
             </button>
             <button
               onClick={handleViewBasket}
-              className="px-4 py-2 rounded-3xl border bg-white shadow hover:shadow-md border-[#f7c32e] w-full font-bold text-[#f7c32e] flex items-center justify-center"
+              className="px-4 py-2 rounded-3xl border bg-white shadow hover:shadow-md btn-base btn-outline w-full font-bold text-[#8710D8] flex items-center justify-center"
             >
               {isViewBasketLoading ? Loader : "View Basket"}
             </button>

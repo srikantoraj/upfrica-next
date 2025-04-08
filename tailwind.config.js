@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class', // ✅ Add this line
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -15,15 +16,15 @@ module.exports = {
         'responsive': 'calc(1.575rem + 3.9vw)',
       },
       container: {
-        center: true, // Center the container
-        padding: '1rem', // Add padding for responsiveness
+        center: true,
+        padding: '1rem',
         screens: {
-          sm: '100%', // Small devices
-          md: '100%', // Medium devices
-          lg: '1024px', // Large devices
-          xl: '1280px', // Extra-large devices
-          '2xl': '1536px', // Default Tailwind setting
-          '3xl': '1800px', // Custom breakpoint for larger screens
+          sm: '100%',
+          md: '100%',
+          lg: '1024px',
+          xl: '1280px',
+          '2xl': '1536px',
+          '3xl': '1800px',
         },
       },
     },
