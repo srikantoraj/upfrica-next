@@ -128,6 +128,19 @@ export default function ProductDetailSection({ product }) {
         ? [{ type: "video", src: product_video }, ...product_images.map((img) => ({ type: "image", src: img }))]
         : product_images;
 
+    const handleBuyNow = () => {
+        const productData = {
+            id,
+            title,
+            price_cents,
+            quantity,
+            image: product_images,
+            color: selectedColor,
+            size: selectedSize,
+        };
+        dispatch(addToBasket(productData));
+        setIsModalVisible(true);
+    };
     const handleAddToBasket = () => {
         const productData = {
             id,
