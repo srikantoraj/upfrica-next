@@ -3,9 +3,6 @@ import Header from '@/components/common/header/Header';
 import ProductList from '@/components/home/ProductList/ProductList';
 import RelatedProducts from '@/components/home/ProductList/RealtedProduct';
 import ProductDetailSection from '@/components/ProductDetailSection/ProductDetailSection';
-import Slider from '@/components/Slider';
-import TextSection from '@/components/TextSection';
-import Dummy from '@/components/ui/details/Dummy';
 import React from 'react';
 
 // Update getProductData to accept a string slug directly

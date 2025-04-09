@@ -8,6 +8,7 @@ import DescriptionAndReviews from "../DescriptionAndReviews";
 import RecentlyViewed from "../RecentlyViewed";
 import ProductSlider from "./ProductSlider";
 import InfoPopover from "../InfoPopover";
+import DirectBuyPopup from "../DirectBuyPopup"; // Import the new direct buy popup component
 import { convertPrice } from "@/app/utils/utils";
 import { useDispatch, useSelector } from "react-redux";
 import { addToBasket, updateQuantity, removeFromBasket } from "../../app/store/slices/cartSlice";
@@ -79,7 +80,8 @@ export default function ProductDetailSection({ product }) {
         condition,
         category,
         shop,
-        user
+        user,
+        product_quantity,
     } = product || {};
 
     // Variation options (new branch design)
@@ -92,8 +94,9 @@ export default function ProductDetailSection({ product }) {
     // Product quantity for adding to basket
     const [quantity, setQuantity] = useState(1);
 
-    // Modal to show basket details
+    // State for basket modal and direct buy popup
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isDirectBuyPopupVisible, setIsDirectBuyPopupVisible] = useState(false);
 
     // Calculate the converted price using your utility
     const convertedPrice = convertPrice(price_cents / 100, price_currency, "GHS", exchangeRates);
@@ -128,19 +131,12 @@ export default function ProductDetailSection({ product }) {
         ? [{ type: "video", src: product_video }, ...product_images.map((img) => ({ type: "image", src: img }))]
         : product_images;
 
-    const handleBuyNow = () => {
-        const productData = {
-            id,
-            title,
-            price_cents,
-            quantity,
-            image: product_images,
-            color: selectedColor,
-            size: selectedSize,
-        };
-        dispatch(addToBasket(productData));
-        setIsModalVisible(true);
+    // Handler for triggering the direct buy popup
+    const handleDirectBuyNow = () => {
+        setIsDirectBuyPopupVisible(true);
     };
+
+    // Handler for Add to Basket (kept for other actions)
     const handleAddToBasket = () => {
         const productData = {
             id,
@@ -184,22 +180,20 @@ export default function ProductDetailSection({ product }) {
                         {/* MOBILE CTA */}
                         <section className="block xl:hidden mt-5">
                             <div className="bg-white p-4 space-y-4">
-
                                 <h1 className="heading-lg text-base md:text-lg lg:text-xl font-bold text-gray-800">{title}</h1>
-                               
-                                {shop && <div className="text-sm text-gray-500">
-                                    <Link href={`/shop/${shop?.slug}`}>
-                                        
-                                        <b>4480 sold</b> — Visit the <b className="text-[#8710D8]">{shop.name}</b> Shop — Accra, GH
-                                    </Link>
-                                </div>}
+                                {shop && (
+                                    <div className="text-sm text-gray-500">
+                                        <Link href={`/shop/${shop?.slug}`}>
+                                            <b>4480 sold</b> — Visit the <b className="text-[#8710D8]">{shop.name}</b> Shop — Accra, GH
+                                        </Link>
+                                    </div>
+                                )}
                                 <div className="flex items-center text-sm space-x-2">
                                     <span className="text-yellow-400">★★★★☆</span>
                                     <span className="underline text-blue-600">595 Reviews</span>
                                     <span className="text-green-600">✅ Verified Seller</span>
                                 </div>
                                 <hr className="border-gray-200" />
-
                                 {/* Price Section */}
                                 <div>
                                     <span className="text-2xl font-bold text-green-700 tracking-tight">
@@ -208,9 +202,7 @@ export default function ProductDetailSection({ product }) {
                                     <del className="ml-2 text-sm text-gray-400">₵400</del>
                                     <p className="text-sm text-gray-500">You Save: ₵200 (2%)</p>
                                 </div>
-
-                                <MultiBuySection />
-
+                                <MultiBuySection product={product} />
                                 {/* Variation Selectors */}
                                 <div className="space-y-4 my-4">
                                     {/* Color Selector */}
@@ -229,7 +221,6 @@ export default function ProductDetailSection({ product }) {
                                             ))}
                                         </div>
                                     </div>
-
                                     {/* Size Selector */}
                                     <div>
                                         <div className="flex items-center justify-between">
@@ -250,9 +241,9 @@ export default function ProductDetailSection({ product }) {
                                         </div>
                                     </div>
                                 </div>
-
                                 <div className="grid gap-2">
-                                    <button className="btn-base btn-primary" onClick={handleAddToBasket}>
+                                    {/* “Buy Now” now calls the direct buy handler */}
+                                    <button className="btn-base btn-primary" onClick={handleDirectBuyNow}>
                                         Buy Now
                                     </button>
                                     <button className="btn-base btn-outline" onClick={handleAddToBasket}>
@@ -263,25 +254,23 @@ export default function ProductDetailSection({ product }) {
                                         <FaRegHeart /> Add to Watchlist
                                     </button>
                                 </div>
-
                                 <PaymentDeliveryReturns />
                             </div>
                         </section>
-
                         <DescriptionAndReviews details={description} user={user} />
                     </div>
                     {/* END LEFT CONTENT */}
-
                     {/* RIGHT SIDEBAR */}
                     <aside className="order-2 hidden xl:block xl:col-span-5">
                         <div className="sticky top-0 space-y-4 p-5">
                             <h1 className="heading-lg text-base md:text-lg lg:text-xl font-bold text-gray-800">{title}</h1>
-                            {shop && <div className="text-sm text-gray-500">
-                                <Link href={`/shop/${shop?.slug}`}>
-
-                                    <b>4480 sold</b> — Visit the <b className="text-[#8710D8]">{shop.name}</b> Shop — Accra, GH
-                                </Link>
-                            </div>}
+                            {shop && (
+                                <div className="text-sm text-gray-500">
+                                    <Link href={`/shop/${shop?.slug}`}>
+                                        <b>4480 sold</b> — Visit the <b className="text-[#8710D8]">{shop.name}</b> Shop — Accra, GH
+                                    </Link>
+                                </div>
+                            )}
                             <div className="flex items-center text-sm text-yellow-400 gap-2">
                                 <MdArrowRightAlt className="h-4 w-4" />
                                 <span>4.5</span>
@@ -290,7 +279,6 @@ export default function ProductDetailSection({ product }) {
                                 <span className="text-green-600">✅ Verified Seller</span>
                             </div>
                             <hr className="my-3 border-gray-200" />
-
                             {/* Variation selectors for desktop */}
                             <div className="space-y-4 my-4">
                                 {/* Color Selector */}
@@ -309,7 +297,6 @@ export default function ProductDetailSection({ product }) {
                                         ))}
                                     </div>
                                 </div>
-
                                 {/* Size Selector */}
                                 <div>
                                     <div className="flex items-center justify-between">
@@ -330,9 +317,7 @@ export default function ProductDetailSection({ product }) {
                                     </div>
                                 </div>
                             </div>
-
                             <hr className="my-3 border-gray-200" />
-
                             <div className="gap-4">
                                 <span className="text-3xl font-bold text-green-700 tracking-tight">
                                     {price_currency} {(convertedPrice || price_cents / 100)?.toFixed(2)}
@@ -341,7 +326,6 @@ export default function ProductDetailSection({ product }) {
                                     Sales ends in {timeRemaining.days} days {timeRemaining.hours}:{timeRemaining.minutes}:{timeRemaining.seconds}
                                 </span>
                             </div>
-
                             <div className="flex items-center gap-4 mb-6">
                                 <span className="text-sm font-medium text-gray-800">In stock</span>
                                 <div className="flex items-center rounded-md border border-gray-300 overflow-hidden w-fit">
@@ -356,16 +340,14 @@ export default function ProductDetailSection({ product }) {
                                     </button>
                                 </div>
                             </div>
-
                             <div className="text-sm text-gray-700 flex items-center gap-1">
                                 Condition: <span className="font-semibold">{condition?.name}</span>
                                 <InfoPopover content="Displays all product details fully expanded." link="/help-center/full-product-details" />
                             </div>
-
                             <MultiBuySection />
-
                             <div className="mt-4 space-y-2">
-                                <button className="btn-base btn-primary w-full" onClick={handleAddToBasket}>
+                                {/* “Buy Now” button now calls the direct buy handler */}
+                                <button className="btn-base btn-primary w-full" onClick={handleDirectBuyNow}>
                                     Buy Now
                                 </button>
                                 <button className="btn-base btn-outline w-full" onClick={handleAddToBasket}>
@@ -379,13 +361,11 @@ export default function ProductDetailSection({ product }) {
                                     <span>Add to Watchlist</span>
                                 </button>
                             </div>
-
                             <PaymentDeliveryReturns />
                         </div>
                     </aside>
                     {/* END RIGHT SIDEBAR */}
-
-                    {/* Basket Modal */}
+                    {/* Existing Basket Modal */}
                     <BasketModal
                         isModalVisible={isModalVisible}
                         handleCloseModal={handleCloseModal}
@@ -395,6 +375,14 @@ export default function ProductDetailSection({ product }) {
                     />
                 </div>
             </div>
+            {/* Direct Buy Popup */}
+            {isDirectBuyPopupVisible && (
+                <DirectBuyPopup
+                    product={product}
+                    isVisible={isDirectBuyPopupVisible}
+                    onClose={() => setIsDirectBuyPopupVisible(false)}
+                />
+            )}
         </section>
     );
 }
