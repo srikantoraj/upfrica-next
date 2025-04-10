@@ -15,6 +15,7 @@ import { addToBasket, updateQuantity, removeFromBasket } from "../../app/store/s
 import { MdArrowRightAlt } from "react-icons/md";
 import { FaMinus, FaPlus, FaRegHeart } from "react-icons/fa";
 import { ImInfo } from "react-icons/im";
+import { useRouter, usePathname } from "next/navigation";
 
 /**
  * Breadcrumbs Component
@@ -63,9 +64,13 @@ const Breadcrumbs = ({ categoryTree, title }) => {
 };
 
 export default function ProductDetailSection({ product }) {
+    const { token } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
+    const currentPath = usePathname();
     const basket = useSelector((state) => state.basket.items) || [];
     const exchangeRates = useSelector((state) => state.exchangeRates.rates);
+    const router = useRouter();
+ 
     const {
         id,
         title,
@@ -92,6 +97,8 @@ export default function ProductDetailSection({ product }) {
     const sku = `SKU-${selectedSize}-${selectedColor.replace(/\s+/g, "-").toUpperCase()}`;
 
     // Product quantity for adding to basket
+    const [loading, setLoading] = useState(false);
+
     const [quantity, setQuantity] = useState(1);
 
     // State for basket modal and direct buy popup
@@ -133,7 +140,50 @@ export default function ProductDetailSection({ product }) {
 
     // Handler for triggering the direct buy popup
     const handleDirectBuyNow = () => {
+        if (!token) {
+            router.push(`/signin?next=${encodeURIComponent(currentPath)}`);
+            return;
+        }
         setIsDirectBuyPopupVisible(true);
+    };
+    const handleAddToWatchlist = async() => {
+        console.log("Add to watchlist clicked");
+        // Assuming `token` is used to check if the user is logged in
+        if (!token) {
+            router.push(`/signin?next=${encodeURIComponent(currentPath)}`);
+            return;
+        }
+        setLoading(true);
+
+        const myHeaders = new Headers();
+        myHeaders.append("Authorization", "Token " + token);
+        myHeaders.append("Content-Type", "application/json");
+
+        // Define the payload; here note is set explicitly
+        const raw = JSON.stringify({
+            "product_id": id,    // product id from your product object
+            "note": "" // the note to send (make sure it’s not an empty string)
+        });
+
+        const requestOptions = {
+            method: "POST",
+            headers: myHeaders,
+            body: raw,
+            redirect: "follow"
+        };
+
+        try {
+            const response = await fetch("https://media.upfrica.com/api/wishlist/", requestOptions);
+            // You can parse as JSON if your API returns JSON data
+            const result = await response.json();
+            console.log("Wishlist API result:", result);
+            // Optionally, update your UI to show a success message here
+        } catch (error) {
+            console.error("Error adding to wishlist:", error);
+        } finally {
+            // Turn off the loader after the API call completes
+            setLoading(false);
+        }
     };
 
     // Handler for Add to Basket (kept for other actions)
@@ -356,9 +406,23 @@ export default function ProductDetailSection({ product }) {
                                 <button className="btn-base btn-outline w-full flex items-center justify-center gap-2">
                                     Buy Now Pay Later (BNPL) <ImInfo className="h-4 w-4" />
                                 </button>
-                                <button className="btn-base btn-outline w-full flex items-center justify-center gap-2">
-                                    <FaRegHeart />
-                                    <span>Add to Watchlist</span>
+                                <button
+                                    onClick={handleAddToWatchlist}
+                                    className="btn-base btn-outline w-full flex items-center justify-center gap-2"
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <div className="flex space-x-2 justify-center items-center h-6">
+                                            <div className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                            <div className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                            <div className="h-2 w-2 bg-current rounded-full animate-bounce" />
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <FaRegHeart />
+                                            <span>Add to Watchlist</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
                             <PaymentDeliveryReturns />
