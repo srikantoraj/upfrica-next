@@ -3,6 +3,7 @@ import React from 'react';
 import LoginForm from '@/components/auth/LoginForm';
 import Image from 'next/image';
 import logo from '@/public/images/logo.png'; // Ensure the logo image is present
+import singinImage from '../../image/signin.svg';
 import Link from 'next/link';
 import LocalStorageComponent from '@/components/LocalStorageComponent';
 
@@ -16,7 +17,7 @@ const LoginPage = () => {
         <div className="col-span-1 order-2 lg:order-1 flex justify-center items-center p-2 lg:p-4">
           <Image
             className="h-80 sm:h-full"
-            src="https://booking.webestica.com/assets/images/element/signin.svg" // Place signin.svg in public/images/
+            src={singinImage} // Place signin.svg in public/images/
             alt="Sign In Image"
             width={500}
             height={500}

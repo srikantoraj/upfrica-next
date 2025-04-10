@@ -1,9 +1,8 @@
 import { FaRegEdit } from "react-icons/fa";
-import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
 import { AiFillWarning } from "react-icons/ai";
 import { BsImage } from "react-icons/bs";
 
-const DraftListingRow = () => {
+ const DraftListingRow = () => {
   return (
     <tr>
       <td>
@@ -72,4 +71,6 @@ const DraftListingRow = () => {
     </tr>
   );
 };
+
+export default DraftListingRow;
 
