@@ -204,7 +204,7 @@ const DirectBuyPopup = ({ product, isVisible, onClose }) => {
                         {product.cancellable ? (
                             <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded">
                                 <p className="text-sm">
-                                    Return Policy: This product can be returned within{" "}
+                                    Return Policy: Can be returned within{" "}
                                     {product.secondary_data?.return_in_days || "N/A"} (Cost by:{" "}
                                     {product.secondary_data?.returns_cost_by || "N/A"}).
                                 </p>
