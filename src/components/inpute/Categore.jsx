@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import InputField from '../InuteFiled';
+import InputField from '../InputField';
 import useCategories, { fetchCategories } from '../api/data';
 
 const Categore = ({formik}) => {

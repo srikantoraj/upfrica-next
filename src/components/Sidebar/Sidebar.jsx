@@ -18,7 +18,7 @@ export default function Sidebar() {
               alignItems: 'center',
               justifyContent: 'center',
               borderRadius: '50%',
-              fontSize: '28px',
+              // fontSize: '28px',
             }}
           >
             <BiPerson />

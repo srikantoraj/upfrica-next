@@ -3,9 +3,6 @@ import Header from '@/components/common/header/Header';
 import ProductList from '@/components/home/ProductList/ProductList';
 import RelatedProducts from '@/components/home/ProductList/RealtedProduct';
 import ProductDetailSection from '@/components/ProductDetailSection/ProductDetailSection';
-import Slider from '@/components/Slider';
-import TextSection from '@/components/TextSection';
-import Dummy from '@/components/ui/details/Dummy';
 import React from 'react';
 
 // Update getProductData to accept a string slug directly
@@ -62,7 +59,7 @@ export default async function ProductDetails({ params }) {
             <Header />
             <div className="container mx-auto">
                 <ProductDetailSection product={product} />
-                <RelatedProducts productId={productSlug} />
+                <RelatedProducts productSlug={product?.slug} />
             </div>
             <Footer />
         </>

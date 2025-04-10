@@ -1,7 +1,9 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import { HiXMark } from "react-icons/hi2";
 import { HiMiniXMark } from "react-icons/hi2";
 import { FaHeart } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function BasketModal({
@@ -11,6 +13,30 @@ export default function BasketModal({
   handleQuantityChange,
   handleRemoveProduct,
 }) {
+  const router = useRouter();
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const [isViewBasketLoading, setIsViewBasketLoading] = useState(false);
+
+  // Define the loader component (three bouncing dots)
+  const Loader = (
+    <div className="flex space-x-2 items-center h-6">
+      <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+      <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+      <div className="h-2 w-2 bg-white rounded-full animate-bounce" />
+    </div>
+  );
+
+  // Handler for checkout navigation
+  const handleCheckout = () => {
+    setIsCheckoutLoading(true);
+    router.push("/checkout");
+  };
+
+  // Handler for view basket navigation
+  const handleViewBasket = () => {
+    setIsViewBasketLoading(true);
+    router.push("/cart");
+  };
 
   return (
     <div
@@ -53,13 +79,15 @@ export default function BasketModal({
             basket.map((product, index) => (
               <div
                 key={index}
-                // Always display image + text side-by-side
                 className="flex items-stretch gap-4 py-4 border-b border-gray-200 last:border-b-0"
               >
                 {/* Product Image */}
                 <div className="w-[100px] h-[100px] flex-shrink-0">
                   <img
-                    src={product?.image?.[0] || "https://via.placeholder.com/150"}
+                    src={
+                      product?.image?.[0] ||
+                      "https://via.placeholder.com/150"
+                    }
                     alt={product.title}
                     className="h-full w-full object-cover rounded-md"
                   />
@@ -67,42 +95,26 @@ export default function BasketModal({
 
                 {/* Product Details */}
                 <div className="flex flex-col justify-center w-full">
-                  {/* Optional SKU */}
                   {product.sku && (
                     <p className="text-xs text-gray-500 mb-1">
                       SKU: {product.sku}
                     </p>
                   )}
-
-                  {/* Title & Quantity Selector */}
                   <div className="flex items-center justify-between w-full">
                     <p className="text-sm sm:text-base md:text-lg font-semibold text-gray-800">
                       {product.title}
                     </p>
-                    {/* <select
-                      value={product.quantity}
-                      onChange={(e) =>
-                        handleQuantityChange(index, parseInt(e.target.value))
-                      }
-                      className="py-1 px-2 border border-gray-300 rounded-md 
-                                 focus:outline-none focus:ring-1 focus:ring-indigo-500
-                                 text-xs sm:text-sm"
-                      aria-label="Select quantity"
-                    >
-                      {[...Array(10).keys()].map((num) => (
-                        <option key={num + 1} value={num + 1}>
-                          {num + 1}
-                        </option>
-                      ))}
-                    </select> */}
                     <select
                       value={product.quantity}
                       onChange={(e) =>
-                        handleQuantityChange(product.id, parseInt(e.target.value, 10))
+                        handleQuantityChange(
+                          product.id,
+                          parseInt(e.target.value, 10)
+                        )
                       }
                       className="py-1 px-2 border border-gray-300 rounded-md 
-             focus:outline-none focus:ring-1 focus:ring-indigo-500
-             text-xs sm:text-sm"
+                        focus:outline-none focus:ring-1 focus:ring-indigo-500
+                        text-xs sm:text-sm"
                       aria-label="Select quantity"
                     >
                       {[...Array(10).keys()].map((num) => (
@@ -111,17 +123,15 @@ export default function BasketModal({
                         </option>
                       ))}
                     </select>
-
                   </div>
 
                   {/* Favorites / Remove / Price */}
                   <div className="flex items-center justify-between pt-2">
-                    {/* Buttons: Favorites & Remove */}
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                       <button
                         type="button"
                         className="inline-flex items-center text-xs sm:text-sm font-medium 
-                 text-gray-500 hover:text-gray-900 hover:underline"
+                          text-gray-500 hover:text-gray-900 hover:underline"
                       >
                         <FaHeart className="mr-1.5 h-4 w-4 sm:h-5 sm:w-5" />
                         Add to Favorites
@@ -131,16 +141,14 @@ export default function BasketModal({
                         onClick={() => handleRemoveProduct(product.id)}
                         type="button"
                         className="inline-flex items-center text-xs sm:text-sm font-medium 
-                 text-red-600 hover:underline"
+                          text-red-600 hover:underline"
                       >
                         <HiMiniXMark className="mr-1.5 h-4 w-4 sm:h-5 sm:w-5" />
                         Remove
                       </button>
                     </div>
 
-                    {/* Price */}
                     <p className="text-sm sm:text-base md:text-lg font-medium text-gray-900">
-                      {/* {product.price_cents}{" "} */}
                       {((product.price_cents / 100) * product.quantity).toFixed(2)}
                     </p>
                   </div>
@@ -157,16 +165,21 @@ export default function BasketModal({
         {/* Modal Footer */}
         {basket.length > 0 && (
           <div className="pt-4 space-y-3">
-            <button className="bg-[#8710D8] text-white rounded-3xl hover:bg-purple-700 w-full p-2 font-bold">
-              Checkout
+            <button
+              onClick={handleCheckout}
+              className="bg-[#8710D8] text-white rounded-3xl hover:bg-purple-700 w-full p-2 font-bold flex items-center justify-center"
+            >
+              {isCheckoutLoading ? Loader : "Checkout"}
             </button>
-            <button className="px-4 py-2 rounded-3xl border bg-white shadow hover:shadow-md border-[#8710D8] w-full font-bold text-[#8710D8]">
-              <Link href="/cart">
-                View Basket
-              </Link>
+            <button
+              onClick={handleViewBasket}
+              className="px-4 py-2 rounded-3xl border bg-white shadow hover:shadow-md btn-base btn-outline w-full font-bold text-[#8710D8] flex items-center justify-center"
+            >
+              {isViewBasketLoading ? Loader : "View Basket"}
             </button>
           </div>
         )}
+
       </div>
     </div>
   );

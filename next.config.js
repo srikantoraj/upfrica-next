@@ -1,8 +1,9 @@
 module.exports = {
   images: {
-    domains: ['d26ukeum83vx3b.cloudfront.net','d3f8uk6yuqjl48.cloudfront.net'],
+    domains: ['d3q0odwafjkyv1.cloudfront.net', 'd26ukeum83vx3b.cloudfront.net','d3f8uk6yuqjl48.cloudfront.net'],
   },
 };
+
 
 // /** @type {import('next').NextConfig} */
 // const nextConfig = {

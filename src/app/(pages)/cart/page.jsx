@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FaHeart } from "react-icons/fa";
 import { HiMiniXMark } from "react-icons/hi2";
 import { useSelector, useDispatch } from "react-redux";
-import { setBasket, removeFromBasket, updateQuantity } from "../../store/slices/basketSlice";
+import { setBasket, removeFromBasket, updateQuantity } from "../../store/slices/cartSlice";
 
 const Cart = () => {
   const token = useSelector((state) => state.auth.token);
@@ -21,7 +21,7 @@ const Cart = () => {
     const stored = JSON.parse(localStorage.getItem("basket")) || [];
     dispatch(setBasket(stored));
   }, []);
-  
+
 
   const handleQuantityChange = (id, quantity) => {
     dispatch(updateQuantity({ id, quantity }));
@@ -32,7 +32,7 @@ const Cart = () => {
   };
 
   const handleCheckout = async () => {
-   
+
     if (!token) {
       router.push("/signin");
     } else {
@@ -197,9 +197,8 @@ const Cart = () => {
 
             <button
               onClick={handleCheckout}
-              className={`bg-[#8710D8] hidden sm:flex justify-center items-center py-3 text-base sm:text-lg font-semibold text-white w-full rounded-md ${
-                basket.length === 0 || isLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`bg-[#8710D8] hidden sm:flex justify-center items-center py-3 text-base sm:text-lg font-semibold text-white w-full rounded-md ${basket.length === 0 || isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               disabled={basket.length === 0 || isLoading}
             >
               {isLoading ? (
@@ -216,9 +215,8 @@ const Cart = () => {
             <div className="sm:hidden fixed bottom-0 left-0 w-full bg-white z-50">
               <button
                 onClick={handleCheckout}
-                className={`bg-[#8710D8] flex justify-center items-center py-3 text-base font-semibold text-white w-full rounded-md ${
-                  basket.length === 0 || isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`bg-[#8710D8] flex justify-center items-center py-3 text-base font-semibold text-white w-full rounded-md ${basket.length === 0 || isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 disabled={basket.length === 0 || isLoading}
               >
                 {isLoading ? (

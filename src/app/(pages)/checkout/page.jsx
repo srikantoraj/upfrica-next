@@ -47,7 +47,7 @@ const Checkout = () => {
         };
 
         const response = await fetch(
-          "https://media.upfrica.com/v1/addresses",
+          "https://media.upfrica.com/api/addresses/",
           requestOptions
         );
 
@@ -56,10 +56,11 @@ const Checkout = () => {
         }
 
         const data = await response.json();
-        setAddresses(data.addresses);
+        console.log(data);
+        setAddresses(data);
 
         // Map addresses to dropdown options
-        const options = data.addresses.map((address) => ({
+        const options = data?.map((address) => ({
           id: address.id,
           value: `${address.address_data.address_line_1}, ${address.address_data.town}, ${address.address_data.country}`,
         }));
@@ -102,83 +103,10 @@ const Checkout = () => {
     setIsOpen(!isOpen);
   };
 
-  // const placeOrder = async (paymentMethod) => {
-  //   setIsLoading(true); // লোডিং শুরু হচ্ছে
-
-  //   const busket = JSON.parse(localStorage.getItem("basket")) || [];
-  //   const user = JSON.parse(localStorage.getItem("user")) || {};
-
-  //   if (!busket.length) return;
-
-  //   const headers = {
-  //     "Content-Type": "application/json",
-  //     Authorization: `Bearer ${user?.token}`,
-  //   };
-
-  //   let itemList = [];
-  //   for (let item of busket) {
-  //     let obj = { product_id: item?.id, quantity: item?.quantity };
-  //     itemList.push(obj);
-  //   }
-
-  //   if (!selectedAddressId) {
-  //     setIsLoading(false); // যদি কোনো ঠিকানা না থাকে, লোডিং বন্ধ করা হচ্ছে
-  //     return;
-  //   }
-
-  //   var data = {
-  //     checkout: {
-  //       address_id: selectedAddressId,
-  //       products: [
-  //         {
-  //           id: itemList[0].product_id,
-  //           quantity: itemList[0]?.quantity,
-  //         },
-  //       ],
-  //       redirect_uri: "upfrica-delta.vercel.app",
-  //       payment_method: paymentMethod,  // সঠিক পেমেন্ট পদ্ধতি পাঠানো হচ্ছে
-  //     },
-  //   };
-
-  //   var requestOptions = {
-  //     method: "POST",
-  //     headers: headers,
-  //     body: JSON.stringify(data),
-  //     redirect: "follow",
-  //   };
-
-  //   fetch(
-  //     "https://upfrica-staging.herokuapp.com/api/v1/orders/checkout",
-  //     requestOptions
-  //   )
-  //     .then((response) => response.json())
-  //     .then((result) => {
-  //       setIsLoading(false); // সার্ভার রেসপন্স পাওয়ার পর লোডিং বন্ধ
-
-  //       console.log("API Result:", result);
-
-  //       if (paymentMethod === 'paystack' && result.paystack?.data?.authorization_url) {
-  //         router.push(result.paystack.data.authorization_url);
-  //       } else if (result.stripe_url) {
-  //         router.push(result.stripe_url);
-  //       } else {
-  //         console.error("No redirect URL found.");
-  //       }
-  //     })
-  //     .catch((error) => {
-  //       console.log("Error:", error);
-  //       setIsLoading(false); // যদি কোনো ত্রুটি ঘটে, লোডিং বন্ধ
-  //     });
-  // };
-
-
 
   const placeOrder = async (paymentMethod) => {
     const basket = JSON.parse(localStorage.getItem("basket")) || [];
-    const user = JSON.parse(localStorage.getItem("user")) || {};
-
-    const selectedAddressId = 7; // ✅ Replace with your own logic to get selected address
-
+    // const selectedAddressId = 7; 
     if (!basket.length || !selectedAddressId || !cartId) {
       console.warn("Missing data");
       return;
@@ -188,7 +116,7 @@ const Checkout = () => {
 
     const headers = {
       "Content-Type": "application/json",
-      Authorization: `Token ${user?.token}`,
+      Authorization: `Token ${token}`,
     };
 
     const data = {
@@ -245,10 +173,10 @@ const Checkout = () => {
       // console.log(values)
       // const myHeaders = new Headers();
       // myHeaders.append("Authorization", `Bearer ${userInfo?.token}`);
-      const user = JSON.parse(localStorage.getItem("user"));
+      
       console.log(user);
       const myHeaders = new Headers();
-      myHeaders.append("Authorization", `Bearer ${user.token}`);
+      myHeaders.append("Authorization", `Token ${token}`);
       myHeaders.append("Content-Type", "application/json");
 
       values["owner_id"] = userInfo?.user?.id;

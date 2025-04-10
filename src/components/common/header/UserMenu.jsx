@@ -132,7 +132,7 @@ export default function UserMenu() {
                   <span className="ml-2">All Orders</span>
                 </div>
               </Link>
-              <Link href="/draf">
+              <Link href="/draft">
                 <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
                   <BsPersonPlus className="h-5 w-5 text-gray-500" />
                   <span className="ml-2">Draft</span>
