@@ -407,7 +407,7 @@ const VoteSection = () => {
     return (
         <div className="my-12 text-center">
             {vote === null ? (
-                <>
+                <> 
                     <p className="font-semibold text-gray-700">Did this resolve the issue?</p>
                     <div className="flex justify-center space-x-4 mt-2">
                         <button
