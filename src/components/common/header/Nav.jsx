@@ -8,7 +8,7 @@ const Navbar = () => {
     { title: "Deals", id: 3, url: "/todays-deals" },
     { title: "Shops", id: 4, url: "/shops" },
     { title: "Categories", id: 5, url: "/categories" },
-    { title: "How It Works", id: 6, url: "/works" },
+    { title: "Help", id: 6, url: "/help" },
     { title: "UK Site", id: 7, url: "/uk-site" },
   ];
 
