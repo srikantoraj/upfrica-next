@@ -74,7 +74,7 @@ export default function UserMenu() {
       {/* Modal */}
       {isModalOpen && (
         <div
-          className="fixed inset-0  z-30 flex justify-end max-h-[700px] "
+          className="fixed inset-0  z-30 flex justify-end max-h-[740px] "
           role="dialog"
           aria-modal="true"
           id="user-menu"

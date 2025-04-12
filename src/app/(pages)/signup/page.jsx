@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useFormik } from "formik";
+import singUpLogo from '../../image/signin.svg'
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -72,7 +73,7 @@ const SignUp = () => {
         <div className="col-span-1 order-2 lg:order-1 p-2 lg:p-2">
           <Image
             className="h-80 sm:h-full"
-            src="https://booking.webestica.com/assets/images/element/signin.svg"
+            src={singUpLogo}
             alt="Sign Up Illustration"
             width={500} // Adjust based on actual image dimensions
             height={500}
