@@ -553,7 +553,7 @@ export default function DeliveryInformation() {
                                 <option>Nederlands</option>
                                 <option>Polski</option>
                                 <option>Português</option>
-                                <option>Русский</option>
+                                
                             </select>
                         </div>
                     </div>
