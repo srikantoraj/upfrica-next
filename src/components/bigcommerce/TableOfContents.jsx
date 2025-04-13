@@ -1,38 +1,4 @@
-// import React from "react";
 
-// const tocLinks = [
-//   { href: "#h2_what_is_ai__", label: "What is AI?" },
-//   {
-//     href: "#h2_how_fashion_brands_are_using_ai_to_sell_more_online",
-//     label: "How fashion brands are using AI to sell more online",
-//   },
-//   { href: "#h2_harnessing_the_power_of_ai_on_bigcommerce", label: "Harnessing the power of AI on BigCommerce" },
-//   { href: "#h2_the_final_word", label: "The final word" },
-// ];
-
-// const TableOfContents = () => {
-//   return (
-//     <div className="sticky top-[150px] h-max min-h-[200px]">
-//       <div className="grid gap-2">
-//         <h6 className="text-xs text-gray-500 uppercase mb-5">Table of Contents</h6>
-//         <ul className="space-y-5">
-//           {tocLinks.map((link, index) => (
-//             <li key={index}>
-//               <a
-//                 href={link.href}
-//                 className="text-base text-gray-600 hover:border-b-2 border-bc-blue font-medium transition-all"
-//               >
-//                 {link.label}
-//               </a>
-//             </li>
-//           ))}
-//         </ul>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default TableOfContents;
 
 import React from "react";
 
