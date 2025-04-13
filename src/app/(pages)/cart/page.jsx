@@ -98,23 +98,27 @@ const Cart = () => {
                 </div>
 
                 <div className="md:pl-6 md:w-3/4 w-full flex flex-col justify-center">
-                  <p className="text-sm text-gray-500 mb-1">SKU: {product.sku || "N/A"}</p>
-                  <div className="flex items-center justify-between w-full">
+
+                  <div className="flex lg:items-center gap-2 justify-between w-full">
                     <p className="text-base sm:text-lg md:text-xl font-semibold text-gray-800">
                       {product.title}
                     </p>
-                    <select
-                      value={product.quantity}
-                      onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value))}
-                      className="py-1 px-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    >
-                      {[...Array(10).keys()].map((num) => (
-                        <option key={num + 1} value={num + 1}>
-                          {num + 1}
-                        </option>
-                      ))}
-                    </select>
+                    <span>
+                      <select
+                        value={product.quantity}
+                        onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value))}
+                        className="py-1 px-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      >
+                        {[...Array(10).keys()].map((num) => (
+                          <option key={num + 1} value={num + 1}>
+                            {num + 1}
+                          </option>
+                        ))}
+                      </select>
+                    </span>
+
                   </div>
+                  <p className="text-sm text-gray-500 mt-1">SKU: {product.sku || "N/A"}</p>
 
                   <div className="flex gap-2 md:items-center justify-between pt-4">
                     <div className="md:flex items-center gap-2 lg:gap-4">

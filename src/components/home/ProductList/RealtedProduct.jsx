@@ -57,7 +57,7 @@ const FetchProductData = ({ productSlug }) => {
   }
 
   return (
-    <div className="grid md:grid-cols-4 py-10 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 py-10 gap-4">
       {products.map((product) => (
         <RelatedProductCard key={product.id} product={product} />
       ))}
