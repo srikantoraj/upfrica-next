@@ -20,7 +20,7 @@ export default function RelatedProductCard({ product }) {
       {/* Image Section */}
       <div className="relative w-full h-[230px]">
         <Link href={`/${country}/${seo_slug}/`}>
-          <span className="block relative w-[230px] h-[230px]">
+          <span className="block relative w-full h-[230px]">
             <img
               src={image_url}
               alt={title}
