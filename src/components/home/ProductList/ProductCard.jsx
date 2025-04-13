@@ -17,13 +17,13 @@ export default function ProductCard({ product }) {
   if (!product_images) return null;
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden flex flex-col justify-between h-[370px] font-sans">
+    <div className="bg-white rounded-lg shadow overflow-hidden flex flex-col justify-between w-full h-[300px] lg:h-[370px] font-sans">
       {/* Image Section */}
       <div className="relative w-full h-[230px]">
         {product_images.length > 0 && (
           <Link href={`/${country}/${seo_slug}/`}>
             {/* Wrapping with an anchor tag for accessibility */}
-            <span className="block relative w-[230px] h-[230px]">
+            <span className="block relative w-[180px] lg:w-[230px] h-[180px] lg:h-[230px]">
               <img
                 src={product_images[0]}
                 alt={title}
@@ -50,16 +50,16 @@ export default function ProductCard({ product }) {
       </div>
 
       {/* Product Details */}
-      <div className="px-4 py-3">
-        <h2 className="text-lg font-semibold text-gray-900 truncate w-full overflow-hidden">
+      <div className="px-2 lg:px-4 py-2 lg:py-3">
+        <h2 className="text-base lg:text-lg font-medium lg:font-semibold text-gray-900 truncate w-full overflow-hidden">
           {title}
         </h2>
-        <p className="text-sm text-gray-500">1083+ sold recently</p>
+        <p className="text-sm text-purple-500">1083+ sold recently</p>
       </div>
 
       {/* Price & Cart Section */}
       <div className="border-t">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-2 lg:px-4 py-2 lg:py-3">
           <div className="flex items-center gap-2">
             {/* <p className="text-lg font-bold text-gray-900">
               {price_currency}{parseInt(price_cents) / 100}
