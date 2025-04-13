@@ -1,27 +1,44 @@
 
-
 'use client'
-import React from 'react'
-import { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Script from 'next/script'
 import { FaSearch } from 'react-icons/fa'
 import Footer from '@/components/common/footer/Footer'
 
-// Dummy data object that would normally come from your backend API.
-const pageData = {
-    header: {
+// A card skeleton for search results
+const CardSkeleton = () => (
+    <div className="animate-pulse p-4 bg-white rounded shadow">
+        <div className="h-6 bg-gray-300 rounded w-5/6 mb-2"></div>
+        <div className="h-4 bg-gray-300 rounded w-full mb-2"></div>
+        <div className="h-3 bg-gray-300 rounded w-4/6"></div>
+    </div>
+)
+
+// Main Page Component with Search Features
+export default function HelpCenterPage({ params }) {
+    const { slug } = params
+
+    // Article Data States
+    const [data, setData] = useState(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+
+    // Static header, breadcrumbs, and sidebar information
+    const staticHeader = {
         title: "Help Centre",
-        // You may later include a background image URL from the backend:
-        backgroundImage: "https://images.pexels.com/photos/6214476/pexels-photo-6214476.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+        backgroundImage:
+            "https://images.pexels.com/photos/6214476/pexels-photo-6214476.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
         searchPlaceholder: "Type your question"
-    },
-    breadcrumbs: [
+    }
+
+    const staticBreadcrumbs = [
         { label: "Help home", href: "/help" },
         { label: "Listings", href: "/help/listings" },
         { label: "Creating a Listing", href: "/help/creating-a-listing" }
-    ],
-    sidebar: {
+    ]
+
+    const staticSidebar = {
         helpTopics: [
             { name: "Shop Management", href: "/help/shop-management" },
             { name: "Orders & Shipping", href: "/help/orders-shipping" },
@@ -31,142 +48,96 @@ const pageData = {
             { name: "Start Selling on Etsy", href: "/help/start-selling" },
             { name: "Your Etsy Account", href: "/help/your-account" }
         ],
-        // Article navigation for jump links.
         articleNavigation: [
-            { title: "How much should I charge for postage?", id: "postage" },
-            { title: "What if I sell very bulky or heavy items?", id: "bulky" },
-            { title: "How do I add postage rates?", id: "add-postage" },
-            { title: "How do I create a delivery profile?", id: "delivery-profile" },
-            { title: "How do I offer free delivery?", id: "free-delivery" },
-            { title: "Multiple items & discounted rates", id: "multiple-items" },
-            { title: "How do I add a delivery upgrade?", id: "delivery-upgrade" },
-            { title: "How are buyers charged for delivery upgrades?", id: "upgrade-charge" }
+            { title: "Introduction", id: "introduction" },
+            { title: "Postage Pricing", id: "postage-pricing" },
+            { title: "Delivery Profile Highlight", id: "delivery-profile-highlight" },
+            { title: "Sample Pricing Table", id: "sample-pricing-table" },
+            { title: "Additional Resources", id: "additional-resources" }
         ]
-    },
-    article: {
-        title: "How to Set Up Delivery Information for your Listings",
-        intro: "Etsy offers many delivery tools to help you set postage rates in your shop.",
-        bulletPoints: [
-            "Use delivery profiles if you have multiple listings with the same delivery settings.",
-            "Offer discounted postage when buyers purchase multiple items.",
-            "Offer buyers the option to pay more for faster delivery."
-        ],
-        highlight: {
-            text: "Review your delivery options carefully. Accurate postage rates and delivery profiles can significantly improve your listing visibility and customer satisfaction."
-        },
-        sections: [
-            {
-                id: "postage",
-                title: "How much should I charge for postage?",
-                paragraphs: [
-                    "Etsy has updated how postage prices are factored into search results for US domestic listings. Listings with postage prices lower than $6 will be prioritised."
-                ],
-                bulletPoints: [
-                    "Postage prices below $6 are prioritised.",
-                    "Refer to postage price search visibility guidelines."
-                ],
-                images: [] // Array of optional image URLs if provided.
-            },
-            {
-                id: "bulky",
-                title: "What if I sell very bulky or heavy items?",
-                paragraphs: [
-                    "For heavy items like furniture, mention that postage prices may vary. Ask buyers to contact you for a quote and then create a custom listing."
-                ],
-                links: [{ href: "/help/custom-listing", text: "Learn how to create a custom listing." }],
-                images: []
-            },
-            {
-                id: "add-postage",
-                title: "How do I add postage rates?",
-                paragraphs: [
-                    "If you prefer not to use calculated postage, add fixed postage rates when creating or editing your listings. Ensure you set a rate for every country you deliver to."
-                ],
-                tips: "Follow your seller dashboard's instructions to add delivery details.",
-                images: []
-            },
-            {
-                id: "delivery-profile",
-                title: "How do I create a delivery profile?",
-                paragraphs: [
-                    "A delivery profile lets you reuse the same delivery settings across multiple listings. Editing the profile will update every listing that uses it.",
-                    "Visit the Delivery profiles page to manage your profiles."
-                ],
-                tips: "Use your shop manager to create and add delivery profiles.",
-                images: []
-            },
-            {
-                id: "free-delivery",
-                title: "How do I offer free delivery?",
-                paragraphs: [
-                    "Free delivery is a strong incentive for buyers. If you use calculated postage, enable free delivery options in your delivery profile for domestic or international orders."
-                ],
-                bulletPoints: [
-                    "For fixed-rate profiles, select the 'Free delivery' option."
-                ],
-                links: [{ href: "/help/free-delivery", text: "Learn more about offering free delivery." }],
-                images: []
-            },
-            {
-                id: "multiple-items",
-                title: "What if someone purchases multiple items from my shop?",
-                paragraphs: [
-                    "You can offer discounted postage with two pricing tiers."
-                ],
-                bulletPoints: [
-                    "One item price: Cost to deliver a single item.",
-                    "Additional item price: Cost for delivering an extra item."
-                ],
-                table: {
-                    headers: ["Item", "One item", "Additional item"],
-                    rows: [
-                        ["Item A", "2.00 USD", "0.50 USD"],
-                        ["Item B", "1.00 USD", "0.75 USD"]
-                    ]
-                },
-                images: []
-            },
-            {
-                id: "delivery-upgrade",
-                title: "How do I add a delivery upgrade?",
-                paragraphs: [
-                    "Delivery upgrades let buyers opt for faster shipping. Enable them in your seller dashboard."
-                ],
-                tips: "For calculated postage, upgrades depend on your chosen carriers.",
-                images: []
-            },
-            {
-                id: "upgrade-charge",
-                title: "How are buyers charged for delivery upgrades?",
-                paragraphs: [
-                    "The upgrade cost is added to the base price of the item. If one item offers an upgrade, it will apply to every item in the order."
-                ],
-                images: []
-            }
-        ]
-    },
-    relatedArticles: [
-        { name: "How to Set Up Calculated Postage", href: "/help/calculated-postage" },
-        { name: "How to Deliver Your Items on Etsy", href: "/help/deliver-items" },
-        { name: "How to Offer Free Delivery", href: "/help/free-delivery" },
-        { name: "What is a Payment Account Reserve?", href: "/help/payment-account-reserve" },
-        { name: "Customs Information for International Delivery", href: "/help/customs-information" }
-    ]
-}
+    }
 
-export default function HelpCenterPage() {
-    // In production, you might fetch this object from your backend API.
-    const data = pageData
+    // Fetch article data based on slug
+    useEffect(() => {
+        const requestOptions = {
+            method: "GET",
+            redirect: "follow"
+        }
+
+        fetch(`https://media.upfrica.com/api/helpblogs/${slug}`, requestOptions)
+            .then((response) => response.json())
+            .then((result) => {
+                setData(result)
+                setLoading(false)
+            })
+            .catch((err) => {
+                console.error(err)
+                setError(err)
+                setLoading(false)
+            })
+    }, [slug])
+
+    // --- Search States and Debounce Logic ---
+    const [searchQuery, setSearchQuery] = useState("")
+    const [searchResults, setSearchResults] = useState([])
+    const [searchLoading, setSearchLoading] = useState(false)
+    const debounceTimeout = useRef(null)
+    const [isFocused, setIsFocused] = useState(false)
+
+    useEffect(() => {
+        // Clear any existing debounce timer
+        if (debounceTimeout.current) clearTimeout(debounceTimeout.current)
+
+        // Clear results if query is empty
+        if (!searchQuery.trim()) {
+            setSearchResults([])
+            setSearchLoading(false)
+            return
+        }
+
+        setSearchLoading(true)
+        // Set debounce delay: 400ms
+        debounceTimeout.current = setTimeout(() => {
+            const encodedQuery = encodeURIComponent(searchQuery.trim())
+            fetch(`https://media.upfrica.com/api/help-blogs/search/?q=${encodedQuery}`)
+                .then((response) => response.json())
+                .then((data) => {
+                    setSearchResults(data)
+                    setSearchLoading(false)
+                })
+                .catch((error) => {
+                    console.error("Search fetch error:", error)
+                    setSearchLoading(false)
+                })
+        }, 400)
+
+        return () => clearTimeout(debounceTimeout.current)
+    }, [searchQuery])
+
+    if (loading) {
+        return <SkeletonLoader />
+    }
+    if (error) {
+        return <div>Error loading data: {error?.message}</div>
+    }
 
     return (
         <div className="min-h-screen bg-gray-100">
-            <Header data={data.header} />
-            <Breadcrumbs data={data.breadcrumbs} />
+            <Header
+                data={staticHeader}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                isFocused={isFocused}
+                setIsFocused={setIsFocused}
+                searchResults={searchResults}
+                searchLoading={searchLoading}
+            />
+            <Breadcrumbs data={staticBreadcrumbs} />
             <div className="container mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <Sidebar data={data.sidebar} />
+                <Sidebar data={staticSidebar} />
                 <main className="lg:col-span-3 space-y-8">
-                    <ArticleContent data={data.article} />
-                    <RelatedArticles data={data.relatedArticles} />
+                    <ArticleContent data={data} />
+                   
                 </main>
             </div>
             <VoteSection />
@@ -176,48 +147,132 @@ export default function HelpCenterPage() {
     )
 }
 
-/* ----------------------------------------------------------------------
-   Header Component – A reduced-height hero with three regions:
-     Left: Displays "Help"
-     Middle: Search bar
-     Right: Sign-in button (rounded-full)
------------------------------------------------------------------------- */
-const Header = ({ data }) => {
+/* --------------------------------------------------
+   SkeletonLoader Component – Mimics the page layout while data loads.
+-------------------------------------------------- */
+const SkeletonLoader = () => (
+    <div className="min-h-screen bg-gray-100 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="h-24 bg-gray-300 relative">
+            <div className="absolute inset-0 bg-gray-400 opacity-50"></div>
+        </div>
+        {/* Breadcrumbs Skeleton */}
+        <div className="py-3 bg-white shadow-sm">
+            <div className="container mx-auto px-4">
+                <div className="h-4 w-1/2 bg-gray-300 rounded"></div>
+            </div>
+        </div>
+        <div className="container mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Sidebar Skeleton */}
+            <aside className="space-y-8">
+                <div className="bg-white shadow rounded p-4">
+                    <div className="h-6 w-1/3 bg-gray-300 mb-4"></div>
+                    <ul className="space-y-2">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <li key={i} className="h-4 bg-gray-300 rounded"></li>
+                        ))}
+                    </ul>
+                </div>
+                <div className="bg-white shadow rounded p-4">
+                    <div className="h-6 w-1/3 bg-gray-300 mb-4"></div>
+                    <ul className="space-y-2">
+                        {[1, 2, 3].map((i) => (
+                            <li key={i} className="h-4 bg-gray-300 rounded"></li>
+                        ))}
+                    </ul>
+                </div>
+            </aside>
+            {/* Main Article Skeleton */}
+            <main className="lg:col-span-3 space-y-8">
+                <div className="space-y-4">
+                    <div className="h-8 w-3/4 bg-gray-300 rounded"></div>
+                    <div className="h-4 w-full bg-gray-300 rounded"></div>
+                    <div className="h-4 w-full bg-gray-300 rounded"></div>
+                </div>
+                {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={index} className="space-y-4 border-t pt-4">
+                        <div className="h-6 w-1/2 bg-gray-300 rounded"></div>
+                        <div className="h-4 w-full bg-gray-300 rounded"></div>
+                        <div className="h-4 w-5/6 bg-gray-300 rounded"></div>
+                    </div>
+                ))}
+            </main>
+        </div>
+        <footer className="bg-gray-800 py-6 mt-12">
+            <div className="container mx-auto text-center">
+                <div className="h-4 w-1/3 bg-gray-400 rounded mx-auto"></div>
+            </div>
+        </footer>
+    </div>
+)
+
+/* --------------------------------------------------
+   Header Component – Now includes integrated search functionality.
+-------------------------------------------------- */
+const Header = ({ data, searchQuery, setSearchQuery, isFocused, setIsFocused, searchResults, searchLoading }) => {
     return (
         <header className="relative h-24">
             <div
                 className="absolute inset-0 bg-cover bg-center"
-                style={{
-                    backgroundImage: `url("${data.backgroundImage}")`
-                }}
+                style={{ backgroundImage: `url("${data?.backgroundImage}")` }}
             ></div>
             <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black opacity-70"></div>
             <div className="absolute inset-0 flex items-center justify-between container mx-auto px-4">
-                {/* Left */}
-                <div className="text-white text-xl font-bold">
-                    Help
-                </div>
-                {/* Middle: Search Bar */}
-                <div className="w-full max-w-md">
-                    <form action="/hc/search" method="get" className="relative">
+                <Link
+                    href={"/help"}
+                    className="text-white text-xl font-bold">Help</Link>
+                <div className="w-full max-w-md relative">
+                    <div className="relative">
+                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <input
                             type="search"
                             name="query"
-                            placeholder={data.searchPlaceholder}
-                            className="w-full rounded-full border border-violet-700 py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-violet-700"
+                            placeholder={data?.searchPlaceholder}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => setIsFocused(true)}
+                            onBlur={() => setTimeout(() => setIsFocused(false), 150)}
+                            className="w-full rounded-full border border-violet-700 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-violet-700 text-gray-500"
                         />
-                        <button
-                            type="submit"
-                            className="absolute right-0 top-0 h-full px-3 flex items-center justify-center"
-                            aria-label="Search"
-                        >
-                            <FaSearch className="text-gray-600 h-5 w-5" />
-                        </button>
-                    </form>
+                    </div>
+                    {/* Floating Search Results Panel */}
+                    {isFocused && searchQuery.trim() && (
+                        <div className="absolute z-20 left-0 right-0 mt-2 bg-white rounded shadow-lg p-4 max-h-96 overflow-y-auto">
+                            {searchLoading ? (
+                                <div className="grid grid-cols-1 gap-4">
+                                    {Array.from({ length: 6 }).map((_, i) => (
+                                        <CardSkeleton key={i} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <>
+                                    {searchResults?.length > 0 ? (
+                                        <div className="grid grid-cols-1 gap-4">
+                                            {searchResults.map((post) => (
+                                                <Link key={post.id} href={`/help/${post.slug}/`}>
+                                                    <div className="block p-4 bg-white rounded shadow hover:shadow-lg transition">
+                                                        <h3 className="text-lg font-bold text-gray-900 mb-2">
+                                                            {post.title}
+                                                        </h3>
+                                                        <p className="text-gray-700">
+                                                            {post.summary?.length > 150
+                                                                ? post.summary.substring(0, 150) + "..."
+                                                                : post.summary}
+                                                        </p>
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="p-4 text-center text-gray-400">No results found.</p>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    )}
                 </div>
-                {/* Right: Sign In Button (rounded-full) */}
                 <div>
-                    <Link href="https://www.etsy.com/sso-forced/zendesk?return_to=https://help.etsy.com">
+                    <Link href="/signin">
                         <button className="px-3 py-2 border border-white text-white rounded-full hover:bg-white hover:text-gray-900 transition">
                             Sign in
                         </button>
@@ -228,187 +283,202 @@ const Header = ({ data }) => {
     )
 }
 
-/* ----------------------------------------------------------------------
-   Breadcrumbs Component – Renders navigation links based on data.
------------------------------------------------------------------------- */
-const Breadcrumbs = ({ data }) => {
-    return (
-        <nav className="bg-white py-3 shadow-sm">
-            <div className="container mx-auto px-4">
-                <ol className="flex space-x-2 text-gray-600 items-center">
-                    {data.map((crumb, index) => (
-                        <React.Fragment key={index}>
-                            <li>
-                                <Link href={crumb.href} className="hover:text-violet-700">
-                                    {crumb.label}
-                                </Link>
-                            </li>
-                            {index < data.length - 1 && <li>/</li>}
-                        </React.Fragment>
-                    ))}
-                </ol>
-            </div>
-        </nav>
-    )
-}
-
-/* ----------------------------------------------------------------------
-   Sidebar Component – Renders two sections from passed data:
-     1. Help Topics
-     2. Article Navigation (jump links)
------------------------------------------------------------------------- */
-const Sidebar = ({ data }) => {
-    return (
-        <aside className="space-y-8">
-            <Card title="Help Topics">
-                <ul className="list-disc pl-4 text-gray-700">
-                    {data.helpTopics.map((link) => (
-                        <li key={link.name}>
-                            <Link href={link.href} className="hover:underline">
-                                {link.name}
+/* --------------------------------------------------
+   Breadcrumbs Component – Renders navigation links.
+-------------------------------------------------- */
+const Breadcrumbs = ({ data }) => (
+    <nav className="bg-white py-3 shadow-sm">
+        <div className="container mx-auto px-4">
+            <ol className="flex space-x-2 text-gray-600 items-center">
+                {data?.map((crumb, index) => (
+                    <React.Fragment key={index}>
+                        <li>
+                            <Link href={crumb.href} className="hover:text-violet-700">
+                                {crumb.label}
                             </Link>
                         </li>
-                    ))}
-                </ul>
-            </Card>
-            <Card title="Article Navigation">
-                <ul className="list-disc pl-4 text-violet-700">
-                    {data.articleNavigation.map((section) => (
-                        <li key={section.id}>
-                            <Link href={`#${section.id}`} className="hover:underline">
-                                {section.title}
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-            </Card>
-        </aside>
-    )
-}
+                        {index < data.length - 1 && <li>/</li>}
+                    </React.Fragment>
+                ))}
+            </ol>
+        </div>
+    </nav>
+)
 
-/* ----------------------------------------------------------------------
-   ArticleContent Component – Renders the article content from the data object.
------------------------------------------------------------------------- */
-const ArticleContent = ({ data }) => {
-    return (
-        <article className="space-y-8">
-            <header>
-                <h1 id="page-title" className="text-3xl font-bold text-gray-900 mb-4" title={data.title}>
-                    {data.title}
-                </h1>
-            </header>
-            <section>
-                <p>{data.intro}</p>
-                <ul className="list-disc pl-6">
-                    {data.bulletPoints.map((point, index) => (
-                        <li key={index}>{point}</li>
-                    ))}
-                </ul>
-            </section>
-            <section>
-                <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4">
-                    <p className="font-semibold">Important:</p>
-                    <p>{data.highlight.text}</p>
-                </div>
-            </section>
-            {data.sections.map((section) => (
-                <section key={section.id} id={section.id}>
-                    <h2 className="text-2xl font-bold mt-8 mb-3">{section.title}</h2>
-                    {section.paragraphs.map((para, i) => (
-                        <p key={i}>{para}</p>
-                    ))}
-                    {section.bulletPoints && (
-                        <ul className="list-disc pl-6">
-                            {section.bulletPoints.map((bullet, i) => (
-                                <li key={i}>{bullet}</li>
-                            ))}
-                        </ul>
-                    )}
-                    {section.tips && (
-                        <p className="mt-2 italic text-gray-600">Tip: {section.tips}</p>
-                    )}
-                    {section.links && (
-                        <div className="mt-2 space-y-1">
-                            {section.links.map((link, i) => (
-                                <p key={i}>
-                                    <Link href={link.href} className="text-violet-700 hover:underline">
-                                        {link.text}
-                                    </Link>
-                                </p>
-                            ))}
-                        </div>
-                    )}
-                    {section.table && (
-                        <div className="overflow-x-auto my-4">
-                            <table className="min-w-full border border-gray-300">
-                                <thead>
-                                    <tr className="bg-gray-200">
-                                        {section.table.headers.map((header, i) => (
-                                            <th key={i} className="px-4 py-2 border border-gray-300">{header}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {section.table.rows.map((row, i) => (
-                                        <tr key={i}>
-                                            {row.map((cell, j) => (
-                                                <td key={j} className="px-4 py-2 border border-gray-300">{cell}</td>
-                                            ))}
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </section>
-            ))}
-        </article>
-    )
-}
-
-/* ----------------------------------------------------------------------
-   RelatedArticles Component – Renders related articles like an article
-   navigation section using the data object.
------------------------------------------------------------------------- */
-const RelatedArticles = ({ data }) => {
-    return (
-        <section className="mt-12">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Related Articles</h3>
-            <ul className="list-disc pl-6 text-violet-700">
-                {data.map((article, index) => (
-                    <li key={index}>
-                        <Link href={article.href} className="hover:underline">
-                            {article.name}
+/* --------------------------------------------------
+   Sidebar Component – Renders the help topics and article navigation.
+-------------------------------------------------- */
+const Sidebar = ({ data }) => (
+    <aside className="space-y-8">
+        <Card title="Help Topics">
+            <ul className="list-disc pl-4 text-gray-700">
+                {data?.helpTopics?.map((link) => (
+                    <li key={link.name}>
+                        <Link href={link.href} className="hover:underline">
+                            {link.name}
                         </Link>
                     </li>
                 ))}
             </ul>
-        </section>
-    )
-}
+        </Card>
+        <Card title="Article Navigation">
+            <ul className="list-disc pl-4 text-violet-700">
+                {data?.articleNavigation?.map((section) => (
+                    <li key={section.id}>
+                        <Link href={`#${section.id}`} className="hover:underline">
+                            {section.title}
+                        </Link>
+                    </li>
+                ))}
+            </ul>
+        </Card>
+    </aside>
+)
 
-/* ----------------------------------------------------------------------
-   Card Component – A reusable card component.
------------------------------------------------------------------------- */
-const Card = ({ title, children }) => {
-    return (
-        <div className="bg-white shadow rounded p-4">
-            {title && <h3 className="text-lg font-bold text-gray-800 mb-3">{title}</h3>}
-            {children}
-        </div>
-    )
-}
+/* --------------------------------------------------
+   ArticleContent Component – Renders the article content.
+-------------------------------------------------- */
+const ArticleContent = ({ data }) => (
+    <article className="space-y-8">
+        <header>
+            <h1
+                id="page-title"
+                className="text-3xl font-bold text-gray-900 mb-4"
+                title={data?.title}
+            >
+                {data?.title}
+            </h1>
+        </header>
+        {data?.summary && <p className="mb-4">{data.summary}</p>}
+        {data?.sections?.map((section, index) => (
+            <section
+                key={index}
+                id={section.sectionTitle?.toLowerCase().replace(/\s/g, "-")}
+                className="border-t pt-4"
+            >
+                <h2 className="text-2xl font-bold mt-8 mb-3">
+                    {section.sectionTitle}
+                </h2>
+                {section.sectionType === "paragraph" && (
+                    <p>{section.sectionContent}</p>
+                )}
 
-/* ----------------------------------------------------------------------
-   VoteSection Component – Provides a simple yes/no vote with feedback.
------------------------------------------------------------------------- */
+                {section.sectionType === "bullet" && (
+                    <ul className="list-disc pl-6">
+                        {section.bulletItems?.map((item, i) => (
+                            <li key={i}>{item}</li>
+                        ))}
+                    </ul>
+                )}
+
+                {section.sectionType === "highlight" && (
+                    <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4">
+                        <p className="font-semibold">Important:</p>
+                        <p>{section.sectionContent}</p>
+                    </div>
+                )}
+
+                {section.sectionType === "table" &&
+                    section.tableHeaders &&
+                    section.tableRows && (
+                        <div className="overflow-x-auto my-4 space-y-4">
+                            {Array.isArray(section.tableHeaders[0])
+                                ? section.tableHeaders.map((headers, tableIndex) => (
+                                    <TableComponent
+                                        key={tableIndex}
+                                        headers={headers}
+                                        rows={section.tableRows[tableIndex]}
+                                    />
+                                ))
+                                : <TableComponent
+                                    headers={section.tableHeaders}
+                                    rows={section.tableRows}
+                                />}
+                        </div>
+                    )}
+
+                {section.sectionType === "links" && (
+                    <div className="mt-2 space-y-1">
+                        {section.links?.map((link, i) => (
+                            <p key={i}>
+                                <Link href={link.url} className="text-violet-700 hover:underline">
+                                    {link.text}
+                                </Link>
+                            </p>
+                        ))}
+                    </div>
+                )}
+            </section>
+        ))}
+    </article>
+)
+
+/* --------------------------------------------------
+   TableComponent – A reusable component to render tables.
+-------------------------------------------------- */
+const TableComponent = ({ headers, rows }) => (
+    <table className="min-w-full border border-gray-300">
+        <thead>
+            <tr className="bg-gray-200">
+                {headers.map((header, i) => (
+                    <th key={i} className="px-4 py-2 border border-gray-300">{header}</th>
+                ))}
+            </tr>
+        </thead>
+        <tbody>
+            {rows.map((row, i) => (
+                <tr key={i}>
+                    {row.map((cell, j) => (
+                        <td key={j} className="px-4 py-2 border border-gray-300">{cell}</td>
+                    ))}
+                </tr>
+            ))}
+        </tbody>
+    </table>
+)
+
+/* --------------------------------------------------
+   RelatedArticles Component – Renders related articles.
+-------------------------------------------------- */
+const RelatedArticles = ({ data }) => (
+    <section className="mt-12">
+        <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            Related Articles
+        </h3>
+        <ul className="list-disc pl-6 text-violet-700">
+            {data?.map((article, index) => (
+                <li key={index}>
+                    <Link href={article.href} className="hover:underline">
+                        {article.name}
+                    </Link>
+                </li>
+            ))}
+        </ul>
+    </section>
+)
+
+/* --------------------------------------------------
+   Card Component – A reusable container for sidebar content.
+-------------------------------------------------- */
+const Card = ({ title, children }) => (
+    <div className="bg-white shadow rounded p-4">
+        {title && <h3 className="text-lg font-bold text-gray-800 mb-3">{title}</h3>}
+        {children}
+    </div>
+)
+
+/* --------------------------------------------------
+   VoteSection Component – Provides a simple feedback UI.
+-------------------------------------------------- */
 const VoteSection = () => {
     const [vote, setVote] = useState(null)
     return (
         <div className="my-12 text-center">
             {vote === null ? (
                 <>
-                    <p className="font-semibold text-gray-700">Did this resolve the issue?</p>
+                    <p className="font-semibold text-gray-700">
+                        Did this resolve the issue?
+                    </p>
                     <div className="flex justify-center space-x-4 mt-2">
                         <button
                             onClick={() => setVote("yes")}
@@ -427,34 +497,34 @@ const VoteSection = () => {
                     </div>
                 </>
             ) : (
-                <p className="text-green-700 font-bold mt-4">Thanks for your feedback!</p>
+                <p className="text-green-700 font-bold mt-4">
+                    Thanks for your feedback!
+                </p>
             )}
         </div>
     )
 }
 
-/* ----------------------------------------------------------------------
+/* --------------------------------------------------
    Scripts Component – Loads external JavaScript files.
------------------------------------------------------------------------- */
-const Scripts = () => {
-    return (
-        <>
-            <Script
-                strategy="afterInteractive"
-                src="https://www.etsy.com/ac/evergreenVendor/js/en-US/zendesk_help_center/header.ffb044d22fc2e825d083.js?z=c07b859e7c81e56b5d68d2a725292397"
-            />
-            <Script
-                strategy="afterInteractive"
-                src="https://www.etsy.com/ac/evergreenVendor/js/en-US/zendesk_help_center/article_page.829581db8ed43b2066c6.js?z=c07b859e7c81e56b5d68d2a725292397"
-            />
-            <Script
-                strategy="afterInteractive"
-                src="https://www.etsy.com/ac/evergreenVendor/js/en-US/zendesk_help_center/footer.511461acd9437365538c.js?z=c07b859e7c81e56b5d68d2a725292397"
-            />
-            <Script
-                strategy="afterInteractive"
-                src="//static.zdassets.com/hc/assets/en-gb.3e9727124d078807077c.js"
-            />
-        </>
-    )
-}
+-------------------------------------------------- */
+const Scripts = () => (
+    <>
+        <Script
+            strategy="afterInteractive"
+            src="https://www.etsy.com/ac/evergreenVendor/js/en-US/zendesk_help_center/header.ffb044d22fc2e825d083.js?z=c07b859e7c81e56b5d68d2a725292397"
+        />
+        <Script
+            strategy="afterInteractive"
+            src="https://www.etsy.com/ac/evergreenVendor/js/en-US/zendesk_help_center/article_page.829581db8ed43b2066c6.js?z=c07b859e7c81e56b5d68d2a725292397"
+        />
+        <Script
+            strategy="afterInteractive"
+            src="https://www.etsy.com/ac/evergreenVendor/js/en-US/zendesk_help_center/footer.511461acd9437365538c.js?z=c07b859e7c81e56b5d68d2a725292397"
+        />
+        <Script
+            strategy="afterInteractive"
+            src="//static.zdassets.com/hc/assets/en-gb.3e9727124d078807077c.js"
+        />
+    </>
+)

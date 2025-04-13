@@ -12,7 +12,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
           {/* Branding & Contact Section */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Upfrica - BD</h2>
+            <h2 className="text-2xl font-bold text-gray-50">Upfrica - Global</h2>
             <p className="text-sm text-gray-300">
               Online Shopping in Ghana, Nigeria, UK for quality items at discounted prices.
               Sell, deliver, process payments, and grow your business.
@@ -32,7 +32,7 @@ export default function Footer() {
           <div className="lg:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-10">
             {/* Page Section */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold tracking-wide">Page</h3>
+              <h3 className="text-xl font-bold tracking-wide text-gray-50">Page</h3>
               <ul className="space-y-2 text-sm">
                 <li className="hover:text-purple-500">
                   <Link href="/deals">Deals</Link>
@@ -54,7 +54,7 @@ export default function Footer() {
 
             {/* Links Section */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold tracking-wide">Links</h3>
+              <h3 className="text-xl font-bold tracking-wide text-gray-50">Links</h3>
               <ul className="space-y-2 text-sm">
                 <li className="hover:text-purple-500">
                   <Link href="/signup">Sign up</Link>
@@ -76,7 +76,7 @@ export default function Footer() {
 
             {/* Countries Section */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold tracking-wide">Countries</h3>
+              <h3 className="text-xl font-bold tracking-wide text-gray-50">Countries</h3>
               <ul className="space-y-2 text-sm">
                 <li className="hover:text-purple-500">
                   <Link href="/ghana">Ghana</Link>
@@ -95,7 +95,7 @@ export default function Footer() {
 
             {/* Quick Links Section */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold tracking-wide">Quick Links</h3>
+              <h3 className="text-xl font-bold tracking-wide text-gray-50">Quick Links</h3>
               <ul className="space-y-2 text-sm">
                 <li className="hover:text-purple-500">
                   <Link href="/sales" className="flex items-center">
@@ -119,13 +119,13 @@ export default function Footer() {
         <div className="mt-10 border-t border-gray-700 pt-6">
           <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center">
             <div className="mb-4 md:mb-0">
-              <h3 className="text-xl font-bold">Ghana HQ</h3>
+              <h3 className="text-xl font-bold text-gray-50">Ghana HQ</h3>
               <p className="text-sm text-gray-400">
                 Upfrica - African Marketplace BD. All rights reserved.
               </p>
             </div>
             <div>
-              <h3 className="text-xl font-bold mb-2">Payment &amp; Security</h3>
+              <h3 className="text-xl font-bold mb-2 text-gray-50">Payment &amp; Security</h3>
               <div className="flex gap-4">
                 <Image
                   className="rounded"
