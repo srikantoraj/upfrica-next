@@ -10,7 +10,7 @@ import LocalStorageComponent from '@/components/LocalStorageComponent';
 
 const LoginPage = () => {
   return (
-    <div className="max-w-screen-2xl flex justify-center items-center mx-auto lg:p-10 p-4 min-h-screen">
+    <div className="max-w-screen-2xl flex justify-center items-center mx-auto lg:p-10  min-h-screen">
       <div className="bg-white container grid lg:grid-cols-2 py-10 lg:px-20 shadow-xl border rounded-md">
         {/* Image Column */}
         <LocalStorageComponent/>
@@ -25,8 +25,8 @@ const LoginPage = () => {
         </div>
 
         {/* Text Column */}
-        <div className="col-span-1 order-1 lg:order-2 p-4">
-          <div className="text-center space-y-4 px-4">
+        <div className="col-span-1 order-1 lg:order-2 lg:p-4">
+          <div className="text-center space-y-4">
             {/* Logo */}
             <div className="flex justify-center">
               <Image

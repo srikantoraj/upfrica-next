@@ -131,7 +131,7 @@ const SellectedItem = async () => {
     }
 
     return (
-      <div className="container mx-auto px-6 py-12 bg-white rounded-lg">
+      <div className="container   py-12 bg-white rounded-lg">
         {/* Section Title */}
         {/* <div className="mb-6">
           <h1 className="text-xl md:text-3xl font-extrabold tracking-wide text-gray-900">
@@ -141,7 +141,7 @@ const SellectedItem = async () => {
 
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 pb-4">
+          <div className="flex items-center gap-2 lg:gap-4 pb-2 lg:pb-4">
             <h1 className="text-xl md:text-3xl font-extrabold text-gray-900 tracking-wide">
               Trending in <br className="hidden lg:inline" /> Machines Today
             </h1>
@@ -151,7 +151,7 @@ const SellectedItem = async () => {
         </div>
 
         {/* Product Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-3 lg:gap-5">
           {productsData.results.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

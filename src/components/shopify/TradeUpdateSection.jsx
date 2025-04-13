@@ -3,6 +3,7 @@ import StartBusinessCTA from './StartBusinessCTA';
 import TariffNoticeSection from './TariffNoticeSection';
 import DdpLabelsSection from './DdpLabelsSection';
 import SidebarNewsletterCTA from './SidebarNewsletterCTA';
+import DutiesCollection from './DutiesCollection';
 
 const TradeUpdateSection = () => {
     return (
@@ -14,6 +15,7 @@ const TradeUpdateSection = () => {
             <div className='col-span-2'>
                 <TariffNoticeSection/>
                 <DdpLabelsSection/>
+                <DutiesCollection/>
             </div>
             <div className='col-span-1 hidden lg:block'>
                 <SidebarNewsletterCTA/>
