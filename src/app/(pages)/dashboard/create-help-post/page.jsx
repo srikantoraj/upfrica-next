@@ -4,6 +4,7 @@ import { Formik, FieldArray } from 'formik';
 import Link from 'next/link';
 import Script from 'next/script';
 import Footer from '@/components/common/footer/Footer';
+import { useSelector } from 'react-redux';
 
 // Initial form values for creating a Help Blog Post.
 // In production, you might start with empty values or fetch defaults from your backend.
@@ -40,19 +41,40 @@ const validate = (values) => {
 };
 
 export default function CreateHelpBlogPage() {
+
+  const { token, user } = useSelector((state) => state.auth);
   return (
     <>
-    <div className="min-h-screen bg-gray-50 p-4 container mx-auto p20">
+    <div className="min-h-screen bg-gray-50 p-4 container mx-auto p-20">
       <h1 className="text-3xl font-bold text-violet-700 mb-6 text-center">
         Create Help Blog Post
       </h1>
       <Formik
         initialValues={initialFormValues}
         validate={validate}
-        onSubmit={(values) => {
-          // In production, you would send the data to your backend API.
-          console.log("Submitted values:", values);
-          alert("Help blog post submitted!");
+          onSubmit={(values) => {
+            const myHeaders = new Headers();
+            myHeaders.append("Authorization", `Token ${token}`);
+            myHeaders.append("Content-Type", "application/json");
+            fetch("https://media.upfrica.com/api/admin/helpblogs/", {
+              method: "POST",
+              headers: myHeaders,
+              body: JSON.stringify(values),
+              redirect: "follow",
+            })
+              .then((response) => response.json())
+              .then((result) => {
+                console.log(result);
+                alert("Help blog post created successfully!");
+                // Redirect to the newly created blog post page
+                window.location.href = `/help/${result.slug}`;
+              })
+              .catch((error) => {
+                console.error("Error:", error);
+                alert("Failed to create help blog post.");
+              });
+
+
         }}
         enableReinitialize
       >
@@ -64,6 +86,7 @@ export default function CreateHelpBlogPage() {
           handleBlur,
           handleSubmit,
           setFieldValue,
+          isSubmitting,
         }) => (
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Post Title */}
@@ -469,14 +492,28 @@ export default function CreateHelpBlogPage() {
             </div>
 
             {/* Submit Button */}
-            <div className='my-10'>
-              <button
-                type="submit"
-                className="w-80 mb-10 self-center mx-auto py-2 bg-violet-700 hover:bg-violet-800 text-white font-semibold rounded-full transition-colors duration-200"
-              >
-                Create Help Blog Post
-              </button>
-           </div>
+              {!isSubmitting && (
+                <button
+                  type="submit"
+                  className=" text-xl px-4 py-2 bg-[#A435F0] text-white rounded-md font-bold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  disabled={isSubmitting}
+                >
+                  Create Help Blog
+                </button>
+              )}
+              {isSubmitting && (
+                <button
+                  type="submit"
+                  className=" w-[200px] text-xl px-4 py-2 bg-[#A435F0] text-white rounded-md font-bold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  disabled={isSubmitting}
+                >
+                  <div className="flex space-x-2 justify-center items-center h-6">
+                    <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <div className="h-2 w-2 bg-white rounded-full animate-bounce" />
+                  </div>
+                </button>
+              )}
           </form>
         )}
       </Formik>
