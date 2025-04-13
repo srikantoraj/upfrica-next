@@ -307,20 +307,19 @@ export default function ProductDetailSection({ product }) {
                                 <PaymentDeliveryReturns />
                             </div>
                         </section>
-                        <DescriptionAndReviews details={description} user={user} />
+                        <DescriptionAndReviews details={description} user={product?.user} />
                     </div>
                     {/* END LEFT CONTENT */}
                     {/* RIGHT SIDEBAR */}
                     <aside className="order-2 hidden xl:block xl:col-span-5">
                         <div className="sticky top-0 space-y-4 p-5">
-                            <h1 className="heading-lg text-base md:text-lg lg:text-xl font-bold text-gray-800">{title}</h1>
-                            {shop && (
-                                <div className="text-sm text-gray-500">
-                                    <Link href={`/shop/${shop?.slug}`}>
-                                        <b>4480 sold</b> — Visit the <b className="text-[#8710D8]">{shop.name}</b> Shop — Accra, GH
-                                    </Link>
-                                </div>
-                            )}
+                        <h1 className="heading-lg text-lg md:text-xl lg:text-2xl font-semibold text-gray-800">{title}</h1>
+                            {shop && <div className="text-sm text-gray-500">
+                                <Link href={`/shop/${shop?.slug}`}>
+
+                                    <b>4480 sold</b> — Visit the <b className="text-[#8710D8]">{shop.name}</b> Shop — Accra, GH
+                                </Link>
+                            </div>}
                             <div className="flex items-center text-sm text-yellow-400 gap-2">
                                 <MdArrowRightAlt className="h-4 w-4" />
                                 <span>4.5</span>
@@ -377,19 +376,26 @@ export default function ProductDetailSection({ product }) {
                                 </span>
                             </div>
                             <div className="flex items-center gap-4 mb-6">
-                                <span className="text-sm font-medium text-gray-800">In stock</span>
-                                <div className="flex items-center rounded-md border border-gray-300 overflow-hidden w-fit">
-                                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 text-lg font-semibold text-gray-500 hover:text-black focus:outline-none">
-                                        <FaMinus />
-                                    </button>
-                                    <div className="w-12 h-10 flex items-center justify-center border-x text-lg font-medium text-black">
-                                        {quantity}
-                                    </div>
-                                    <button onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 text-lg font-semibold text-gray-500 hover:text-black focus:outline-none">
-                                        <FaPlus />
-                                    </button>
-                                </div>
-                            </div>
+                <span className="text-sm font-medium text-gray-800">In stock</span>
+                <div className="flex items-center rounded-md border border-gray-300 overflow-hidden w-fit">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-10 h-10 text-lg font-semibold text-gray-500 hover:text-black focus:outline-none"
+                  >
+                    –
+                  </button>
+                  <div className="w-12 h-10 flex items-center justify-center border-x text-lg font-medium text-black">
+                    {quantity}
+                  </div>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-10 h-10 text-lg font-semibold text-gray-500 hover:text-black focus:outline-none"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
                             <div className="text-sm text-gray-700 flex items-center gap-1">
                                 Condition: <span className="font-semibold">{condition?.name}</span>
                                 <InfoPopover content="Displays all product details fully expanded." link="/help-center/full-product-details" />

@@ -404,7 +404,7 @@ export default function ProductDetailSection({ product }) {
                             </div>
                         </section>
 
-                        <DescriptionAndReviews />
+                        <DescriptionAndReviews details={product?.description} user = {product?.user} />
                     </div>
                     {/* END LEFT CONTENT */}
 
