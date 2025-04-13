@@ -67,7 +67,7 @@ export default function CreateHelpBlogPage() {
                 console.log(result);
                 alert("Help blog post created successfully!");
                 // Redirect to the newly created blog post page
-                window.location.href = `/help/${result.slug}`;
+                window.location.href = `/help-draft/`;
               })
               .catch((error) => {
                 console.error("Error:", error);

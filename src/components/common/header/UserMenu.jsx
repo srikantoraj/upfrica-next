@@ -138,6 +138,12 @@ export default function UserMenu() {
                   <span className="ml-2">Draft</span>
                 </div>
               </Link>
+              <Link href="/help-draft">
+                <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
+                  <BsPersonPlus className="h-5 w-5 text-gray-500" />
+                  <span className="ml-2"> Help Blogs(Draft)</span>
+                </div>
+              </Link>
               <Link href="/admin/users">
                 <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
                   <BsCalendar3 className="h-5 w-5 text-gray-500" />
