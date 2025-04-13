@@ -74,8 +74,8 @@ const Cart = () => {
 
   return (
     <div className="container mt-12">
-      <div className="grid lg:grid-cols-5 gap-5 my-10  rounded-lg overflow-hidden">
-        <div className="w-full lg:col-span-3 bg-white p-0 lg:p-6 sm:p-10">
+      <div className="grid lg:grid-cols-6 gap-5 my-10  rounded-lg overflow-hidden">
+        <div className="w-full lg:col-span-4 bg-white p-0 lg:p-6 sm:p-10">
           <div className="flex justify-between border-b pb-6">
             <h1 className="font-bold text-xl sm:text-2xl md:text-3xl">Shopping Cart</h1>
             <h2 className="font-semibold text-base sm:text-lg md:text-xl text-gray-700">
@@ -93,7 +93,7 @@ const Cart = () => {
                   <img
                     src={product?.image?.[0] || "https://via.placeholder.com/150"}
                     alt={product.title}
-                    className="h-full w-full object-cover rounded-md"
+                    className="h-full w-full object-contain rounded-md"
                   />
                 </div>
 
@@ -116,7 +116,7 @@ const Cart = () => {
                     </select>
                   </div>
 
-                  <div className="flex gap-2 items-center justify-between pt-4">
+                  <div className="flex gap-2 md:items-center justify-between pt-4">
                     <div className="md:flex items-center gap-2 lg:gap-4">
                       <button className="flex gap-4 items-center text-sm font-medium text-gray-500 hover:text-gray-900 hover:underline">
                         <FaHeart className="lg:mr-1.5 h-5 w-5" />
