@@ -233,7 +233,7 @@ export default function ProductDetailSection({ product }) {
                                 <h1 className="heading-lg text-base md:text-lg lg:text-xl font-bold text-gray-800">{title}</h1>
                                 {shop && (
                                     <div className="text-sm text-gray-500">
-                                        <Link href={`/shop/${shop?.slug}`}>
+                                        <Link href={`/shops/${shop?.slug}`}>
                                             <b>4480 sold</b> — Visit the <b className="text-[#8710D8]">{shop.name}</b> Shop — Accra, GH
                                         </Link>
                                     </div>
@@ -315,7 +315,7 @@ export default function ProductDetailSection({ product }) {
                         <div className="sticky top-0 space-y-4 p-5">
                         <h1 className="heading-lg text-lg md:text-xl lg:text-2xl font-semibold text-gray-800">{title}</h1>
                             {shop && <div className="text-sm text-gray-500">
-                                <Link href={`/shop/${shop?.slug}`}>
+                                <Link href={`/shops/${shop?.slug}`}>
 
                                     <b>4480 sold</b> — Visit the <b className="text-[#8710D8]">{shop.name}</b> Shop — Accra, GH
                                 </Link>
