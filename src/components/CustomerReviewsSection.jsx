@@ -84,7 +84,7 @@ export default function CustomerReviewsSection() {
             !error &&
             reviews.map((review) => (
               <div key={review.id} className="my-4 pb-4 border-b last:border-b-0">
-                <div className="flex flex-col md:flex-row gap-3">
+                <div className="flex  gap-3">
                   <div className="flex-shrink-0">
                     <img
                       className="w-16 h-16 rounded-full object-cover"

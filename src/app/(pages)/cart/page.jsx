@@ -74,8 +74,8 @@ const Cart = () => {
 
   return (
     <div className="container mt-12">
-      <div className="sm:flex flex-col sm:flex-row lg:shadow-md my-10 bg-gray-100 rounded-lg overflow-hidden">
-        <div className="w-full sm:w-3/5 bg-white p-0 lg:p-6 sm:p-10">
+      <div className="grid lg:grid-cols-5 gap-5 my-10  rounded-lg overflow-hidden">
+        <div className="w-full lg:col-span-3 bg-white p-0 lg:p-6 sm:p-10">
           <div className="flex justify-between border-b pb-6">
             <h1 className="font-bold text-xl sm:text-2xl md:text-3xl">Shopping Cart</h1>
             <h2 className="font-semibold text-base sm:text-lg md:text-xl text-gray-700">
@@ -87,9 +87,9 @@ const Cart = () => {
             basket.map((product) => (
               <div
                 key={product.id}
-                className="md:flex items-stretch py-6 border-b border-gray-200 last:border-b-0"
+                className="flex items-stretch gap-2 lg:gap-4 py-6 border-b border-gray-200 last:border-b-0"
               >
-                <div className="md:w-1/6 h-[200px] w-full mb-4 md:mb-0">
+                <div className="w-[120px] lg:w-2/6 h-[100px] lg:h-[200px]  mb-4 md:mb-0">
                   <img
                     src={product?.image?.[0] || "https://via.placeholder.com/150"}
                     alt={product.title}
@@ -116,15 +116,15 @@ const Cart = () => {
                     </select>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="flex items-center gap-4">
-                      <button className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 hover:underline">
-                        <FaHeart className="mr-1.5 h-5 w-5" />
-                        Add to Favorites
+                  <div className="flex gap-2 items-center justify-between pt-4">
+                    <div className="md:flex items-center gap-2 lg:gap-4">
+                      <button className="flex gap-4 items-center text-sm font-medium text-gray-500 hover:text-gray-900 hover:underline">
+                        <FaHeart className="lg:mr-1.5 h-5 w-5" />
+                        <span>Add to Favorites</span>
                       </button>
                       <button
                         onClick={() => handleRemoveProduct(product.id)}
-                        className="inline-flex items-center text-sm font-medium text-red-600 hover:underline"
+                        className="inline-flex items-center text-sm font-medium text-red-600 hover:underline pt-4 md:pt-0"
                       >
                         <HiMiniXMark className="mr-1.5 h-5 w-5" />
                         Remove
@@ -152,7 +152,7 @@ const Cart = () => {
           </Link>
         </div>
 
-        <div className="w-full sm:w-2/5 p-6 sm:p-10 bg-gray-50">
+        <div className="w-full lg:col-span-2 p-6 sm:p-10 bg-gray-50">
           <h1 className="font-bold text-xl sm:text-2xl md:text-3xl border-b pb-4 text-gray-800">
             Order Summary
           </h1>
