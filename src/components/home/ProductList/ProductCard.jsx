@@ -64,7 +64,7 @@ export default function ProductCard({ product }) {
             {/* <p className="text-lg font-bold text-gray-900">
               {price_currency}{parseInt(price_cents) / 100}
             </p> */}
-            <p className="text-base lg:text-lg font-medium lg:font-bold text-gray-900">
+            <p className="text-base lg:text-lg font-bold lg:font-bold text-gray-900">
               GHS {convertedPrice?.toFixed(2)}
             </p>
             {/* <p className="text-sm text-gray-500 line-through">
@@ -73,7 +73,7 @@ export default function ProductCard({ product }) {
           </div>
           <Link href={`/${country}/${category?.slug}/${slug}/`}>
            
-              <div className="p-2 border rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+              <div className="p-1  border rounded-sm bg-gray-100 hover:bg-gray-200 transition-colors">
                 <AiOutlineShoppingCart className="w-5 lg:w-6 h-5 lg:h-6 text-purple-500" />
               </div>
           
