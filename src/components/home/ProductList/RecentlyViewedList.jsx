@@ -22,7 +22,7 @@ const RecentlyViewedList = () => {
     if (items.length === 0) return null;
 
     return (
-        <div className='container bg-white p-5 md:py-6 font-sans rounded-lg my-2'>
+        <div className='container bg-white p-5 md:py-6 font-sans  my-2'>
             <div className="mb-8">
                 <h1 className="text-xl md:text-3xl font-extrabold tracking-wide text-gray-900">
                     {
@@ -30,17 +30,18 @@ const RecentlyViewedList = () => {
                     }
                 </h1>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 lg:gap-5">
                 {items.map((item) => (
-                    <RecentProductCard key={item.id} product={item} />
+                    // <RecentProductCard key={item.id} product={item} />
+                    <ProductCard key={item.id} product={item} />
                 ))}
             </div>
             {/* Optionally, add a link to view all if the list is long */}
-            {items.length > 5 && (
+            {/* {items.length > 5 && (
                 <Link href="/recently-viewed">
                     <span>View All</span>
                 </Link>
-            )}
+            )} */}
         </div>
     );
 };

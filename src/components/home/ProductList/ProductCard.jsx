@@ -19,11 +19,11 @@ export default function ProductCard({ product }) {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden flex flex-col justify-between w-full h-[300px] lg:h-[370px] font-sans">
       {/* Image Section */}
-      <div className="relative w-full h-[230px]">
+      <div className="relative w-full h-[150px] lg:h-[230px]">
         {product_images.length > 0 && (
           <Link href={`/${country}/${seo_slug}/`}>
             {/* Wrapping with an anchor tag for accessibility */}
-            <span className="block relative w-[180px] lg:w-[230px] h-[180px] lg:h-[230px]">
+            <span className="block relative w-full h-[150px] lg:h-[230px]">
               <img
                 src={product_images[0]}
                 alt={title}
@@ -37,7 +37,7 @@ export default function ProductCard({ product }) {
 
         {/* Favorite Icon */}
         <div className="absolute top-2 right-2 bg-gray-100 border p-2 rounded-full">
-          <FaHeart className="w-6 h-6 text-gray-600" />
+          <FaHeart className="w-4 lg:w-6 h-4 lg:h-6 text-gray-600" />
         </div>
 
         {/* Sales Badge */}
@@ -64,7 +64,7 @@ export default function ProductCard({ product }) {
             {/* <p className="text-lg font-bold text-gray-900">
               {price_currency}{parseInt(price_cents) / 100}
             </p> */}
-            <p className="text-lg font-bold text-gray-900">
+            <p className="text-base lg:text-lg font-medium lg:font-bold text-gray-900">
               GHS {convertedPrice?.toFixed(2)}
             </p>
             {/* <p className="text-sm text-gray-500 line-through">
@@ -74,7 +74,7 @@ export default function ProductCard({ product }) {
           <Link href={`/${country}/${category?.slug}/${slug}/`}>
            
               <div className="p-2 border rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
-                <AiOutlineShoppingCart className="w-6 h-6 text-purple-500" />
+                <AiOutlineShoppingCart className="w-5 lg:w-6 h-5 lg:h-6 text-purple-500" />
               </div>
           
           </Link>

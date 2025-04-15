@@ -141,7 +141,7 @@ const SellectedItem = async () => {
 
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-2 lg:gap-4 pb-2 lg:pb-4">
+          <div className="flex gap-2 lg:gap-4 pb-2 lg:pb-4">
             <h1 className="text-xl md:text-3xl font-extrabold text-gray-900 tracking-wide">
               Trending in <br className="hidden lg:inline" /> Machines Today
             </h1>

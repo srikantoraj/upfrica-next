@@ -1,5 +1,3 @@
-
-
 import Header from "@/components/common/header/Header";
 import ProductList from "@/components/home/ProductList/ProductList";
 import FAQ from "@/components/home/Faq/Faq";
@@ -22,21 +20,16 @@ export default function Home() {
   return (
     <div className="bg-gray-100">
       <Header />
-      {/* <Cover /> */}
-     
       <EarlyDeals />
-      <ProductList title={'Selected by Upfrica'} />
+      <ProductList title={"Selected by Upfrica"} />
       <Selling />
       <RecentlyViewedList />
-      
       <WomenFasion title="Trending in Women’s Fashion" />
       <SellectedItem />
       <MenFashion title="Trending in Men’s Fashion" />
       <Selling color="green" />
       <NewArrivals title="New arrivals" />
       <Categories />
-      {/* <AboutSection /> */}
-      {/* <ProductList title="Selected for you" /> */}
       <FAQ />
       <Footer />
       <User />

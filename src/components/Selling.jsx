@@ -4,12 +4,12 @@ import React from 'react';
 const Selling = ({ color }) => {
     return (
         <div
-            className={`container mx-auto grid md:grid-cols-3 items-center py-12 md:py-16 px-6 md:px-14 text-white rounded-[40px] my-6 md:my-10 gap-8 ${color ? 'bg-[#0A8800]' : 'bg-black'
+            className={`container mx-auto   grid md:grid-cols-3 items-center py-8 lg:py-12  px-6 lg:px-14 text-white rounded-[40px]  md:my-10 gap-6 ${color ? 'bg-[#0A8800]' : 'bg-black'
                 }`}
         >
             {/* Text Section */}
             <div className="md:col-span-2 space-y-4 text-center md:text-left">
-                <h1 className="text-2xl md:text-4xl font-extrabold leading-snug">
+                <h1 className="text-2xl md:text-4xl font-extrabold leading-snug text-gray-200">
                     Selling Locally? List for Free!
                 </h1>
                 <p className="text-lg md:text-2xl font-medium leading-relaxed">

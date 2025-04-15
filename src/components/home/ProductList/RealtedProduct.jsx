@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import RelatedProductCard from "./RelatedProductCard";
 import RelatedProductCardSkeleton from "./RelatedProductCardSkeleton";
+import ProductCard from "./ProductCard";
 
 const FetchProductData = ({ productSlug, productTitle, location = "Ghana" }) => {
   const [products, setProducts] = useState([]);
@@ -50,7 +51,7 @@ const FetchProductData = ({ productSlug, productTitle, location = "Ghana" }) => 
 
   if (loading) {
     return (
-      <div className="grid md:grid-cols-4 py-10 gap-4">
+      <div className="grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 py-10 gap-4">
         {Array.from({ length: 4 }).map((_, index) => (
           <RelatedProductCardSkeleton key={index} />
         ))}
@@ -74,9 +75,10 @@ const FetchProductData = ({ productSlug, productTitle, location = "Ghana" }) => 
           See more
         </a>
       </h3>
-      <div className="grid md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6  gap-3 lg:gap-5">
         {products.map((product) => (
           <RelatedProductCard key={product.id} product={product} />
+          // <ProductCard key={product.id} product={product} />
         ))}
       </div>
     </div>
