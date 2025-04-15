@@ -83,9 +83,9 @@ export default function Header() {
           </div>
         </div>
       </div>
-      <hr />
+      {/* <hr /> */}
       <Navbar />
-      <hr />
+      
     </header>
   );
 }
