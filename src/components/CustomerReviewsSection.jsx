@@ -24,7 +24,7 @@ const SkeletonReview = () => (
   </div>
 );
 
-export default function CustomerReviewsSection() {
+export default function CustomerReviewsSection({slug}) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,7 +34,7 @@ export default function CustomerReviewsSection() {
     const fetchReviews = async () => {
       try {
         const res = await fetch(
-          "https://media.upfrica.com/api/products/redmi-power-bank-18w-fast-power-charger/reviews/"
+          `https://media.upfrica.com/api/products/${slug}/reviews/`
         );
         if (!res.ok) {
           throw new Error("Failed to fetch");

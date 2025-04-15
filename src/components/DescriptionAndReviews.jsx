@@ -128,7 +128,7 @@ export default function DescriptionAndReviews({ details, user }) {
                     </div>
                 </div>
 
-                <CustomerReviewsSection />
+                <CustomerReviewsSection slug={details?.slug} />
             </section>
 
             <CreateReves />
