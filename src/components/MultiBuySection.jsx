@@ -10,9 +10,9 @@ export default function MultiBuySection({ product }) {
   // For quantity 1, no discount (i.e., multiplier 1); for 2, 3 and 4+ we apply progressively higher discounts.
   const discountRates = {
     1: 1,     // No discount for 1 item.
-    2: 0.93,  // 7% off for buying 2.
-    3: 0.88,  // 12% off for buying 3.
-    4: 0.85   // 15% off for buying 4 or more.
+    2: 1,  // 7% off for buying 2.
+    3: 1,  // 12% off for buying 3.
+    4: 1   // 15% off for buying 4 or more.
   };
 
   // Build the options based on available quantity.
