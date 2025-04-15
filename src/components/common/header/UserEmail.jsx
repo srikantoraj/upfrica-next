@@ -15,10 +15,10 @@ const UserEmail = () => {
     setUser(user)
   }, [])
   return (
-    <div className='flex gap-5'>
+    <div className='flex gap-3'>
       <div className="flex items-center">
         <FaRegUser
-          className="h-7 w-7 text-purple-500 cursor-pointer" />
+          className="h-5 lg:h-7 w-5 lg:w-7 text-purple-500 cursor-pointer text-lg lg:text-xl" />
         {!userData && <span className="ml-2 font-bold">Please login!</span>}
         {userData && <span className="ml-2 font-bold">{userData?.name}</span>}
       </div>

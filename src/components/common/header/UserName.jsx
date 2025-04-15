@@ -20,8 +20,8 @@ const UserName = () => {
           </Link>
         ) : (
           <>
-            <span className="text-purple-500  text-base font-bold">{user?.first_name}</span> <br />
-            <span className='text-base font-bold'>Welcome back</span>
+            <p className="text-purple-500  text-base font-medium">{user?.first_name}</p> 
+            <p className='text-base font-medium'>Welcome back</p>
           </>
         )}
       </h2>

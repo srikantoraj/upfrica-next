@@ -74,13 +74,13 @@ export default function UserMenu() {
       {/* Modal */}
       {isModalOpen && (
         <div
-          className="fixed inset-0  z-30 flex justify-end max-h-[740px] "
+          className="fixed inset-0  z-30 flex justify-end max-h-[720px] xl:max-h-[780px]"
           role="dialog"
           aria-modal="true"
           id="user-menu"
         >
           <div
-            className="bg-white w-80 p-4 shadow-2xl mt-16 mr-4 rounded-md "
+            className="bg-white w-64 2xl:w-80 p-4 shadow-2xl mt-12 lg:mt-16 mr-4 rounded-md border text-base lg:text-lg"
             ref={modalRef}
             tabIndex={-1}
           >
