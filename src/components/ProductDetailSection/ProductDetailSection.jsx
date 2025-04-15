@@ -284,16 +284,13 @@ export default function ProductDetailSection({ product }) {
                                                                     [variant.id]: val,
                                                                 }))
                                                             }
-                                                            className={`px-4  border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
+                                                            className={`px-4 ${val.additional_price_cents == 0 && 'py-2'} border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
                                                                     ? "border-black font-semibold"
                                                                     : "border-gray-300 text-gray-700"
                                                                 }`}
                                                         >
                                                             <div>{val.value}</div>
-                                                            {/* <div className=" text-gray-900 text-[10px]">
-                                                                {val.additional_price_cents > 0 &&
-                                                                    ` (+${'₵'}${(val.additional_price_cents / 100).toFixed(2)})`}
-                                                            </div> */}
+                                                            
                                                             <div className=" text-gray-900 text-[10px]">
                                                                 {val.additional_price_cents > 0 &&
                                                                     ` (+${'₵'}${(convertPrice(val.additional_price_cents / 100, price_currency, "GHS", exchangeRates)).toFixed(2)})`}
@@ -369,7 +366,7 @@ export default function ProductDetailSection({ product }) {
                                                                 [variant.id]: val,
                                                             }))
                                                         }
-                                                        className={`px-4  border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
+                                                        className={`px-4 ${val.additional_price_cents == 0 && 'py-2'} border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
                                                                 ? "border-black font-semibold"
                                                                 : "border-gray-300 text-gray-700"
                                                             }`}
