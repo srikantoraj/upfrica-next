@@ -42,7 +42,7 @@ const Breadcrumbs = ({ categoryTree, title }) => {
     const categoryChain = categoryTree ? flattenCategoryChain(categoryTree) : [];
 
     return (
-        <div className="flex items-center space-x-2 mb-4 overflow-x-auto whitespace-nowrap scrollbar-thin text-sm text-gray-500">
+        <div className="flex items-center space-x-2 mb-4 overflow-x-auto whitespace-nowrap scrollbar-thin text-sm text-gray-500 scrollbar-hide">
             <Link href="/">
                 <span className="text-blue-600 hover:underline">Upfrica</span>
             </Link>

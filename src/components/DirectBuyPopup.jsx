@@ -17,26 +17,21 @@ const DirectBuyPopup = ({ product, isVisible, onClose }) => {
     const router = useRouter();
     const { token } = useSelector((state) => state.auth) || {};
 
-    // States for address fetching and selection
     const [addresses, setAddresses] = useState([]);
     const [isAddressLoading, setIsAddressLoading] = useState(true);
     const [selectedAddressId, setSelectedAddressId] = useState("");
 
-    // Payment method and policy agreement
     const [paymentMethod, setPaymentMethod] = useState("paystack");
     const [acceptedPolicy, setAcceptedPolicy] = useState(true);
 
-    // Quantity, confirmation loading and error state
     const [directBuyQuantity, setDirectBuyQuantity] = useState(1);
     const [isConfirmLoading, setIsConfirmLoading] = useState(false);
     const [error, setError] = useState("");
 
-    // Calculate pricing values
     const pricePerItem = product?.price_cents ? product.price_cents / 100 : 0;
     const postageFee = product?.postage_fee_cents ? product.postage_fee_cents / 100 : 0;
     const totalCharges = (pricePerItem * directBuyQuantity + postageFee).toFixed(2);
 
-    // Estimated Delivery Date calculation based on dispatch_time_in_days
     let estimatedDelivery = "N/A";
     if (product && product.dispatch_time_in_days) {
         const deliveryDate = new Date();
@@ -44,7 +39,6 @@ const DirectBuyPopup = ({ product, isVisible, onClose }) => {
         estimatedDelivery = deliveryDate.toLocaleDateString();
     }
 
-    // Fetch addresses on mount; show skeleton loader while fetching
     useEffect(() => {
         if (!token) {
             router.push(`/signin?redirect=${encodeURIComponent(router.asPath)}`);
@@ -84,11 +78,9 @@ const DirectBuyPopup = ({ product, isVisible, onClose }) => {
         fetchAddresses();
     }, [token, router]);
 
-    // Handlers for quantity control
     const decrementQuantity = () => setDirectBuyQuantity((prev) => (prev > 1 ? prev - 1 : 1));
     const incrementQuantity = () => setDirectBuyQuantity((prev) => prev + 1);
 
-    // Handler for confirming the purchase
     const handleConfirmPurchase = async () => {
         setError("");
         if (!acceptedPolicy) {
@@ -138,7 +130,7 @@ const DirectBuyPopup = ({ product, isVisible, onClose }) => {
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 overflow-y-auto"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm overflow-y-auto"
             onClick={onClose}
         >
             <div
@@ -164,7 +156,7 @@ const DirectBuyPopup = ({ product, isVisible, onClose }) => {
                         />
                         <div className="flex-1">
                             <p
-                                className="font-semibold text-gray-800 w-[60%] md:w-[80%] whitespace-nowrap text-ellipsis hitespace-nowrap overflow-hidden text-ellipsis"
+                                className="text-sm md:text-base font-medium text-gray-800 line-clamp-2"
                                 title={product.title}
                             >
                                 {product.title}
@@ -192,8 +184,7 @@ const DirectBuyPopup = ({ product, isVisible, onClose }) => {
                             Estimated Delivery: <span className="font-medium">{estimatedDelivery}</span>
                         </p>
                         <p className="text-sm text-gray-700">
-                            Delivery Charges:{" "}
-                            <span className="font-medium">
+                            Delivery Charges: <span className="font-medium">
                                 {postageFee === 0 ? "Free" : `${product.price_currency} ${postageFee.toFixed(2)}`}
                             </span>
                         </p>
@@ -204,9 +195,7 @@ const DirectBuyPopup = ({ product, isVisible, onClose }) => {
                         {product.cancellable ? (
                             <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded">
                                 <p className="text-sm">
-                                    Return Policy: Can be returned within{" "}
-                                    {product.secondary_data?.return_in_days || "N/A"} (Cost by:{" "}
-                                    {product.secondary_data?.returns_cost_by || "N/A"}).
+                                    Return Policy: Can be returned within {product.secondary_data?.return_in_days || "N/A"} (Cost by: {product.secondary_data?.returns_cost_by || "N/A"}).
                                 </p>
                             </div>
                         ) : (
