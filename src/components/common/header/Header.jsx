@@ -1,3 +1,4 @@
+'use client'
 import { BiUser } from "react-icons/bi";
 import { FaWhatsapp } from "react-icons/fa";
 import { IoMdMenu } from "react-icons/io";
@@ -9,32 +10,53 @@ import ShopingCart from "./ShopingCart";
 import SearchBox from "./SearchBox";
 import PhoneSlider from "./PhoneSlider";
 import Image from "next/image";
+import { useState } from "react";
+import NavTitle from "./NavTitle";
+import { IoClose } from "react-icons/io5";
 
 export default function Header() {
+
+  const [showMenu, setShowMenu] = useState(false);
+  console.log("state", showMenu);
+
+
+  const toggleMenu = () => {
+    setShowMenu(!showMenu);
+  };
   return (
     <header className="bg-white ">
       <div className=" px-4 py-3 2xl:py-1 ">
-        <div className="flex items-center justify-between 2xl:hidden">
-          <Link href="/">
-            <img
-              className="h-auto w-[80px] md:w-[100px] ml-4"
-              
-              src="https://d26ukeum83vx3b.cloudfront.net/assets/upfrica-com-logo-dark_170x-94d438d62a4c6b2c2c70fe1084c008f4584357ed2847dac5fc38818a0de6459d.webp"
-              alt="Upfrica Logo"
-            />
-          </Link>
-          <Link href="/products/new">
-            <button className="bg-purple-500 text-white text-sm font-semibold px-3 py-1 rounded-md">
-              Sell
-            </button>
-          </Link>
-          <div className="flex items-center space-x-3">
-            <ShopingCart />
-            {/* <BiUser className="text-purple-500 h-6 w-6" /> */}
-            <UserMenu />
-            <IoMdMenu className="h-6 w-6" />
+        <div className="relative ">
+          <div className=" flex items-center justify-between 2xl:hidden">
+            <Link href="/">
+              <img
+                className="h-auto w-[80px] md:w-[100px] ml-4"
+
+                src="https://d26ukeum83vx3b.cloudfront.net/assets/upfrica-com-logo-dark_170x-94d438d62a4c6b2c2c70fe1084c008f4584357ed2847dac5fc38818a0de6459d.webp"
+                alt="Upfrica Logo"
+              />
+            </Link>
+            <Link href="/products/new">
+              <button className="bg-purple-500 text-white text-sm font-semibold px-3 py-1 rounded-md">
+                Sell
+              </button>
+            </Link>
+            <div className="flex items-center space-x-3">
+              <ShopingCart />
+              {/* <BiUser className="text-purple-500 h-6 w-6" /> */}
+              <UserMenu />
+              { showMenu ? <IoClose onClick={toggleMenu} className="h-6 w-6 cursor-pointer" /> :
+               <IoMdMenu className="h-6 w-6 cursor-pointer" onClick={toggleMenu} />}
+            </div>
+          </div>
+
+          {/* Show NavTitle when showMenu is true */}
+          <div className="px-0">
+          {showMenu && <NavTitle isOpen={showMenu} />}
           </div>
         </div>
+
+
 
         {/* Mobile: Search, PhoneSlider & WhatsApp */}
         <div className="mt-3 2xl:hidden">
@@ -45,7 +67,7 @@ export default function Header() {
             <span className="text-purple-500 text-sm font-medium ml-2 2xl:hidden">
               Join the WhatsApp Group
             </span>
-            
+
           </div>
         </div>
 
@@ -86,7 +108,7 @@ export default function Header() {
       </div>
       {/* <hr /> */}
       <Navbar />
-      
+
     </header>
   );
 }

@@ -12,7 +12,7 @@
 //   const town = seller_town?.toLowerCase() || 'accra';
 //   const exchangeRates = useSelector((state) => state.exchangeRates.rates);
 //   const convertedPrice = convertPrice(price_cents / 100, price_currency,'GHS', exchangeRates);
- 
+
 
 //   if (!product_images) return null;
 
@@ -72,11 +72,11 @@
 //             </p> */}
 //           </div>
 //           <Link href={`/${country}/${category?.slug}/${slug}/`}>
-           
+
 //               <div className="p-1  border rounded-sm bg-gray-100 hover:bg-gray-200 transition-colors">
 //                 <AiOutlineShoppingCart className="w-5 lg:w-6 h-5 lg:h-6 text-purple-500" />
 //               </div>
-          
+
 //           </Link>
 //         </div>
 //       </div>
@@ -116,6 +116,10 @@ export default function ProductCard({ product }) {
   // Convert the regular price to the destination currency (GHS)
   const convertedPrice = convertPrice(price_cents / 100, price_currency, 'GHS', exchangeRates);
 
+
+ 
+
+
   // Determine if the sale is active
   const isOnSaleActive =
     (sale_end_date && new Date(sale_end_date) > new Date() && sale_price_cents > 0) ||
@@ -132,10 +136,10 @@ export default function ProductCard({ product }) {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden flex flex-col justify-between w-full h-[300px] lg:h-[370px] font-sans">
       {/* Image Section */}
-      <div className="relative w-full h-[150px] lg:h-[230px]">
+      <div className="relative w-full ">
         {product_images.length > 0 && (
           <Link href={`/${country}/${seo_slug}/`}>
-            <span className="block relative w-full h-[150px] lg:h-[230px]">
+            <span className="block relative w-full h-[200px] lg:h-[250px]">
               <img
                 src={product_images[0]}
                 alt={title}
@@ -174,16 +178,16 @@ export default function ProductCard({ product }) {
       {/* Price & Cart Section */}
       <div className="border-t">
         <div className="flex items-center justify-between px-2 lg:px-4 py-2 lg:py-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between gap-1  md:gap-2 ">
             {isOnSaleActive ? (
               <>
-                <p className="text-base lg:text-lg font-bold text-gray-900">
+                <p className="text-base lg:text-lg font-medium lg:font-bold text-gray-900">
                   ₵ {convertedSalePrice?.toFixed(2)}
                 </p>
                 <p className="text-sm text-gray-500 line-through">
-                  ₵ {convertedPrice?.toFixed(2)}
+                   {convertedPrice?.toFixed(2)}
                 </p>
-                
+
               </>
             ) : (
               <p className="text-base lg:text-lg font-bold text-gray-900">
@@ -192,7 +196,7 @@ export default function ProductCard({ product }) {
             )}
           </div>
           <Link href={`/${country}/${category?.slug}/${slug}/`}>
-            <div className="p-1 border rounded-sm bg-gray-100 hover:bg-gray-200 transition-colors">
+            <div className="p-1 border rounded-md bg-gray-100 hover:bg-gray-200 transition-colors">
               <AiOutlineShoppingCart className="w-5 lg:w-6 h-5 lg:h-6 text-purple-500" />
             </div>
           </Link>

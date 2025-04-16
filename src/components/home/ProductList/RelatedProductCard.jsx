@@ -6,12 +6,21 @@ import { convertPrice } from "@/app/utils/utils";
 import { useSelector } from "react-redux";
 
 export default function RelatedProductCard({ product }) {
+  console.log(product);
+
   // Extract only the necessary properties
-  const { image_url, title, price_cents, price_currency, slug, seo_slug } = product;
+  const { image_url, title, price_cents, price_currency, slug, seo_slug, sale_end_date, sale_price_cents
+
+  } = product;
   // Fallback country if not provided in data
   const country = "gh";
   const exchangeRates = useSelector((state) => state.exchangeRates.rates);
   const convertedPrice = convertPrice(price_cents / 100, price_currency, "GHS", exchangeRates);
+
+
+  // Determine if the sale is active
+  const isOnSaleActive =
+    (sale_end_date && new Date(sale_end_date) > new Date() && sale_price_cents > 0)
 
   if (!image_url) return null;
 
@@ -37,17 +46,17 @@ export default function RelatedProductCard({ product }) {
         </div>
 
         {/* Sales Badge */}
-        <div className="absolute bottom-2 left-2">
+        {isOnSaleActive && <div className="absolute bottom-2 left-2">
           <button className="bg-red-600 text-white text-sm px-3 py-1 rounded-full flex items-center gap-1">
             <FaBolt className="w-4 h-4" />
             Sales
           </button>
-        </div>
+        </div>}
       </div>
 
       {/* Product Details */}
       <div className="px-4 py-3">
-        <h2 className="text-lg font-semibold text-gray-900 truncate w-full overflow-hidden">
+        <h2 className="text-base lg:text-lg font-semibold text-gray-900 truncate w-full overflow-hidden">
           {title}
         </h2>
         <p className="text-sm text-gray-500">1083+ sold recently</p>
@@ -55,15 +64,18 @@ export default function RelatedProductCard({ product }) {
 
       {/* Price & Cart Section */}
       <div className="border-t">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-2 lg:px-4 py-3">
           <div className="flex items-center gap-2">
-            <p className="text-lg font-bold text-gray-900">
+            <p className="text-base lg:text-lg font-medium text-gray-900">
               GHS {convertedPrice?.toFixed(2)}
             </p>
           </div>
           <Link href={`/${country}/${slug}/`}>
-            <div className="p-2 border rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+            {/* <div className="p-2 border rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
               <AiOutlineShoppingCart className="w-6 h-6 text-purple-500" />
+            </div> */}
+            <div className="p-1 border rounded-sm bg-gray-100 hover:bg-gray-200 transition-colors">
+              <AiOutlineShoppingCart className="w-5 lg:w-6 h-5 lg:h-6 text-purple-500" />
             </div>
           </Link>
         </div>
