@@ -14,7 +14,7 @@ export default function DescriptionAndReviews({ details, condition, user, shop ,
     const properties = product?.properties || [];
 
     return (
-        <main className="mx-auto max-w-screen-xl px-4 py-8 text-gray-800">
+        <main className="mx-auto max-w-screen-xl  py-8 text-gray-800">
             {/* Section Header */}
             <header className="pb-4 border-b border-gray-300">
               
