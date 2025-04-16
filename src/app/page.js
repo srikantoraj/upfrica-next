@@ -23,7 +23,7 @@ export default function Home() {
       <EarlyDeals />
       <ProductList title={"Selected by Upfrica"} />
       <Selling />
-      <RecentlyViewedList />
+      <RecentlyViewedList title="Recently Viewed Products" />
       <WomenFasion title="Trending in Women’s Fashion" />
       <SellectedItem />
       <MenFashion title="Trending in Men’s Fashion" />

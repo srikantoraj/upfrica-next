@@ -25,9 +25,9 @@ export default function Header() {
   };
   return (
     <header className="bg-white ">
-      <div className=" px-4 py-3 2xl:py-1 ">
-        <div className="relative ">
-          <div className=" flex items-center justify-between 2xl:hidden">
+      <div className=" px-4 py-3 xl:py-1 ">
+        <div className="relative">
+          <div className=" flex items-center justify-between xl:hidden">
             <Link href="/">
               <img
                 className="h-auto w-[80px] md:w-[100px] ml-4"
@@ -59,7 +59,7 @@ export default function Header() {
 
 
         {/* Mobile: Search, PhoneSlider & WhatsApp */}
-        <div className="mt-3 2xl:hidden">
+        <div className="mt-3 xl:hidden">
           <SearchBox />
           <PhoneSlider />
           <div className="mt-2 flex items-center justify-center bg-gray-100 p-2 py-2 lg:py-4 rounded-md">
@@ -72,7 +72,7 @@ export default function Header() {
         </div>
 
         {/* Desktop Header */}
-        <div className="hidden 2xl:flex items-center gap-5">
+        <div className="hidden xl:flex items-center gap-5">
           <div className="flex items-center space-x-6">
             <Link href="/">
               <img
@@ -86,8 +86,8 @@ export default function Header() {
               <SearchBox />
             </div>
           </div>
-          <div className="flex items-center justify-between space-x-5">
-            <div className="flex items-center bg-gray-50 py-2 px-3 rounded-md">
+          <div className="flex items-center justify-between space-x-3 ">
+            <div className="flex items-center bg-gray-50 py-2 px-1 rounded-md">
               <FaWhatsapp className="text-green-500 h-6 w-6" />
               <span className="text-purple-500 text-sm font-medium ml-2">
                 Join WhatsApp Group
@@ -95,9 +95,11 @@ export default function Header() {
             </div>
             <ShopingCart />
             <Link href="/products/new">
-              <button className="border border-gray-400 rounded-md px-2 py-2 text-purple-500 font-bold text-sm">
+              
+              <button className="border border-gray-400 rounded-md px-2 py-1 text-purple-500 font-bold text-sm">
                 Sell
               </button>
+             
             </Link>
             <div className="flex items-center space-x-2">
               <UserMenu />

@@ -132,22 +132,19 @@ const SellectedItem = async () => {
 
     return (
       <div className="container   py-12 bg-white rounded-lg">
-        {/* Section Title */}
-        {/* <div className="mb-6">
-          <h1 className="text-xl md:text-3xl font-extrabold tracking-wide text-gray-900">
-            Selected for You
-          </h1>
-        </div> */}
-
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex gap-2 lg:gap-4 pb-2 lg:pb-4">
+        {/* Section Title */} 
+        <div className="mb-4 lg:mb-8">
+          <div className=" pb-2 lg:pb-4">
             <h1 className="text-xl md:text-3xl font-extrabold text-gray-900 tracking-wide">
-              Trending in <br className="hidden lg:inline" /> Machines Today
+              Trending in <br className="hidden lg:inline" />
+              <span className='flex gap-2 lg:gap-4 items-center justify-between md:justify-start'>
+                 Machines Today
+                 <IoIosArrowRoundForward className="h-10 w-10 text-gray-700" />
+                  </span>
             </h1>
-            <IoIosArrowRoundForward className="h-10 w-10 text-gray-700" />
+            
           </div>
-          <p className="text-xl font-normal text-gray-500">All with Free Delivery</p>
+          {/* <p className="text-xl font-normal text-gray-500">All with Free Delivery</p> */}
         </div>
 
         {/* Product Grid */}

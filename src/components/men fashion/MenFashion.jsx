@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import React from 'react';
-import { IoIosArrowRoundForward } from 'react-icons/io';
 import { FaShoppingCart } from "react-icons/fa";
 
 const MenFashion = async ({ title }) => {

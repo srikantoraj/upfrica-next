@@ -139,7 +139,7 @@ const EarlyDeals = async () => {
     return (
         <div className="container bg-white py-5 mb-2 px-5 ">
             {/* Header */}
-            <div className="flex gap-4 pb-4">
+            <div className="flex gap-4 pb-4 items-center justify-between md:justify-start">
                 <h1 className="text-xl md:text-3xl font-extrabold tracking-wide">2025 Deals</h1>
                 <IoIosArrowRoundForward className="h-10 w-10 text-gray-700" />
             </div>
