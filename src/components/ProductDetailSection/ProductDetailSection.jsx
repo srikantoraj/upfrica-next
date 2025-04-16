@@ -242,7 +242,7 @@ export default function ProductDetailSection({ product }) {
 
                         {/* MOBILE CTA */}
                         <section className="block xl:hidden mt-5">
-                            <div className="bg-white p-4 space-y-4">
+                            <div className="bg-white space-y-4">
                                 <h1 className="heading-lg text-base md:text-lg lg:text-xl font-bold text-gray-800">{title}</h1>
                                 {shop && (
                                     <div className="text-sm text-gray-500">

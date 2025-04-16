@@ -23,7 +23,7 @@ const PaymentDeliveryReturns = () => {
   ];
 
   return (
-    <div className="mt-6 w-full max-w-3xl mx-auto p-4  border-gray-200 rounded-lg">
+    <div className="mt-6 w-full max-w-3xl mx-auto py-2  border-gray-200 rounded-lg">
       {/* Title */}
       <h2 className="text-xl lg:text-2xl font-bold mb-6">
         Payment, Delivery and Returns
