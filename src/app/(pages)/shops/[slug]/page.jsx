@@ -5,10 +5,11 @@ import ShopCard from '@/components/home/ProductList/ShopCard';
 import ProductCardSkeleton from './ProductCardSkeleton';
 import SearchResultSkeleton from './SearchResultSkeleton';
 import PriceRange from './PriceRange';
-import { FaCheckCircle, FaStar } from 'react-icons/fa';
+import { FaCheckCircle, FaStar, FaEdit } from 'react-icons/fa';
 import { AiOutlineSearch, AiOutlineClose } from 'react-icons/ai';
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 import Link from 'next/link';
+import { useSelector } from 'react-redux';
 
 // Sample categories array used for demonstration.
 const categories = ["Electronics", "Fashion", "Homeware"];
@@ -107,16 +108,20 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 
 export default function Shops({ params }) {
     const { slug } = params;
+    const { token, user } = useSelector((state) => state.auth);
+    console.log(user, token)
 
     // Pagination state.
     const PAGE_SIZE = 20; // Adjust page size to match your API
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [showPhone, setShowPhone] = useState(false);
 
     // Main grid products fetch state.
     const [mainProducts, setMainProducts] = useState([]);
     const [mainLoading, setMainLoading] = useState(true);
     const [mainError, setMainError] = useState(null);
+    const [shop, setShop] = useState(null);
 
     // Search suggestion products state.
     const [searchResults, setSearchResults] = useState([]);
@@ -156,6 +161,7 @@ export default function Shops({ params }) {
                 }
                 const data = await response.json();
                 setMainProducts(data.results || []);
+                setShop(data.shop || null);
                 if (data.count) {
                     setTotalPages(Math.ceil(data.count / PAGE_SIZE));
                 }
@@ -235,27 +241,66 @@ export default function Shops({ params }) {
         <div className="min-h-screen bg-gray-50 text-gray-900">
             {/* HERO SECTION */}
             <section className="relative">
-                <img
-                    src="https://images.pexels.com/photos/34577/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-                    alt="Shops hero"
-                    className="h-[300px] w-full object-cover"
-                />
+                {shop?.top_banner ? (
+                    // If a top banner is provided, display it.
+                    <img
+                        src={shop.top_banner}
+                        alt="Shop top banner"
+                        className="h-[300px] w-full object-cover"
+                    />
+                ) : shop?.bg_color ? (
+                    // If there's no top banner but a background color is provided, show a div with the bg_color.
+                    <div
+                        className="h-[300px] w-full"
+                        style={{ backgroundColor: shop.bg_color }}
+                    />
+                ) : (
+                    // Else, show the dummy image.
+                    <img
+                        src="https://images.pexels.com/photos/34577/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+                        alt="Shops hero"
+                        className="h-[300px] w-full object-cover"
+                    />
+                )}
+
                 <div className="absolute bottom-0 left-10 bg-white backdrop-blur p-6 rounded-tl-lg rounded-tr-lg">
-                    <h1 className="text-3xl font-bold">Upfrica Shops</h1>
+                    <h1 className="text-3xl font-bold">{shop?.name || "N/A"}</h1>
                     <div className="mt-2 flex items-center gap-8 text-sm my-2">
                         <span className="flex items-center gap-1">
                             <FaCheckCircle className="bg-violet-700 h-4 w-4 text-white rounded-full" />
                             <span>Verified</span>
                         </span>
-                        <span role="img" aria-label="Ghana flag">
-                            🇬🇭 Ghana
+                        <span className="flex items-center gap-1">
+                            {/* Display the seller's location details: local_area, town, and country */}
+                            {shop?.user?.country === "GH" && (
+                                <span role="img" aria-label="Ghana flag">
+                                    🇬🇭
+                                </span>
+                            )}
+                            {shop?.user?.local_area && <span>{shop.user.local_area},</span>}
+                            {shop?.user?.town && <span>{shop.user.town},</span>}
+                            <span>{shop?.user?.country}</span>
                         </span>
+
                     </div>
                     <p className="mt-2 text-sm text-gray-600">
-                        Great deals on a variety of products from shops across Ghana and Nigeria!
+                        {shop?.description || "No details available."}
                     </p>
-                </div>
+                    <div>
+                        {user && (
+                            <div className='flex items-center gap-2 '>
+                                <FaEdit
+                                    className=" cursor-pointer "
+                                    title="Edit Shop Details"
+                                />
+                                <span className='font-semibold'>Edit</span>
+                            </div>
+                        )}
+                    </div>
+                </div> 
             </section>
+
+
 
             {/* TOP NAVIGATION */}
             <nav className="border-b bg-white">
@@ -287,7 +332,12 @@ export default function Shops({ params }) {
                     <li className="cursor-pointer hover:underline hover:text-violet-700">About</li>
                     <li className="cursor-pointer hover:underline hover:text-violet-700">Reviews</li>
                     <li className="ml-auto">
-                        <button className="rounded border px-4 py-2 hover:bg-gray-100">Contact Seller</button>
+                        <button
+                            className="rounded border px-4 py-2 hover:bg-gray-100"
+                            onClick={() => setShowPhone(prev => !prev)}
+                        >
+                            {showPhone ? shop?.user?.phone_number || "No Contact Info" : "Contact Seller"}
+                        </button>
                     </li>
                 </ul>
             </nav>
@@ -341,7 +391,7 @@ export default function Shops({ params }) {
                     <div className="mb-4">
                         <label className="block font-medium">About the Shop</label>
                         <p className="text-sm text-gray-600">
-                            Discover top-quality products and amazing deals from verified shops.
+                            {shop?.description || "No informaiton available."}
                         </p>
                     </div>
                 </aside>
