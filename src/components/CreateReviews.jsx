@@ -27,6 +27,7 @@ const CreateReviews = () => {
   };
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+    console.log("Submitted values:", values); // 🔍 এখানে ডেটা দেখা যাবে
     if (!token) {
       router.push("/signin");
       return;
@@ -60,6 +61,8 @@ const CreateReviews = () => {
 
       alert("Review submitted successfully!");
       resetForm();
+      console.log('revews', response);
+
     } catch (error) {
       console.error(error);
       alert("Something went wrong while submitting.");
@@ -188,13 +191,13 @@ const CreateReviews = () => {
             </div>
 
             {/* Submit */}
-            {!isSubmitting&&<button
+            {!isSubmitting && <button
               type="submit"
               disabled={isSubmitting}
               className="bg-[#A435F0] text-white px-6 py-2 rounded font-semibold"
             >
-              { "Post Review"}
-            </button>} 
+              {"Post Review"}
+            </button>}
             {isSubmitting && (
               <button
                 type="button"

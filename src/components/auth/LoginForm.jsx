@@ -170,7 +170,7 @@ const LoginForm = () => {
       console.log('Form Data:', values);
       try {
         const response = await fetch(
-          'https://media.upfrica.com/api/login/',
+          'https://www.upfrica.com/api/v1/auth.json',
           {
             method: 'POST',
             headers: {
