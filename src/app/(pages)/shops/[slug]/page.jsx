@@ -12,6 +12,7 @@ import { FaCheckCircle, FaStar, FaEdit } from 'react-icons/fa';
 import { AiOutlineSearch, AiOutlineClose, AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
+import { HiOutlineCalendar, HiOutlineTag } from 'react-icons/hi';
 import HeroSectionSkeleton from './HeroSectionSkeleton';
 
 // Sample categories array used for the top nav dropdown.
@@ -322,13 +323,21 @@ export default function Shops({ params }) {
                                 </span>
                             </div>
 
-                            <p className="mt-2 text-sm text-gray-600">
+                            <p className="mt-2 text-sm text-gray-600 max-w-[400px]">
                                 {shop?.description || 'No details available.'}
                             </p>
+                                <p className=" text-sm mt-2 text-gray-600 max-w-[400px] flex items-center">
+                                    <HiOutlineCalendar className="mr-2" size={16} />
+                                    {shop?.created_at
+                                        ? `${new Date(shop.created_at).toLocaleDateString()}`
+                                        : 'N/A'}
+                                </p>
+
+                               
 
                             {user && (
                                     <div
-                                        className="flex items-center gap-2 mt-4 cursor-pointer"
+                                        className="flex items-center gap-2 mt-2 cursor-pointer"
                                         onClick={() => setIsEditOpen(true)}
                                         onMouseDown={e => e.preventDefault()}
                                     >
@@ -346,8 +355,9 @@ export default function Shops({ params }) {
             </section>
                <ShopEditModal
                   isOpen={isEditOpen}
-                  onClose={() => setIsEditOpen(false)}
-                  shop={shop}
+                onClose={() => setIsEditOpen(false)}
+                shop={shop}
+                setShop={setShop}
                   onSave={handleShopSave}
                 />
 
