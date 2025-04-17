@@ -1,53 +1,54 @@
 
 
-'use client';
+// 'use client';
 
-import React, { useEffect, useState } from 'react';
-import ShopCard from '@/components/home/ProductList/ShopCard';
-import ProductCardSkeleton from './ProductCardSkeleton';
-import SearchResultSkeleton from './SearchResultSkeleton';
-import PriceRange from './PriceRange';
-import ShopEditModal from './ShopEditModal';
-import { FaCheckCircle, FaStar, FaEdit } from 'react-icons/fa';
-import { AiOutlineSearch, AiOutlineClose, AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
-import Link from 'next/link';
-import { useSelector } from 'react-redux';
-import { HiOutlineCalendar, HiOutlineTag } from 'react-icons/hi';
-import HeroSectionSkeleton from './HeroSectionSkeleton';
+// import React, { useEffect, useState } from 'react';
+// import ShopCard from '@/components/home/ProductList/ShopCard';
+// import ProductCardSkeleton from './ProductCardSkeleton';
+// import SearchResultSkeleton from './SearchResultSkeleton';
+// import PriceRange from './PriceRange';
+// import ShopEditModal from './ShopEditModal';
+// import { FaCheckCircle, FaStar, FaEdit } from 'react-icons/fa';
+// import { AiOutlineSearch, AiOutlineClose, AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
+// import Link from 'next/link';
+// import { useSelector } from 'react-redux';
+// import { HiOutlineCalendar, HiOutlineTag } from 'react-icons/hi';
+// import HeroSectionSkeleton from './HeroSectionSkeleton';
 
-// Sample categories array used for the top nav dropdown.
-const navCategories = ["Electronics", "Fashion", "Homeware"];
+// // Sample categories array used for the top nav dropdown.
+// const navCategories = ["Electronics", "Fashion", "Homeware"];
 
-// Determine product category based on product name.
-function getCategory(productName) {
-    if (["Smartphone", "Smartwatch", "Headphones", "Laptop"].includes(productName))
-        return "Electronics";
-    if (["Sneakers"].includes(productName))
-        return "Fashion";
-    return "Homeware";
-}
+// // Determine product category based on product name.
+// function getCategory(productName) {
+//     if (["Smartphone", "Smartwatch", "Headphones", "Laptop"].includes(productName))
+//         return "Electronics";
+//     if (["Sneakers"].includes(productName))
+//         return "Fashion";
+//     return "Homeware";
+// }
 
-// Hero skeleton for loading state
-const HeroSkeleton = () => (
-    <div className="h-[300px] w-full bg-gray-200 animate-pulse" />
-);
+// // Hero skeleton for loading state
+// const HeroSkeleton = () => (
+//     <div className="h-[300px] w-full bg-gray-200 animate-pulse" />
+// );
 
-// Component for rendering a single search result item.
-const SearchResultItem = ({ product }) => (
-    <div className="flex items-center p-4 border-b border-gray-200 hover:bg-gray-50">
-        <img
-            src={product.product_images[0]}
-            alt={product.title}
-            className="w-12 h-12 rounded object-cover"
-        />
-        <div className="ml-4">
-            <p className="text-sm font-medium">{product.title}</p>
-            <p className="text-xs text-gray-500">
-                ₵{(product.price_cents / 100).toFixed(2)}
-            </p>
-        </div>
-    </div>
-);
+// // Component for rendering a single search result item.
+// const SearchResultItem = ({ product }) => (
+//     <div className="flex items-center p-4 border-b border-gray-200 hover:bg-gray-50">
+//         <img
+//             src={product.product_images[0]}
+//             alt={product.title}
+//             className="w-12 h-12 rounded object-cover"
+//         />
+//         <div className="ml-4">
+//             <p className="text-sm font-medium">{product.title}</p>
+//             <p className="text-xs text-gray-500">
+//                 ₵{(product.price_cents / 100).toFixed(2)}
+//             </p>
+//         </div>
+//     </div>
+// );
+'use client'
 
 // Custom Pagination component.
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
@@ -108,63 +109,520 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     );
 };
 
+// export default function Shops({ params }) {
+//     const { slug } = params;
+//     const { token, user } = useSelector((state) => state.auth);
+//     const [isEditOpen, setIsEditOpen] = useState(false);
+
+//     // callback to receive updated shop from modal
+//     const handleShopSave = (newShop) => {
+//         setShop(newShop);
+//     };
+
+//     // Pagination state
+//     const PAGE_SIZE = 20;
+//     const [currentPage, setCurrentPage] = useState(1);
+//     const [totalPages, setTotalPages] = useState(1);
+
+//     // Hero & main products fetch state
+//     const [shop, setShop] = useState(null);
+//     const [mainProducts, setMainProducts] = useState([]);
+//     const [mainLoading, setMainLoading] = useState(true);
+//     const [mainError, setMainError] = useState(null);
+
+//     // Search suggestion products state
+//     const [searchQuery, setSearchQuery] = useState("");
+//     const [searchActive, setSearchActive] = useState(false);
+//     const [searchResults, setSearchResults] = useState([]);
+//     const [searchLoading, setSearchLoading] = useState(false);
+
+//     // Top-nav categories dropdown
+//     const [selectedCategories, setSelectedCategories] = useState([]);
+//     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
+//     // Price & rating filters
+//     const [priceMin, setPriceMin] = useState(0);
+//     const [priceMax, setPriceMax] = useState(1000);
+//     const [reviewRating, setReviewRating] = useState("");
+
+//     // Dynamic shop categories (for sidebar)
+//     const [shopCategories, setShopCategories] = useState([]);
+//     const [categoriesLoading, setCategoriesLoading] = useState(true);
+//     const [categoriesError, setCategoriesError] = useState(null);
+//     const [selectedCategorySlug, setSelectedCategorySlug] = useState("");
+
+//     // Dynamic shop conditions (for sidebar)
+//     const [shopConditions, setShopConditions] = useState([]);
+//     const [conditionsLoading, setConditionsLoading] = useState(true);
+//     const [conditionsError, setConditionsError] = useState(null);
+//     const [selectedConditionSlug, setSelectedConditionSlug] = useState("");
+
+//     // Toggle top-nav category
+//     const toggleCategory = (cat) => {
+//         setSelectedCategories(prev =>
+//             prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+//         );
+//     };
+
+//     const toggleCategoryDropdown = () => {
+//         setShowCategoryDropdown(prev => !prev);
+//     };
+
+//     // Fetch main products & shop info
+//     useEffect(() => {
+//         const fetchMainProducts = async () => {
+//             setMainLoading(true);
+//             setMainError(null);
+//             try {
+//                 const resp = await fetch(`https://media.upfrica.com/api/shops/${slug}/products/?page=${currentPage}`);
+//                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+//                 const data = await resp.json();
+//                 setMainProducts(data.results || []);
+//                 setShop(data.shop || null);
+//                 if (data.count) {
+//                     setTotalPages(Math.ceil(data.count / PAGE_SIZE));
+//                 }
+//             } catch (err) {
+//                 console.error(err);
+//                 setMainError(err);
+//             } finally {
+//                 setMainLoading(false);
+//             }
+//         };
+//         fetchMainProducts();
+//     }, [slug, currentPage]);
+
+//     // Fetch search suggestions
+//     useEffect(() => {
+//         if (!searchQuery.trim()) {
+//             setSearchResults([]);
+//             setSearchLoading(false);
+//             return;
+//         }
+//         const timer = setTimeout(() => {
+//             const fetchSearch = async () => {
+//                 setSearchLoading(true);
+//                 try {
+//                     const resp = await fetch(
+//                         `https://media.upfrica.com/api/shops/${slug}/products/filter/?q=${encodeURIComponent(searchQuery)}`
+//                     );
+//                     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+//                     const data = await resp.json();
+//                     setSearchResults(data.results || []);
+//                 } catch (err) {
+//                     console.error(err);
+//                 } finally {
+//                     setSearchLoading(false);
+//                 }
+//             };
+//             fetchSearch();
+//         }, 500);
+//         return () => clearTimeout(timer);
+//     }, [searchQuery, slug]);
+
+//     // Fetch dynamic categories & conditions
+//     useEffect(() => {
+//         const fetchCategories = async () => {
+//             setCategoriesLoading(true);
+//             setCategoriesError(null);
+//             try {
+//                 const resp = await fetch(`https://media.upfrica.com/api/shops/${slug}/categories/`);
+//                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+//                 const data = await resp.json();
+//                 setShopCategories(data);
+//             } catch (err) {
+//                 console.error(err);
+//                 setCategoriesError(err);
+//             } finally {
+//                 setCategoriesLoading(false);
+//             }
+//         };
+//         const fetchConditions = async () => {
+//             setConditionsLoading(true);
+//             setConditionsError(null);
+//             try {
+//                 const resp = await fetch(`https://media.upfrica.com/api/shops/${slug}/conditions/`);
+//                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+//                 const data = await resp.json();
+//                 setShopConditions(data);
+//             } catch (err) {
+//                 console.error(err);
+//                 setConditionsError(err);
+//             } finally {
+//                 setConditionsLoading(false);
+//             }
+//         };
+//         fetchCategories();
+//         fetchConditions();
+//     }, [slug]);
+
+//     // Apply local filters (category slug & condition slug not applied to filtering yet)
+//     const filteredProducts = mainProducts.filter(p => {
+//         let ok = true;
+//         if (selectedCategories.length > 0) {
+//             const cat = getCategory(p.title);
+//             if (!selectedCategories.includes(cat)) ok = false;
+//         }
+//         const price = p.price_cents / 100;
+//         if (price < priceMin || price > priceMax) ok = false;
+//         if (reviewRating && p.rating !== undefined && p.rating < reviewRating) ok = false;
+//         return ok;
+//     });
+
+//     if (mainError) {
+//         return (
+//             <div className="min-h-screen bg-gray-50 text-gray-900 flex items-center justify-center">
+//                 <p className="text-center py-10">
+//                     There was a problem loading the products. Please try again later.
+//                 </p>
+//             </div>
+//         );
+//     }
+
+//     return (
+//         <div className="min-h-screen bg-gray-50 text-gray-900">
+//             {/* HERO SECTION */}
+//             <section className="relative">
+//                 {mainLoading ? (
+//                     <HeroSectionSkeleton />
+//                 ) : (
+//                     <>
+//                         {shop?.top_banner ? (
+//                             <img
+//                                 src={shop.top_banner}
+//                                 alt="Shop top banner"
+//                                 className="h-[300px] w-full object-cover"
+//                             />
+//                         ) : shop?.bg_color ? (
+//                             <div
+//                                 className="h-[300px] w-full"
+//                                 style={{ backgroundColor: shop.bg_color }}
+//                             />
+//                         ) : (
+//                             <img
+//                                 src="https://images.pexels.com/photos/34577/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+//                                 alt="Shops hero"
+//                                 className="h-[300px] w-full object-cover"
+//                             />
+//                         )}
+
+//                         <div className="absolute bottom-0 left-10 bg-white backdrop-blur p-6 rounded-tl-lg rounded-tr-lg">
+//                             <h1 className="text-3xl font-bold">{shop?.name || 'N/A'}</h1>
+
+//                             <div className="mt-2 flex items-center gap-8 text-sm my-2">
+//                                 <span className="flex items-center gap-1">
+//                                     <FaCheckCircle className="bg-violet-700 h-4 w-4 text-white rounded-full" />
+//                                     <span>Verified</span>
+//                                 </span>
+//                                 <span className="flex items-center gap-1">
+//                                     {shop?.user?.country === 'GH' && (
+//                                         <span role="img" aria-label="Ghana flag">🇬🇭</span>
+//                                     )}
+//                                     {shop?.user?.local_area && <span>{shop.user.local_area},</span>}
+//                                     {shop?.user?.town && <span>{shop.user.town},</span>}
+//                                     <span>{shop?.user?.country}</span>
+//                                 </span>
+//                             </div>
+
+//                             <p className="mt-2 text-sm text-gray-600 max-w-[400px]">
+//                                 {shop?.description || 'No details available.'}
+//                             </p>
+//                                 <p className=" text-sm mt-2 text-gray-600 max-w-[400px] flex items-center">
+//                                     <HiOutlineCalendar className="mr-2" size={16} />
+//                                     {shop?.created_at
+//                                         ? `${new Date(shop.created_at).toLocaleDateString()}`
+//                                         : 'N/A'}
+//                                 </p>
+
+                               
+
+//                             {user && (
+//                                     <div
+//                                         className="flex items-center gap-2 mt-2 cursor-pointer"
+//                                         onClick={() => setIsEditOpen(true)}
+//                                         onMouseDown={e => e.preventDefault()}
+//                                     >
+//                                     <FaEdit
+                                        
+//                                         title="Edit Shop"
+                                        
+//                                     />
+//                                     <span className="font-semibold">Edit</span>
+//                                 </div>
+//                             )}
+//                         </div>
+//                     </>
+//                 )}
+//             </section>
+//                <ShopEditModal
+//                   isOpen={isEditOpen}
+//                 onClose={() => setIsEditOpen(false)}
+//                 shop={shop}
+//                 setShop={setShop}
+//                   onSave={handleShopSave}
+//                 />
+
+//             {/* TOP NAVIGATION */}
+//             <nav className="border-b bg-white">
+//                 <ul className="mx-auto flex max-w-6xl gap-6 px-6 py-4 text-sm font-medium items-center">
+//                     <li className="cursor-pointer hover:underline border-b-2 border-violet-700">
+//                         All Products
+//                     </li>
+//                     <li onClick={toggleCategoryDropdown} className="cursor-pointer hover:underline hover:text-violet-700 relative">
+//                         Categories
+//                         <div>{selectedCategories.join(", ")}</div>
+//                         {showCategoryDropdown && (
+//                             <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow p-2 z-20 w-[120px]">
+//                                 {navCategories.map(cat => (
+//                                     <label key={cat} className="block text-sm">
+//                                         <input
+//                                             type="checkbox"
+//                                             className="mr-2"
+//                                             checked={selectedCategories.includes(cat)}
+//                                             onChange={() => toggleCategory(cat)}
+//                                         />
+//                                         {cat}
+//                                     </label>
+//                                 ))}
+//                             </div>
+//                         )}
+//                     </li>
+//                     <li className="cursor-pointer hover:underline hover:text-violet-700">About</li>
+//                     <li className="cursor-pointer hover:underline hover:text-violet-700">Reviews</li>
+//                     <li className="ml-auto">
+//                         <button
+//                             className="rounded border px-4 py-2 hover:bg-gray-100"
+//                             onClick={() => setSearchActive(prev => !prev)}
+//                         >
+//                             {searchActive ? shop?.user?.phone_number || "No Contact Info" : "Contact Seller"}
+//                         </button>
+//                     </li>
+//                 </ul>
+//             </nav>
+
+//             {/* MAIN CONTENT */}
+//             <main className="mx-auto grid max-w-6xl gap-8 px-6 py-10 md:grid-cols-[240px_1fr]">
+//                 {/* LEFT SIDEBAR FILTERS */}
+//                 <aside className="space-y-6">
+//                     <h2 className="text-xl font-semibold">Filters</h2>
+
+//                     {/* Dynamic Categories Filter */}
+//                     <div>
+//                         <label className="block text-sm font-medium mb-1">Categories</label>
+//                         {categoriesLoading ? (
+//                             <div className="h-10 w-full bg-gray-200 rounded animate-pulse" />
+//                         ) : (
+//                             <select
+//                                 className="w-full rounded border px-3 py-2"
+//                                 value={selectedCategorySlug}
+//                                 onChange={e => setSelectedCategorySlug(e.target.value)}
+//                             >
+//                                 <option value="">Select Category</option>
+//                                 {shopCategories.map(cat => (
+//                                     <option key={cat.id} value={cat.slug}>
+//                                         {cat.name}
+//                                     </option>
+//                                 ))}
+//                             </select>
+//                         )}
+//                     </div>
+
+//                     {/* Dynamic Condition Filter */}
+//                     <div>
+//                         <label className="block text-sm font-medium mb-1">Condition</label>
+//                         {conditionsLoading ? (
+//                             <div className="h-10 w-full bg-gray-200 rounded animate-pulse" />
+//                         ) : (
+//                             <select
+//                                 className="w-full rounded border px-3 py-2"
+//                                 value={selectedConditionSlug}
+//                                 onChange={e => setSelectedConditionSlug(e.target.value)}
+//                             >
+//                                 <option value="">Select Condition</option>
+//                                 {shopConditions.map(cond => (
+//                                     <option key={cond.id} value={cond.slug}>
+//                                         {cond.name}
+//                                     </option>
+//                                 ))}
+//                             </select>
+//                         )}
+//                     </div>
+
+//                     {/* Sort By Filter */}
+//                     <div>
+//                         <label className="block text-sm font-medium mb-1">Sort By</label>
+//                         <select className="w-full rounded border px-3 py-2">
+//                             <option value="">Sort by</option>
+//                             <option value="priceLowHigh">Price (low → high)</option>
+//                             <option value="priceHighLow">Price (high → low)</option>
+//                         </select>
+//                     </div>
+
+//                     {/* Price Range Filter */}
+//                     <PriceRange
+//                         min={priceMin}
+//                         max={priceMax}
+//                         onChangeMin={setPriceMin}
+//                         onChangeMax={setPriceMax}
+//                     />
+
+//                     {/* Ratings Filter */}
+//                     <div>
+//                         <h2 className="mb-2 font-semibold">Ratings</h2>
+//                         <div className="flex items-center">
+//                             {[...Array(5)].map((_, i) => (
+//                                 <FaStar key={i} className="text-yellow-400" />
+//                             ))}
+//                             <span className="ml-2 text-sm">5</span>
+//                         </div>
+//                         <p className="text-xs text-gray-500">Rating: 4.5/10</p>
+//                     </div>
+
+//                     {/* About the Shop */}
+//                     <div>
+//                         <label className="block font-medium mb-1">About the Shop</label>
+//                         <p className="text-sm text-gray-600">
+//                             {shop?.description || "No information available."}
+//                         </p>
+//                     </div>
+//                 </aside>
+
+//                 {/* RIGHT SIDE - MAIN CONTENT */}
+//                 <section className="relative">
+//                     {/* Search Input */}
+//                     <div className="mb-6 relative">
+//                         <AiOutlineSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-700 text-xl" />
+//                         <input
+//                             type="text"
+//                             placeholder="Search products..."
+//                             className="w-full pl-10 pr-10 py-2 rounded-full border border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-800"
+//                             value={searchQuery}
+//                             onChange={e => setSearchQuery(e.target.value)}
+//                             onFocus={() => setSearchActive(true)}
+//                             onBlur={() => setTimeout(() => setSearchActive(false), 100)}
+//                         />
+//                         {searchQuery && (
+//                             <AiOutlineClose
+//                                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-700 cursor-pointer"
+//                                 onClick={() => setSearchQuery('')}
+//                             />
+//                         )}
+
+//                         {/* Search Dropdown */}
+//                         {searchActive && searchQuery && (
+//                             <div className="absolute left-0 right-0 mt-2 z-20 bg-white shadow border border-gray-200">
+//                                 {searchLoading ? (
+//                                     <>
+//                                         <SearchResultSkeleton />
+//                                         <SearchResultSkeleton />
+//                                         <SearchResultSkeleton />
+//                                     </>
+//                                 ) : (
+//                                     searchResults.slice(0, 5).map(product => (
+//                                         <Link
+//                                             key={product.id}
+//                                             href={`/${product?.seller_country?.toLowerCase() || 'gh'}/${product?.seo_slug || ''}`}
+//                                             onMouseDown={e => e.preventDefault()}
+//                                         >
+//                                             <SearchResultItem product={product} />
+//                                         </Link>
+//                                     ))
+//                                 )}
+//                             </div>
+//                         )}
+//                     </div>
+
+//                     {/* Products Grid */}
+//                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+//                         {mainLoading
+//                             ? [...Array(6)].map((_, idx) => <ProductCardSkeleton key={idx} />)
+//                             : filteredProducts.map(product => (
+//                                 <ShopCard key={product.id} product={product} />
+//                             ))
+//                         }
+//                     </div>
+
+//                     {/* Custom Pagination */}
+//                     <div className="flex justify-center mt-4">
+//                         <Pagination
+//                             currentPage={currentPage}
+//                             totalPages={totalPages}
+//                             onPageChange={setCurrentPage}
+//                         />
+//                     </div>
+//                 </section>
+//             </main>
+//         </div>
+//     );
+// }
+
+
+// 'use client';
+
+import React, { useEffect, useState } from 'react';
+import ShopCard from '@/components/home/ProductList/ShopCard';
+import ProductCardSkeleton from './ProductCardSkeleton';
+import SearchResultSkeleton from './SearchResultSkeleton';
+import PriceRange from './PriceRange';
+import ShopEditModal from './ShopEditModal';
+import { FaCheckCircle, FaStar, FaEdit } from 'react-icons/fa';
+import { AiOutlineSearch, AiOutlineClose, AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
+import { HiOutlineCalendar } from 'react-icons/hi';
+import Link from 'next/link';
+import { useSelector } from 'react-redux';
+import HeroSectionSkeleton from './HeroSectionSkeleton';
+
 export default function Shops({ params }) {
     const { slug } = params;
     const { token, user } = useSelector((state) => state.auth);
+
+    // --- UI state ---
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
-    // callback to receive updated shop from modal
-    const handleShopSave = (newShop) => {
-        setShop(newShop);
-    };
-
-    // Pagination state
+    // --- Pagination ---
     const PAGE_SIZE = 20;
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
-    // Hero & main products fetch state
+    // --- Main products & shop info ---
     const [shop, setShop] = useState(null);
     const [mainProducts, setMainProducts] = useState([]);
     const [mainLoading, setMainLoading] = useState(true);
     const [mainError, setMainError] = useState(null);
 
-    // Search suggestion products state
-    const [searchQuery, setSearchQuery] = useState("");
+    // --- Search suggestions ---
+    const [searchQuery, setSearchQuery] = useState('');
     const [searchActive, setSearchActive] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
     const [searchLoading, setSearchLoading] = useState(false);
 
-    // Top-nav categories dropdown
-    const [selectedCategories, setSelectedCategories] = useState([]);
-    const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-
-    // Price & rating filters
-    const [priceMin, setPriceMin] = useState(0);
-    const [priceMax, setPriceMax] = useState(1000);
-    const [reviewRating, setReviewRating] = useState("");
-
-    // Dynamic shop categories (for sidebar)
+    // --- Dynamic categories & conditions (for filters) ---
     const [shopCategories, setShopCategories] = useState([]);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
     const [categoriesError, setCategoriesError] = useState(null);
-    const [selectedCategorySlug, setSelectedCategorySlug] = useState("");
 
-    // Dynamic shop conditions (for sidebar)
     const [shopConditions, setShopConditions] = useState([]);
     const [conditionsLoading, setConditionsLoading] = useState(true);
     const [conditionsError, setConditionsError] = useState(null);
-    const [selectedConditionSlug, setSelectedConditionSlug] = useState("");
 
-    // Toggle top-nav category
-    const toggleCategory = (cat) => {
-        setSelectedCategories(prev =>
-            prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
-        );
-    };
+    // --- Local filter state ---
+    const [selectedCategorySlug, setSelectedCategorySlug] = useState('');
+    const [selectedConditionSlug, setSelectedConditionSlug] = useState('');
+    const [sortOption, setSortOption] = useState('');
+    const [priceMin, setPriceMin] = useState(0);
+    const [priceMax, setPriceMax] = useState(1000);
+    const [discounted, setDiscounted] = useState(false);
+    const [onSales, setOnSales] = useState(false);
 
-    const toggleCategoryDropdown = () => {
-        setShowCategoryDropdown(prev => !prev);
+    // --- Filtered products ---
+    const [filterProducts, setFilterProducts] = useState([]);
+    const [filterLoading, setFilterLoading] = useState(false);
+    const [filterError, setFilterError] = useState(null);
+
+    // Callback when shop is edited
+    const handleShopSave = (newShop) => {
+        setShop(newShop);
     };
 
     // Fetch main products & shop info
@@ -173,12 +631,14 @@ export default function Shops({ params }) {
             setMainLoading(true);
             setMainError(null);
             try {
-                const resp = await fetch(`https://media.upfrica.com/api/shops/${slug}/products/?page=${currentPage}`);
+                const resp = await fetch(
+                    `https://media.upfrica.com/api/shops/${slug}/products/?page=${currentPage}`
+                );
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
                 setMainProducts(data.results || []);
                 setShop(data.shop || null);
-                if (data.count) {
+                if (data.count != null) {
                     setTotalPages(Math.ceil(data.count / PAGE_SIZE));
                 }
             } catch (err) {
@@ -203,7 +663,9 @@ export default function Shops({ params }) {
                 setSearchLoading(true);
                 try {
                     const resp = await fetch(
-                        `https://media.upfrica.com/api/shops/${slug}/products/filter/?q=${encodeURIComponent(searchQuery)}`
+                        `https://media.upfrica.com/api/shops/${slug}/products/filter/?q=${encodeURIComponent(
+                            searchQuery
+                        )}`
                     );
                     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                     const data = await resp.json();
@@ -225,7 +687,9 @@ export default function Shops({ params }) {
             setCategoriesLoading(true);
             setCategoriesError(null);
             try {
-                const resp = await fetch(`https://media.upfrica.com/api/shops/${slug}/categories/`);
+                const resp = await fetch(
+                    `https://media.upfrica.com/api/shops/${slug}/categories/`
+                );
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
                 setShopCategories(data);
@@ -240,7 +704,9 @@ export default function Shops({ params }) {
             setConditionsLoading(true);
             setConditionsError(null);
             try {
-                const resp = await fetch(`https://media.upfrica.com/api/shops/${slug}/conditions/`);
+                const resp = await fetch(
+                    `https://media.upfrica.com/api/shops/${slug}/conditions/`
+                );
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
                 setShopConditions(data);
@@ -255,18 +721,85 @@ export default function Shops({ params }) {
         fetchConditions();
     }, [slug]);
 
-    // Apply local filters (category slug & condition slug not applied to filtering yet)
-    const filteredProducts = mainProducts.filter(p => {
-        let ok = true;
-        if (selectedCategories.length > 0) {
-            const cat = getCategory(p.title);
-            if (!selectedCategories.includes(cat)) ok = false;
+    // Fetch filtered products whenever any filter changes
+    useEffect(() => {
+        const noFilters =
+            !selectedCategorySlug &&
+            !selectedConditionSlug &&
+            !sortOption &&
+            priceMin === 0 &&
+            priceMax === 1000 &&
+            !discounted &&
+            !onSales;
+
+        if (noFilters) {
+            setFilterProducts([]);
+            setFilterError(null);
+            setFilterLoading(false);
+            return;
         }
-        const price = p.price_cents / 100;
-        if (price < priceMin || price > priceMax) ok = false;
-        if (reviewRating && p.rating !== undefined && p.rating < reviewRating) ok = false;
-        return ok;
-    });
+
+        const fetchFiltered = async () => {
+            setFilterLoading(true);
+            setFilterError(null);
+            try {
+                const params = new URLSearchParams();
+                params.append('page', currentPage);
+
+                if (selectedCategorySlug) {
+                    const cat = shopCategories.find((c) => c.slug === selectedCategorySlug);
+                    if (cat) params.append('category', cat.id);
+                }
+                if (selectedConditionSlug) {
+                    const cond = shopConditions.find(
+                        (c) => c.slug === selectedConditionSlug
+                    );
+                    if (cond) params.append('condition', cond.id);
+                }
+                if (priceMin != null) params.append('min_price', priceMin);
+                if (priceMax != null) params.append('max_price', priceMax);
+                if (discounted) params.append('discounted', 'true');
+                if (onSales) params.append('on_sales', 'yes');
+
+                if (sortOption === 'priceLowHigh') params.append('ordering', 'price');
+                if (sortOption === 'priceHighLow') params.append('ordering', '-price');
+
+                const url = `https://media.upfrica.com/api/shops/${slug}/products/filter/?${params.toString()}`;
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                setFilterProducts(data.results || []);
+                if (data.count != null) {
+                    setTotalPages(Math.ceil(data.count / PAGE_SIZE));
+                }
+            } catch (err) {
+                console.error(err);
+                setFilterError(err);
+            } finally {
+                setFilterLoading(false);
+            }
+        };
+
+        fetchFiltered();
+    }, [
+        slug,
+        currentPage,
+        selectedCategorySlug,
+        selectedConditionSlug,
+        priceMin,
+        priceMax,
+        discounted,
+        onSales,
+        sortOption,
+        shopCategories,
+        shopConditions,
+    ]);
+
+    // Decide which list to display
+    const displayProducts =
+        filterLoading || filterError || filterProducts.length > 0
+            ? filterProducts
+            : mainProducts;
 
     if (mainError) {
         return (
@@ -280,10 +813,10 @@ export default function Shops({ params }) {
 
     return (
         <div className="min-h-screen bg-gray-50 text-gray-900">
-            {/* HERO SECTION */}
+            {/* HERO */}
             <section className="relative">
                 {mainLoading ? (
-                    <HeroSectionSkeleton />
+                    <HeroSectionSkeleton/>
                 ) : (
                     <>
                         {shop?.top_banner ? (
@@ -307,7 +840,6 @@ export default function Shops({ params }) {
 
                         <div className="absolute bottom-0 left-10 bg-white backdrop-blur p-6 rounded-tl-lg rounded-tr-lg">
                             <h1 className="text-3xl font-bold">{shop?.name || 'N/A'}</h1>
-
                             <div className="mt-2 flex items-center gap-8 text-sm my-2">
                                 <span className="flex items-center gap-1">
                                     <FaCheckCircle className="bg-violet-700 h-4 w-4 text-white rounded-full" />
@@ -315,37 +847,31 @@ export default function Shops({ params }) {
                                 </span>
                                 <span className="flex items-center gap-1">
                                     {shop?.user?.country === 'GH' && (
-                                        <span role="img" aria-label="Ghana flag">🇬🇭</span>
+                                        <span role="img" aria-label="Ghana flag">
+                                            🇬🇭
+                                        </span>
                                     )}
                                     {shop?.user?.local_area && <span>{shop.user.local_area},</span>}
                                     {shop?.user?.town && <span>{shop.user.town},</span>}
                                     <span>{shop?.user?.country}</span>
                                 </span>
                             </div>
-
                             <p className="mt-2 text-sm text-gray-600 max-w-[400px]">
                                 {shop?.description || 'No details available.'}
                             </p>
-                                <p className=" text-sm mt-2 text-gray-600 max-w-[400px] flex items-center">
-                                    <HiOutlineCalendar className="mr-2" size={16} />
-                                    {shop?.created_at
-                                        ? `${new Date(shop.created_at).toLocaleDateString()}`
-                                        : 'N/A'}
-                                </p>
-
-                               
-
+                            <p className="text-sm mt-2 text-gray-600 flex items-center">
+                                <HiOutlineCalendar className="mr-2" size={16} />
+                                {shop?.created_at
+                                    ? new Date(shop.created_at).toLocaleDateString()
+                                    : 'N/A'}
+                            </p>
                             {user && (
-                                    <div
-                                        className="flex items-center gap-2 mt-2 cursor-pointer"
-                                        onClick={() => setIsEditOpen(true)}
-                                        onMouseDown={e => e.preventDefault()}
-                                    >
-                                    <FaEdit
-                                        
-                                        title="Edit Shop"
-                                        
-                                    />
+                                <div
+                                    className="flex items-center gap-2 mt-2 cursor-pointer"
+                                    onClick={() => setIsEditOpen(true)}
+                                    onMouseDown={(e) => e.preventDefault()}
+                                >
+                                    <FaEdit title="Edit Shop" />
                                     <span className="font-semibold">Edit</span>
                                 </div>
                             )}
@@ -353,71 +879,95 @@ export default function Shops({ params }) {
                     </>
                 )}
             </section>
-               <ShopEditModal
-                  isOpen={isEditOpen}
+
+            <ShopEditModal
+                isOpen={isEditOpen}
                 onClose={() => setIsEditOpen(false)}
                 shop={shop}
                 setShop={setShop}
-                  onSave={handleShopSave}
-                />
+                onSave={handleShopSave}
+            />
 
-            {/* TOP NAVIGATION */}
+            {/* TOP NAV */}
             <nav className="border-b bg-white">
                 <ul className="mx-auto flex max-w-6xl gap-6 px-6 py-4 text-sm font-medium items-center">
                     <li className="cursor-pointer hover:underline border-b-2 border-violet-700">
                         All Products
                     </li>
-                    <li onClick={toggleCategoryDropdown} className="cursor-pointer hover:underline hover:text-violet-700 relative">
+                    <li
+                        className="cursor-pointer hover:underline relative"
+                        onClick={() => setShowCategoryDropdown((v) => !v)}
+                    >
                         Categories
-                        <div>{selectedCategories.join(", ")}</div>
+                        <div className="ml-2 text-gray-700">
+                            {shopCategories
+                                .filter((c) => c.slug === selectedCategorySlug)
+                                .map((c) => c.name)
+                                .join(', ')}
+                        </div>
                         {showCategoryDropdown && (
-                            <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow p-2 z-20 w-[120px]">
-                                {navCategories.map(cat => (
-                                    <label key={cat} className="block text-sm">
-                                        <input
-                                            type="checkbox"
-                                            className="mr-2"
-                                            checked={selectedCategories.includes(cat)}
-                                            onChange={() => toggleCategory(cat)}
-                                        />
-                                        {cat}
-                                    </label>
-                                ))}
+                            <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow p-2 z-20 w-[200px]">
+                                {categoriesLoading ? (
+                                    <div className="h-10 bg-gray-200 animate-pulse" />
+                                ) : (
+                                    shopCategories.map((cat) => (
+                                        <label key={cat.id} className="block text-sm">
+                                            <input
+                                                type="checkbox"
+                                                className="mr-2"
+                                                checked={selectedCategorySlug === cat.slug}
+                                                onChange={() => {
+                                                    setSelectedCategorySlug((prev) =>
+                                                        prev === cat.slug ? '' : cat.slug
+                                                    );
+                                                    setCurrentPage(1);
+                                                }}
+                                            />
+                                            {cat.name}
+                                        </label>
+                                    ))
+                                )}
                             </div>
                         )}
                     </li>
-                    <li className="cursor-pointer hover:underline hover:text-violet-700">About</li>
-                    <li className="cursor-pointer hover:underline hover:text-violet-700">Reviews</li>
+                    <li className="cursor-pointer hover:underline hover:text-violet-700">
+                        About
+                    </li>
+                    <li className="cursor-pointer hover:underline hover:text-violet-700">
+                        Reviews
+                    </li>
                     <li className="ml-auto">
                         <button
                             className="rounded border px-4 py-2 hover:bg-gray-100"
-                            onClick={() => setSearchActive(prev => !prev)}
+                            onClick={() => setSearchActive((v) => !v)}
                         >
-                            {searchActive ? shop?.user?.phone_number || "No Contact Info" : "Contact Seller"}
+                            {searchActive ? shop?.user?.phone_number || 'No Contact Info' : 'Contact Seller'}
                         </button>
                     </li>
                 </ul>
             </nav>
 
-            {/* MAIN CONTENT */}
             <main className="mx-auto grid max-w-6xl gap-8 px-6 py-10 md:grid-cols-[240px_1fr]">
-                {/* LEFT SIDEBAR FILTERS */}
+                {/* SIDEBAR FILTERS */}
                 <aside className="space-y-6">
                     <h2 className="text-xl font-semibold">Filters</h2>
 
-                    {/* Dynamic Categories Filter */}
+                    {/* Category */}
                     <div>
-                        <label className="block text-sm font-medium mb-1">Categories</label>
+                        <label className="block text-sm font-medium mb-1">Category</label>
                         {categoriesLoading ? (
                             <div className="h-10 w-full bg-gray-200 rounded animate-pulse" />
                         ) : (
                             <select
                                 className="w-full rounded border px-3 py-2"
                                 value={selectedCategorySlug}
-                                onChange={e => setSelectedCategorySlug(e.target.value)}
+                                onChange={(e) => {
+                                    setSelectedCategorySlug(e.target.value);
+                                    setCurrentPage(1);
+                                }}
                             >
-                                <option value="">Select Category</option>
-                                {shopCategories.map(cat => (
+                                <option value="">All Categories</option>
+                                {shopCategories.map((cat) => (
                                     <option key={cat.id} value={cat.slug}>
                                         {cat.name}
                                     </option>
@@ -426,7 +976,7 @@ export default function Shops({ params }) {
                         )}
                     </div>
 
-                    {/* Dynamic Condition Filter */}
+                    {/* Condition */}
                     <div>
                         <label className="block text-sm font-medium mb-1">Condition</label>
                         {conditionsLoading ? (
@@ -435,10 +985,13 @@ export default function Shops({ params }) {
                             <select
                                 className="w-full rounded border px-3 py-2"
                                 value={selectedConditionSlug}
-                                onChange={e => setSelectedConditionSlug(e.target.value)}
+                                onChange={(e) => {
+                                    setSelectedConditionSlug(e.target.value);
+                                    setCurrentPage(1);
+                                }}
                             >
-                                <option value="">Select Condition</option>
-                                {shopConditions.map(cond => (
+                                <option value="">All Conditions</option>
+                                {shopConditions.map((cond) => (
                                     <option key={cond.id} value={cond.slug}>
                                         {cond.name}
                                     </option>
@@ -447,25 +1000,66 @@ export default function Shops({ params }) {
                         )}
                     </div>
 
-                    {/* Sort By Filter */}
+                    {/* Sort By */}
                     <div>
                         <label className="block text-sm font-medium mb-1">Sort By</label>
-                        <select className="w-full rounded border px-3 py-2">
+                        <select
+                            className="w-full rounded border px-3 py-2"
+                            value={sortOption}
+                            onChange={(e) => {
+                                setSortOption(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                        >
                             <option value="">Sort by</option>
                             <option value="priceLowHigh">Price (low → high)</option>
                             <option value="priceHighLow">Price (high → low)</option>
                         </select>
                     </div>
 
-                    {/* Price Range Filter */}
+                    {/* Price Range */}
                     <PriceRange
                         min={priceMin}
                         max={priceMax}
-                        onChangeMin={setPriceMin}
-                        onChangeMax={setPriceMax}
+                        onChangeMin={(v) => {
+                            setPriceMin(v);
+                            setCurrentPage(1);
+                        }}
+                        onChangeMax={(v) => {
+                            setPriceMax(v);
+                            setCurrentPage(1);
+                        }}
                     />
 
-                    {/* Ratings Filter */}
+                    {/* Discounted & On Sale */}
+                    {/* <div className="space-y-2">
+                        <label className="flex items-center text-sm">
+                            <input
+                                type="checkbox"
+                                className="mr-2"
+                                checked={discounted}
+                                onChange={(e) => {
+                                    setDiscounted(e.target.checked);
+                                    setCurrentPage(1);
+                                }}
+                            />
+                            Discounted only
+                        </label>
+                        <label className="flex items-center text-sm">
+                            <input
+                                type="checkbox"
+                                className="mr-2"
+                                checked={onSales}
+                                onChange={(e) => {
+                                    setOnSales(e.target.checked);
+                                    setCurrentPage(1);
+                                }}
+                            />
+                            On sale
+                        </label>
+                    </div> */}
+
+                    {/* Ratings (static placeholder) */}
                     <div>
                         <h2 className="mb-2 font-semibold">Ratings</h2>
                         <div className="flex items-center">
@@ -481,12 +1075,12 @@ export default function Shops({ params }) {
                     <div>
                         <label className="block font-medium mb-1">About the Shop</label>
                         <p className="text-sm text-gray-600">
-                            {shop?.description || "No information available."}
+                            {shop?.description || 'No information available.'}
                         </p>
                     </div>
                 </aside>
 
-                {/* RIGHT SIDE - MAIN CONTENT */}
+                {/* MAIN CONTENT */}
                 <section className="relative">
                     {/* Search Input */}
                     <div className="mb-6 relative">
@@ -496,7 +1090,7 @@ export default function Shops({ params }) {
                             placeholder="Search products..."
                             className="w-full pl-10 pr-10 py-2 rounded-full border border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-800"
                             value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             onFocus={() => setSearchActive(true)}
                             onBlur={() => setTimeout(() => setSearchActive(false), 100)}
                         />
@@ -507,7 +1101,6 @@ export default function Shops({ params }) {
                             />
                         )}
 
-                        {/* Search Dropdown */}
                         {searchActive && searchQuery && (
                             <div className="absolute left-0 right-0 mt-2 z-20 bg-white shadow border border-gray-200">
                                 {searchLoading ? (
@@ -517,13 +1110,28 @@ export default function Shops({ params }) {
                                         <SearchResultSkeleton />
                                     </>
                                 ) : (
-                                    searchResults.slice(0, 5).map(product => (
+                                    searchResults.slice(0, 5).map((product) => (
                                         <Link
                                             key={product.id}
-                                            href={`/${product?.seller_country?.toLowerCase() || 'gh'}/${product?.seo_slug || ''}`}
-                                            onMouseDown={e => e.preventDefault()}
+                                            href={`/${product?.seller_country
+                                                ?.toLowerCase() || 'gh'}/${product?.seo_slug || ''}`}
+                                            onMouseDown={(e) => e.preventDefault()}
                                         >
-                                            <SearchResultItem product={product} />
+                                            <div className="flex items-center p-4 border-b border-gray-200 hover:bg-gray-50">
+                                                <img
+                                                    src={product.product_images[0]}
+                                                    alt={product.title}
+                                                    className="w-12 h-12 rounded object-cover"
+                                                />
+                                                <div className="ml-4">
+                                                    <p className="text-sm font-medium">
+                                                        {product.title}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">
+                                                        ₵{(product.price_cents / 100).toFixed(2)}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </Link>
                                     ))
                                 )}
@@ -531,23 +1139,41 @@ export default function Shops({ params }) {
                         )}
                     </div>
 
-                    {/* Products Grid */}
+                    {/* Product Grid */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                        {mainLoading
-                            ? [...Array(6)].map((_, idx) => <ProductCardSkeleton key={idx} />)
-                            : filteredProducts.map(product => (
+                        {(mainLoading || filterLoading) ? (
+                            [...Array(6)].map((_, idx) => (
+                                <ProductCardSkeleton key={idx} />
+                            ))
+                        ) : (
+                            displayProducts.map((product) => (
                                 <ShopCard key={product.id} product={product} />
                             ))
-                        }
+                        )}
                     </div>
 
-                    {/* Custom Pagination */}
+                    {/* Pagination */}
                     <div className="flex justify-center mt-4">
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={setCurrentPage}
-                        />
+                        <button
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="px-3 py-1 flex items-center rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+                        >
+                            <AiOutlineLeft className="mr-1" /> Prev
+                        </button>
+
+                        <span className="px-4 py-1">
+                            Page {currentPage} of {totalPages}
+                        </span>
+
+                        <button
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="px-3 py-1 flex items-center rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+                        >
+                            Next <AiOutlineRight className="ml-1" />
+                        </button>
+                        {/* <Pagination /> */}
                     </div>
                 </section>
             </main>
