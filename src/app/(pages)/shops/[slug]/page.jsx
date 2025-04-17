@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -5,14 +7,15 @@ import ShopCard from '@/components/home/ProductList/ShopCard';
 import ProductCardSkeleton from './ProductCardSkeleton';
 import SearchResultSkeleton from './SearchResultSkeleton';
 import PriceRange from './PriceRange';
+import ShopEditModal from './ShopEditModal';
 import { FaCheckCircle, FaStar, FaEdit } from 'react-icons/fa';
-import { AiOutlineSearch, AiOutlineClose } from 'react-icons/ai';
-import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
+import { AiOutlineSearch, AiOutlineClose, AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
+import HeroSectionSkeleton from './HeroSectionSkeleton';
 
-// Sample categories array used for demonstration.
-const categories = ["Electronics", "Fashion", "Homeware"];
+// Sample categories array used for the top nav dropdown.
+const navCategories = ["Electronics", "Fashion", "Homeware"];
 
 // Determine product category based on product name.
 function getCategory(productName) {
@@ -22,6 +25,11 @@ function getCategory(productName) {
         return "Fashion";
     return "Homeware";
 }
+
+// Hero skeleton for loading state
+const HeroSkeleton = () => (
+    <div className="h-[300px] w-full bg-gray-200 animate-pulse" />
+);
 
 // Component for rendering a single search result item.
 const SearchResultItem = ({ product }) => (
@@ -40,7 +48,7 @@ const SearchResultItem = ({ product }) => (
     </div>
 );
 
-// Custom Pagination component mimicking Flowbite's style.
+// Custom Pagination component.
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     const handlePageClick = (page) => {
         if (page >= 1 && page <= totalPages && page !== currentPage) {
@@ -48,15 +56,11 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         }
     };
 
-    // Create page numbers to display.
     const getPageNumbers = () => {
         const pages = [];
         if (totalPages <= 5) {
-            for (let i = 1; i <= totalPages; i++) {
-                pages.push(i);
-            }
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
         } else {
-            // If there are many pages, show a few pages around the current one.
             if (currentPage <= 3) {
                 pages.push(1, 2, 3, 4, '...', totalPages);
             } else if (currentPage >= totalPages - 2) {
@@ -78,20 +82,17 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                 <AiOutlineLeft className="mr-1" />
                 <span>Prev</span>
             </button>
-            {getPageNumbers().map((page, index) =>
+            {getPageNumbers().map((page, i) =>
                 typeof page === 'number' ? (
                     <button
-                        key={index}
+                        key={i}
                         onClick={() => handlePageClick(page)}
-                        className={`px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100 ${page === currentPage ? 'bg-violet-700 text-white' : ''
-                            }`}
+                        className={`px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100 ${page === currentPage ? 'bg-violet-700 text-white' : ''}`}
                     >
                         {page}
                     </button>
                 ) : (
-                    <span key={index} className="px-3 py-1">
-                        {page}
-                    </span>
+                    <span key={i} className="px-3 py-1">{page}</span>
                 )
             )}
             <button
@@ -109,122 +110,161 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 export default function Shops({ params }) {
     const { slug } = params;
     const { token, user } = useSelector((state) => state.auth);
-    console.log(user, token)
+    const [isEditOpen, setIsEditOpen] = useState(false);
 
-    // Pagination state.
-    const PAGE_SIZE = 20; // Adjust page size to match your API
+    // callback to receive updated shop from modal
+    const handleShopSave = (newShop) => {
+        setShop(newShop);
+    };
+
+    // Pagination state
+    const PAGE_SIZE = 20;
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [showPhone, setShowPhone] = useState(false);
 
-    // Main grid products fetch state.
+    // Hero & main products fetch state
+    const [shop, setShop] = useState(null);
     const [mainProducts, setMainProducts] = useState([]);
     const [mainLoading, setMainLoading] = useState(true);
     const [mainError, setMainError] = useState(null);
-    const [shop, setShop] = useState(null);
 
-    // Search suggestion products state.
+    // Search suggestion products state
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchActive, setSearchActive] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
     const [searchLoading, setSearchLoading] = useState(false);
 
-    // Left sidebar filters & search states.
+    // Top-nav categories dropdown
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
+    // Price & rating filters
     const [priceMin, setPriceMin] = useState(0);
     const [priceMax, setPriceMax] = useState(1000);
     const [reviewRating, setReviewRating] = useState("");
-    const [searchQuery, setSearchQuery] = useState("");
-    const [searchActive, setSearchActive] = useState(false);
 
-    // Toggle category selection.
+    // Dynamic shop categories (for sidebar)
+    const [shopCategories, setShopCategories] = useState([]);
+    const [categoriesLoading, setCategoriesLoading] = useState(true);
+    const [categoriesError, setCategoriesError] = useState(null);
+    const [selectedCategorySlug, setSelectedCategorySlug] = useState("");
+
+    // Dynamic shop conditions (for sidebar)
+    const [shopConditions, setShopConditions] = useState([]);
+    const [conditionsLoading, setConditionsLoading] = useState(true);
+    const [conditionsError, setConditionsError] = useState(null);
+    const [selectedConditionSlug, setSelectedConditionSlug] = useState("");
+
+    // Toggle top-nav category
     const toggleCategory = (cat) => {
-        setSelectedCategories((prev) =>
-            prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+        setSelectedCategories(prev =>
+            prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
         );
     };
 
-    // Toggle the left sidebar categories dropdown.
     const toggleCategoryDropdown = () => {
-        setShowCategoryDropdown((prev) => !prev);
+        setShowCategoryDropdown(prev => !prev);
     };
 
-    // Fetch main products for the grid using page numbers.
+    // Fetch main products & shop info
     useEffect(() => {
         const fetchMainProducts = async () => {
             setMainLoading(true);
             setMainError(null);
             try {
-                const url = `https://media.upfrica.com/api/shops/${slug}/products/?page=${currentPage}`;
-                const response = await fetch(url, { method: 'GET', redirect: 'follow' });
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
+                const resp = await fetch(`https://media.upfrica.com/api/shops/${slug}/products/?page=${currentPage}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
                 setMainProducts(data.results || []);
                 setShop(data.shop || null);
                 if (data.count) {
                     setTotalPages(Math.ceil(data.count / PAGE_SIZE));
                 }
             } catch (err) {
-                console.error('Failed to fetch main products:', err);
+                console.error(err);
                 setMainError(err);
             } finally {
                 setMainLoading(false);
             }
         };
-
         fetchMainProducts();
-    }, [currentPage, slug]);
+    }, [slug, currentPage]);
 
-    // Fetch products for search suggestions.
+    // Fetch search suggestions
     useEffect(() => {
         if (!searchQuery.trim()) {
             setSearchResults([]);
             setSearchLoading(false);
             return;
         }
-
         const timer = setTimeout(() => {
-            const fetchSearchResults = async () => {
+            const fetchSearch = async () => {
                 setSearchLoading(true);
                 try {
-                    const endpoint = `https://media.upfrica.com/api/shops/${slug}/products/filter/?q=${encodeURIComponent(
-                        searchQuery
-                    )}`;
-                    const response = await fetch(endpoint, { method: 'GET', redirect: 'follow' });
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    const data = await response.json();
+                    const resp = await fetch(
+                        `https://media.upfrica.com/api/shops/${slug}/products/filter/?q=${encodeURIComponent(searchQuery)}`
+                    );
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                    const data = await resp.json();
                     setSearchResults(data.results || []);
                 } catch (err) {
-                    console.error('Failed to fetch search results:', err);
+                    console.error(err);
                 } finally {
                     setSearchLoading(false);
                 }
             };
-            fetchSearchResults();
+            fetchSearch();
         }, 500);
-
         return () => clearTimeout(timer);
     }, [searchQuery, slug]);
 
-    // Apply local filters on the main products.
-    const filteredProducts = mainProducts.filter((p) => {
-        let include = true;
-        // Category filter.
+    // Fetch dynamic categories & conditions
+    useEffect(() => {
+        const fetchCategories = async () => {
+            setCategoriesLoading(true);
+            setCategoriesError(null);
+            try {
+                const resp = await fetch(`https://media.upfrica.com/api/shops/${slug}/categories/`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                setShopCategories(data);
+            } catch (err) {
+                console.error(err);
+                setCategoriesError(err);
+            } finally {
+                setCategoriesLoading(false);
+            }
+        };
+        const fetchConditions = async () => {
+            setConditionsLoading(true);
+            setConditionsError(null);
+            try {
+                const resp = await fetch(`https://media.upfrica.com/api/shops/${slug}/conditions/`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                setShopConditions(data);
+            } catch (err) {
+                console.error(err);
+                setConditionsError(err);
+            } finally {
+                setConditionsLoading(false);
+            }
+        };
+        fetchCategories();
+        fetchConditions();
+    }, [slug]);
+
+    // Apply local filters (category slug & condition slug not applied to filtering yet)
+    const filteredProducts = mainProducts.filter(p => {
+        let ok = true;
         if (selectedCategories.length > 0) {
             const cat = getCategory(p.title);
-            if (!selectedCategories.includes(cat)) include = false;
+            if (!selectedCategories.includes(cat)) ok = false;
         }
-        // Price range filter.
         const price = p.price_cents / 100;
-        if (price < priceMin || price > priceMax) include = false;
-        // Review rating filter.
-        if (reviewRating !== "" && p.rating !== undefined) {
-            if (p.rating < reviewRating) include = false;
-        }
-        return include;
+        if (price < priceMin || price > priceMax) ok = false;
+        if (reviewRating && p.rating !== undefined && p.rating < reviewRating) ok = false;
+        return ok;
     });
 
     if (mainError) {
@@ -241,66 +281,75 @@ export default function Shops({ params }) {
         <div className="min-h-screen bg-gray-50 text-gray-900">
             {/* HERO SECTION */}
             <section className="relative">
-                {shop?.top_banner ? (
-                    // If a top banner is provided, display it.
-                    <img
-                        src={shop.top_banner}
-                        alt="Shop top banner"
-                        className="h-[300px] w-full object-cover"
-                    />
-                ) : shop?.bg_color ? (
-                    // If there's no top banner but a background color is provided, show a div with the bg_color.
-                    <div
-                        className="h-[300px] w-full"
-                        style={{ backgroundColor: shop.bg_color }}
-                    />
+                {mainLoading ? (
+                    <HeroSectionSkeleton />
                 ) : (
-                    // Else, show the dummy image.
-                    <img
-                        src="https://images.pexels.com/photos/34577/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-                        alt="Shops hero"
-                        className="h-[300px] w-full object-cover"
-                    />
-                )}
-
-                <div className="absolute bottom-0 left-10 bg-white backdrop-blur p-6 rounded-tl-lg rounded-tr-lg">
-                    <h1 className="text-3xl font-bold">{shop?.name || "N/A"}</h1>
-                    <div className="mt-2 flex items-center gap-8 text-sm my-2">
-                        <span className="flex items-center gap-1">
-                            <FaCheckCircle className="bg-violet-700 h-4 w-4 text-white rounded-full" />
-                            <span>Verified</span>
-                        </span>
-                        <span className="flex items-center gap-1">
-                            {/* Display the seller's location details: local_area, town, and country */}
-                            {shop?.user?.country === "GH" && (
-                                <span role="img" aria-label="Ghana flag">
-                                    🇬🇭
-                                </span>
-                            )}
-                            {shop?.user?.local_area && <span>{shop.user.local_area},</span>}
-                            {shop?.user?.town && <span>{shop.user.town},</span>}
-                            <span>{shop?.user?.country}</span>
-                        </span>
-
-                    </div>
-                    <p className="mt-2 text-sm text-gray-600">
-                        {shop?.description || "No details available."}
-                    </p>
-                    <div>
-                        {user && (
-                            <div className='flex items-center gap-2 '>
-                                <FaEdit
-                                    className=" cursor-pointer "
-                                    title="Edit Shop Details"
-                                />
-                                <span className='font-semibold'>Edit</span>
-                            </div>
+                    <>
+                        {shop?.top_banner ? (
+                            <img
+                                src={shop.top_banner}
+                                alt="Shop top banner"
+                                className="h-[300px] w-full object-cover"
+                            />
+                        ) : shop?.bg_color ? (
+                            <div
+                                className="h-[300px] w-full"
+                                style={{ backgroundColor: shop.bg_color }}
+                            />
+                        ) : (
+                            <img
+                                src="https://images.pexels.com/photos/34577/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+                                alt="Shops hero"
+                                className="h-[300px] w-full object-cover"
+                            />
                         )}
-                    </div>
-                </div> 
+
+                        <div className="absolute bottom-0 left-10 bg-white backdrop-blur p-6 rounded-tl-lg rounded-tr-lg">
+                            <h1 className="text-3xl font-bold">{shop?.name || 'N/A'}</h1>
+
+                            <div className="mt-2 flex items-center gap-8 text-sm my-2">
+                                <span className="flex items-center gap-1">
+                                    <FaCheckCircle className="bg-violet-700 h-4 w-4 text-white rounded-full" />
+                                    <span>Verified</span>
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    {shop?.user?.country === 'GH' && (
+                                        <span role="img" aria-label="Ghana flag">🇬🇭</span>
+                                    )}
+                                    {shop?.user?.local_area && <span>{shop.user.local_area},</span>}
+                                    {shop?.user?.town && <span>{shop.user.town},</span>}
+                                    <span>{shop?.user?.country}</span>
+                                </span>
+                            </div>
+
+                            <p className="mt-2 text-sm text-gray-600">
+                                {shop?.description || 'No details available.'}
+                            </p>
+
+                            {user && (
+                                    <div
+                                        className="flex items-center gap-2 mt-4 cursor-pointer"
+                                        onClick={() => setIsEditOpen(true)}
+                                        onMouseDown={e => e.preventDefault()}
+                                    >
+                                    <FaEdit
+                                        
+                                        title="Edit Shop"
+                                        
+                                    />
+                                    <span className="font-semibold">Edit</span>
+                                </div>
+                            )}
+                        </div>
+                    </>
+                )}
             </section>
-
-
+               <ShopEditModal
+                  isOpen={isEditOpen}
+                  onClose={() => setIsEditOpen(false)}
+                  shop={shop}
+                  onSave={handleShopSave}
+                />
 
             {/* TOP NAVIGATION */}
             <nav className="border-b bg-white">
@@ -308,35 +357,33 @@ export default function Shops({ params }) {
                     <li className="cursor-pointer hover:underline border-b-2 border-violet-700">
                         All Products
                     </li>
-                    <li onClick={toggleCategoryDropdown} className="cursor-pointer hover:underline hover:text-violet-700">
+                    <li onClick={toggleCategoryDropdown} className="cursor-pointer hover:underline hover:text-violet-700 relative">
                         Categories
-                        <div className="relative">
-                            <div>{selectedCategories.length > 0 ? selectedCategories.join(", ") : ""}</div>
-                            {showCategoryDropdown && (
-                                <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow p-2 z-20 w-[120px]">
-                                    {categories.map((cat) => (
-                                        <label key={cat} className="block text-sm">
-                                            <input
-                                                type="checkbox"
-                                                className="mr-2"
-                                                checked={selectedCategories.includes(cat)}
-                                                onChange={() => toggleCategory(cat)}
-                                            />
-                                            {cat}
-                                        </label>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        <div>{selectedCategories.join(", ")}</div>
+                        {showCategoryDropdown && (
+                            <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow p-2 z-20 w-[120px]">
+                                {navCategories.map(cat => (
+                                    <label key={cat} className="block text-sm">
+                                        <input
+                                            type="checkbox"
+                                            className="mr-2"
+                                            checked={selectedCategories.includes(cat)}
+                                            onChange={() => toggleCategory(cat)}
+                                        />
+                                        {cat}
+                                    </label>
+                                ))}
+                            </div>
+                        )}
                     </li>
                     <li className="cursor-pointer hover:underline hover:text-violet-700">About</li>
                     <li className="cursor-pointer hover:underline hover:text-violet-700">Reviews</li>
                     <li className="ml-auto">
                         <button
                             className="rounded border px-4 py-2 hover:bg-gray-100"
-                            onClick={() => setShowPhone(prev => !prev)}
+                            onClick={() => setSearchActive(prev => !prev)}
                         >
-                            {showPhone ? shop?.user?.phone_number || "No Contact Info" : "Contact Seller"}
+                            {searchActive ? shop?.user?.phone_number || "No Contact Info" : "Contact Seller"}
                         </button>
                     </li>
                 </ul>
@@ -347,26 +394,51 @@ export default function Shops({ params }) {
                 {/* LEFT SIDEBAR FILTERS */}
                 <aside className="space-y-6">
                     <h2 className="text-xl font-semibold">Filters</h2>
-                    {/* Categories Filter */}
-                    <div className="mb-4">
+
+                    {/* Dynamic Categories Filter */}
+                    <div>
                         <label className="block text-sm font-medium mb-1">Categories</label>
-                        <select className="w-full rounded border px-3 py-2">
-                            <option value="">Select Categories</option>
-                            <option value="laptop">Laptop</option>
-                            <option value="mobile">Mobile</option>
-                        </select>
+                        {categoriesLoading ? (
+                            <div className="h-10 w-full bg-gray-200 rounded animate-pulse" />
+                        ) : (
+                            <select
+                                className="w-full rounded border px-3 py-2"
+                                value={selectedCategorySlug}
+                                onChange={e => setSelectedCategorySlug(e.target.value)}
+                            >
+                                <option value="">Select Category</option>
+                                {shopCategories.map(cat => (
+                                    <option key={cat.id} value={cat.slug}>
+                                        {cat.name}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
                     </div>
-                    {/* Condition Filter */}
-                    <div className="mb-4">
+
+                    {/* Dynamic Condition Filter */}
+                    <div>
                         <label className="block text-sm font-medium mb-1">Condition</label>
-                        <select className="w-full rounded border px-3 py-2">
-                            <option value="">Select Condition</option>
-                            <option value="New">New</option>
-                            <option value="Used">Used</option>
-                        </select>
+                        {conditionsLoading ? (
+                            <div className="h-10 w-full bg-gray-200 rounded animate-pulse" />
+                        ) : (
+                            <select
+                                className="w-full rounded border px-3 py-2"
+                                value={selectedConditionSlug}
+                                onChange={e => setSelectedConditionSlug(e.target.value)}
+                            >
+                                <option value="">Select Condition</option>
+                                {shopConditions.map(cond => (
+                                    <option key={cond.id} value={cond.slug}>
+                                        {cond.name}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
                     </div>
+
                     {/* Sort By Filter */}
-                    <div className="mb-4">
+                    <div>
                         <label className="block text-sm font-medium mb-1">Sort By</label>
                         <select className="w-full rounded border px-3 py-2">
                             <option value="">Sort by</option>
@@ -374,8 +446,15 @@ export default function Shops({ params }) {
                             <option value="priceHighLow">Price (high → low)</option>
                         </select>
                     </div>
+
                     {/* Price Range Filter */}
-                    <PriceRange />
+                    <PriceRange
+                        min={priceMin}
+                        max={priceMax}
+                        onChangeMin={setPriceMin}
+                        onChangeMax={setPriceMax}
+                    />
+
                     {/* Ratings Filter */}
                     <div>
                         <h2 className="mb-2 font-semibold">Ratings</h2>
@@ -387,11 +466,12 @@ export default function Shops({ params }) {
                         </div>
                         <p className="text-xs text-gray-500">Rating: 4.5/10</p>
                     </div>
+
                     {/* About the Shop */}
-                    <div className="mb-4">
-                        <label className="block font-medium">About the Shop</label>
+                    <div>
+                        <label className="block font-medium mb-1">About the Shop</label>
                         <p className="text-sm text-gray-600">
-                            {shop?.description || "No informaiton available."}
+                            {shop?.description || "No information available."}
                         </p>
                     </div>
                 </aside>
@@ -400,28 +480,23 @@ export default function Shops({ params }) {
                 <section className="relative">
                     {/* Search Input */}
                     <div className="mb-6 relative">
-                        <div className="relative">
-                            <AiOutlineSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-700 text-xl font-bold" />
-                            <input
-                                type="text"
-                                placeholder="Search products..."
-                                className="w-full pl-10 pr-10 py-2 rounded-full border border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-800"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onFocus={() => setSearchActive(true)}
-                                onBlur={() =>
-                                    setTimeout(() => {
-                                        setSearchActive(false);
-                                    }, 100)
-                                }
+                        <AiOutlineSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-700 text-xl" />
+                        <input
+                            type="text"
+                            placeholder="Search products..."
+                            className="w-full pl-10 pr-10 py-2 rounded-full border border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-800"
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            onFocus={() => setSearchActive(true)}
+                            onBlur={() => setTimeout(() => setSearchActive(false), 100)}
+                        />
+                        {searchQuery && (
+                            <AiOutlineClose
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-700 cursor-pointer"
+                                onClick={() => setSearchQuery('')}
                             />
-                            {searchQuery && (
-                                <AiOutlineClose
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-700 cursor-pointer font-bold"
-                                    onClick={() => setSearchQuery('')}
-                                />
-                            )}
-                        </div>
+                        )}
+
                         {/* Search Dropdown */}
                         {searchActive && searchQuery && (
                             <div className="absolute left-0 right-0 mt-2 z-20 bg-white shadow border border-gray-200">
@@ -432,19 +507,13 @@ export default function Shops({ params }) {
                                         <SearchResultSkeleton />
                                     </>
                                 ) : (
-                                    // Display up to 5 search results.
-                                    searchResults.slice(0, 5).map((product) => (
+                                    searchResults.slice(0, 5).map(product => (
                                         <Link
                                             key={product.id}
                                             href={`/${product?.seller_country?.toLowerCase() || 'gh'}/${product?.seo_slug || ''}`}
-                                            onMouseDown={(e) => {
-                                                // Prevent the input from blurring too quickly.
-                                                e.preventDefault();
-                                            }}
+                                            onMouseDown={e => e.preventDefault()}
                                         >
-                                            <span>
-                                                <SearchResultItem product={product} />
-                                            </span>
+                                            <SearchResultItem product={product} />
                                         </Link>
                                     ))
                                 )}
@@ -455,10 +524,11 @@ export default function Shops({ params }) {
                     {/* Products Grid */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                         {mainLoading
-                            ? [...Array(6)].map((_, index) => <ProductCardSkeleton key={index} />)
-                            : filteredProducts.map((product) => (
+                            ? [...Array(6)].map((_, idx) => <ProductCardSkeleton key={idx} />)
+                            : filteredProducts.map(product => (
                                 <ShopCard key={product.id} product={product} />
-                            ))}
+                            ))
+                        }
                     </div>
 
                     {/* Custom Pagination */}
