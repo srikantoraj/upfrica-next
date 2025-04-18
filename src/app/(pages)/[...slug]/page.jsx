@@ -60,9 +60,9 @@ export default async function ProductDetails({ params }) {
             <div className="container mx-auto">
                 <ProductDetailSection product={product} />
                 <RelatedProducts
-                productSlug={product?.slug}
-                productTitle={product?.title}
-               location={product?.seller_country || "Ghana"} // fallback to "Ghana" if not present
+                    productSlug={product?.slug}
+                    productTitle={product?.title}
+                    location={product?.seller_country || "Ghana"} // fallback to "Ghana" if not present
                />
             </div>
             <Footer />

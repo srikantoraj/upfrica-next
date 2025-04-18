@@ -84,9 +84,9 @@ const SearchBox = () => {
   };
 
   return (
-    <div className="relative w-full xl:w-[50vw] 2xl:w-[55vw]  flex items-center">
+    <div className="relative w-full xl:w-[50vw] 2xl:w-[55vw]  flex items-center md:ml-10">
       {/* Left search icon always visible */}
-      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none pt-2">
+      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
         <IoMdSearch className="h-7 w-7 text-purple-500" />
       </div>
       <input
@@ -99,7 +99,7 @@ const SearchBox = () => {
       />
 
       {/* Right X button appears when there is text */}
-      <div className="absolute inset-y-0 right-0 flex items-center pr-4 top-2">
+      <div className="absolute inset-y-0 right-0 flex items-center pr-4 ">
         {searchText && (
           <button onClick={clearSearch} className="text-gray-500 hover:text-gray-700 ">
             <IoMdClose className="h-7 w-7" />
