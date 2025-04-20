@@ -4,8 +4,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
 import { FaStar } from 'react-icons/fa';
 import { AiOutlineFilter, AiOutlineClose } from 'react-icons/ai';
-import PriceRange from './priceRange';
-import './PriceRange.css';
+// import PriceRange from './priceRange';
+// import './PriceRange.css';
 
 function FilterGroup({ title, children, defaultOpen = true }) {
     const [open, setOpen] = useState(defaultOpen);
@@ -158,9 +158,9 @@ export default function FilterPage() {
                 </FilterGroup>
 
                 {/* 4. Price Range */}
-                <FilterGroup title="Price Range">
+                {/* <FilterGroup title="Price Range">
                     <PriceRange />
-                </FilterGroup>
+                </FilterGroup> */}
 
                 {/* 5. Ratings */}
                 <FilterGroup title="Ratings">

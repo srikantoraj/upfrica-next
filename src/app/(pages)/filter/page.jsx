@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 
-// import Filter from './Filter';
+import Filter from './Filter';
 import ProductCard from '@/components/home/ProductList/ProductCard';
 import SearchBox from './SearchBox';
 
@@ -147,9 +147,9 @@ export default function FilterPage() {
         <div className={loading ? 'h-screen' : 'h-auto'}>
             <div className="grid lg:grid-cols-7 gap-10">
                 {/* sidebar filters */}
-                {/* <div className="col-span-2 hidden lg:block">
+                <div className="col-span-2 hidden lg:block">
                     <Filter />
-                </div> */}
+                </div>
 
                 {/* main content */}
                 <div className="col-span-5 p-4">
