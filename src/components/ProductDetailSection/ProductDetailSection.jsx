@@ -724,7 +724,7 @@ export default function ProductDetailSection({ product }) {
                         <Breadcrumbs categoryTree={category?.category_tree} title={title} />
 
                         <section className="mt-2">
-                            <ProductSlider images={mediaItems} />
+                            <ProductSlider mediaItems={mediaItems} />
                         </section>
 
                         {/* MOBILE CTA */}
