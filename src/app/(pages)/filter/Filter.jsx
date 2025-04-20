@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
 import { FaStar } from 'react-icons/fa';
 import { AiOutlineFilter, AiOutlineClose } from 'react-icons/ai';
-import PriceRange from './PriceRange';
+import PriceRange from './priceRange';
 import './PriceRange.css';
 
 function FilterGroup({ title, children, defaultOpen = true }) {
