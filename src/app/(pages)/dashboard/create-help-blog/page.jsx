@@ -1,5 +1,7 @@
 'use client';
 import React from 'react';
+import { Editor } from '@tinymce/tinymce-react';
+import { useRef } from 'react';
 import { Formik, FieldArray } from 'formik';
 import Link from 'next/link';
 import Script from 'next/script';
@@ -41,7 +43,7 @@ const validate = (values) => {
 };
 
 export default function CreateHelpBlogPage() {
-
+  const summaryEditorRef = useRef(null);
   const { token, user } = useSelector((state) => state.auth);
   return (
     <>
@@ -108,24 +110,42 @@ export default function CreateHelpBlogPage() {
               )}
             </div>
 
-            {/* Summary */}
-            <div>
-              <label className="block text-gray-700 font-bold mb-1">
-                Summary
-              </label>
-              <textarea
-                name="summary"
-                placeholder="Enter a short summary"
-                rows="2"
-                value={values.summary}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className="w-full border border-violet-700 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
-              />
-              {touched.summary && errors.summary && (
-                <div className="text-red-600 text-sm">{errors.summary}</div>
-              )}
-            </div>
+         
+              
+
+                         {/* Summary (TinyMCE) */}
+                         <div>
+                             <label className="block text-gray-700 font-bold mb-1">
+                                 Summary <span className="text-red-500">*</span>
+                               </label>
+                             <Editor
+                                apiKey="cly2l2971z9pgqhfjufgnqbl1h4nomfzmiqbjositk620gut"
+                                onInit={(evt, editor) => (summaryEditorRef.current = editor)}
+                                value={values.summary || ''}
+                                onEditorChange={(content) => {
+                                  setFieldValue('summary', content);
+                                 }}
+                                init={{
+                                height: 250,
+                                 menubar: false,
+                                 plugins: [
+                                   'advlist autolink lists link charmap preview anchor',
+                                   'searchreplace visualblocks code fullscreen',
+                                   'insertdatetime media table help wordcount',
+                                 ].join(' '),
+                                 toolbar:
+                                   'undo redo | formatselect | ' +
+                                   'bold italic underline forecolor | ' +
+                                   'alignleft aligncenter alignright alignjustify | ' +
+                                   'bullist numlist outdent indent | removeformat | help',
+                                 content_style:
+                                   'body {font - family:Helvetica,Arial,sans-serif; font-size:14px }',
+               }}
+            />
+                            {touched.summary && errors.summary && (
+                                 <div className="text-red-600 text-sm">{errors.summary}</div>
+                               )}
+                           </div>
 
             {/* Tags */}
             <div>
