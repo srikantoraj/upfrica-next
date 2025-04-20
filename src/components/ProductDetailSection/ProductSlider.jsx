@@ -7,26 +7,37 @@ import Modal from "react-modal";
 import { FaPlay } from "react-icons/fa";
 
 const ProductSlider = ({ mediaItems = [] }) => {
+  // Normalize: allow strings → images
+  const items = Array.isArray(mediaItems)
+    ? mediaItems.map(item =>
+      typeof item === "string"
+        ? { type: "image", src: item }
+        : item
+    )
+    : [];
+
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [zoomPosition, setZoomPosition] = useState(null);
-  const [bgGradient, setBgGradient] = useState(
-    "linear-gradient(to bottom, #1f1f1f, #000)"
-  );
+  const [zoomPos, setZoomPos] = useState(null);
+  const [bgGradient, setBgGradient] = useState("linear-gradient(to bottom, #1f1f1f, #000)");
   const containerRef = useRef(null);
 
-  const currentItem = mediaItems[selectedIndex];
+  if (items.length === 0) {
+    return <p className="text-center text-gray-500">No images available</p>;
+  }
 
-  const extractGradient = (src) => {
+  const current = items[selectedIndex];
+
+  // For images: extract average color for background gradient
+  useEffect(() => {
+    if (current.type !== "image") return;
     const img = new window.Image();
     img.crossOrigin = "anonymous";
-    img.src = src;
+    img.src = current.src;
     img.onload = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = 20;
-      canvas.height = 20;
+      canvas.width = 20; canvas.height = 20;
       const ctx = canvas.getContext("2d");
-      if (!ctx) return;
       ctx.drawImage(img, 0, 0, 20, 20);
       const data = ctx.getImageData(0, 0, 20, 20).data;
       let r = 0, g = 0, b = 0, count = 0;
@@ -42,75 +53,68 @@ const ProductSlider = ({ mediaItems = [] }) => {
         setBgGradient(`linear-gradient(to bottom, ${avg}, #000)`);
       }
     };
-  };
+  }, [current]);
 
-  useEffect(() => {
-    if (currentItem?.type === "image") {
-      extractGradient(currentItem.src);
-    }
-  }, [currentItem]);
-
-  const handleMouseMove = (e) => {
-    if (currentItem?.type !== "image" || !containerRef.current) return;
+  // Zoom handlers
+  const onMouseMove = e => {
+    if (current.type !== "image" || !containerRef.current) return;
     const { left, top, width, height } = containerRef.current.getBoundingClientRect();
     const x = Math.min(100, Math.max(0, ((e.clientX - left) / width) * 100));
     const y = Math.min(100, Math.max(0, ((e.clientY - top) / height) * 100));
-    setZoomPosition({ x, y });
+    setZoomPos({ x, y });
   };
-  const handleMouseLeave = () => setZoomPosition(null);
+  const onMouseLeave = () => setZoomPos(null);
 
+  // Modal controls
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
-  const next = () => setSelectedIndex(i => (i + 1) % mediaItems.length);
-  const prev = () => setSelectedIndex(i => (i - 1 + mediaItems.length) % mediaItems.length);
+  const next = () => setSelectedIndex(i => (i + 1) % items.length);
+  const prev = () => setSelectedIndex(i => (i - 1 + items.length) % items.length);
 
   return (
     <div className="space-y-4">
-      {/* Main media area: fixed 588×588 */}
+      {/* Main display (588×588) */}
       <div
         ref={containerRef}
-        className="relative border rounded-md p-0 cursor-zoom-in mx-auto overflow-hidden"
+        className="relative border rounded-md mx-auto overflow-hidden cursor-zoom-in"
         style={{
-          width: "588px",
-          height: "588px",
-          background: currentItem?.type === "image" ? bgGradient : "transparent",
-          transition: "background 0.3s ease-in-out",
+          width: 588,
+          height: 588,
+          background: current.type === "image" ? bgGradient : "transparent",
         }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
         onClick={openModal}
       >
-        {currentItem?.type === "video" ? (
+        {current.type === "video" ? (
           <video
             controls
-            src={currentItem.src}
+            src={current.src}
             className="w-full h-full object-contain rounded-md"
           />
         ) : (
           <>
             <Image
-              src={currentItem.src}
+              src={current.src}
               alt={`Slide ${selectedIndex + 1}`}
               width={588}
               height={588}
-              className="w-full h-full object-contain rounded-md"
+              className="object-contain rounded-md"
               priority
             />
-            {zoomPosition && (
+            {zoomPos && (
               <div
                 className="absolute pointer-events-none border-2 border-white rounded-full"
                 style={{
-                  width: "120px",
-                  height: "120px",
-                  left: `calc(${zoomPosition.x}% - 60px)`,
-                  top: `calc(${zoomPosition.y}% - 60px)`,
-                  backgroundImage: `url(${currentItem.src})`,
+                  width: 120,
+                  height: 120,
+                  left: `calc(${zoomPos.x}% - 60px)`,
+                  top: `calc(${zoomPos.y}% - 60px)`,
+                  backgroundImage: `url(${current.src})`,
                   backgroundSize: "900% 900%",
-                  backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
                   boxShadow: "0 0 10px rgba(255,255,255,0.5)",
                   transform: "scale(1.1)",
-                  transition: "transform 0.1s ease-out",
                 }}
               />
             )}
@@ -118,50 +122,65 @@ const ProductSlider = ({ mediaItems = [] }) => {
         )}
       </div>
 
-      {/* Thumbnails: fixed 60×60 */}
-      <div className="flex mt-2 justify-center space-x-2 h-[60px] overflow-x-auto">
-        {mediaItems.map((item, idx) => {
+      {/* Thumbnails (60×60) */}
+      <div className="flex justify-center space-x-2">
+        {items.map((item, idx) => {
           const isActive = idx === selectedIndex;
-          const borderClass = isActive
-            ? "border-2 border-green-500"
-            : "border border-gray-300";
-          return item.type === "video" ? (
-            <div
-              key={idx}
-              onClick={() => setSelectedIndex(idx)}
-              className={`relative w-[60px] h-[60px] rounded-md overflow-hidden cursor-pointer ${borderClass}`}
-            >
-              <video
-                src={item.src}
-                muted
-                preload="metadata"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <FaPlay className="text-white text-xl opacity-75" />
+          const border = isActive ? "border-2 border-green-500" : "border border-gray-300";
+
+          if (item.type === "video") {
+            // show thumbnail if provided, else video frame
+            const thumb = item.thumbnail;
+            return (
+              <div
+                key={idx}
+                onClick={() => setSelectedIndex(idx)}
+                className={`relative w-[60px] h-[60px] rounded-md overflow-hidden cursor-pointer ${border}`}
+              >
+                {thumb ? (
+                  <Image
+                    src={thumb}
+                    alt="Video thumbnail"
+                    width={60}
+                    height={60}
+                    className="object-cover"
+                  />
+                ) : (
+                  <video
+                    src={item.src}
+                    muted
+                    preload="metadata"
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <FaPlay className="text-white text-xl opacity-75" />
+                </div>
               </div>
-            </div>
-          ) : (
+            );
+          }
+
+          return (
             <Image
               key={idx}
               src={item.src}
               alt={`Thumb ${idx + 1}`}
               width={60}
               height={60}
-              className={`rounded-md object-cover cursor-pointer ${borderClass}`}
+              className={`object-cover rounded-md cursor-pointer ${border}`}
               onClick={() => setSelectedIndex(idx)}
             />
           );
         })}
       </div>
 
-      {/* Lightbox modal */}
+      {/* Lightbox */}
       <Modal
         isOpen={isModalOpen}
         onRequestClose={closeModal}
-        contentLabel="Product Media Lightbox"
+        contentLabel="Media Lightbox"
         className="fixed inset-0 flex items-center justify-center z-50"
-        overlayClassName="fixed inset-0 backdrop-blur-md bg-black/30"
+        overlayClassName="fixed inset-0 bg-black/30 backdrop-blur-md"
         ariaHideApp={false}
       >
         <div className="relative flex items-center justify-center w-full h-full">
@@ -178,15 +197,15 @@ const ProductSlider = ({ mediaItems = [] }) => {
             ◀
           </button>
           <div className="flex-grow flex items-center justify-center">
-            {currentItem?.type === "video" ? (
+            {current.type === "video" ? (
               <video
                 controls
-                src={currentItem.src}
+                src={current.src}
                 className="max-w-[90vw] max-h-[90vh] object-contain rounded-md"
               />
             ) : (
               <Image
-                src={currentItem.src}
+                src={current.src}
                 alt={`Slide ${selectedIndex + 1}`}
                 width={1200}
                 height={900}
