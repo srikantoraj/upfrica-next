@@ -1,7 +1,7 @@
 
 
 "use client"
-import AmazonLeftFilter from '@/components/priceFiter/AmazonLeftFilter';
+import AmazonLeftFilter from '@/components/priceFiter/LeftFilter';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
@@ -29,7 +29,7 @@ const DetelsCategories = () => {
   const { slug } = useParams();
   const [categoryData, setCategoryData] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
 
   useEffect(() => {
     if (slug) {

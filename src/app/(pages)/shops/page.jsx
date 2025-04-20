@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { AiOutlineSearch, AiOutlineClose } from 'react-icons/ai'
 import { FaArrowRight } from 'react-icons/fa'
 
@@ -32,14 +33,12 @@ function SearchResultItem({ shop }) {
                     N/A
                 </div>
             )}
-
             <div className="ml-4 flex-1 overflow-hidden">
                 <p className="text-sm font-medium text-gray-900 truncate">
                     {shop.name}
                 </p>
                 <p
                     className="text-xs text-gray-500 truncate"
-                    // if description is HTML, renders it; otherwise shows the dash
                     dangerouslySetInnerHTML={{ __html: shop.description || '—' }}
                 />
             </div>
@@ -47,11 +46,14 @@ function SearchResultItem({ shop }) {
     )
 }
 
-
 export default function ShopGrid() {
+    const router = useRouter()
+
     // — Grid state
     const [shops, setShops] = useState([])
     const [loadingShops, setLoadingShops] = useState(true)
+    // track which shop button was clicked
+    const [loadingShopId, setLoadingShopId] = useState(null)
 
     // — Search state
     const [searchQuery, setSearchQuery] = useState('')
@@ -116,6 +118,12 @@ export default function ShopGrid() {
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
+    // Handler for Visit Shop click
+    const handleVisitShop = (slug, id) => {
+        setLoadingShopId(id)
+        router.push(`/shops/${slug}`)
+    }
+
     // Grid skeletons
     const renderGridSkeletons = () =>
         Array.from({ length: 6 }).map((_, i) => (
@@ -129,7 +137,7 @@ export default function ShopGrid() {
         ))
 
     return (
-        <div className="px-4">
+        <div className="px-4 container mx-auto">
             {/* — Search Box — */}
             <div
                 ref={containerRef}
@@ -182,16 +190,14 @@ export default function ShopGrid() {
                 <p className="text-gray-600 mb-1">
                     Variety of Shops in Ghana, Nigeria and more at low prices.
                 </p>
-                <Link
-                    href="/products/new"
-                    className="text-gray-600">
+                <Link href="/products/new" className="text-gray-600">
                     Have something to sell?{' '}
                     <span className="font-bold underline">Sell on Upfrica</span>
                 </Link>
             </div>
 
             {/* — Shop Grid — */}
-            <div className="mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {loadingShops
                     ? renderGridSkeletons()
                     : shops.map((shop) => (
@@ -218,11 +224,23 @@ export default function ShopGrid() {
                                 <h2 className="text-2xl font-bold text-gray-900 truncate">
                                     {shop.name}
                                 </h2>
-                                <Link href={`/shops/${shop.slug}`}>
-                                    <button className="mt-4 bg-black text-white font-bold py-2 px-5 rounded-lg flex items-center gap-2">
-                                        Visit Shop <FaArrowRight />
-                                    </button>
-                                </Link>
+                                <button
+                                    onClick={() => handleVisitShop(shop.slug, shop.id)}
+                                    disabled={loadingShopId === shop.id}
+                                    className="mt-4 bg-black text-white font-bold py-2 px-5 rounded-lg flex items-center gap-2"
+                                >
+                                    {loadingShopId === shop.id ? (
+                                        <div className="flex space-x-2 justify-center items-center h-6">
+                                            <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                            <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                            <div className="h-2 w-2 bg-white rounded-full animate-bounce" />
+                                        </div>
+                                    ) : (
+                                        <>
+                                            Visit Shop <FaArrowRight />
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         </div>
                     ))}

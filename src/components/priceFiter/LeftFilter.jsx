@@ -34,7 +34,7 @@ function FilterGroup({ title, children, defaultOpen = true }) {
   );
 }
 
-function AmazonLeftFilter() {
+function LeftFilter() {
   return (
     <aside
       className="
@@ -194,4 +194,4 @@ function AmazonLeftFilter() {
   );
 }
 
-export default AmazonLeftFilter;
+export default LeftFilter;
