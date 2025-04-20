@@ -12,9 +12,9 @@ const Categore = ({formik}) => {
         <h2 className="text-2xl font-bold mb-2">*Category</h2>
 
         <hr className="border-gray-300 mb-4" />
-        <div className="relative flex items-center justify-between border rounded-md group focus-within:border-purple-500">
+        <div className="relative flex items-center justify-between border rounded-md  rounded-l-lg border-purple-500 bg-purple-500 ">
           <InputField
-            className="w-full border-none focus:outline-none focus:ring-0 py-2 ps-3 hover:cursor-pointer"
+            className="w-full focus:outline-none focus:ring-0  py-2 ps-3 hover:cursor-pointer"
             type="text"
             placeholder="Search Upfrica BD"
             value={formik?.values?.category_name} // Formik value
@@ -29,7 +29,7 @@ const Categore = ({formik}) => {
           />
           <button
             type="button"
-            className="bg-purple-500 text-white h-[45px] px-6 rounded-tr-md rounded-br-md"
+            className=" text-white h-full  px-6 "
           >
             More
           </button>

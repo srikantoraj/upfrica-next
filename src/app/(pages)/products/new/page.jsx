@@ -10,6 +10,11 @@ import Conditon from "@/components/inpute/Conditon";
 import Photo from "@/components/inpute/Photo";
 import Brand from "@/components/inpute/Brand";
 import { useSelector } from "react-redux";
+import PriceSection from "@/components/inpute/PriceSection";
+import Promotions from "@/components/inpute/Promotions";
+import DeliverySection from "@/components/inpute/DeliverySection";
+import CancellationReturns from "@/components/inpute/CancellationReturns";
+import ApprovalNotesSelect from "@/components/inpute/ApprovalNotesSelect";
 
 const AddNewProducts = () => {
   // Get user information and token from Redux store
@@ -57,7 +62,7 @@ const AddNewProducts = () => {
     },
 
     onSubmit: async (values) => {
-     
+
       const formData = new FormData();
 
       // Append primary product fields
@@ -117,7 +122,7 @@ const AddNewProducts = () => {
           "https://media.upfrica.com/api/product/create/",
           requestOptions
         );
-        const result = await response.text();
+        const result = await response.json();
         console.log("API Result:", result);
       } catch (error) {
         console.error("Error:", error);
@@ -129,7 +134,7 @@ const AddNewProducts = () => {
     <div className="flex justify-center pt-5 md:pt-20 bg-slate-50 px-2 md:px-4">
       <form
         onSubmit={formik.handleSubmit}
-        className="w-full lg:w-3/5 2xl:w-1/2 py-5"
+        className="w-full lg:max-w-3xl py-5"
       >
         <div className="text-center space-y-4 py-5">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-wide">
@@ -516,6 +521,11 @@ const AddNewProducts = () => {
           {/* Photo component handles image selection and lifts the list via onImagesSelect */}
           <Photo onImagesSelect={setSelectedImages} />
         </div>
+        <PriceSection formik={formik} />
+        <Promotions formik={formik} />
+        <DeliverySection formik={formik} />
+        <CancellationReturns formik={formik} />
+        <ApprovalNotesSelect formik={formik} />
 
         <div className="flex justify-between text-xl font-bold p-4">
           <button
@@ -532,3 +542,230 @@ const AddNewProducts = () => {
 };
 
 export default AddNewProducts;
+
+
+// "use client";
+// import React, { useState } from "react";
+// import { FaMinus, FaPencilAlt, FaPlus } from "react-icons/fa";
+// import { IoMdNotifications } from "react-icons/io";
+// import { useFormik } from "formik";
+// import { useSelector } from "react-redux";
+
+// // Custom components
+// import Title from "@/components/inpute/Title";
+// import Description from "@/components/inpute/Description";
+// import Categore from "@/components/inpute/Categore";
+// import Conditon from "@/components/inpute/Conditon";
+// import Photo from "@/components/inpute/Photo";
+// import Brand from "@/components/inpute/Brand";
+
+// const AddNewProducts = () => {
+//   const { user, token } = useSelector((state) => state.auth);
+//   const [isOpen, setIsOpen] = useState(false);
+//   const [selectedImages, setSelectedImages] = useState([]);
+
+//   const toggleForm = (e) => {
+//     e.preventDefault();
+//     setIsOpen(!isOpen);
+//   };
+
+//   const formik = useFormik({
+//     initialValues: {
+//       title: "",
+//       description: "",
+//       product_quantity: 1,
+//       price_cents: "5000",
+//       sale_price_cents: 0,
+//       postage_fee_cents: 0,
+//       secondary_postage_fee_cents: 0,
+//       price_currency: "USD",
+//       status: "",
+//       brand: "", // ✅ Added brand
+//       condition_id: "",
+//       condition_name: "",
+//       supplierLink: "",
+//       backupSupplier: "",
+//       supplerName: "",
+//       supplerNumber: "",
+//       productPrice: "",
+//       vPrice: "",
+//       Vshipping: "",
+//       L: "",
+//       W: "",
+//       H: "",
+//       CBM: "",
+//       rate: "",
+//       cmb: "",
+//       shoppingCost: "",
+//       productCost: "",
+//       totalCost: "",
+//     },
+
+//     onSubmit: async (values) => {
+//       console.log("Submitting form with values:", values);
+
+//       const formData = new FormData();
+//       formData.append("title", values.title);
+//       formData.append("price_cents", values.price_cents);
+//       formData.append("price_currency", values.price_currency);
+//       formData.append("user_id", user?.user?.id);
+//       formData.append("brand", values.brand);
+//       formData.append("condition_id", values.condition_id);
+
+//       formData.append("supplierLink", values.supplierLink);
+//       formData.append("backupSupplier", values.backupSupplier);
+//       formData.append("supplerName", values.supplerName);
+//       formData.append("supplerNumber", values.supplerNumber);
+//       formData.append("productPrice", values.productPrice);
+//       formData.append("vPrice", values.vPrice);
+//       formData.append("Vshipping", values.Vshipping);
+//       formData.append("L", values.L);
+//       formData.append("W", values.W);
+//       formData.append("H", values.H);
+//       formData.append("CBM", values.CBM);
+//       formData.append("rate", values.rate);
+//       formData.append("cmb", values.cmb);
+//       formData.append("shoppingCost", values.shoppingCost);
+//       formData.append("productCost", values.productCost);
+//       formData.append("totalCost", values.totalCost);
+
+//       // Images
+//       if (selectedImages?.[0]?.file) {
+//         formData.append("images", selectedImages[0].file, "image1.png");
+//       }
+//       if (selectedImages?.[1]?.file) {
+//         formData.append("images", selectedImages[1].file, "image2.png");
+//       }
+
+//       const headers = new Headers();
+//       headers.append("Authorization", `Token ${token}`);
+
+//       try {
+//         const response = await fetch(
+//           "https://media.upfrica.com/api/product/create/",
+//           {
+//             method: "POST",
+//             headers: headers,
+//             body: formData,
+//           }
+//         );
+
+//         const result = await response.json(); // ✅ Better parsing
+//         console.log("API Response:", result);
+//       } catch (error) {
+//         console.error("Form submission error:", error);
+//       }
+//     },
+//   });
+
+//   return (
+//     <div className="flex justify-center pt-5 md:pt-20 bg-slate-50 px-2 md:px-4">
+//       <form
+//         onSubmit={formik.handleSubmit}
+//         className="w-full lg:max-w-3xl py-5"
+//       >
+//         {/* Title Header */}
+//         <div className="text-center space-y-4 py-5">
+//           <h1 className="text-4xl font-bold tracking-wide">Add New Listing</h1>
+//           <p className="flex items-center justify-center space-x-2 text-[#0063d1]">
+//             <span>Your location: Dhaka, Bangladesh</span>
+//             <FaPencilAlt />
+//           </p>
+//         </div>
+
+//         {/* Admin Panel: Homepage positions */}
+//         <div className="p-4 bg-white shadow-md rounded-xl mb-4">
+//           <h2 className="text-2xl font-bold mb-4">Homepage Positions (Admin)</h2>
+//           <hr className="py-2" />
+//           <div className="space-y-2 font-bold">
+//             {[1, 2, 3, 4, 5].map((pos) => (
+//               <label key={pos} className="flex items-center space-x-2">
+//                 <input type="checkbox" />
+//                 <span>Add to position {pos}</span>
+//               </label>
+//             ))}
+//           </div>
+//         </div>
+
+//         {/* Admin Inputs (Expandable Section) */}
+//         <div className="p-4 bg-white shadow-md rounded-xl mb-4">
+//           <div className="flex items-center justify-between text-base font-bold">
+//             <div className="flex items-center space-x-2">
+//               <IoMdNotifications />
+//               <span>Admin Inputs</span>
+//             </div>
+//             <button onClick={toggleForm}>
+//               {isOpen ? <FaMinus /> : <FaPlus />}
+//             </button>
+//           </div>
+//           {isOpen && (
+//             <div className="pt-4 space-y-4">
+//               {/* Supplier Info Inputs */}
+//               {[
+//                 { id: "supplierLink", label: "Supplier Link or GPS*" },
+//                 { id: "backupSupplier", label: "Backup Supplier Link" },
+//                 { id: "supplerName", label: "Supplier Name" },
+//                 { id: "supplerNumber", label: "Supplier Phone Number" },
+//               ].map((field) => (
+//                 <div key={field.id}>
+//                   <label className="block font-bold mb-2">{field.label}</label>
+//                   <input
+//                     id={field.id}
+//                     name={field.id}
+//                     type="text"
+//                     onChange={formik.handleChange}
+//                     value={formik.values[field.id]}
+//                     className="w-full px-3 py-2 border rounded-md"
+//                   />
+//                 </div>
+//               ))}
+
+//               {/* Example numeric inputs */}
+//               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+//                 {["vPrice", "Vshipping", "L", "W", "H", "CBM", "rate"].map(
+//                   (field) => (
+//                     <input
+//                       key={field}
+//                       id={field}
+//                       name={field}
+//                       placeholder={field}
+//                       onChange={formik.handleChange}
+//                       value={formik.values[field]}
+//                       className="w-full px-3 py-2 border rounded-md"
+//                     />
+//                   )
+//                 )}
+//               </div>
+//             </div>
+//           )}
+//         </div>
+
+//         {/* Main Product Details Section */}
+//         <div className="my-4 bg-white shadow-md rounded-md p-4 space-y-4">
+//           <Title formik={formik} />
+//           <Description formik={formik} />
+//           <Categore formik={formik} />
+//           <Conditon formik={formik} />
+//           <Brand formik={formik} />
+//           <Photo onImagesSelect={setSelectedImages} />
+//         </div>
+
+//         {/* Submit Button */}
+//         <div className="flex justify-between text-xl font-bold p-4">
+//           <button
+//             type="submit"
+//             className="bg-purple-500 text-white px-4 py-2 rounded-md"
+//           >
+//             Save and continue
+//           </button>
+//           <button type="button" className="text-gray-600">
+//             Cancel
+//           </button>
+//         </div>
+//       </form>
+//     </div>
+//   );
+// };
+
+// export default AddNewProducts;
+

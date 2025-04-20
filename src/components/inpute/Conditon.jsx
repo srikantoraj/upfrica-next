@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { MdOutlineArrowDropDown, MdOutlineArrowDropUp } from "react-icons/md";
 import useCategories from "../api/data";
+import { RiArrowDropDownLine } from "react-icons/ri";
+import { IoIosArrowDown } from "react-icons/io";
 
 const Conditon = ({ formik }) => {
     const { conditions, loading, error } = useCategories();
@@ -31,8 +33,8 @@ const Conditon = ({ formik }) => {
                 Use keywords people would search for when looking for your item.
                 Include details such as colour, size, brand, and model.
             </p>
-            <hr className="border-gray-300 mb-4" />
-            <div className="relative flex items-center">
+            {/* <hr className="border-gray-300 mb-4" /> */}
+            {/* <div className="relative flex items-center border">
                 <input
                     id="condition_name"
                     name="condition_name"
@@ -41,7 +43,7 @@ const Conditon = ({ formik }) => {
                     value={formik.values.condition_name || ""}
                     readOnly
                     onClick={() => setDropdownOpen((prev) => !prev)}
-                    className="w-full border rounded-md py-2 px-3 cursor-pointer"
+                    className="w-full border-none py-2 px-3 cursor-pointer"
                 />
                 <button
                     type="button"
@@ -54,32 +56,86 @@ const Conditon = ({ formik }) => {
                         <MdOutlineArrowDropDown size={24} />
                     )}
                 </button>
-            </div>
-            {dropdownOpen && (
-                <div className="absolute z-10 w-full bg-white border mt-1 rounded shadow">
-                    {loading ? (
-                        <div className="p-3 text-gray-500">Loading...</div>
-                    ) : error ? (
-                        <div className="p-3 text-red-500">{error}</div>
+
+                {dropdownOpen && (
+                    <div className="absolute z-10 w-full bg-white border mt-1 rounded shadow">
+                        {loading ? (
+                            <div className="p-3 text-gray-500">Loading...</div>
+                        ) : error ? (
+                            <div className="p-3 text-red-500">{error}</div>
+                        ) : (
+                            <ul>
+                                {conditions && conditions.length > 0 ? (
+                                    conditions.map((condition) => (
+                                        <li
+                                            key={condition.id}
+                                            onClick={() => handleSelectCondition(condition)}
+                                            className="px-3 py-2 hover:bg-gray-200 cursor-pointer"
+                                        >
+                                            {condition.name}
+                                        </li>
+                                    ))
+                                ) : (
+                                    <li className="p-3 text-gray-500">No conditions found</li>
+                                )}
+                            </ul>
+                        )}
+                    </div>
+                )}
+
+            </div> */}
+
+            <div className="relative flex items-center border rounded-lg border-purple-500 px-2">
+                <input
+                    id="condition_name"
+                    name="condition_name"
+                    type="text"
+                    placeholder="Select Condition"
+                    value={formik.values.condition_name || ""}
+                    readOnly
+                    onClick={() => setDropdownOpen((prev) => !prev)}
+                    className="w-full border-none focus:ring-0 px-3 cursor-pointer"
+                />
+                <button
+                    type="button"
+                    onClick={() => setDropdownOpen((prev) => !prev)}
+                    className="ml-2 focus:outline-none"
+                >
+                    {dropdownOpen ? (
+                        <IoIosArrowDown className="w-5 h-5" />
                     ) : (
-                        <ul>
-                            {conditions && conditions.length > 0 ? (
-                                conditions.map((condition) => (
-                                    <li
-                                        key={condition.id}
-                                        onClick={() => handleSelectCondition(condition)}
-                                        className="px-3 py-2 hover:bg-gray-200 cursor-pointer"
-                                    >
-                                        {condition.name}
-                                    </li>
-                                ))
-                            ) : (
-                                <li className="p-3 text-gray-500">No conditions found</li>
-                            )}
-                        </ul>
+                        <IoIosArrowDown className="w-5 h-5" />
                     )}
-                </div>
-            )}
+                </button>
+
+                {dropdownOpen && (
+                    <div className="absolute top-full left-0 z-10 w-full bg-white border mt-1 rounded shadow max-h-60 overflow-y-auto">
+                        {loading ? (
+                            <div className="p-3 text-gray-500">Loading...</div>
+                        ) : error ? (
+                            <div className="p-3 text-red-500">{error}</div>
+                        ) : (
+                            <ul>
+                                {conditions && conditions.length > 0 ? (
+                                    conditions.map((condition) => (
+                                        <li
+                                            key={condition.id}
+                                            onClick={() => handleSelectCondition(condition)}
+                                            className="px-3 py-2 hover:bg-gray-200 cursor-pointer"
+                                        >
+                                            {condition.name}
+                                        </li>
+                                    ))
+                                ) : (
+                                    <li className="p-3 text-gray-500">No conditions found</li>
+                                )}
+                            </ul>
+                        )}
+                    </div>
+                )}
+            </div>
+
+
         </div>
     );
 };
