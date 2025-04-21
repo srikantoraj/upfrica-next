@@ -17,7 +17,7 @@ const Description = ({ formik }) => {
 
       <Editor
         name="description"
-        apiKey="wlfjcowajns1o44b16c3vyk0lmxnctw5pehcbmo9070i2f4x"
+        apiKey="cly2l2971z9pgqhfjufgnqbl1h4nomfzmiqbjositk620gut"
         value={formik.values.description || ""} // Initial value সঠিকভাবে সেট করুন
         onEditorChange={(content) => {
           console.log(content)

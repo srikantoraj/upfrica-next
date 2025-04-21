@@ -1,197 +1,462 @@
-import React, { useState } from 'react';
+
+// 'use client';
+
+// import React, { useState, useEffect } from 'react';
+// import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+// import DateSelector from './DateSelector';
+
+// export default function Promotions({ formik }) {
+//     // collapse state mirrors the formik “yes”/“no” flags:
+//     const [salesOpen, setSalesOpen] = useState(formik.values.on_sales === 'yes');
+//     const [multiBuyOpen, setMultiBuyOpen] = useState(
+//         formik.values.multi_buy === 'yes'
+//     );
+
+//     // keep collapse panels in sync if parent formik.initialValues come in “yes”
+//     useEffect(() => {
+//         setSalesOpen(formik.values.on_sales === 'yes');
+//     }, [formik.values.on_sales]);
+
+//     useEffect(() => {
+//         setMultiBuyOpen(formik.values.multi_buy === 'yes');
+//     }, [formik.values.multi_buy]);
+
+//     const handleAddTier = () =>
+//         formik.setFieldValue('multi_buy_tiers', [
+//             ...formik.values.multi_buy_tiers,
+//             { min_quantity: '', price_each: '' },
+//         ]);
+
+//     const handleRemoveTier = idx => {
+//         const updated = [...formik.values.multi_buy_tiers];
+//         updated.splice(idx, 1);
+//         formik.setFieldValue('multi_buy_tiers', updated);
+//     };
+
+//     return (
+//         <div className="bg-white shadow-md rounded-md mb-4">
+//             <div className="border-b p-4">
+//                 <h5 className="text-lg font-semibold mb-0">
+//                     Promotions (On Sale & Multi‑Buy)
+//                 </h5>
+//             </div>
+
+//             <div className="p-4 space-y-4">
+//                 {/* ===== Sales Section ===== */}
+//                 <div className="border rounded-md">
+//                     <div className="flex items-center justify-between px-4 py-2">
+//                         <label className="flex items-center cursor-pointer">
+//                             <input
+//                                 type="checkbox"
+//                                 name="on_sales"
+//                                 checked={formik.values.on_sales === 'yes'}
+//                                 onChange={e => {
+//                                     const yes = e.target.checked ? 'yes' : 'no';
+//                                     formik.setFieldValue('on_sales', yes);
+//                                 }}
+//                                 className="form-checkbox w-5 h-5 text-violet-700 mr-2 rounded"
+//                             />
+//                             <span className="text-lg font-semibold">Sales</span>
+//                         </label>
+//                         <button
+//                             type="button"
+//                             disabled={formik.values.on_sales !== 'yes'}
+//                             onClick={() =>
+//                                 formik.values.on_sales === 'yes' && setSalesOpen(!salesOpen)
+//                             }
+//                             className={`flex items-center ${formik.values.on_sales === 'yes'
+//                                     ? ''
+//                                     : 'opacity-50 cursor-not-allowed'
+//                                 }`}
+//                         >
+//                             {salesOpen ? <FaChevronUp /> : <FaChevronDown />}
+//                         </button>
+//                     </div>
+
+//                     {formik.values.on_sales === 'yes' && salesOpen && (
+//                         <div className="p-4 text-sm text-gray-700">
+//                             <p className="text-center mb-3">
+//                                 Reduce the item price for a period of time.
+//                             </p>
+//                             <hr className="my-2" />
+
+//                             <div className="mb-4">
+//                                 <label className="block mb-1 font-medium">
+//                                     Sales Price{' '}
+//                                     <span className="text-red-600 text-xs">
+//                                         (numbers only &amp; must be less than the item price above)
+//                                     </span>
+//                                 </label>
+//                                 <input
+//                                     type="text"
+//                                     name="sale_price_cents"
+//                                     value={formik.values.sale_price_cents}
+//                                     onChange={formik.handleChange}
+//                                     placeholder="Enter value"
+//                                     className="w-full border px-3 py-2 rounded-md"
+//                                 />
+//                             </div>
+
+//                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//                                 <div>
+//                                     <label className="block mb-1 font-medium">
+//                                         Sales start date
+//                                     </label>
+//                                     <DateSelector name="sale_start_date" formik={formik} />
+//                                 </div>
+//                                 <div>
+//                                     <label className="block mb-1 font-medium">
+//                                         Sales end date
+//                                     </label>
+//                                     <DateSelector name="sale_end_date" formik={formik} />
+//                                 </div>
+//                             </div>
+//                         </div>
+//                     )}
+//                 </div>
+
+//                 <hr className="border-t-2 border-gray-300" />
+
+//                 {/* ===== Multi‑Buy Section ===== */}
+//                 <div className="border rounded-md">
+//                     <div className="flex items-center justify-between px-4 py-2">
+//                         <label className="flex items-center cursor-pointer">
+//                             <input
+//                                 type="checkbox"
+//                                 name="multi_buy"
+//                                 checked={formik.values.multi_buy === 'yes'}
+//                                 onChange={e => {
+//                                     const yes = e.target.checked ? 'yes' : 'no';
+//                                     formik.setFieldValue('multi_buy', yes);
+//                                 }}
+//                                 className="form-checkbox w-5 h-5 text-violet-700 mr-2 rounded"
+//                             />
+//                             <span className="text-lg font-semibold">Multi‑Buy</span>
+//                         </label>
+//                         <button
+//                             type="button"
+//                             disabled={formik.values.multi_buy !== 'yes'}
+//                             onClick={() =>
+//                                 formik.values.multi_buy === 'yes' &&
+//                                 setMultiBuyOpen(!multiBuyOpen)
+//                             }
+//                             className={`flex items-center ${formik.values.multi_buy === 'yes'
+//                                     ? ''
+//                                     : 'opacity-50 cursor-not-allowed'
+//                                 }`}
+//                         >
+//                             {multiBuyOpen ? <FaChevronUp /> : <FaChevronDown />}
+//                         </button>
+//                     </div>
+
+//                     {formik.values.multi_buy === 'yes' && multiBuyOpen && (
+//                         <div className="p-4 text-sm text-gray-700">
+//                             <p className="text-center mb-3">
+//                                 Offer a discount when buyers purchase more than one item.
+//                             </p>
+//                             <hr className="my-2" />
+
+//                             {formik.values.multi_buy_tiers.map((tier, idx) => (
+//                                 <div
+//                                     key={idx}
+//                                     className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end"
+//                                 >
+//                                     <div>
+//                                         <label className="block mb-1 font-medium">
+//                                             Min Quantity
+//                                         </label>
+//                                         <input
+//                                             type="number"
+//                                             name={`multi_buy_tiers[${idx}].min_quantity`}
+//                                             min="1"
+//                                             placeholder="e.g. 2"
+//                                             value={tier.min_quantity}
+//                                             onChange={formik.handleChange}
+//                                             className="w-full border px-3 py-2 rounded-md"
+//                                         />
+//                                     </div>
+
+//                                     <div>
+//                                         <label className="block mb-1 font-medium">
+//                                             Price Each{' '}
+//                                             <span className="text-red-600 text-xs">
+//                                                 (must be less than standard price)
+//                                             </span>
+//                                         </label>
+//                                         <input
+//                                             type="text"
+//                                             name={`multi_buy_tiers[${idx}].price_each`}
+//                                             placeholder="e.g. 9.99"
+//                                             value={tier.price_each}
+//                                             onChange={formik.handleChange}
+//                                             className="w-full border px-3 py-2 rounded-md"
+//                                         />
+//                                     </div>
+
+//                                     <div className="flex space-x-2">
+//                                         <button
+//                                             type="button"
+//                                             onClick={() => handleRemoveTier(idx)}
+//                                             className="px-3 py-2 border rounded-md hover:bg-gray-100"
+//                                         >
+//                                             Remove
+//                                         </button>
+//                                         <button
+//                                             type="button"
+//                                             onClick={handleAddTier}
+//                                             className="px-3 py-2 border rounded-md hover:bg-gray-100"
+//                                         >
+//                                             Add Tier
+//                                         </button>
+//                                     </div>
+//                                 </div>
+//                             ))}
+
+//                             {formik.values.multi_buy_tiers.length === 0 && (
+//                                 <button
+//                                     type="button"
+//                                     onClick={handleAddTier}
+//                                     className="px-4 py-2 bg-violet-700 text-white rounded-md"
+//                                 >
+//                                     Add First Tier
+//                                 </button>
+//                             )}
+//                         </div>
+//                     )}
+//                 </div>
+//             </div>
+//         </div>
+//     );
+// }
+
+
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import DateSelector from './DateSelector';
 
-export default function Promotions() {
-    const [promotionsOpen, setPromotionsOpen] = useState(true);
-    const [salesOpen, setSalesOpen] = useState(false);
-    const [multiBuyOpen, setMultiBuyOpen] = useState(false);
-    const [salesActive, setSalesActive] = useState('yes');
-    const [salePrice, setSalePrice] = useState('329.00');
-    const [multiBuyActive, setMultiBuyActive] = useState(false);
-    const [wholesalePrice, setWholesalePrice] = useState('0.00');
-    const [minOrderQty, setMinOrderQty] = useState(1);
+export default function Promotions({ formik }) {
+    // collapse state mirrors the formik “yes”/“no” flags:
+    const [salesOpen, setSalesOpen] = useState(formik.values.on_sales === 'yes');
+    const [multiBuyOpen, setMultiBuyOpen] = useState(
+        formik.values.multi_buy === 'yes'
+    );
+
+    // keep collapse panels in sync if parent formik.initialValues come in “yes”
+    useEffect(() => {
+        setSalesOpen(formik.values.on_sales === 'yes');
+    }, [formik.values.on_sales]);
+
+    useEffect(() => {
+        setMultiBuyOpen(formik.values.multi_buy === 'yes');
+    }, [formik.values.multi_buy]);
+
+    const handleAddTier = () =>
+        formik.setFieldValue('multi_buy_tiers', [
+            ...formik.values.multi_buy_tiers,
+            { min_quantity: '', price_each: '' },
+        ]);
+
+    const handleRemoveTier = idx => {
+        const updated = [...formik.values.multi_buy_tiers];
+        updated.splice(idx, 1);
+        formik.setFieldValue('multi_buy_tiers', updated);
+    };
 
     return (
-        <>
-            {/* <DateSelector /> */}
-            <div className="bg-white shadow-md rounded-md mb-4">
-                {/* Header */}
-                <div className="border-b p-4">
-                    <h5 className="text-lg font-semibold mb-0">Promotions</h5>
-                </div>
+        <div className="bg-white shadow-md rounded-md mb-4">
+            <div className="border-b p-4">
+                <h5 className="text-lg font-semibold mb-0">
+                    Promotions (On Sale & Multi‑Buy)
+                </h5>
+            </div>
 
-                <div className="p-4">
-                    {/* Toggle Promotions */}
-                    <div className="flex items-center mb-4">
+            <div className="p-4 space-y-4">
+                {/* ===== Sales Section ===== */}
+                <div className="border rounded-md">
+                    <div className="flex items-center justify-between px-4 py-2">
                         <label className="flex items-center cursor-pointer">
                             <input
                                 type="checkbox"
-                                checked={promotionsOpen}
-                                onChange={() => setPromotionsOpen(!promotionsOpen)}
-                                className="form-checkbox w-5 h-5 text-purple-600 mr-2"
+                                name="on_sales"
+                                checked={formik.values.on_sales === 'yes'}
+                                onChange={e => {
+                                    const yes = e.target.checked ? 'yes' : 'no';
+                                    formik.setFieldValue('on_sales', yes);
+                                }}
+                                className="form-checkbox w-5 h-5 text-violet-700 mr-2 rounded"
                             />
-                            <span className="text-sm font-medium">
-                                {promotionsOpen ? 'Opened' : 'Closed'}
-                            </span>
+                            <span className="text-lg font-semibold">Sales</span>
                         </label>
+                        <button
+                            type="button"
+                            disabled={formik.values.on_sales !== 'yes'}
+                            onClick={() =>
+                                formik.values.on_sales === 'yes' && setSalesOpen(!salesOpen)
+                            }
+                            className={`flex items-center ${formik.values.on_sales === 'yes'
+                                    ? ''
+                                    : 'opacity-50 cursor-not-allowed'
+                                }`}
+                        >
+                            {salesOpen ? <FaChevronUp /> : <FaChevronDown />}
+                        </button>
                     </div>
 
-                    {promotionsOpen && (
-                        <div>
-                          
-                            <div className="space-y-4">
-                                {/* Sales Accordion */}
+                    {formik.values.on_sales === 'yes' && salesOpen && (
+                        <div className="p-4 text-sm text-gray-700">
+                            <p className="text-center mb-3">
+                                Reduce the item price for a period of time.
+                            </p>
+                            <hr className="my-2" />
+
+                            <div className="mb-4">
+                                <label className="block mb-1 font-medium">
+                                    Sales Price{' '}
+                                    <span className="text-red-600 text-xs">
+                                        (numbers only &amp; must be less than the item price above)
+                                    </span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="sale_price_cents"
+                                    value={formik.values.sale_price_cents}
+                                    onChange={formik.handleChange}
+                                    placeholder="Enter value"
+                                    className="w-full border px-3 py-2 rounded-md"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <button
-                                        className="w-full flex justify-between items-center text-lg font-semibold  px-4 py-2 rounded-md"
-                                        onClick={() => setSalesOpen(!salesOpen)}
-                                    >
-                                        <span>Sales</span>
-                                        {salesOpen ? <FaChevronUp className="text-gray-600" /> : <FaChevronDown className="text-gray-600" />}
-                                    </button>
-                                    {salesOpen && (
-                                        <div className="p-4 border rounded-md mt-2 text-sm text-gray-700">
-                                            <p className="text-center mb-3">
-                                                Reduce the Item price for a period of time
-                                            </p>
-                                            <hr className="my-2" />
-
-                                            {/* Activate Sales */}
-                                            <div className="mb-4 flex flex-wrap items-center gap-4">
-                                                <h5 className="text-base w-full sm:w-auto">Activate Sales?</h5>
-                                                <label className="flex items-center gap-2">
-                                                    <input
-                                                        type="radio"
-                                                        name="sales"
-                                                        value="yes"
-                                                        checked={salesActive === 'yes'}
-                                                        onChange={() => setSalesActive('yes')}
-                                                    />
-                                                    Yes
-                                                </label>
-                                                <label className="flex items-center gap-2">
-                                                    <input
-                                                        type="radio"
-                                                        name="sales"
-                                                        value="no"
-                                                        checked={salesActive === 'no'}
-                                                        onChange={() => setSalesActive('no')}
-                                                    />
-                                                    No
-                                                </label>
-                                            </div>
-
-                                            {/* Sales Price */}
-                                            <div className="mb-4">
-                                                <label className="block mb-1 font-medium">
-                                                    Sales Price{' '}
-                                                    <span className="text-red-600 text-xs">
-                                                        numbers only & must be less than the item price showing above
-                                                    </span>
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={salePrice}
-                                                    onChange={(e) => setSalePrice(e.target.value)}
-                                                    placeholder="Enter value"
-                                                    className="w-full border px-3 py-2 rounded-md"
-                                                />
-                                            </div>
-
-                                            {/* Dates */}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block mb-1 font-medium">Sales start date</label>
-                                                    <input
-                                                        type="text"
-                                                        readOnly
-                                                        value="2023-06-11T23:00:00"
-                                                        className="w-full border px-3 py-2 rounded-md"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block mb-1 font-medium">Sales end date</label>
-                                                    <input
-                                                        type="text"
-                                                        readOnly
-                                                        value="2025-04-30T11:00:00"
-                                                        className="w-full border px-3 py-2 rounded-md"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+                                    <label className="block mb-1 font-medium">
+                                        Sales start date
+                                    </label>
+                                    <DateSelector name="sale_start_date" formik={formik} />
                                 </div>
-
-                                {/* Horizontal Divider */}
-                                <hr className="border-t-2  border-gray-300 my-4" />
-
-                                {/* Multi-buy Accordion */}
                                 <div>
-                                    <button
-                                        className="w-full flex justify-between items-center text-lg font-semibold  px-4 py-2 rounded-md"
-                                        onClick={() => setMultiBuyOpen(!multiBuyOpen)}
-                                    >
-                                        <span>Multi-buy</span>
-                                        {multiBuyOpen ? <FaChevronUp className="text-gray-600" /> : <FaChevronDown className="text-gray-600" />}
-                                    </button>
-                                    {multiBuyOpen && (
-                                        <div className="p-4 border rounded-md mt-2 text-sm text-gray-700">
-                                            <p className="text-center mb-3">
-                                                Offer a discount when buyers purchase more than one item at a time.
-                                            </p>
-                                            <hr className="my-2" />
-
-                                            {/* Activate Multi-buy */}
-                                            <div className="flex items-center mb-4 gap-4">
-                                                <h5 className="text-base">Activate multi-buy?</h5>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={multiBuyActive}
-                                                    onChange={() => setMultiBuyActive(!multiBuyActive)}
-                                                    className="form-checkbox w-5 h-5 text-blue-600"
-                                                />
-                                            </div>
-
-                                            {/* Price Each */}
-                                            <div className="mb-4">
-                                                <label className="block mb-1 font-medium">
-                                                    Price each{' '}
-                                                    <span className="text-red-600 text-xs">
-                                                        numbers only & must be less than the standard price showing above
-                                                    </span>
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={wholesalePrice}
-                                                    onChange={(e) => setWholesalePrice(e.target.value)}
-                                                    placeholder="Enter a value"
-                                                    className="w-full border px-3 py-2 rounded-md"
-                                                />
-                                            </div>
-
-                                            {/* Minimum Order Quantity */}
-                                            <div className="mb-4">
-                                                <label className="block mb-1 font-medium">Minimum Order Quantity</label>
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    step="1"
-                                                    value={minOrderQty}
-                                                    onChange={(e) => setMinOrderQty(Number(e.target.value))}
-                                                    placeholder="e.g: 2"
-                                                    className="w-full border px-3 py-2 rounded-md"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
+                                    <label className="block mb-1 font-medium">
+                                        Sales end date
+                                    </label>
+                                    <DateSelector name="sale_end_date" formik={formik} />
                                 </div>
                             </div>
                         </div>
                     )}
                 </div>
+
+                <hr className="border-t-2 border-gray-300" />
+
+                {/* ===== Multi‑Buy Section ===== */}
+                <div className="border rounded-md">
+                    <div className="flex items-center justify-between px-4 py-2">
+                        <label className="flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                name="multi_buy"
+                                checked={formik.values.multi_buy === 'yes'}
+                                onChange={e => {
+                                    const yes = e.target.checked ? 'yes' : 'no';
+                                    formik.setFieldValue('multi_buy', yes);
+                                }}
+                                className="form-checkbox w-5 h-5 text-violet-700 mr-2 rounded"
+                            />
+                            <span className="text-lg font-semibold">Multi‑Buy</span>
+                        </label>
+                        <button
+                            type="button"
+                            disabled={formik.values.multi_buy !== 'yes'}
+                            onClick={() =>
+                                formik.values.multi_buy === 'yes' &&
+                                setMultiBuyOpen(!multiBuyOpen)
+                            }
+                            className={`flex items-center ${formik.values.multi_buy === 'yes'
+                                    ? ''
+                                    : 'opacity-50 cursor-not-allowed'
+                                }`}
+                        >
+                            {multiBuyOpen ? <FaChevronUp /> : <FaChevronDown />}
+                        </button>
+                    </div>
+
+                    {formik.values.multi_buy === 'yes' && multiBuyOpen && (
+                        <div className="p-4 text-sm text-gray-700">
+                            <p className="text-center mb-3">
+                                Offer a discount when buyers purchase more than one item.
+                            </p>
+                            <hr className="my-2" />
+
+                            {formik.values.multi_buy_tiers.map((tier, idx) => (
+                                <div
+                                    key={idx}
+                                    className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end"
+                                >
+                                    <div>
+                                        <label className="block mb-1 font-medium">
+                                            Min Quantity
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name={`multi_buy_tiers[${idx}].min_quantity`}
+                                            min="1"
+                                            placeholder="e.g. 2"
+                                            value={tier.min_quantity}
+                                            onChange={formik.handleChange}
+                                            className="w-full border px-3 py-2 rounded-md"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block mb-1 font-medium">
+                                            Price Each{' '}
+                                            <span className="text-red-600 text-xs">
+                                                (must be less than standard price)
+                                            </span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name={`multi_buy_tiers[${idx}].price_each`}
+                                            placeholder="e.g. 9.99"
+                                            value={tier.price_each}
+                                            onChange={formik.handleChange}
+                                            className="w-full border px-3 py-2 rounded-md"
+                                        />
+                                    </div>
+
+                                    <div className="flex space-x-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveTier(idx)}
+                                            className="px-3 py-2 border rounded-md hover:bg-gray-100"
+                                        >
+                                            Remove
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleAddTier}
+                                            className="px-3 py-2 border rounded-md hover:bg-gray-100"
+                                        >
+                                            Add Tier
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {formik.values.multi_buy_tiers.length === 0 && (
+                                <button
+                                    type="button"
+                                    onClick={handleAddTier}
+                                    className="px-4 py-2 bg-violet-700 text-white rounded-md"
+                                >
+                                    Add First Tier
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
-        </>
+        </div>
     );
 }
+
