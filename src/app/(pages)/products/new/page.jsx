@@ -43,12 +43,17 @@ const AddNewProducts = () => {
       title: "",
       description: "",
       product_quantity: 1,
-      price_cents: "5000",
+      price_cents: "0",
+      on_sales: 'no',
       sale_price_cents: 0,
+      sale_start_date: '',  // will hold ISO string
+      sale_end_date: '',
       postage_fee_cents: 0,
       secondary_postage_fee_cents: 0,
-      price_currency: "USD",
+      price_currency: "GHS",
       status: "",
+      multi_buy: false,              // checkbox: Multi‑Buy on/off
+      multi_buy_tiers: [{}], 
       // Supplier information
       supplierLink: "",
       backupSupplier: "",
@@ -106,6 +111,10 @@ const AddNewProducts = () => {
           );
         }
       }
+
+      console.log("Form Data:", formData);
+      console.log("Form Values:", values);
+      return;
       // Set up headers with Authorization
       const myHeaders = new Headers();
       myHeaders.append("Authorization", `Token ${token}`);
@@ -445,8 +454,9 @@ const AddNewProducts = () => {
 
         {/* Other Sections */}
         <PriceSection formik={formik} />
-        <Promotions formik={formik} />
+        
         <DeliverySection formik={formik} />
+        <Promotions formik={formik} />
         <CancellationReturns formik={formik} />
         <ApprovalNotesSelect formik={formik} />
 

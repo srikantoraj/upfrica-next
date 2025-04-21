@@ -50,7 +50,7 @@ const DeliverySection = ({ formik }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="product_quantity" className="block text-sm font-medium mb-1">
-              *Quantity Available
+              *Max Available Quantity
             </label>
             <input
               type="number"
@@ -61,6 +61,9 @@ const DeliverySection = ({ formik }) => {
               value={formik.values.product_quantity}
               onChange={formik.handleChange}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              (stock will reduce automatically after each sale)
+            </p>
           </div>
 
           <div>
