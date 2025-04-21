@@ -333,7 +333,7 @@ export default function ProductDetailSection({ product }) {
                             {shop && (
                                 <div className="text-sm text-gray-500">
                                     <Link href={`/shops/${shop?.slug}`}>
-                                        <b>4480 sold</b> — Visit the <b className="text-[#8710D8]">{shop.name}</b> Shop — Accra, GH
+                                        <b>4480 sold</b> | Sold by the <b className="text-[#8710D8]">{shop.name}</b> Shop — Accra, GH
                                     </Link>
                                 </div>
                             )}
@@ -344,45 +344,50 @@ export default function ProductDetailSection({ product }) {
                                 <span className="underline text-blue-600">595 Reviews</span>
                                 <span className="text-green-600">✅ Verified Seller</span>
                             </div>
-                            <hr className="my-3 border-gray-200" />
+                            
                             {/* Dynamic Variant Selectors for Desktop */}
                             <div className="space-y-4 my-4">
-                                {variants && variants.length > 0 && variants.map((variant) => (
-                                    variant.values && variant.values.length > 0 && (
-                                        <div key={variant.id}>
-                                            <div className="flex items-center justify-between">
-                                                <p className="text-sm font-medium text-gray-700 mb-1">
-                                                    {variant.label}
-                                                </p>
-                                                <span className="text-sm text-gray-400">{sku}</span>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2">
-                                                {variant.values.map((val) => (
-                                                    <button
-                                                        key={val.id}
-                                                        onClick={() =>
-                                                            setSelectedVariants(prev => ({
-                                                                ...prev,
-                                                                [variant.id]: val,
-                                                            }))
-                                                        }
-                                                        className={`px-4 ${val.additional_price_cents == 0 && 'py-2'} border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
-                                                                ? "border-black font-semibold"
-                                                                : "border-gray-300 text-gray-700"
-                                                            }`}
-                                                    >
-                                                        <div>{val.value}</div>
-                                                        <div className=" text-gray-900 text-[10px]">
-                                                            {val.additional_price_cents > 0 &&
-                                                                ` (+${'₵'}${(convertPrice(val.additional_price_cents / 100, price_currency, "GHS", exchangeRates )).toFixed(2)})`}
-                                                        </div>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )
-                                ))}
-                            </div>
+  {variants && variants.length > 0 && (
+    <>
+      <hr className="my-3 border-gray-200" />
+      {variants.map((variant) => (
+        variant.values && variant.values.length > 0 && (
+          <div key={variant.id}>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-700 mb-1">
+                {variant.label}
+              </p>
+              <span className="text-sm text-gray-400">{sku}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {variant.values.map((val) => (
+                <button
+                  key={val.id}
+                  onClick={() =>
+                    setSelectedVariants(prev => ({
+                      ...prev,
+                      [variant.id]: val,
+                    }))
+                  }
+                  className={`px-4 ${val.additional_price_cents == 0 && 'py-2'} border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
+                    ? "border-black font-semibold"
+                    : "border-gray-300 text-gray-700"
+                    }`}
+                >
+                  <div>{val.value}</div>
+                  <div className=" text-gray-900 text-[10px]">
+                    {val.additional_price_cents > 0 &&
+                      ` (+₵${(convertPrice(val.additional_price_cents / 100, price_currency, "GHS", exchangeRates)).toFixed(2)})`}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )
+      ))}
+    </>
+  )}
+</div>
                             <hr className="my-3 border-gray-200" />
                             <div className="gap-4">
                                 <span className="text-3xl font-bold text-green-700 tracking-tight">
