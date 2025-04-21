@@ -112,9 +112,9 @@ const AddNewProducts = () => {
         }
       }
 
-      console.log("Form Data:", formData);
+      // console.log("Form Data:", formData);
       console.log("Form Values:", values);
-      return;
+      // return;
       // Set up headers with Authorization
       const myHeaders = new Headers();
       myHeaders.append("Authorization", `Token ${token}`);
