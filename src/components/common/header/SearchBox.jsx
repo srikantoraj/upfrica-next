@@ -98,7 +98,7 @@ const SearchBox = () => {
   };
 
   return (
-    <div className="relative w-full xl:w-[50vw] 2xl:w-[55vw] flex items-center md:ml-10">
+    <div className="relative w-full xl:w-[50vw] 2xl:w-[55vw] flex items-center ">
       {/* Left search icon always visible */}
       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
         <IoMdSearch className="h-7 w-7 text-purple-500" />
