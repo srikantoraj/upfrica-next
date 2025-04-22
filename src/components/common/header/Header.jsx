@@ -17,7 +17,7 @@ import { IoClose } from "react-icons/io5";
 export default function Header() {
 
   const [showMenu, setShowMenu] = useState(false);
-  console.log("state", showMenu);
+  // console.log("state", showMenu);
 
 
   const toggleMenu = () => {

@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { FiSettings } from "react-icons/fi";
 
-export const TitleSection = () => {
+export const TitleSection = ({ formik }) => {
   const [showOptions, setShowOptions] = useState(false);
   const [title, setTitle] = useState("Apple Watch SE (2022) 40mm Midnight Aluminium Case with Sport Band, Regular...");
   const [subtitleEnabled, setSubtitleEnabled] = useState(false);
@@ -63,13 +63,16 @@ export const TitleSection = () => {
         </label>
         <input
           id="title"
+          name="title"
           type="text"
           maxLength={80}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          value={formik.values.title}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
           required
         />
+
       </div>
 
       {/* Character counter */}
