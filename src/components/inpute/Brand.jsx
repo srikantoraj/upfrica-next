@@ -1,12 +1,13 @@
 
-
-
+// Brand.js
 import React, { useState, useRef, useEffect } from 'react';
 import { IoIosArrowDown } from 'react-icons/io';
+import useBrands from '../api/useBrands';
 
 const Brand = ({ formik }) => {
   const [arrowshowDropdown, setArrowShowDropdown] = useState(false);
   const wrapperRef = useRef(null);
+  const { brands, loading, error } = useBrands();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -16,12 +17,12 @@ const Brand = ({ formik }) => {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const brandOptions = ["Option 1", "Option 2", "Option 3"];
+  // Find the name of the currently selected brand (Formik stores the id)
+  const selectedBrandName =
+    brands.find((b) => b.id === formik.values.brand)?.name || '';
 
   return (
     <div className="py-4" ref={wrapperRef}>
@@ -37,32 +38,40 @@ const Brand = ({ formik }) => {
           name="brand"
           type="text"
           placeholder="Select Brand"
-          value={formik.values.brand || ""}
+          value={selectedBrandName}
           readOnly
-          onClick={() => setArrowShowDropdown((prev) => !prev)}
+          onClick={() => !loading && setArrowShowDropdown((prev) => !prev)}
           className="w-full border-none focus:ring-0 px-3 py-2 cursor-pointer"
         />
         <button
           type="button"
-          onClick={() => setArrowShowDropdown((prev) => !prev)}
+          onClick={() => !loading && setArrowShowDropdown((prev) => !prev)}
           className="ml-2 focus:outline-none"
         >
           <IoIosArrowDown className="w-5 h-5" />
         </button>
 
         {arrowshowDropdown && (
-          <div className="absolute top-full left-0 w-full bg-white border rounded shadow-lg mt-2 z-10">
+          <div className="absolute top-full left-0 w-full bg-white border rounded shadow-lg mt-2 z-10 max-h-60 overflow-auto">
             <ul className="py-2">
-              {brandOptions.map((option) => (
+              {loading && (
+                <li className="px-4 py-2 text-gray-500">লোড হচ্ছে…</li>
+              )}
+              {error && (
+                <li className="px-4 py-2 text-red-500">
+                  Error: {error}
+                </li>
+              )}
+              {!loading && !error && brands.map((brand) => (
                 <li
-                  key={option}
+                  key={brand.id}
                   className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
                   onClick={() => {
-                    formik.setFieldValue("brand", option);
+                    formik.setFieldValue("brand", brand.id);
                     setArrowShowDropdown(false);
                   }}
                 >
-                  {option}
+                  {brand.name}
                 </li>
               ))}
             </ul>

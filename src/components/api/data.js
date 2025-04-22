@@ -11,9 +11,9 @@ const useCategories = () => {
     const fetchCategories = async () => {
       setLoading(true);
       try {
-        const response = await fetch("https://upfrica-staging.herokuapp.com/api/v1/categories"); // তোমার API URL এখানে
+        const response = await fetch("https://media.upfrica.com/api/categories/"); // তোমার API URL এখানে
         const data = await response.json();
-        setCategories(data.categories); // ক্যাটেগরির ডেটা সেট করা
+        setCategories(data.results); // ক্যাটেগরির ডেটা সেট করা
       } catch (error) {
         setError("Error fetching categories: " + error.message); // ত্রুটি বার্তা
       } finally {
@@ -24,9 +24,9 @@ const useCategories = () => {
     const fetchConditions = async () => {
       setLoading(true);
       try {
-        const response = await fetch("https://upfrica-staging.herokuapp.com/api/v1/conditions"); // তোমার API URL এখানে
+        const response = await fetch("https://media.upfrica.com/api/conditions/"); // তোমার API URL এখানে
         const data = await response.json();
-        setConditions(data.conditions); // কন্ডিশনের ডেটা সেট করা
+        setConditions(data); // কন্ডিশনের ডেটা সেট করা
       } catch (error) {
         setError("Error fetching conditions: " + error.message); // ত্রুটি বার্তা
       } finally {
