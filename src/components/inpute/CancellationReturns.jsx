@@ -1,126 +1,149 @@
 import React from "react";
 
-const CancellationReturnsSection = ({ formik }) => {
+const CancellationPolicyForm = ({ formik }) => {
   return (
-    <div className="bg-white shadow rounded-lg mb-6">
-      {/* Header */}
-      <div className="border-b px-4 py-3">
-        <h5 className="text-lg font-semibold mb-0">*Cancellation & Returns</h5>
+  
+    <div className="bg-white shadow rounded-lg mb-6 ">
+      
+      <div className="border-b p-4">
+        <h5 className="text-lg font-semibold mb-0">
+          Define Cancellation Policy
+        </h5>
       </div>
 
-      {/* Body */}
-      <div className="p-4 space-y-6">
-
-        {/* Order Cancellation Section */}
-        <div className="border-b pb-4 mt-4">
-          <h5 className="text-md font-semibold mb-2">
-            *Is order cancellation allowed on this item?
-          </h5>
-          <div className="space-y-2">
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name="cancellable"
-                id="product_cancellable_true"
-                value="true"
-                checked={formik.values.cancellable === "true"}
-                onChange={formik.handleChange}
-                className="form-radio text-blue-600"
-              />
-              <span>Yes</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name="cancellable"
-                id="product_cancellable_false"
-                value="false"
-                checked={formik.values.cancellable === "false"}
-                onChange={formik.handleChange}
-                className="form-radio text-blue-600"
-              />
-              <span>No</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Returns Section */}
-        <div className="bg-gray-100 p-4 border rounded-md mt-4 space-y-4">
-          <h5 className="text-md font-semibold">*Returns</h5>
-
-          {/* Return Yes */}
-          <div className="flex items-center space-x-2">
-            <input
-              type="radio"
-              name="domestic_returns_accepted"
-              id="product_domestic_returns_accepted_yes"
-              value="yes"
-              checked={formik.values.domestic_returns_accepted === "yes"}
-              onChange={formik.handleChange}
-              className="form-radio text-blue-600"
-            />
-            <label htmlFor="product_domestic_returns_accepted_yes" className="text-sm">
-              Yes. Domestic return allowed
-            </label>
-          </div>
-
-          {formik.values.domestic_returns_accepted === "yes" && (
-            <div className="grid grid-cols-1  gap-4 mt-2">
-              <div>
-                <label className="block text-sm mb-1">
-                  After receiving the item, your buyer should return within:
-                </label>
-                <select
-                  name="return_in_days"
-                  id="product_return_in_days"
-                  value={formik.values.return_in_days}
-                  onChange={formik.handleChange}
-                  className="w-full lg:w-1/2 border rounded-md px-3 py-2"
-                >
-                  <option value="14 days">14 days</option>
-                  <option value="30 days">30 days</option>
-                  <option value="60 days">60 days</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm mb-1">
-                  Returns delivery fee will be paid by:
-                </label>
-                <select
-                  name="returns_cost_by"
-                  id="product_returns_cost_by"
-                  value={formik.values.returns_cost_by}
-                  onChange={formik.handleChange}
-                  className="w-full lg:w-1/2 border rounded-md px-3 py-2"
-                >
-                  <option value="Buyer">Buyer</option>
-                  <option value="Seller(free returns)">Seller (free returns)</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* Return No */}
-          <div className="flex items-start space-x-2 mt-3">
-            <input
-              type="radio"
-              name="domestic_returns_accepted"
-              id="product_domestic_returns_accepted_no"
-              value="no"
-              checked={formik.values.domestic_returns_accepted === "no"}
-              onChange={formik.handleChange}
-              className="form-radio text-blue-600 mt-1"
-            />
-            <label htmlFor="product_domestic_returns_accepted_no" className="text-sm">
-              No. Domestic return not allowed. Unless item is damaged, defective or does not match the listing description
-            </label>
-          </div>
-        </div>
+      {/* 1. Toggle: Allow cancellation? */}
+      <div className="space-x-6 p-6 ">
+        <label className="inline-flex items-center">
+          <input
+            type="radio"
+            name="cancellable"
+            // unchecked by default
+            checked={formik.values.cancellable === false}
+            onChange={() => formik.setFieldValue("cancellable", false)}
+            className="form-radio text-blue-600"
+          />
+          <span className="ml-2">No, cancellations not allowed</span>
+        </label>
+        <label className="inline-flex items-center">
+          <input
+            type="radio"
+            name="cancellable"
+            checked={formik.values.cancellable === true}
+            onChange={() => formik.setFieldValue("cancellable", true)}
+            className="form-radio text-blue-600"
+          />
+          <span className="ml-2">Yes, allow cancellations</span>
+        </label>
       </div>
-    </div>
+
+      {/* 2. When allowed → show policy inputs */}
+      {formik.values.cancellable && (
+        <div className="border-l-4 border-blue-300 pl-4 mt-4 space-y-4 pb-4">
+          {/* 2.1 Cancellation window */}
+          <div className="">
+            <label htmlFor="cancellationWindowHours" className="block text-sm font-medium mb-1">
+              Cancellation window (hours)
+            </label>
+            <input
+              type="number"
+              id="cancellationWindowHours"
+              name="cancellationWindowHours"
+              min={1}
+              max={48}
+              value={formik.values.cancellationWindowHours}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              className="w-24 border rounded-md px-2 py-1"
+            />
+            {formik.touched.cancellationWindowHours && formik.errors.cancellationWindowHours && (
+              <p className="text-red-500 text-sm mt-1">{formik.errors.cancellationWindowHours}</p>
+            )}
+            <p className="text-xs text-gray-500">(e.g. 1–2 hours before shipment)</p>
+          </div>
+
+          {/* 2.2 Seller SLA */}
+          <div>
+            <label htmlFor="sellerResponseSLA" className="block text-sm font-medium mb-1">
+              Seller response SLA
+            </label>
+            <select
+              id="sellerResponseSLA"
+              name="sellerResponseSLA"
+              value={formik.values.sellerResponseSLA}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              className="w-32 border rounded-md px-3 py-2"
+            >
+              <option value="24h">24 hours</option>
+              <option value="48h">48 hours</option>
+            </select>
+            {formik.touched.sellerResponseSLA && formik.errors.sellerResponseSLA && (
+              <p className="text-red-500 text-sm mt-1">{formik.errors.sellerResponseSLA}</p>
+            )}
+          </div>
+
+          {/* 2.3 Deny if shipped/custom */}
+          <div>
+            <label className="inline-flex items-center">
+              <input
+                type="checkbox"
+                name="denyIfShippedOrCustom"
+                checked={formik.values.denyIfShippedOrCustom}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                className="form-checkbox text-blue-600"
+              />
+              <span className="ml-2">Deny if already shipped or customized</span>
+            </label>
+          </div>
+
+          {/* 2.4 Auto‑cancel unpaid orders */}
+          <div>
+            <label htmlFor="autoCancelUnpaidHours" className="block text-sm font-medium mb-1">
+              Auto-cancel unpaid orders after (hours)
+            </label>
+            <input
+              type="number"
+              id="autoCancelUnpaidHours"
+              name="autoCancelUnpaidHours"
+              min={1}
+              max={168}
+              value={formik.values.autoCancelUnpaidHours}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              className="w-24 border rounded-md px-2 py-1"
+            />
+            {formik.touched.autoCancelUnpaidHours && formik.errors.autoCancelUnpaidHours && (
+              <p className="text-red-500 text-sm mt-1">{formik.errors.autoCancelUnpaidHours}</p>
+            )}
+            <p className="text-xs text-gray-500">(e.g. 48 hours = 2 days)</p>
+          </div>
+
+          {/* 2.5 Flag abuse threshold */}
+          <div>
+            <label htmlFor="abuseFlagThreshold" className="block text-sm font-medium mb-1">
+              Flag user/seller after X cancellations in 30 days
+            </label>
+            <input
+              type="number"
+              id="abuseFlagThreshold"
+              name="abuseFlagThreshold"
+              min={1}
+              value={formik.values.abuseFlagThreshold}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              className="w-20 border rounded-md px-2 py-1"
+            />
+            {formik.touched.abuseFlagThreshold && formik.errors.abuseFlagThreshold && (
+              <p className="text-red-500 text-sm mt-1">{formik.errors.abuseFlagThreshold}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+ </div>
+
   );
 };
 
-export default CancellationReturnsSection;
-
+export default CancellationPolicyForm;

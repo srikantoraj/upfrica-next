@@ -71,14 +71,52 @@ const AddNewProducts = () => {
       shoppingCost: "",
       productCost: "",
       totalCost: "",
+
+
+      cancellable: false,
+      cancellationWindowHours: 2,
+      sellerResponseSLA: "24h",
+      denyIfShippedOrCustom: false,
+      autoCancelUnpaidHours: 48,
+      abuseFlagThreshold: 5,
     },
     onSubmit: async (values) => {
+ 
+
+
+
       const formData = new FormData();
+
       // Append primary product fields
       formData.append("title", values.title);
+      formData.append("description", values.description);
+      formData.append("product_quantity", values.product_quantity.toString());
       formData.append("price_cents", values.price_cents);
       formData.append("price_currency", values.price_currency);
       formData.append("user_id", user?.user?.id);
+      formData.append("brand", values?.brand);
+      formData.append("category", values?.category);
+      formData.append("condition", values?.condition);
+
+      // Append sale & status fields
+      if (values.on_sales === 'yes') {
+        formData.append("on_sales", values.on_sales);
+        formData.append("sale_price_cents", values.sale_price_cents.toString());
+        formData.append("sale_price_currency", values.price_currency);
+        formData.append("sale_start_date", values.sale_start_date);
+        formData.append("sale_end_date", values.sale_end_date);
+        // formData.append("status", values.status);
+      }
+
+      // Append postage fees
+      formData.append("postage_fee_cents", values.postage_fee_cents.toString());
+      formData.append("postage_fee_cents_currency", values.price_currency);
+      formData.append("secondary_postage_fee_cents", values.secondary_postage_fee_cents.toString());
+      formData.append("secondary_postage_fee_cents_currency", values.price_currency);
+
+      // Append multi‑buy options
+      
+
       // Append supplier fields
       formData.append("supplierLink", values.supplierLink);
       formData.append("backupSupplier", values.backupSupplier);
@@ -96,12 +134,36 @@ const AddNewProducts = () => {
       formData.append("shoppingCost", values.shoppingCost);
       formData.append("productCost", values.productCost);
       formData.append("totalCost", values.totalCost);
+
+      let cancellationPolicy = {
+        cancellable: values.cancellable,
+        cancellationWindowHours: values.cancellationWindowHours,
+        sellerResponseSLA: values.sellerResponseSLA,
+        denyIfShippedOrCustom: values.denyIfShippedOrCustom,
+        autoCancelUnpaidHours: values.autoCancelUnpaidHours,
+        abuseFlagThreshold: values.abuseFlagThreshold,
+      };
+
+
+      // secondary data
+      if (values.multi_buy == 'yes') {
+        formData.append("multi_buy_tiers", JSON.stringify(values.multi_buy_tiers));
+      }
+      formData.append(
+        "approval_notes",
+        values.approval_notes
+      );
+      formData.append(
+        "cancellation_policy",
+        JSON.stringify(cancellationPolicy)
+      );
+
       // Append images
       if (selectedImages.length > 0) {
         formData.append(
           "images",
           selectedImages[0].file,
-          "authenticator_app.png"
+          "upload_image.png"
         );
         if (selectedImages.length > 1) {
           formData.append(
@@ -112,8 +174,13 @@ const AddNewProducts = () => {
         }
       }
 
+
       // console.log("Form Data:", formData);
-      console.log("Form Values:", values);
+      // console.log("Form Values:", values);
+      // for (let [key, value] of formData.entries()) {
+      //   console.log(`${key}:`, value);
+      // }
+     
       // return;
       // Set up headers with Authorization
       const myHeaders = new Headers();
@@ -462,12 +529,26 @@ const AddNewProducts = () => {
 
         {/* Form Actions */}
         <div className="flex justify-between text-xl font-bold p-4">
-          <button
+          {!formik?.isSubmitting && <button
             type="submit"
             className="bg-purple-500 text-white px-4 py-2 rounded-md"
           >
             Save and continue
-          </button>
+          </button>}
+          {formik.isSubmitting && (
+            <button
+              type="submit"
+              className=" text-xl px-20 py-2 bg-[#A435F0] text-white rounded-md font-bold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              disabled={formik.isSubmitting}
+            >
+              <div className="flex space-x-2 justify-center items-center h-6">
+                <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <div className="h-2 w-2 bg-white rounded-full animate-bounce" />
+              </div>
+            </button>
+          )}
+
           <button type="button">Cancel</button>
         </div>
       </form>

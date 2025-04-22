@@ -627,23 +627,43 @@ export default function ProductDetailSection({ product }) {
         seconds: 0,
     });
 
+    // useEffect(() => {
+    //     if (!saleActive) return;
+
+    //     const update = () => {
+    //         const diff = saleEndDate - new Date();
+    //         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    //         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    //         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    //         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    //         setTimeRemaining({ days, hours, minutes, seconds });
+    //     };
+
+    //     update();
+    //     const intervalId = setInterval(update, 1000);
+    //     return () => clearInterval(intervalId);
+    // }, [saleEndDate, saleActive]);
+
     useEffect(() => {
-        if (!saleActive) return;
+        if (!sale_end_date) return;                // depend on the *string* prop
+
+        const saleEnd = new Date(sale_end_date);   // build the Date inside the effect
 
         const update = () => {
-            const diff = saleEndDate - new Date();
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            setTimeRemaining({ days, hours, minutes, seconds });
+            const diff = saleEnd - new Date();
+            setTimeRemaining({
+                days: Math.floor(diff / 86400000),
+                hours: Math.floor((diff % 86400000) / 3600000),
+                minutes: Math.floor((diff % 3600000) / 60000),
+                seconds: Math.floor((diff % 60000) / 1000),
+            });
         };
 
         update();
-        const intervalId = setInterval(update, 1000);
-        return () => clearInterval(intervalId);
-    }, [saleEndDate, saleActive]);
+        const id = setInterval(update, 1000);
+        return () => clearInterval(id);
+    }, [sale_end_date]);  // 
 
     // Media items (video first, then images)
     const mediaItems = product_video
@@ -729,6 +749,10 @@ export default function ProductDetailSection({ product }) {
 
                         {/* MOBILE CTA */}
                         <section className="block xl:hidden mt-5">
+                            <Link href={`/products/edit/${product?.seo_slug}`}>
+                                
+                                <span className="text-blue-600 hover:underline">Edit</span>
+                            </Link>
                             <div className="bg-white space-y-4 p-4">
                                 <h1 className="heading-lg text-base md:text-lg lg:text-xl font-bold text-gray-800">
                                     {title}
@@ -859,6 +883,10 @@ export default function ProductDetailSection({ product }) {
                     {/* RIGHT SIDEBAR */}
                     <aside className="order-2 hidden xl:block xl:col-span-5">
                         <div className="sticky top-0 space-y-4 p-5">
+                            <Link href={`/products/edit/${product?.slug}`}>
+
+                                <span className="text-blue-600 hover:underline">Edit</span>
+                            </Link>
                             <h1 className="heading-lg text-lg md:text-xl lg:text-2xl font-semibold text-gray-800">
                                 {title}
                             </h1>
