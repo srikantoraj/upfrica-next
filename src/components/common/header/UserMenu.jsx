@@ -108,10 +108,10 @@ export default function UserMenu() {
                   <span className="ml-2">Sales History</span>
                 </div>
               </Link>
-              <Link href="/all-blogs">
+              <Link href="/sidebar">
                 <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
                   <BsFillBookmarkHeartFill className="h-5 w-5 text-gray-500" />
-                  <span className="ml-2">All Blogs</span>
+                  <span className="ml-2">Sidebar</span>
                 </div>
               </Link>
 

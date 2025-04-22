@@ -72,8 +72,8 @@ export default function Header() {
         </div>
 
         {/* Desktop Header */}
-        <div className="hidden xl:flex items-center gap-5">
-          <div className="flex items-center space-x-6">
+        <div className="hidden xl:flex items-center justify-between w-full gap-5">
+          <div className="flex items-center ">
             <Link href="/">
               <img
                 className="h-10 w-auto"

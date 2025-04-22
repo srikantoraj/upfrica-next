@@ -45,10 +45,10 @@ const NewProduct = ({ params }) => {
         }
 
         const myHeaders = new Headers();
-        myHeaders.append("Authorization", `Bearer ${token}`);
+        // myHeaders.append("Authorization", `Bearer ${token}`);
 
         const response = await fetch(
-          `https://upfrica-staging.herokuapp.com/api/v1/products/${id}`,
+          `https://media.uprica.com/api/products/${id}`,
           {
             method: "GET",
             headers: myHeaders,

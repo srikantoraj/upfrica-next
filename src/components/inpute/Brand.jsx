@@ -1,71 +1,70 @@
-import React, { useState } from 'react';
-import InputField from '../InputField';
-import { MdOutlineArrowDropDown, MdOutlineArrowDropUp } from 'react-icons/md';
+
+
+
+import React, { useState, useRef, useEffect } from 'react';
+import { IoIosArrowDown } from 'react-icons/io';
 
 const Brand = ({ formik }) => {
   const [arrowshowDropdown, setArrowShowDropdown] = useState(false);
-  const [brand, setBrand] = useState(false);
+  const wrapperRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setArrowShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const brandOptions = ["Option 1", "Option 2", "Option 3"];
+
   return (
-    <div className="py-4">
+    <div className="py-4" ref={wrapperRef}>
       <h2 className="text-2xl font-bold mb-2">*Brand</h2>
-      <p>
+      <p className="mb-2 text-gray-600">
         Use keywords people would search for when looking for your item.
         Include details such as colour, size, brand & model.
       </p>
-      <hr className="border-gray-300 mb-4" />
 
-      <div className="relative flex items-center justify-between border rounded-md group focus-within:border-purple-500">
-        <InputField
-          className="w-full border-none focus:outline-none focus:ring-0 py-2 ps-3 hover:cursor-pointer"
+      <div className="relative flex items-center border rounded-lg border-purple-500 px-2">
+        <input
           id="brand"
           name="brand"
-          placeholder="Search Upfrica BD"
-          value={formik?.values?.brand} // Set Formik value
-          onClick={() => setArrowShowDropdown(!arrowshowDropdown)} // Toggle dropdown
-          onChange={formik.handleChange} // Handle input change
-          readOnly={true} // Input is read-only
+          type="text"
+          placeholder="Select Brand"
+          value={formik.values.brand || ""}
+          readOnly
+          onClick={() => setArrowShowDropdown((prev) => !prev)}
+          className="w-full border-none focus:ring-0 px-3 py-2 cursor-pointer"
         />
-        {brand ? (
-          <button className="h-[45px] px-6 rounded-tr-md rounded-br-md">
-            <MdOutlineArrowDropUp />
-          </button>
-        ) : (
-          <button className="h-[45px] px-6 rounded-tr-md rounded-br-md">
-            <MdOutlineArrowDropDown />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setArrowShowDropdown((prev) => !prev)}
+          className="ml-2 focus:outline-none"
+        >
+          <IoIosArrowDown className="w-5 h-5" />
+        </button>
 
-        {/* Dropdown list */}
         {arrowshowDropdown && (
           <div className="absolute top-full left-0 w-full bg-white border rounded shadow-lg mt-2 z-10">
             <ul className="py-2">
-              <li
-                className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                onClick={() => {
-                  formik.setFieldValue("brand", "Option 1"); // Set selected value
-                  setArrowShowDropdown(false); // Hide dropdown after selection
-                }}
-              >
-                Option 1
-              </li>
-              <li
-                className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                onClick={() => {
-                  formik.setFieldValue("brand", "Option 2"); // Set selected value
-                  setArrowShowDropdown(false); // Hide dropdown after selection
-                }}
-              >
-                Option 2
-              </li>
-              <li
-                className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                onClick={() => {
-                  formik.setFieldValue("brand", "Option 3"); // Set selected value
-                  setArrowShowDropdown(false); // Hide dropdown after selection
-                }}
-              >
-                Option 3
-              </li>
+              {brandOptions.map((option) => (
+                <li
+                  key={option}
+                  className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                  onClick={() => {
+                    formik.setFieldValue("brand", option);
+                    setArrowShowDropdown(false);
+                  }}
+                >
+                  {option}
+                </li>
+              ))}
             </ul>
           </div>
         )}

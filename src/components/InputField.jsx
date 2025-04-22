@@ -10,7 +10,7 @@ const InputField = ({ id, name, type, value, onChange, placeholder,onClick }) =>
       value={value}
       onClick={onClick}
       onChange={onChange}
-      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+      className="w-full px-3 rounded-lg  border border-purple-500   focus:outline-none  focus:ring-purple-500"
       placeholder={placeholder}
     />
   );
