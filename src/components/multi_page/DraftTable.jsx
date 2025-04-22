@@ -1,27 +1,89 @@
-import DraftRow from "./DraftRow";
+import React from "react";
 
-export default function DraftTable() {
+const headers = [
+  "Select",
+  "Edit your listing",
+  "Status",
+  "Photos",
+  "Item category 1",
+  "Title",
+  "Custom label (SKU)",
+  "Format",
+  "Available quantity",
+  "Price",
+  "Item cost",
+  "Sales tax",
+  "Fees",
+  "Net proceeds",
+  "Promotions",
+  "Sold",
+  "Unsold",
+  "Views",
+  "Watchers",
+  "Start date",
+  "End date",
+  "Duration",
+  "Time left",
+  "Actions",
+];
+
+// Dummy row data (just an example row)
+const rowData = [
+  {
+    select: "✔",
+    edit: "Edit",
+    status: "Active",
+    photos: "📷",
+    category: "Electronics",
+    title: "Smartphone",
+    sku: "SKU123",
+    format: "Fixed Price",
+    qty: 10,
+    price: "$299",
+    cost: "$200",
+    tax: "$15",
+    fees: "$20",
+    proceeds: "$264",
+    promo: "None",
+    sold: 5,
+    unsold: 2,
+    views: 120,
+    watchers: 3,
+    start: "2025-04-01",
+    end: "2025-04-30",
+    duration: "30 days",
+    left: "10d left",
+    actions: "Action",
+  },
+  // Add more rows here if needed
+];
+
+export default function FullDraftTable() {
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-left text-sm">
+    <div className="overflow-x-auto p-4">
+      <table className="min-w-full text-left text-sm border-separate border-spacing-y-2">
         <thead>
           <tr className="bg-gray-100 text-xs uppercase">
-            <th className="p-2">Select</th>
-            <th className="p-2">Edit</th>
-            <th className="p-2">Status</th>
-            <th className="p-2">Photo</th>
-            <th className="p-2">Category</th>
-            <th className="p-2">Title</th>
-            <th className="p-2">SKU</th>
-            <th className="p-2">Format</th>
-            <th className="p-2">Duration</th>
-            <th className="p-2">Qty</th>
-            <th className="p-2">Buy It Now</th>
+            {headers.map((header, index) => (
+              <th key={index} className="p-2 whitespace-nowrap border-l border-r border-gray-300">
+                {header}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
-          <DraftRow />
-          {/* You can duplicate DraftRow here for more rows */}
+          {rowData.map((row, rowIndex) => (
+            <tr
+              key={rowIndex}
+              className="bg-white border-l border-r border-gray-300"
+            >
+              {Object.values(row).map((value, colIndex) => (
+                <td key={colIndex} className="p-2 whitespace-nowrap">
+                  {value}
+                </td>
+              ))}
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
