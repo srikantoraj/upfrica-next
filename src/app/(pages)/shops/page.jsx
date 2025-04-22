@@ -137,7 +137,9 @@ export default function ShopGrid() {
         ))
 
     return (
-        <div className="px-4 container mx-auto">
+        <div className="px-4 container mx-auto"                                             style={{
+            backgroundColor: shop.bg_color || '#E8EAED',
+        }}>
             {/* — Search Box — */}
             <div
                 ref={containerRef}

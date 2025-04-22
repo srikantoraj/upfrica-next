@@ -876,7 +876,7 @@ export default function ProductDetailSection({ product }) {
                                 <span className="underline text-blue-600">595 Reviews</span>
                                 <span className="text-green-600">✅ Verified Seller</span>
                             </div>
-                            <hr className="my-3 border-gray-200" />
+                            
                             {/* Dynamic Variant Selectors for Desktop */}
                             <div className="space-y-4 my-4">
   {variants && variants.length > 0 && (

@@ -246,7 +246,10 @@ export default function ShopPage({ params }) {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-900">
+        <div className="min-h-screen bg-gray-50 text-gray-900" 
+        style={{
+            backgroundColor: shop?.bg_color || '#E8EAED',
+        }}>
             {/* HERO */}
             <section className="relative">
                 {mainLoading ? (
@@ -358,7 +361,7 @@ export default function ShopPage({ params }) {
                 <aside className="hidden md:block space-y-6">
                     <h2 className="text-xl font-semibold">Filters</h2>
                     {/* Category */}
-                    <div>
+                    <div className="p-5 bg-white border border-[#dee2e6] rounded-t-[5px] drop-shadow-[0_0_10px_rgba(0,0,0,0.1)]">
                         <label className="block text-sm font-medium mb-1">Category</label>
                         {categoriesLoading ? (
                             <div className="h-10 w-full bg-gray-200 animate-pulse rounded" />
@@ -381,7 +384,7 @@ export default function ShopPage({ params }) {
                         )}
                     </div>
                     {/* Condition */}
-                    <div>
+                    <div className="p-5 m-0 bg-white border border-[#dee2e6] drop-shadow-[0_0_10px_rgba(0,0,0,0.1)]" style={{ margin: '0px' }}>
                         <label className="block text-sm font-medium mb-1">Condition</label>
                         {conditionsLoading ? (
                             <div className="h-10 w-full bg-gray-200 animate-pulse rounded" />
@@ -404,7 +407,7 @@ export default function ShopPage({ params }) {
                         )}
                     </div>
                     {/* Sort */}
-                    <div>
+                    <div className="p-5 m-0 bg-white border border-[#dee2e6] drop-shadow-[0_0_10px_rgba(0,0,0,0.1)]" style={{ margin: '0px' }}>
                         <label className="block text-sm font-medium mb-1">Sort By</label>
                         <select
                             value={sortOption}
@@ -421,19 +424,21 @@ export default function ShopPage({ params }) {
                     </div>
                     {/* Price Range */}
                     <PriceRange
-                        min={priceMin}
-                        max={priceMax}
-                        onChangeMin={(v) => {
-                            setPriceMin(v);
-                            setCurrentPage(1);
-                        }}
-                        onChangeMax={(v) => {
-                            setPriceMax(v);
-                            setCurrentPage(1);
-                        }}
-                    />
+  min={priceMin}
+  max={priceMax}
+  onChangeMin={(v) => {
+    setPriceMin(v);
+    setCurrentPage(1);
+  }}
+  onChangeMax={(v) => {
+    setPriceMax(v);
+    setCurrentPage(1);
+  }}
+  className="m-0 p-5 bg-white border border-[#dee2e6] drop-shadow-[0_0_10px_rgba(0,0,0,0.1)]"
+  style={{ margin: '0px' }}
+/>
                     {/* Ratings (static) */}
-                    <div>
+                    <div className="p-5 bg-white border border-[#dee2e6] rounded-b-[5px] drop-shadow-[0_0_10px_rgba(0,0,0,0.1)]" style={{ margin: '0px' }}>
                         <h2 className="mb-2 font-semibold">Ratings</h2>
                         <div className="flex items-center">
                             {[...Array(5)].map((_, i) => (

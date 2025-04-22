@@ -339,7 +339,7 @@ const Sidebar = ({ data }) => (
    ArticleContent Component – Renders the article content.
 -------------------------------------------------- */
 const ArticleContent = ({ data }) => (
-    <article className="space-y-8">
+    <article className="space-y-8 bg-white rounded p-4 shadow">
         <header>
             <h1
                 id="page-title"
@@ -349,14 +349,14 @@ const ArticleContent = ({ data }) => (
                 {data?.title}
             </h1>
         </header>
-        {data?.summary && <p className="mb-4">{data.summary}</p>}
+        {data?.summary && <p className="mb-2">{data.summary}</p>}
         {data?.sections?.map((section, index) => (
             <section
                 key={index}
                 id={section.sectionTitle?.toLowerCase().replace(/\s/g, "-")}
-                className="border-t pt-4"
+                className="border-t pt-0"
             >
-                <h2 className="text-2xl font-bold mt-8 mb-3">
+                <h2 className="text-2xl font-bold mt-4 mb-2">
                     {section.sectionTitle}
                 </h2>
                 {section.sectionType === "paragraph" && (

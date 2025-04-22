@@ -7,7 +7,7 @@ const PriceRange = () => {
     const [priceRange, setPriceRange] = useState([0, 1000]);
 
     return (
-        <div className="price-range-container">
+        <div className="price-range-container p-5 bg-white border border-[#dee2e6] drop-shadow-[0_0_10px_rgba(0,0,0,0.1)]" style={{ margin: '0px' }}>
             <label className="block text-sm font-medium mb-1">Price Range</label>
             <ReactSlider
                 className="horizontal-slider"
