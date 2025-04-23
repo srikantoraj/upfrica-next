@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function ListingCTA() {
+export default function ListingCTA(formik) {
   return (
     <div className="flex flex-col  mt-6 lg:w-2/5 space-y-3 mx-auto px-8 lg:px-0">
       <button
@@ -12,7 +12,8 @@ export default function ListingCTA() {
       </button>
 
       <button
-        type="button"
+         type="submit" 
+       
         className="px-6 py-3 text-sm font-medium text-gray-700 border-black border   hover:bg-gray-200 rounded-full"
         aria-label="Save for later"
       >
@@ -20,7 +21,8 @@ export default function ListingCTA() {
       </button>
 
       <button
-        type="submit" 
+        onClick={() => console.log("Preview clicked:", formik.values)}
+        type="button"
         className="px-6 py-3 text-sm font-medium text-gray-700 border-black border  hover:bg-gray-200 rounded-full"
         aria-label="Preview"
         name="preview"

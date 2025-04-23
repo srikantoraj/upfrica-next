@@ -1,60 +1,80 @@
-// ItemForm.jsx
 'use client'
-import { useState } from 'react';
-import DropdownSelect from './DropdownSelect';
+import React, { useState } from 'react';
+// import './styles.css'; // For custom transitions (optional)
 
-const ItemForm = () => {
-  const [brand, setBrand] = useState('Apple');
-  const [model, setModel] = useState('Apple Watch Series 8');
-  const [caseSize, setCaseSize] = useState('41 mm');
-  const [os, setOS] = useState('iOS - Apple');
-  const [band, setBand] = useState('Fluoroelastomer');
+const attributes = [
+  {
+    label: 'Item Height',
+    tooltip: 'Measured height from top to bottom when upright.',
+    options: ['15 in', '75 in', '250 cm'],
+  },
+  {
+    label: 'Item Length',
+    tooltip: 'Measured length from left to right when upright.',
+    options: ['0.5 in', '1 in', '18 in'],
+  },
+  {
+    label: 'Item Width',
+    tooltip: 'Shortest horizontal side of the item.',
+    options: ['15 in', '100 cm', '150 cm'],
+  },
+  {
+    label: 'Type',
+    tooltip: 'Specific type of product, e.g., "Wardrobe"',
+    options: ['Wardrobe', 'Canvas Wardrobe', 'Freestanding Wardrobe'],
+  },
+];
+
+const ItemAttributesForm = () => {
+  const [values, setValues] = useState({});
+  const [openDropdown, setOpenDropdown] = useState(null);
+
+  const handleChange = (label, value) => {
+    setValues({ ...values, [label]: value });
+  };
 
   return (
-    <div className="">
-      <h2 className="text-lg font-bold mb-4">Product Details</h2>
+    <form className="">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6 border-b pb-2">Item Details</h2>
 
-      <DropdownSelect
-        label="Brand"
-        tooltip="Name of the brand, designer or artist"
-        options={['Apple', 'Samsung', 'Fitbit', 'Garmin']}
-        selected={brand}
-        setSelected={setBrand}
-      />
+      {attributes.map((attr, index) => (
+        <div key={index} className="flex justify-between items-start mb-6">
+          {/* Label + Tooltip */}
+          <div className="w-1/3 pr-4">
+            <label className="text-sm font-medium text-gray-800 flex items-center">
+              {attr.label}
+              <div className="ml-2 relative group">
+                <span className="text-gray-400 hover:text-gray-600 cursor-pointer">ⓘ</span>
+                <div className="absolute hidden group-hover:block bg-black text-white text-xs p-2 rounded shadow-md w-48 z-20 top-5 left-0">
+                  {attr.tooltip}
+                </div>
+              </div>
+            </label>
+          </div>
 
-      <DropdownSelect
-        label="Model"
-        tooltip="Specific name used for the product"
-        options={['Apple Watch Series 8', 'Apple Watch SE', 'Apple Watch Ultra']}
-        selected={model}
-        setSelected={setModel}
-      />
-
-      <DropdownSelect
-        label="Case Size"
-        tooltip="Measured diagonally in mm"
-        options={['38 mm', '40 mm', '41 mm', '44 mm', '45 mm']}
-        selected={caseSize}
-        setSelected={setCaseSize}
-      />
-
-      <DropdownSelect
-        label="Compatible OS"
-        tooltip="OS supported by the device"
-        options={['iOS - Apple', 'Android', 'Windows']}
-        selected={os}
-        setSelected={setOS}
-      />
-
-      <DropdownSelect
-        label="Band Material"
-        tooltip="Main material of the watch band"
-        options={['Fluoroelastomer', 'Leather', 'Silicone', 'Stainless Steel']}
-        selected={band}
-        setSelected={setBand}
-      />
-    </div>
+          {/* Select Input */}
+          <div className="w-2/3 relative">
+            <select
+              onFocus={() => setOpenDropdown(attr.label)}
+              onBlur={() => setOpenDropdown(null)}
+              value={values[attr.label] || ''}
+              onChange={(e) => handleChange(attr.label, e.target.value)}
+              className={`w-full border border-gray-300 rounded-md p-2 text-sm transition-all duration-300 ease-in-out ${
+                openDropdown === attr.label ? 'shadow-lg scale-[1.02]' : 'shadow-sm'
+              } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+            >
+              <option value="">Select {attr.label}</option>
+              {attr.options.map((opt, i) => (
+                <option key={i} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      ))}
+    </form>
   );
 };
 
-export default ItemForm;
+export default ItemAttributesForm;
