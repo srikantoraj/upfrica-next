@@ -393,7 +393,7 @@ const Sidebar = ({ data }) => {
    ArticleContent Component – Renders the article content.
 -------------------------------------------------- */
 const ArticleContent = ({ data }) => (
-    <article className="space-y-8 bg-white  dark:bg-zinc-900 dark:text-white rounded p-4 shadow ">
+    <article className="space-y-8 bg-white  dark:bg-zinc-900 dark:text-white rounded p-4 shadow text-[18px] leading-[32px] tracking-[-0.003em] font-normal ">
         <header>
             <h1
                 id="page-title"
@@ -473,7 +473,7 @@ const ArticleContent = ({ data }) => (
 const TableComponent = ({ headers, rows }) => (
     <table className="min-w-full border border-gray-300">
         <thead>
-            <tr className="bg-gray-200">
+            <tr className="bg-gray-200 dark:bg-zinc-900 dark:text-dark">
                 {headers.map((header, i) => (
                     <th key={i} className="px-4 py-2 border border-gray-300">{header}</th>
                 ))}
