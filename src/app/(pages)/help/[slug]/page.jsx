@@ -6,12 +6,43 @@ import Script from 'next/script'
 import { FaSearch } from 'react-icons/fa'
 import Footer from '@/components/common/footer/Footer'
 
+
+// Dark Mode Toggle Hook
+const useDarkMode = () => {
+    const [enabled, setEnabled] = useState(false)
+    useEffect(() => {
+        const saved = localStorage.getItem('theme') === 'dark'
+        if (saved) {
+            document.documentElement.classList.add('dark')
+            setEnabled(true)
+        }
+    }, [])
+
+    const toggle = () => {
+        const isDark = !enabled
+        localStorage.setItem('theme', isDark ? 'dark' : 'light')
+        document.documentElement.classList.toggle('dark', isDark)
+        setEnabled(isDark)
+    }
+    return [enabled, toggle]
+}
+
+// Dark mode toggle button
+const DarkModeToggle = () => {
+    const [enabled, toggle] = useDarkMode()
+    return (
+        <button onClick={toggle} className="ml-4 px-3 py-2 border border-white text-white rounded-full hover:bg-white hover:text-black transition">
+            {enabled ? '🌙 Dark' : '☀️ Light'}
+        </button>
+    )
+}
+
 // A card skeleton for search results
 const CardSkeleton = () => (
-    <div className="animate-pulse p-4 bg-white rounded shadow">
-        <div className="h-6 bg-gray-300 rounded w-5/6 mb-2"></div>
-        <div className="h-4 bg-gray-300 rounded w-full mb-2"></div>
-        <div className="h-3 bg-gray-300 rounded w-4/6"></div>
+    <div className="animate-pulse p-4 bg-white dark:bg-gray-800 rounded shadow">
+        <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-5/6 mb-2"></div>
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full mb-2"></div>
+        <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-4/6"></div>
     </div>
 )
 
@@ -122,7 +153,7 @@ export default function HelpCenterPage({ params }) {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
             <Header
                 data={staticHeader}
                 searchQuery={searchQuery}
@@ -132,10 +163,14 @@ export default function HelpCenterPage({ params }) {
                 searchResults={searchResults}
                 searchLoading={searchLoading}
             />
+            <div className="absolute top-6 right-6 z-50">
+                <DarkModeToggle />
+            </div>
+
             <Breadcrumbs data={staticBreadcrumbs} />
-            <div className="container mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className="container mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8 ">
                 <Sidebar data={staticSidebar} />
-                <main className="lg:col-span-3 space-y-8">
+                <main className="lg:col-span-3 space-y-8 ">
                     <ArticleContent data={data} />
                    
                 </main>
@@ -151,7 +186,7 @@ export default function HelpCenterPage({ params }) {
    SkeletonLoader Component – Mimics the page layout while data loads.
 -------------------------------------------------- */
 const SkeletonLoader = () => (
-    <div className="min-h-screen bg-gray-100 animate-pulse">
+    <div className="min-h-screen bg-gray-100 animate-pulse ">
         {/* Header Skeleton */}
         <div className="h-24 bg-gray-300 relative">
             <div className="absolute inset-0 bg-gray-400 opacity-50"></div>
@@ -183,7 +218,7 @@ const SkeletonLoader = () => (
                 </div>
             </aside>
             {/* Main Article Skeleton */}
-            <main className="lg:col-span-3 space-y-8">
+            <main className="lg:col-span-3 space-y-8  dark:bg-gray-900 text-gray-900 dark:text-gray-100">
                 <div className="space-y-4">
                     <div className="h-8 w-3/4 bg-gray-300 rounded"></div>
                     <div className="h-4 w-full bg-gray-300 rounded"></div>
@@ -309,7 +344,7 @@ const Breadcrumbs = ({ data }) => (
    Sidebar Component – Renders the help topics and article navigation.
 -------------------------------------------------- */
 const Sidebar = ({ data }) => (
-    <aside className="space-y-8">
+    <aside className="space-y-8 ">
         <Card title="Help Topics">
             <ul className="list-disc pl-4 text-gray-700">
                 {data?.helpTopics?.map((link) => (
@@ -339,11 +374,11 @@ const Sidebar = ({ data }) => (
    ArticleContent Component – Renders the article content.
 -------------------------------------------------- */
 const ArticleContent = ({ data }) => (
-    <article className="space-y-8 bg-white rounded p-4 shadow">
+    <article className="space-y-8 bg-white  dark:bg-zinc-900 dark:text-white rounded p-4 shadow ">
         <header>
             <h1
                 id="page-title"
-                className="text-3xl font-bold text-gray-900 mb-4"
+                className="text-3xl font-bold text-gray-900  dark:text-white mb-4"
                 title={data?.title}
             >
                 {data?.title}
@@ -354,9 +389,9 @@ const ArticleContent = ({ data }) => (
             <section
                 key={index}
                 id={section.sectionTitle?.toLowerCase().replace(/\s/g, "-")}
-                className="border-t pt-0"
+                className="border-t pt-0  dark:text-white"
             >
-                <h2 className="text-2xl font-bold mt-4 mb-2">
+                <h2 className="text-2xl font-bold mt-4 mb-2  dark:text-white">
                     {section.sectionTitle}
                 </h2>
                 {section.sectionType === "paragraph" && (
@@ -372,7 +407,7 @@ const ArticleContent = ({ data }) => (
                 )}
 
                 {section.sectionType === "highlight" && (
-                    <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4">
+                    <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 dark:bg-yellow-200/30">
                         <p className="font-semibold">Important:</p>
                         <p>{section.sectionContent}</p>
                     </div>
