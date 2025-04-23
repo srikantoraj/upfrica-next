@@ -75,6 +75,7 @@ import React, { useEffect, useState } from 'react';
 import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import ShopCard from '@/components/home/ProductList/ShopCard';
+import ShopFAQSection from '@/components/ShopFAQSection';
 import ProductCardSkeleton from './ProductCardSkeleton';
 import SearchResultSkeleton from './SearchResultSkeleton';
 import PriceRange from './PriceRange';
@@ -618,6 +619,9 @@ export default function ShopPageClient({ slug }) {
   totalPages={totalPages}
   onPageChange={setCurrentPage}
 />
+
+<ShopFAQSection shop={shop} />
+
                 </section>
             </main>
         </div>
