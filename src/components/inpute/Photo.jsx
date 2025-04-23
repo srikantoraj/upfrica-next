@@ -133,7 +133,7 @@ const Photo = ({ initialImages = [], onImagesSelect }) => {
                                         >
                                             ✕
                                         </button>
-                                    </div>
+                        </div>
                                 ))}
                             </div>
                         </div>

@@ -3,8 +3,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Script from 'next/script'
+import { FaEdit } from 'react-icons/fa';
+
 import { FaSearch } from 'react-icons/fa'
 import Footer from '@/components/common/footer/Footer'
+import { useSelector } from 'react-redux';
 
 // A card skeleton for search results
 const CardSkeleton = () => (
@@ -18,6 +21,7 @@ const CardSkeleton = () => (
 // Main Page Component with Search Features
 export default function HelpCenterPage({ params }) {
     const { slug } = params
+    const { user, token } = useSelector((state) => state.auth)
 
     // Article Data States
     const [data, setData] = useState(null)
@@ -341,6 +345,13 @@ const Sidebar = ({ data }) => (
 const ArticleContent = ({ data }) => (
     <article className="space-y-8">
         <header>
+            {/* {user?.id === data?.user && ( */}
+                <Link href={`/all-blogs/edit/${data?.slug}`} className="text-violet-700 hover:underline flex items-center gap-1">
+                    <FaEdit />
+                    Edit
+                </Link>
+            {/* )} */}
+
             <h1
                 id="page-title"
                 className="text-3xl font-bold text-gray-900 mb-4"
