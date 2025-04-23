@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Script from 'next/script'
-import { FaSearch } from 'react-icons/fa'
+import { FaSearch, FaBars } from 'react-icons/fa'
 import Footer from '@/components/common/footer/Footer'
 
 
@@ -36,6 +36,8 @@ const DarkModeToggle = () => {
         </button>
     )
 }
+
+
 
 // A card skeleton for search results
 const CardSkeleton = () => (
@@ -343,32 +345,49 @@ const Breadcrumbs = ({ data }) => (
 /* --------------------------------------------------
    Sidebar Component – Renders the help topics and article navigation.
 -------------------------------------------------- */
-const Sidebar = ({ data }) => (
-    <aside className="space-y-8 ">
-        <Card title="Help Topics">
-            <ul className="list-disc pl-4 text-gray-700">
-                {data?.helpTopics?.map((link) => (
-                    <li key={link.name}>
-                        <Link href={link.href} className="hover:underline">
-                            {link.name}
-                        </Link>
-                    </li>
-                ))}
-            </ul>
-        </Card>
-        <Card title="Article Navigation">
-            <ul className="list-disc pl-4 text-violet-700">
-                {data?.articleNavigation?.map((section) => (
-                    <li key={section.id}>
-                        <Link href={`#${section.id}`} className="hover:underline">
-                            {section.title}
-                        </Link>
-                    </li>
-                ))}
-            </ul>
-        </Card>
-    </aside>
+// Sidebar toggle button for mobile
+const SidebarToggleButton = ({ onClick }) => (
+    <button
+        onClick={onClick}
+        className="block lg:hidden mb-4 px-4 py-2 border border-gray-300 rounded-md bg-white dark:bg-zinc-800 dark:text-white"
+    >
+        <FaBars className="inline-block mr-2" /> Menu
+    </button>
 )
+
+// Modified Sidebar to include collapsible logic
+const Sidebar = ({ data }) => {
+    const [isOpen, setIsOpen] = useState(false)
+    return (
+        <aside className="space-y-8  dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+            <SidebarToggleButton onClick={() => setIsOpen(!isOpen)} />
+            <div className={`${isOpen ? 'block' : 'hidden'} lg:block space-y-8 `}> 
+                <Card title="Help Topics">
+                    <ul className="list-disc pl-4 text-gray-700 dark:text-dark">
+                        {data?.helpTopics?.map((link) => (
+                            <li key={link.name}>
+                                <Link href={link.href} className="hover:underline">
+                                    {link.name}
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </Card>
+                <Card title="Article Navigation">
+                    <ul className="list-disc pl-4 text-violet-700">
+                        {data?.articleNavigation?.map((section) => (
+                            <li key={section.id}>
+                                <Link href={`#${section.id}`} className="hover:underline">
+                                    {section.title}
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </Card>
+            </div>
+        </aside>
+    )
+}
 
 /* --------------------------------------------------
    ArticleContent Component – Renders the article content.
