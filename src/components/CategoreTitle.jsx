@@ -1,6 +1,6 @@
 import React from "react";
 
-const TitleInputFiled = ({ id, name, type, value, onChange, placeholder,onClick }) => {
+const CategoreTitle = ({ id, name, type, value, onChange, placeholder,onClick }) => {
   return (
     <input
       id={id}
@@ -15,4 +15,4 @@ const TitleInputFiled = ({ id, name, type, value, onChange, placeholder,onClick 
   );
 };
 
-export default TitleInputFiled;
+export default CategoreTitle;

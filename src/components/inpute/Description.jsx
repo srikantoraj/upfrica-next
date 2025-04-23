@@ -31,6 +31,7 @@ const Description = ({ formik }) => {
             "advlist", "autolink", "lists", "link", "charmap", "preview",
             "anchor", "searchreplace", "visualblocks", "code", "fullscreen",
             "insertdatetime", "media", "table", "help", "wordcount",
+            
           ],
           toolbar:
             "undo redo | blocks | bold italic forecolor | alignleft aligncenter " +
