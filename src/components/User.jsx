@@ -50,7 +50,7 @@ const User = () => {
             <div className="fixed bottom-0 left-0 right-0 bg-black bg-opacity-95 shadow-lg text-white z-50">
                 <div className="flex items-center justify-center mx-auto py-2 lg:py-3 ">
                     <p className="text-sm lg:text-base">Sign in for the best experience</p>
-                    <Link href="/signin" className="ml-4 px-4 lg:px-6 py-1 lg:py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-full font-medium transition duration-300">
+                    <Link href="/signin" className="ml-4 px-4 lg:px-6 py-1  bg-purple-500 hover:bg-purple-600 text-white rounded-full lg:font-medium transition duration-300">
                         Sign in
                     </Link>
                 </div>

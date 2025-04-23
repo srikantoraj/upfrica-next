@@ -1,43 +1,53 @@
 'use client'
 import React, { useState } from "react";
+import { FiSettings } from "react-icons/fi";
 
-export const TitleSection = () => {
-  const [title, setTitle] = useState("Apple Watch Series 8 41mm Starlight Case with Beige Fluoroelastomer Sport...");
+export const TitleSection = ({ formik }) => {
   const [showOptions, setShowOptions] = useState(false);
-  const [isSubtitleEnabled, setIsSubtitleEnabled] = useState(false);
+  const [title, setTitle] = useState("Apple Watch SE (2022) 40mm Midnight Aluminium Case with Sport Band, Regular...");
+  const [subtitleEnabled, setSubtitleEnabled] = useState(false);
+
+  const toggleOptions = () => setShowOptions(!showOptions);
 
   return (
     <div className="">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Title</h2>
+
+      {/* Title header */}
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-lg font-semibold">Title</h2>
+
         <div className="relative">
           <button
-            onClick={() => setShowOptions(!showOptions)}
-            className="text-sm flex items-center gap-1 text-gray-700 hover:text-black"
+            onClick={toggleOptions}
+            className="flex items-center space-x-1  text-sm hover:underline"
           >
-            See title options
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M3 6a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/></svg>
+            <span>See title options</span>
+            <FiSettings className="w-4 h-4" />
           </button>
 
-          {/* Toggle Dropdown */}
           {showOptions && (
-            <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded shadow p-4 z-10">
-              <p className="text-sm mb-3 text-gray-700">Enable the items below that you’d like to show as an option when listing an item.</p>
-              <div className="flex justify-between items-start">
+            <div className="absolute right-0 mt-2 w-80 p-4 bg-white border rounded-md shadow z-10 text-sm">
+              <p className="mb-3 text-gray-700">
+                Enable the items below that you’d like to show as an option when listing an item.
+              </p>
+
+              <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="font-medium text-sm">Subtitle</p>
-                  <p className="text-xs text-gray-500">Subtitles appear in our search results in the list view, and can increase buyer interest by providing more descriptive info (non-refundable fee applies).</p>
+                  <label className="font-medium">Subtitle</label>
+                  <p className="text-xs text-gray-600">
+                    Subtitles appear in our search results in the list view, and can increase buyer interest by providing more descriptive info (non-refundable fee applies).
+                  </p>
                 </div>
+
                 <label className="inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    className="sr-only"
-                    checked={isSubtitleEnabled}
-                    onChange={() => setIsSubtitleEnabled(!isSubtitleEnabled)}
+                    checked={subtitleEnabled}
+                    onChange={() => setSubtitleEnabled(!subtitleEnabled)}
+                    className="sr-only peer"
                   />
-                  <div className={`w-11 h-6 flex items-center bg-gray-300 rounded-full p-1 transition ${isSubtitleEnabled ? "bg-blue-600" : ""}`}>
-                    <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${isSubtitleEnabled ? "translate-x-5" : ""}`}></div>
+                  <div className="w-11 h-6 bg-gray-300 peer-checked:bg-blue-600 rounded-full peer relative transition-colors duration-200">
+                    <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-5 transition-transform duration-200"></div>
                   </div>
                 </label>
               </div>
@@ -46,24 +56,30 @@ export const TitleSection = () => {
         </div>
       </div>
 
-      {/* Input field */}
-      <div>
-        <label htmlFor="itemTitle" className="block text-sm font-medium text-gray-700 mb-1">
+      {/* Title Input */}
+      <div className="mb-1">
+        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
           Item title
         </label>
-        <div className="relative">
-          <input
-            id="itemTitle"
-            type="text"
-            maxLength={80}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-          <div className="absolute right-2 bottom-2 text-sm text-gray-500">{title.length}/80</div>
-        </div>
+        <input
+          id="title"
+          name="title"
+          type="text"
+          maxLength={80}
+          value={formik.values.title}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+          required
+        />
+
+      </div>
+
+      {/* Character counter */}
+      <div className="flex justify-end text-xs text-gray-500">
+        {title.length}/80
       </div>
     </div>
   );
 };
+
