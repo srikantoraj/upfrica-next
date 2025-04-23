@@ -267,87 +267,64 @@ export default function ShopPageClient({ slug }) {
         style={{
             backgroundColor: shop?.bg_color || '#E8EAED',
         }}>
-            {/* HERO */}
-            <section className="relative">
-                {mainLoading ? (
-                    <HeroSectionSkeleton />
-                ) : (
-                    <>
-                        <img
-                            src={shop?.top_banner || shop?.bg_color || 'https://images.pexels.com/photos/34577/pexels-photo.jpg'}
-                            alt="Banner"
-                            className="w-full object-cover h-[200px] md:h-[300px]"
-                            style={shop?.bg_color && !shop.top_banner ? { backgroundColor: shop.bg_color } : {}}
-                        />
-                        <div className="absolute left-4 bottom-4 md:left-10 md:bottom-0 bg-white backdrop-blur p-4 md:p-6 rounded-tl-lg rounded-tr-lg max-w-[90%] md:max-w-[400px]">
-                            <h1 className="text-2xl md:text-3xl font-bold">{shop?.name}</h1>
-                            <h3 className="h6 mb-1 text-center text-gray-600">{shopType}</h3>
-                            <div className="mt-2 flex items-center gap-8 text-sm my-2">
-                                                                 <span className="flex items-center gap-1">
-                                                                     <FaCheckCircle className="bg-violet-700 h-4 w-4 text-white rounded-full" />
-                                                                    <span>Verified</span>
-                                                                 </span>
-                                                                 <span className="flex items-center gap-1">
-                                                                     {shop?.user?.country === 'GH' && (
-                                                                         <span role="img" aria-label="Ghana flag">
-                                                                             🇬🇭
-                                                                         </span>
-                                                                     )}
-                                                                     {shop?.user?.local_area && <span>{shop.user.local_area},</span>}
-                                                                     {shop?.user?.town && <span>{shop.user.town},</span>}
-                                                                     <span>{shop?.user?.country}</span>
-                                                                </span>
-                                                            </div>
-                            {/* Description: text or HTML, 5 lines max, scrollable */}
-                            <div className="mt-2 text-sm text-gray-600 max-h-32 overflow-y-auto">
-                                {shop?.description?.trim().startsWith('<') ? (
-                                    <div
-                                        className="space-y-1"
-                                        dangerouslySetInnerHTML={{ __html: shop.description }}
-                                    />
-                                ) : (
-                                    <p>{shop?.description}</p>
-                                )}
-                            </div>
-                                
+<section className="relative">
+  {mainLoading ? (
+    <HeroSectionSkeleton />
+  ) : (
+    <div className="relative">
+      <img
+        src={shop?.top_banner || 'https://images.pexels.com/photos/34577/pexels-photo.jpg'}
+        alt="Shop Banner"
+        className="w-full object-cover h-[240px] md:h-[320px]"
+      />
 
-                                <p className="text-sm mt-2 text-gray-600 flex items-center">
-                                    <HiOutlineCalendar className="mr-2" size={16} />
-                                    {shop?.created_at
-                                        ? new Date(shop.created_at).toLocaleDateString()
-                                        : 'N/A'}
-                                </p>
-                            {/* {shop?.user && (
-                                <button
-                                    onClick={() => setIsEditOpen(true)}
-                                    className="mt-3 inline-flex items-center gap-2 text-sm text-violet-700 hover:underline"
-                                >
-                                    <FaEdit /> Edit Shop
-                                </button>
-                            )}
-                            </div> */}
-                            
+      <div className="absolute inset-0 flex flex-col md:flex-row justify-between items-center px-4 md:px-10 py-4">
+        {/* Shop Logo + Info */}
+        <div className="flex items-center gap-4 md:gap-6 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg">
+          <img
+            src="https://via.placeholder.com/64x64.png?text=Logo"
+            alt="Shop Logo"
+            className="h-16 w-16 md:h-20 md:w-20 rounded-full border-2 border-white shadow object-cover"
+          />
+<div>
+  <h1 className="text-2xl md:text-3xl font-bold">{shop?.name}</h1>
+  <p className="text-sm text-gray-600">{shopType}</p>
 
+  <div className="flex items-center gap-3 mt-2 text-sm text-gray-600">
+    {shop?.created_at && (
+      <span className="flex items-center gap-1">
+        <HiOutlineCalendar className="text-gray-500" />
+        {new Date(shop.created_at).toLocaleDateString()}
+      </span>
+    )}
+    <span className="flex items-center gap-1">
+      <FaCheckCircle className="text-green-500" />
+      Verified
+    </span>
+    {shop?.user?.country && (
+      <span className="flex items-center gap-1">
+        {shop.user.country === 'GH' && '🇬🇭'} {shop.user.town}, {shop.user.country}
+      </span>
+    )}
+  </div>
 
+  {/* ✅ EDIT BUTTON visible only to the shop owner */}
+  {user && (
+    <button
+      onClick={() => setIsEditOpen(true)}
+      className="mt-3 inline-flex items-center gap-2 px-3 py-1 text-sm text-violet-700 border border-violet-700 rounded hover:bg-violet-50"
+    >
+      <FaEdit className="text-violet-700" />
+      Edit Shop
+    </button>
+  )}
+</div>
+        </div>
 
-
-                                           
-                                             
-                                            {user && (
-                                                <div
-                                                    className="flex items-center gap-2 mt-2 cursor-pointer"
-                                                    onClick={() => setIsEditOpen(true)}
-                                                    onMouseDown={(e) => e.preventDefault()}
-                                                >
-                                                     <FaEdit title="Edit Shop" />
-                                                     <span className="font-semibold">Edit</span>
-                                                 </div>
-                                )}
-                                </div>
-                                        
-                    </>
-                )}
-            </section>
+      </div>
+    </div>
+  )}
+</section>
 
             <ShopEditModal
                 isOpen={isEditOpen}
@@ -356,38 +333,39 @@ export default function ShopPageClient({ slug }) {
                 onSave={setShop}
             />
 
-            {/* TOP NAV */}
-            <nav className="border-b bg-white">
-                <ul className="mx-auto flex max-w-6xl flex-wrap items-center gap-6 px-6 py-4 text-sm font-medium">
-                    <li className="border-b-2 border-violet-700 pb-1">All Products</li>
-                    <li>Categories</li>
-                    <li>About</li>
-                    <li>Reviews</li>
-                    <li className="ml-auto">
-  <div className="flex gap-2 items-center">
-    {/* Call Seller */}
-    {shop?.user?.phone_number && (
-      <a
-        href={`tel:${shop.user.phone_number}`}
-        className="flex items-center gap-2 rounded border px-4 py-2 hover:bg-gray-100 text-sm"
-      >
-        <FaPhoneAlt className="text-gray-600" />
-        Call Seller
-      </a>
-    )}
+{/* TOP NAV */}
+<nav className="bg-white border-t border-b shadow-sm">
+  <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-3 px-4 md:px-6 py-3">
 
-    {/* Chat Seller */}
-    <button
-      onClick={() => setIsChatOpen(true)}
-      className="flex items-center gap-2 rounded border px-4 py-2 hover:bg-gray-100 text-sm"
-    >
-      <FaCommentDots className="text-gray-600" />
-      Chat
-    </button>
+    {/* Tabs */}
+    <ul className="flex flex-wrap gap-4 text-sm font-medium">
+      <li className="text-violet-700 border-b-2 border-violet-700 pb-1">All Products</li>
+      <li className="hover:text-violet-700 cursor-pointer">Categories</li>
+      <li className="hover:text-violet-700 cursor-pointer">About</li>
+      <li className="hover:text-violet-700 cursor-pointer">Reviews</li>
+    </ul>
+
+    {/* Call / Chat */}
+    <div className="flex flex-wrap md:flex-nowrap gap-2 w-full md:w-auto justify-end">
+      {shop?.user?.phone_number && (
+        <a
+          href={`tel:${shop.user.phone_number}`}
+          className="flex items-center justify-center gap-2 border px-4 py-2 rounded hover:bg-gray-100 text-sm w-full md:w-auto"
+        >
+          <FaPhoneAlt className="text-gray-600" />
+          Call
+        </a>
+      )}
+      <button
+        onClick={() => setIsChatOpen(true)}
+        className="flex items-center justify-center gap-2 border px-4 py-2 rounded hover:bg-gray-100 text-sm w-full md:w-auto"
+      >
+        <FaCommentDots className="text-gray-600" />
+        Chat
+      </button>
+    </div>
   </div>
-</li>
-                </ul>
-            </nav>
+</nav>
 
             <main className="mx-auto grid max-w-6xl gap-8 px-2 py-10 md:grid-cols-[240px_1fr]">
                 {/* DESKTOP SIDEBAR */}
