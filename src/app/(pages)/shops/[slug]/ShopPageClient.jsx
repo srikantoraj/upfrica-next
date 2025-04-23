@@ -80,7 +80,7 @@ import ProductCardSkeleton from './ProductCardSkeleton';
 import SearchResultSkeleton from './SearchResultSkeleton';
 import PriceRange from './PriceRange';
 import ShopEditModal from './ShopEditModal';
-import { FaCheckCircle, FaStar, FaEdit } from 'react-icons/fa';
+import { FaCheckCircle, FaStar, FaEdit, FaPhoneAlt, FaCommentDots } from 'react-icons/fa';
 import { AiOutlineSearch, AiOutlineClose, AiOutlineLeft, AiOutlineRight, AiOutlineFilter } from 'react-icons/ai';
 import { HiOutlineCalendar } from 'react-icons/hi';
 import Link from 'next/link';
@@ -131,6 +131,8 @@ export default function ShopPageClient({ slug }) {
 
     const [filterProducts, setFilterProducts] = useState([]);
     const [filterLoading, setFilterLoading] = useState(false);
+
+    const shopType = shop?.shoptype?.name || '';
 
     const sidebarRef = useRef();
 
@@ -279,6 +281,7 @@ export default function ShopPageClient({ slug }) {
                         />
                         <div className="absolute left-4 bottom-4 md:left-10 md:bottom-0 bg-white backdrop-blur p-4 md:p-6 rounded-tl-lg rounded-tr-lg max-w-[90%] md:max-w-[400px]">
                             <h1 className="text-2xl md:text-3xl font-bold">{shop?.name}</h1>
+                            <h3 className="h6 mb-1 text-center text-gray-600">{shopType}</h3>
                             <div className="mt-2 flex items-center gap-8 text-sm my-2">
                                                                  <span className="flex items-center gap-1">
                                                                      <FaCheckCircle className="bg-violet-700 h-4 w-4 text-white rounded-full" />
@@ -361,13 +364,28 @@ export default function ShopPageClient({ slug }) {
                     <li>About</li>
                     <li>Reviews</li>
                     <li className="ml-auto">
-                        <button
-                            className="rounded border px-4 py-2 hover:bg-gray-100"
-                                onClick={() => setSearchActive((v) => !v)}
-                        >
-                            {searchActive ? shop?.user?.phone_number || 'No Contact Info' : 'Contact Seller'}
-                        </button>
-                    </li>
+  <div className="flex gap-2 items-center">
+    {/* Call Seller */}
+    {shop?.user?.phone_number && (
+      <a
+        href={`tel:${shop.user.phone_number}`}
+        className="flex items-center gap-2 rounded border px-4 py-2 hover:bg-gray-100 text-sm"
+      >
+        <FaPhoneAlt className="text-gray-600" />
+        Call Seller
+      </a>
+    )}
+
+    {/* Chat Seller */}
+    <button
+      onClick={() => setIsChatOpen(true)}
+      className="flex items-center gap-2 rounded border px-4 py-2 hover:bg-gray-100 text-sm"
+    >
+      <FaCommentDots className="text-gray-600" />
+      Chat
+    </button>
+  </div>
+</li>
                 </ul>
             </nav>
 
