@@ -349,7 +349,7 @@ export default function ShopPageClient({ slug }) {
     <div className="flex flex-wrap md:flex-nowrap gap-2 w-full md:w-auto justify-end">
       {shop?.user?.phone_number && (
         <a
-          href={`tel:${shop.user.phone_number}`}
+          href={`tel:${shop.user?.phone_number}`}
           className="flex items-center justify-center gap-2 border px-4 py-2 rounded hover:bg-gray-100 text-sm w-full md:w-auto"
         >
           <FaPhoneAlt className="text-gray-600" />
