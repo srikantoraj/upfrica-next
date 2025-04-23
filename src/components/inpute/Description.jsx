@@ -16,11 +16,12 @@ const Description = ({ formik }) => {
       <hr className="border-gray-300 mb-4" />
 
       <Editor
+        
         name="description"
         apiKey="cly2l2971z9pgqhfjufgnqbl1h4nomfzmiqbjositk620gut"
         value={formik.values.description || ""} // Initial value সঠিকভাবে সেট করুন
         onEditorChange={(content) => {
-          console.log(content)
+          // console.log(content)
           formik.setFieldValue("description", content); // Update formik field
         }}
         init={{

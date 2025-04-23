@@ -72,15 +72,20 @@ const Photo = ({ initialImages = [], onImagesSelect }) => {
 
     // If the parent hands us a new initialImages array, re‑initialize
     useEffect(() => {
-        setImages(initialImages.map((url) => ({ data_url: url })));
+        if (initialImages.length > 0) {
+            setImages(initialImages.map((url) => ({ data_url: url })));
+        }
     }, [initialImages]);
 
+
     const onChange = (imageList) => {
+        console.log("Selected image list:", imageList); // 👈 eta add koro
         setImages(imageList);
         if (onImagesSelect) {
             onImagesSelect(imageList);
         }
     };
+
 
     return (
         <div>
@@ -119,22 +124,19 @@ const Photo = ({ initialImages = [], onImagesSelect }) => {
                             </button>
 
                             <div className="flex flex-wrap gap-4 mt-4">
-                                {imageList.map((image, index) => (
-                                    <div key={index} className="relative">
-                                        <img
-                                            src={image.data_url}
-                                            alt={`upload-${index}`}
-                                            className="h-24 w-24 object-cover rounded-md"
-                                        />
-                                        <button
-                                            type="button"
-                                            className="absolute top-0 right-0 bg-white rounded-full p-1 shadow"
-                                            onClick={() => onImageRemove(index)}
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                ))}
+                                {imageList.map((image, index) => {
+                                    console.log("Rendering image:", image); // 👈 eta add koro
+                                    return (
+                                        <div key={index} className="relative">
+                                            <img
+                                                src={image?.data_url}
+                                                alt={`upload-${index}`}
+                                                className="h-24 w-24 object-cover rounded-md border" // border for debug
+                                            />
+                                        </div>
+                                    );
+                                })}
+
                             </div>
                         </div>
                     )}
