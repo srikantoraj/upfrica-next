@@ -26,40 +26,48 @@ export default function ShopCard({ product }) {
     if (!imageUrl) return null;
 
     return (
-        <Link
-            href={`/${country}/${seo_slug}`}
-            className="group relative block overflow-hidden rounded-lg bg-white aspect-[4/5] transition shadow-[0_1px_2px_0_rgba(60,64,67,0.3),0_1px_3px_1px_rgba(60,64,67,0.15)] border border-[#dee2e6] hover:shadow-lg"
-        >
-            {/* Product Image */}
-            {imageOk ? (
-                <img
-                    src={imageUrl}
-                    alt={title}
-                    onError={() => setImageOk(false)}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-            ) : (
-                <div className="flex h-full w-full items-center justify-center text-gray-400 text-xs bg-gray-50">
-                    No image
-                </div>
-            )}
+        <div className="mt-4">
+            <div className="bg-white shadow p-2 pb-0 h-full rounded-t-md border border-[#dee2e6] drop-shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+                <div className="relative">
+                    <Link href={`/${country}/${seo_slug}`} target="_blank">
+                        <img
+                            src={imageUrl}
+                            alt={title}
+                            onError={() => setImageOk(false)}
+                            className="w-full h-[16.6rem] bg-[#F7F8FA] rounded-md object-cover transition-transform duration-300 group-hover:scale-105"
+                            loading="lazy"
+                        />
+                    </Link>
 
-            {/* Info Block (bottom, solid background) */}
-            <div className="absolute bottom-0 w-full bg-[#ffffffbd] text-white px-4 py-3 transition-all duration-300 group-hover:translate-y-0 translate-y-[10%]">
-                <h3 className="text-sm  font-semibold line-clamp-2">{title}</h3>
-                <p className="text-base font-bold leading-6 mt-1 text-[#A435F0] ">GHS {convertedPrice?.toFixed(2)}</p>
-                {seller_town && <p className="text-xs text-black">{seller_town}</p>}
-            </div>
+                    <Link href="/login">
+                        <div className="absolute top-2 right-2 z-10">
+                            <span className="inline-flex items-center justify-center bg-white rounded-full p-1 shadow hover:bg-gray-100">
+                                <AiOutlineHeart className="text-lg text-gray-700" />
+                            </span>
+                        </div>
+                    </Link>
+                </div>
 
-            {/* Hover Icons */}
-            <div className="absolute top-2 right-2 flex flex-col items-end space-y-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                <div className="bg-white p-1 rounded-full shadow hover:bg-rose-100 cursor-pointer">
-                    <AiOutlineHeart className="text-rose-500 text-lg" title="Add to Wishlist" />
+                <div className="px-2 pt-3" style={{ maxHeight: '3.5rem' }}>
+                    <h5 className="text-sm font-semibold leading-tight line-clamp-2">
+                        <Link href={`/${country}/${seo_slug}`} target="_blank">
+                            {title}
+                        </Link>
+                    </h5>
                 </div>
-                <div className="bg-white p-1 rounded-full shadow hover:bg-violet-100 cursor-pointer">
-                    <AiOutlineShoppingCart className="text-violet-700 text-xl" title="Add to Cart" />
+
+                <div className="border-t mt-2 py-1 px-2">
+                    <div className="flex justify-between items-center">
+                        <h6 className="text-sm text-gray-900 font-medium">GHS {convertedPrice?.toFixed(2)}</h6>
+                        <button
+                            title="Add to basket"
+                            className="border border-white p-1 rounded hover:bg-gray-100"
+                        >
+                            <AiOutlineShoppingCart className="text-base text-gray-700" />
+                        </button>
+                    </div>
                 </div>
             </div>
-        </Link>
+        </div>
     );
 }
