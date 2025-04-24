@@ -143,15 +143,22 @@ const AddNewProducts = () => {
 
       // secondary data
       if (values.multi_buy == 'yes') {
+        formData.append("multi_buy", values.multi_buy);
         formData.append("multi_buy_tiers", JSON.stringify(values.multi_buy_tiers));
       }
       formData.append(
         "approval_notes",
         values.approval_notes
       );
+    
+      let cancel = values?.cancellable? 'yes' : 'no';
       formData.append(
-        "cancellation_policy",
-        JSON.stringify(cancellationPolicy)
+        "cancellable",
+        cancel
+      );
+
+      formData.append(
+        "cancellation_policy", cancel =='no'?'':JSON.stringify(cancellationPolicy)
       );
 
       // Append images
@@ -171,11 +178,11 @@ const AddNewProducts = () => {
       }
 
 
-      // console.log("Form Data:", formData);
-      // console.log("Form Values:", values);
-      // for (let [key, value] of formData.entries()) {
-      //   console.log(`${key}:`, value);
-      // }
+      console.log("Form Data:", formData);
+      console.log("Form Values:", values);
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+      }
 
       // return;
       // Set up headers with Authorization
