@@ -203,7 +203,7 @@ const AddNewProducts = () => {
     <div className="flex justify-center md:pt-20 bg-slate-50 px-2 md:px-4">
       <form
         onSubmit={formik.handleSubmit}
-        className="w-full lg:max-w-3xl py-5"
+        className="w-full lg:max-w-5xl py-5"
       >
         {/* Page Title */}
         <div className="text-center space-y-4 pb-10">
