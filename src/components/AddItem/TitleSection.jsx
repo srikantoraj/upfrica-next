@@ -156,7 +156,7 @@ export const TitleSection = ({ formik }) => {
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-          required
+          // required
         />
       </div>
 

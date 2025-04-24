@@ -5,7 +5,7 @@ import CompleteListing from '@/components/AddItem/CompleteListing';
 import DeliveryDetails from '@/components/AddItem/DeliveryDetails';
 import EbayFooter from '@/components/AddItem/EbayFooter';
 import ItemDisclosures from '@/components/AddItem/ItemDisclosures';
-import ItemForm from '@/components/AddItem/ItemForm';
+import ItemForm from '@/components/AddItem/ItemAttributesForm';
 import LegalFAQNotice from '@/components/AddItem/LegalFAQNotice';
 import ListingCTA from '@/components/AddItem/ListingCTA';
 import ListingFee from '@/components/AddItem/ListingFee';
@@ -16,10 +16,33 @@ import { TitleSection } from '@/components/AddItem/TitleSection';
 import { UploaderGrid } from '@/components/AddItem/UploaderGrid';
 import Header from '@/components/common/header/Header';
 import { useFormik } from 'formik';
-import React from 'react';
+import React, { useState } from 'react';
 import * as Yup from 'yup';
+import Item from '@/components/AddItem/Item';
+import ItemConditionSelector from '@/components/AddItem/ItemConditionSelector';
 
 const AddItem = () => {
+    const [uploadedImages, setUploadedImages] = useState([]); // ⭐️ Add this line
+
+
+    // const formik = useFormik({
+    //     initialValues: {
+    //         title: '',
+    //         price: 0,
+    //         schedule: { date: '', time: '' },
+    //         adRate: 9,
+    //     },
+    //     validationSchema: Yup.object({
+    //         title: Yup.string().required('Title is required'),
+    //         // price: Yup.number().min(1, 'Minimum price is 1'),
+    //     }),
+    //     onSubmit: (values) => {
+    //         console.log('✅ Final listing data:', values);
+
+    //     },
+    // });
+
+
 
     const formik = useFormik({
         initialValues: {
@@ -27,30 +50,58 @@ const AddItem = () => {
             price: 0,
             schedule: { date: '', time: '' },
             adRate: 9,
+            images: [], // <-- Add this to formik
+            itemAttributes: {}, // ⭐️ New field for ItemAttributes
+            condition: 'New', // ⭐️ Add this
+            description: '', // ⭐️ Add this line
+            pricing: {                         // ✅ Add this block
+                format: 'Auction',
+                duration: '7 days',
+                startingBid: '47.70',
+                buyItNow: '136.91',
+                immediatePay: false,
+                reservePrice: '',
+                quantity: 1,
+            },
+            deliveryDetails: {
+                method: 'FLAT_RATE_LOCAL_PICKUP',
+                weight: { kg: '', g: '' },
+                dimensions: { length: '', width: '', depth: '' },
+                location: '',
+            },
+            majorWeight: '',
+            minorWeight: '',
+            length: '',
+            width: '',
+            depth: ''
+
         },
         validationSchema: Yup.object({
             title: Yup.string().required('Title is required'),
-            // price: Yup.number().min(1, 'Minimum price is 1'),
         }),
         onSubmit: (values) => {
             console.log('✅ Final listing data:', values);
-
         },
     });
 
+    const handleImagesChange = (imgs) => {
+        setUploadedImages(imgs);
+        formik.setFieldValue('images', imgs); // <-- Update Formik value
+    };
     return (
         <div>
             <Header />
             <form onSubmit={formik.handleSubmit} className="max-w-5xl mx-auto space-y-10 py-5 px-4">
                 <CompleteListing />
-                <UploaderGrid />
+                <UploaderGrid onImagesChange={handleImagesChange} />
                 <TitleSection formik={formik} />
                 <CategorySection />
-                <ItemForm />
-                <AiDescription />
-                <PricingSection />
-                <ScheduleListing />
-                <DeliveryDetails />
+                <Item formik={formik} />
+                <ItemConditionSelector formik={formik} />
+                <AiDescription formik={formik} />
+                <PricingSection formik={formik} />
+                {/* <ScheduleListing /> */}
+                <DeliveryDetails formik={formik} />
                 <ItemDisclosures />
                 <PromoteListing />
                 <ListingFee />

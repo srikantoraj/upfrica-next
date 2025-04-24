@@ -1,7 +1,10 @@
 'use client'
 import React, { useState } from 'react';
+import PackageDetails from './PackageDetails';
+import DomesticPostage from './DomesticPostage';
+import CollectionInPersonSection from './CollectionInPersonSection';
 
-export default function DeliveryDetails() {
+export default function DeliveryDetails({formik}) {
   const [showOptions, setShowOptions] = useState(false);
   const [internationalPostage, setInternationalPostage] = useState(false);
   const [excludedLocations, setExcludedLocations] = useState(false);
@@ -57,44 +60,20 @@ export default function DeliveryDetails() {
         ))}
       </div>
 
-      {/* Package Size & Dimensions */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Package size (optional)</h3>
-        <div className="flex space-x-4">
-          <div className="flex-1">
-            <label className="block mb-1">Weight (kg)</label>
-            <input type="text" className="w-full border rounded px-3 py-2" placeholder="kg" />
-          </div>
-          <div className="flex-1">
-            <label className="block mb-1">Weight (g)</label>
-            <input type="text" className="w-full border rounded px-3 py-2" placeholder="g" />
-          </div>
-        </div>
-        <div className="flex space-x-4">
-          <div className="flex-1">
-            <label className="block mb-1">Length (cm)</label>
-            <input type="text" className="w-full border rounded px-3 py-2" placeholder="cm" />
-          </div>
-          <div className="flex-1">
-            <label className="block mb-1">Width (cm)</label>
-            <input type="text" className="w-full border rounded px-3 py-2" placeholder="cm" />
-          </div>
-          <div className="flex-1">
-            <label className="block mb-1">Depth (cm)</label>
-            <input type="text" className="w-full border rounded px-3 py-2" placeholder="cm" />
-          </div>
-        </div>
-      </div>
+      {/* Conditional rendering for PackageDetails and DomesticPostage */}
+      {(deliveryMethod === 'FLAT_RATE_LOCAL_PICKUP' || deliveryMethod === 'FLAT_RATE_ONLY') && (
+        <>
+          {/* Package Size & Dimensions */}
+          <PackageDetails formik={formik} />
 
-      {/* Domestic Postage */}
-      <div className="space-y-2">
-        <h3 className="text-lg font-medium">Domestic postage</h3>
-        <p className="text-sm text-gray-600">For complete seller protection, choose postage with tracking and purchase the postage label through eBay.</p>
-        <button className="inline-flex items-center space-x-2 text-blue-600 hover:underline">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke="currentColor" strokeWidth="2" /></svg>
-          <span>Add primary service</span>
-        </button>
-      </div>
+          {/* Domestic Postage */}
+          <DomesticPostage />
+        </>
+      )}
+
+      {deliveryMethod === 'NOT_SPECIFIED' && <CollectionInPersonSection />}
+
+
 
       {/* Preferences */}
       <div className="space-y-2">
