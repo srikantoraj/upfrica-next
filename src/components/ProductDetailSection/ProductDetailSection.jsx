@@ -909,7 +909,11 @@ export default function ProductDetailSection({ product }) {
                             <div className="space-y-4 my-4">
   {variants && variants.length > 0 && (
     <>
-      <hr className="my-3 border-gray-200" />
+    <hr className="my-3 border-gray-200" />
+    <Link href={`/products/edit/variants/${product?.id}`} className="flex items-center gap-2">
+        <FaEdit className="h-4 w-4 text-violet-700" />
+        <span className="text-violet-700 hover:underline">Edit Variants</span>
+    </Link>
       {variants.map((variant) => (
         variant.values && variant.values.length > 0 && (
           <div key={variant.id}>

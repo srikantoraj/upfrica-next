@@ -61,7 +61,7 @@ export default function EditProductPage({ params }) {
             price_currency: product?.price_currency || "GHS",
             status: product?.status || "",
             multi_buy: product?.multi_buy ? "yes" : "no",
-            multi_buy_tiers: product?.multi_buy_tiers || [{}],
+            multi_buy_tiers: product?.secondary_data?.multi_buy_tiers || [{}],
             supplierLink: product?.supplierLink || "",
             backupSupplier: product?.backupSupplier || "",
             supplerName: product?.supplerName || "",
@@ -89,7 +89,7 @@ export default function EditProductPage({ params }) {
                 product?.cancellation_policy?.autoCancelUnpaidHours || 48,
             abuseFlagThreshold:
                 product?.cancellation_policy?.abuseFlagThreshold || 5,
-            approval_notes: product?.approval_notes || "",
+            approval_notes: product?.secondary_data?.approval_notes || "",
             brand: product?.brand?.id || "",
             category: product?.category?.id || "",
             condition: product?.condition?.id || "",
@@ -182,7 +182,7 @@ export default function EditProductPage({ params }) {
 
             try {
                 const res = await fetch(
-                    `https://media.upfrica.com/api/product/update/${product.id}/`,
+                    `https://media.upfrica.com/api/product/${product.id}/`,
                     {
                         method: "PATCH",
                         headers: myHeaders,
