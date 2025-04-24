@@ -25,7 +25,7 @@ function SearchResultItem({ shop }) {
             {shop.shop_logo ? (
                 <img
                     src={shop.shop_logo}
-                    alt={shop.name}
+                    alt={shop?.name}
                     className="w-12 h-12 rounded object-cover flex-shrink-0"
                 />
             ) : (
@@ -35,7 +35,7 @@ function SearchResultItem({ shop }) {
             )}
             <div className="ml-4 flex-1 overflow-hidden">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                    {shop.name}
+                    {shop?.name}
                 </p>
                 <p
                     className="text-xs text-gray-500 truncate"
@@ -46,7 +46,7 @@ function SearchResultItem({ shop }) {
     )
 }
 
-export default function ShopGrid() {
+export default function ShopGrid({ bgColor = '#E8EAED' }) {
     const router = useRouter()
 
     // — Grid state
@@ -137,9 +137,7 @@ export default function ShopGrid() {
         ))
 
     return (
-        <div className="px-4 container mx-auto"                                             style={{
-            backgroundColor: shop.bg_color || '#E8EAED',
-        }}>
+<div className="px-4 container mx-auto" style={{ backgroundColor: bgColor }}>
             {/* — Search Box — */}
             <div
                 ref={containerRef}
@@ -216,7 +214,7 @@ export default function ShopGrid() {
                                         <div
                                             className="w-full h-full rounded-t-lg"
                                             style={{
-                                                backgroundColor: shop.bg_color || '#E8EAED',
+                                                backgroundColor: shop?.bg_color || '#E8EAED',
                                             }}
                                         />
                                     )}

@@ -647,10 +647,18 @@ import { HiOutlineCalendar } from 'react-icons/hi';
 
 // Components & skeletons
 import ShopCard from '@/components/home/ProductList/ShopCard';
+import ShopFAQSection from '@/components/ShopFAQSection';
 import ProductCardSkeleton from './ProductCardSkeleton';
 import SearchResultSkeleton from './SearchResultSkeleton';
 import PriceRange from './PriceRange';
 import ShopEditModal from './ShopEditModal';
+
+import { FaCheckCircle, FaStar, FaEdit, FaPhoneAlt, FaCommentDots } from 'react-icons/fa';
+import { AiOutlineSearch, AiOutlineClose, AiOutlineLeft, AiOutlineRight, AiOutlineFilter } from 'react-icons/ai';
+import { HiOutlineCalendar } from 'react-icons/hi';
+import Link from 'next/link';
+import { useSelector } from 'react-redux';
+
 import HeroSectionSkeleton from './HeroSectionSkeleton';
 
 const PAGE_SIZE = 20;
@@ -773,6 +781,8 @@ export default function ShopPageClient({ slug }) {
 
     const [filterProducts, setFilterProducts] = useState([]);
     const [filterLoading, setFilterLoading] = useState(false);
+
+    const shopType = shop?.shoptype?.name || '';
 
     const sidebarRef = useRef();
 
@@ -902,78 +912,68 @@ export default function ShopPageClient({ slug }) {
     }
 
     return (
-        <div
-            className="min-h-screen bg-gray-50 text-gray-900"
-            style={{ backgroundColor: shop?.bg_color || '#E8EAED' }}
-        >
-            {/* HERO */}
-            <section className="relative">
-                {mainLoading ? (
-                    <HeroSectionSkeleton />
-                ) : (
-                    <>
-                        <img
-                            src={
-                                shop?.top_banner ||
-                                shop?.bg_color ||
-                                'https://images.pexels.com/photos/34577/pexels-photo.jpg'
-                            }
-                            alt="Banner"
-                            className="w-full object-cover h-[200px] md:h-[300px]"
-                            style={
-                                shop?.bg_color && !shop.top_banner
-                                    ? { backgroundColor: shop.bg_color }
-                                    : {}
-                            }
-                        />
-                        <div className="absolute left-4 bottom-4 md:left-10 md:bottom-0 bg-white backdrop-blur p-4 md:p-6 rounded-tl-lg rounded-tr-lg max-w-[90%] md:max-w-[400px]">
-                            <h1 className="text-2xl md:text-3xl font-bold">{shop?.name}</h1>
-                            <div className="mt-2 flex items-center gap-8 text-sm my-2">
-                                <span className="flex items-center gap-1">
-                                    <FaCheckCircle className="bg-violet-700 h-4 w-4 text-white rounded-full" />
-                                    <span>Verified</span>
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    {shop?.user?.country === 'GH' && (
-                                        <span role="img" aria-label="Ghana flag">
-                                            🇬🇭
-                                        </span>
-                                    )}
-                                    {shop?.user?.local_area && <span>{shop.user.local_area},</span>}
-                                    {shop?.user?.town && <span>{shop.user.town},</span>}
-                                    <span>{shop?.user?.country}</span>
-                                </span>
-                            </div>
-                            <div className="mt-2 text-sm text-gray-600 max-h-32 overflow-y-auto">
-                                {shop?.description?.trim().startsWith('<') ? (
-                                    <div
-                                        className="space-y-1"
-                                        dangerouslySetInnerHTML={{ __html: shop.description }}
-                                    />
-                                ) : (
-                                    <p>{shop?.description}</p>
-                                )}
-                            </div>
-                            <p className="text-sm mt-2 text-gray-600 flex items-center">
-                                <HiOutlineCalendar className="mr-2" size={16} />
-                                {shop?.created_at
-                                    ? new Date(shop.created_at).toLocaleDateString()
-                                    : 'N/A'}
-                            </p>
-                            {user && (
-                                <div
-                                    className="flex items-center gap-2 mt-2 cursor-pointer"
-                                    onClick={() => setIsEditOpen(true)}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                >
-                                    <FaEdit title="Edit Shop" />
-                                    <span className="font-semibold">Edit</span>
-                                </div>
-                            )}
-                        </div>
-                    </>
-                )}
-            </section>
+        <div className="min-h-screen bg-gray-50 text-gray-900" 
+        style={{
+            backgroundColor: shop?.bg_color || '#E8EAED',
+        }}>
+<section className="relative">
+  {mainLoading ? (
+    <HeroSectionSkeleton />
+  ) : (
+    <div className="relative">
+      <img
+        src={shop?.top_banner || 'https://images.pexels.com/photos/34577/pexels-photo.jpg'}
+        alt="Shop Banner"
+        className="w-full object-cover h-[240px] md:h-[320px]"
+      />
+
+      <div className="absolute inset-0 flex flex-col md:flex-row justify-between items-center px-4 md:px-10 py-4">
+        {/* Shop Logo + Info */}
+        <div className="flex items-center gap-4 md:gap-6 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg">
+          <img
+            src="https://via.placeholder.com/64x64.png?text=Logo"
+            alt="Shop Logo"
+            className="h-16 w-16 md:h-20 md:w-20 rounded-full border-2 border-white shadow object-cover"
+          />
+<div>
+  <h1 className="text-2xl md:text-3xl font-bold">{shop?.name}</h1>
+  <p className="text-sm text-gray-600">{shopType}</p>
+
+  <div className="flex items-center gap-3 mt-2 text-sm text-gray-600">
+    {shop?.created_at && (
+      <span className="flex items-center gap-1">
+        <HiOutlineCalendar className="text-gray-500" />
+        {new Date(shop.created_at).toLocaleDateString()}
+      </span>
+    )}
+    <span className="flex items-center gap-1">
+      <FaCheckCircle className="text-green-500" />
+      Verified
+    </span>
+    {shop?.user?.country && (
+      <span className="flex items-center gap-1">
+        {shop.user.country === 'GH' && '🇬🇭'} {shop.user.town}, {shop.user.country}
+      </span>
+    )}
+  </div>
+
+  {/* ✅ EDIT BUTTON visible only to the shop owner */}
+  {user && (
+    <button
+      onClick={() => setIsEditOpen(true)}
+      className="mt-3 inline-flex items-center gap-2 px-3 py-1 text-sm text-violet-700 border border-violet-700 rounded hover:bg-violet-50"
+    >
+      <FaEdit className="text-violet-700" />
+      Edit Shop
+    </button>
+  )}
+</div>
+        </div>
+
+      </div>
+    </div>
+  )}
+</section>
 
             <ShopEditModal
                 isOpen={isEditOpen}
@@ -982,23 +982,39 @@ export default function ShopPageClient({ slug }) {
                 onSave={setShop}
             />
 
-            {/* TOP NAV */}
-            <nav className="border-b bg-white">
-                <ul className="mx-auto flex max-w-6xl flex-wrap items-center gap-6 px-6 py-4 text-sm font-medium">
-                    <li className="border-b-2 border-violet-700 pb-1">All Products</li>
-                    <li>Categories</li>
-                    <li>About</li>
-                    <li>Reviews</li>
-                    <li className="ml-auto">
-                        <button
-                            className="rounded border px-4 py-2 hover:bg-gray-100"
-                            onClick={() => setSearchActive((v) => !v)}
-                        >
-                            {searchActive ? shop?.user?.phone_number || 'No Contact Info' : 'Contact Seller'}
-                        </button>
-                    </li>
-                </ul>
-            </nav>
+{/* TOP NAV */}
+<nav className="bg-white border-t border-b shadow-sm">
+  <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-3 px-4 md:px-6 py-3">
+
+    {/* Tabs */}
+    <ul className="flex flex-wrap gap-4 text-sm font-medium">
+      <li className="text-violet-700 border-b-2 border-violet-700 pb-1">All Products</li>
+      <li className="hover:text-violet-700 cursor-pointer">Categories</li>
+      <li className="hover:text-violet-700 cursor-pointer">About</li>
+      <li className="hover:text-violet-700 cursor-pointer">Reviews</li>
+    </ul>
+
+    {/* Call / Chat */}
+    <div className="flex flex-wrap md:flex-nowrap gap-2 w-full md:w-auto justify-end">
+      {shop?.user?.phone_number && (
+        <a
+          href={`tel:${shop.user?.phone_number}`}
+          className="flex items-center justify-center gap-2 border px-4 py-2 rounded hover:bg-gray-100 text-sm w-full md:w-auto"
+        >
+          <FaPhoneAlt className="text-gray-600" />
+          Call
+        </a>
+      )}
+      <button
+        onClick={() => setIsChatOpen(true)}
+        className="flex items-center justify-center gap-2 border px-4 py-2 rounded hover:bg-gray-100 text-sm w-full md:w-auto"
+      >
+        <FaCommentDots className="text-gray-600" />
+        Chat
+      </button>
+    </div>
+  </div>
+</nav>
 
             <main className="mx-auto grid max-w-6xl gap-8 px-2 py-10 md:grid-cols-[240px_1fr]">
                 {/* DESKTOP SIDEBAR */}
@@ -1243,12 +1259,15 @@ export default function ShopPageClient({ slug }) {
                         )}
                     </div>
 
-                    {/* PAGINATION */}
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                    />
+        {/* PAGINATION */}
+        <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        />
+
+<ShopFAQSection shop={shop} />
+
                 </section>
             </main>
         </div>
