@@ -72,15 +72,20 @@ const Photo = ({ initialImages = [], onImagesSelect }) => {
 
     // If the parent hands us a new initialImages array, re‑initialize
     useEffect(() => {
-        setImages(initialImages.map((url) => ({ data_url: url })));
+        if (initialImages.length > 0) {
+            setImages(initialImages.map((url) => ({ data_url: url })));
+        }
     }, [initialImages]);
 
+
     const onChange = (imageList) => {
+        console.log("Selected image list:", imageList); // 👈 eta add koro
         setImages(imageList);
         if (onImagesSelect) {
             onImagesSelect(imageList);
         }
     };
+
 
     return (
         <div>

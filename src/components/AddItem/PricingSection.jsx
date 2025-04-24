@@ -4,7 +4,7 @@ import SoldListingsSummary from "./SoldListingsSummary";
 
 
 
-export default function PricingSection() {
+export default function PricingSection({formik}) {
 
 
 
@@ -13,7 +13,7 @@ export default function PricingSection() {
       <PricingOptionsPanel />
       <div className="grid md:grid-cols-2 md:gap-4">
         <div>
-          <PriceFields />
+          <PriceFields formik={formik} />
         </div>
         <SoldListingsSummary />
       </div>

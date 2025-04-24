@@ -53,7 +53,7 @@ const AddNewProducts = () => {
       price_currency: "GHS",
       status: "",
       multi_buy: false,              // checkbox: Multi‑Buy on/off
-      multi_buy_tiers: [{}], 
+      multi_buy_tiers: [{}],
       // Supplier information
       supplierLink: "",
       backupSupplier: "",
@@ -81,10 +81,6 @@ const AddNewProducts = () => {
       abuseFlagThreshold: 5,
     },
     onSubmit: async (values) => {
- 
-
-
-
       const formData = new FormData();
 
       // Append primary product fields
@@ -115,7 +111,7 @@ const AddNewProducts = () => {
       formData.append("secondary_postage_fee_cents_currency", values.price_currency);
 
       // Append multi‑buy options
-      
+
 
       // Append supplier fields
       formData.append("supplierLink", values.supplierLink);
@@ -180,7 +176,7 @@ const AddNewProducts = () => {
       // for (let [key, value] of formData.entries()) {
       //   console.log(`${key}:`, value);
       // }
-     
+
       // return;
       // Set up headers with Authorization
       const myHeaders = new Headers();
@@ -517,11 +513,11 @@ const AddNewProducts = () => {
           <Brand formik={formik} />
           <Photo onImagesSelect={setSelectedImages} />
         </div>
-        
+
 
         {/* Other Sections */}
         <PriceSection formik={formik} />
-        
+
         <DeliverySection formik={formik} />
         <Promotions formik={formik} />
         <CancellationReturns formik={formik} />

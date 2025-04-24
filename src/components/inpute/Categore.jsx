@@ -88,8 +88,8 @@
 
 
 import React, { useState, useRef, useEffect } from "react";
-import InputField from "../InputField";
 import useCategories from "../api/data";
+import CategoreTitle from "../CategoreTitle";
 
 const Categore = ({ formik }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -122,9 +122,9 @@ const Categore = ({ formik }) => {
       <h2 className="text-2xl font-bold mb-2">*Category</h2>
       <hr className="border-gray-300 mb-4" />
 
-      <div className="relative flex items-center border rounded-md border-purple-500 bg-purple-50 px-2">
-        <InputField
-          className="w-full focus:outline-none py-2 ps-3 hover:cursor-pointer"
+      <div className="relative flex items-center border rounded-md border-purple-500 px-2">
+        <CategoreTitle
+          className="w-full focus:ring-0 py-2 ps-3 border-none hover:cursor-pointer"
           type="text"
           name="category"
           readOnly

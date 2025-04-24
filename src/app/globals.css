@@ -78,4 +78,10 @@ h3 {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* styles.css */
+select {
+  transition: all 0.3s ease;
+}
+
 }
