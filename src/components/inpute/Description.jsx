@@ -25,7 +25,7 @@ const Description = ({ formik }) => {
           formik.setFieldValue("description", content); // Update formik field
         }}
         init={{
-          height: 200,
+          height: 350,
           menubar: false,
           plugins: [
             "advlist", "autolink", "lists", "link", "charmap", "preview",
