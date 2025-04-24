@@ -44,7 +44,7 @@ const ItemAttributesForm = () => {
             <label className="text-sm font-medium text-gray-800 flex items-center">
               {attr.label}
               <div className="ml-2 relative group">
-                <span className="text-gray-400 hover:text-gray-600 cursor-pointer">ⓘ</span>
+                
                 <div className="absolute hidden group-hover:block bg-black text-white text-xs p-2 rounded shadow-md w-48 z-20 top-5 left-0">
                   {attr.tooltip}
                 </div>
