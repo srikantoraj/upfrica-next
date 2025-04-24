@@ -3,18 +3,52 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Script from 'next/script'
+
 import { FaEdit } from 'react-icons/fa';
 
-import { FaSearch } from 'react-icons/fa'
+import { FaSearch, FaBars } from 'react-icons/fa'
 import Footer from '@/components/common/footer/Footer'
 import { useSelector } from 'react-redux';
 
+
+// Dark Mode Toggle Hook
+const useDarkMode = () => {
+    const [enabled, setEnabled] = useState(false)
+    useEffect(() => {
+        const saved = localStorage.getItem('theme') === 'dark'
+        if (saved) {
+            document.documentElement.classList.add('dark')
+            setEnabled(true)
+        }
+    }, [])
+
+    const toggle = () => {
+        const isDark = !enabled
+        localStorage.setItem('theme', isDark ? 'dark' : 'light')
+        document.documentElement.classList.toggle('dark', isDark)
+        setEnabled(isDark)
+    }
+    return [enabled, toggle]
+}
+
+// Dark mode toggle button
+const DarkModeToggle = () => {
+    const [enabled, toggle] = useDarkMode()
+    return (
+        <button onClick={toggle} className="ml-4 px-3 py-2 border border-white text-white rounded-full hover:bg-white hover:text-black transition">
+            {enabled ? '🌙 Dark' : '☀️ Light'}
+        </button>
+    )
+}
+
+
+
 // A card skeleton for search results
 const CardSkeleton = () => (
-    <div className="animate-pulse p-4 bg-white rounded shadow">
-        <div className="h-6 bg-gray-300 rounded w-5/6 mb-2"></div>
-        <div className="h-4 bg-gray-300 rounded w-full mb-2"></div>
-        <div className="h-3 bg-gray-300 rounded w-4/6"></div>
+    <div className="animate-pulse p-4 bg-white dark:bg-gray-800 rounded shadow">
+        <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-5/6 mb-2"></div>
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full mb-2"></div>
+        <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-4/6"></div>
     </div>
 )
 
@@ -126,7 +160,7 @@ export default function HelpCenterPage({ params }) {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
             <Header
                 data={staticHeader}
                 searchQuery={searchQuery}
@@ -136,10 +170,14 @@ export default function HelpCenterPage({ params }) {
                 searchResults={searchResults}
                 searchLoading={searchLoading}
             />
+            <div className="absolute top-6 right-6 z-50">
+                <DarkModeToggle />
+            </div>
+
             <Breadcrumbs data={staticBreadcrumbs} />
-            <div className="container mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className="container mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8 ">
                 <Sidebar data={staticSidebar} />
-                <main className="lg:col-span-3 space-y-8">
+                <main className="lg:col-span-3 space-y-8 ">
                     <ArticleContent data={data} />
                    
                 </main>
@@ -155,7 +193,7 @@ export default function HelpCenterPage({ params }) {
    SkeletonLoader Component – Mimics the page layout while data loads.
 -------------------------------------------------- */
 const SkeletonLoader = () => (
-    <div className="min-h-screen bg-gray-100 animate-pulse">
+    <div className="min-h-screen bg-gray-100 animate-pulse ">
         {/* Header Skeleton */}
         <div className="h-24 bg-gray-300 relative">
             <div className="absolute inset-0 bg-gray-400 opacity-50"></div>
@@ -187,7 +225,7 @@ const SkeletonLoader = () => (
                 </div>
             </aside>
             {/* Main Article Skeleton */}
-            <main className="lg:col-span-3 space-y-8">
+            <main className="lg:col-span-3 space-y-8  dark:bg-gray-900 text-gray-900 dark:text-gray-100">
                 <div className="space-y-4">
                     <div className="h-8 w-3/4 bg-gray-300 rounded"></div>
                     <div className="h-4 w-full bg-gray-300 rounded"></div>
@@ -312,38 +350,55 @@ const Breadcrumbs = ({ data }) => (
 /* --------------------------------------------------
    Sidebar Component – Renders the help topics and article navigation.
 -------------------------------------------------- */
-const Sidebar = ({ data }) => (
-    <aside className="space-y-8">
-        <Card title="Help Topics">
-            <ul className="list-disc pl-4 text-gray-700">
-                {data?.helpTopics?.map((link) => (
-                    <li key={link.name}>
-                        <Link href={link.href} className="hover:underline">
-                            {link.name}
-                        </Link>
-                    </li>
-                ))}
-            </ul>
-        </Card>
-        <Card title="Article Navigation">
-            <ul className="list-disc pl-4 text-violet-700">
-                {data?.articleNavigation?.map((section) => (
-                    <li key={section.id}>
-                        <Link href={`#${section.id}`} className="hover:underline">
-                            {section.title}
-                        </Link>
-                    </li>
-                ))}
-            </ul>
-        </Card>
-    </aside>
+// Sidebar toggle button for mobile
+const SidebarToggleButton = ({ onClick }) => (
+    <button
+        onClick={onClick}
+        className="block lg:hidden mb-4 px-4 py-2 border border-gray-300 rounded-md bg-white dark:bg-zinc-800 dark:text-white"
+    >
+        <FaBars className="inline-block mr-2" /> Menu
+    </button>
 )
+
+// Modified Sidebar to include collapsible logic
+const Sidebar = ({ data }) => {
+    const [isOpen, setIsOpen] = useState(false)
+    return (
+        <aside className="space-y-8  dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+            <SidebarToggleButton onClick={() => setIsOpen(!isOpen)} />
+            <div className={`${isOpen ? 'block' : 'hidden'} lg:block space-y-8 `}> 
+                <Card title="Help Topics">
+                    <ul className="list-disc pl-4 text-gray-700 dark:text-dark">
+                        {data?.helpTopics?.map((link) => (
+                            <li key={link.name}>
+                                <Link href={link.href} className="hover:underline">
+                                    {link.name}
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </Card>
+                <Card title="Article Navigation">
+                    <ul className="list-disc pl-4 text-violet-700">
+                        {data?.articleNavigation?.map((section) => (
+                            <li key={section.id}>
+                                <Link href={`#${section.id}`} className="hover:underline">
+                                    {section.title}
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </Card>
+            </div>
+        </aside>
+    )
+}
 
 /* --------------------------------------------------
    ArticleContent Component – Renders the article content.
 -------------------------------------------------- */
 const ArticleContent = ({ data }) => (
-    <article className="space-y-8">
+    <article className="space-y-8 bg-white  dark:bg-zinc-900 dark:text-white rounded p-4 shadow text-[18px] leading-[32px] tracking-[-0.003em] font-normal ">
         <header>
             {/* {user?.id === data?.user && ( */}
                 <Link href={`/all-blogs/edit/${data?.slug}`} className="text-violet-700 hover:underline flex items-center gap-1">
@@ -354,20 +409,20 @@ const ArticleContent = ({ data }) => (
 
             <h1
                 id="page-title"
-                className="text-3xl font-bold text-gray-900 mb-4"
+                className="text-3xl font-bold text-gray-900  dark:text-white mb-4"
                 title={data?.title}
             >
                 {data?.title}
             </h1>
         </header>
-        {data?.summary && <p className="mb-4">{data.summary}</p>}
+        {data?.summary && <p className="mb-2">{data.summary}</p>}
         {data?.sections?.map((section, index) => (
             <section
                 key={index}
                 id={section.sectionTitle?.toLowerCase().replace(/\s/g, "-")}
-                className="border-t pt-4"
+                className="border-t pt-0  dark:text-white"
             >
-                <h2 className="text-2xl font-bold mt-8 mb-3">
+                <h2 className="text-2xl font-bold mt-4 mb-2  dark:text-white">
                     {section.sectionTitle}
                 </h2>
                 {section.sectionType === "paragraph" && (
@@ -383,7 +438,7 @@ const ArticleContent = ({ data }) => (
                 )}
 
                 {section.sectionType === "highlight" && (
-                    <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4">
+                    <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 dark:bg-yellow-200/30">
                         <p className="font-semibold">Important:</p>
                         <p>{section.sectionContent}</p>
                     </div>
@@ -430,7 +485,7 @@ const ArticleContent = ({ data }) => (
 const TableComponent = ({ headers, rows }) => (
     <table className="min-w-full border border-gray-300">
         <thead>
-            <tr className="bg-gray-200">
+            <tr className="bg-gray-200 dark:bg-zinc-900 dark:text-dark">
                 {headers.map((header, i) => (
                     <th key={i} className="px-4 py-2 border border-gray-300">{header}</th>
                 ))}

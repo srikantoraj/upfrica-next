@@ -1,0 +1,20 @@
+# Allow all crawlers access to everything
+User-agent: *
+
+# Allow crawling of all content
+Allow: /
+
+# Disallow internal or sensitive routes (adjust as needed)
+Disallow: /admin/
+Disallow: /api/
+Disallow: /cart/
+Disallow: /checkout/
+Disallow: /orders/
+Disallow: /login/
+Disallow: /register/
+Disallow: /reset-password/
+Disallow: /404
+Disallow: /500
+
+# Sitemap(s)
+Sitemap: https://upfrica.com/sitemap.xml

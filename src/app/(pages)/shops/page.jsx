@@ -137,7 +137,9 @@ export default function ShopGrid() {
         ))
 
     return (
-        <div className="px-4 container mx-auto">
+        <div className="px-4 container mx-auto"                                             style={{
+            backgroundColor: shop.bg_color || '#E8EAED',
+        }}>
             {/* — Search Box — */}
             <div
                 ref={containerRef}
@@ -200,7 +202,7 @@ export default function ShopGrid() {
             <div className="mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {loadingShops
                     ? renderGridSkeletons()
-                    : shops.map((shop) => (
+                    : shops&&shops.map((shop) => (
                         <div key={shop.id} className="relative mb-24">
                             <div className="bg-white shadow-lg rounded-lg overflow-hidden">
                                 <div className="h-[400px]">

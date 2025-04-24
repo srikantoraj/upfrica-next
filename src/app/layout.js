@@ -1,48 +1,66 @@
-
-// import "./globals.css";
-// import { Inter, Montserrat } from 'next/font/google';
-// import Providers from "./providers";
-
-
-// const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-// const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' });
-
-// export const metadata = {
-//   title: "Buy & Sell Online in Ghana | Post Free Ads – Upfrica Marketplace",
-//   description: "Upfrica is Ghana’s trusted free online marketplace to buy and sell phones, cars, electronics, fashion, and more. Post ads for free and connect with real buyers today",
-// };
-
-// export default function RootLayout({ children }) {
-//   return (
-//     <html lang="en">
-//       <body
-//         className={`${inter.variable} ${montserrat.variable}`}
-//       >
-//         <Providers>{children}</Providers>
-    
-//       </body>
-//     </html>
-//   );
-// }
 import "./globals.css";
-import { Roboto } from 'next/font/google';
+import { Roboto } from "next/font/google";
 import Providers from "./providers";
 
 const roboto = Roboto({
-  subsets: ['latin'],
-  weight: '300', // specify the weight you want to use
-  variable: '--font-roboto'
+  subsets: ["latin"],
+  weight: "300",
+  variable: "--font-roboto",
 });
 
 export const metadata = {
-  title: "Buy & Sell Online in Ghana | Post Free Ads – Upfrica Marketplace",
-  description: "Upfrica is Ghana’s trusted free online marketplace to buy and sell phones, cars, electronics, fashion, and more. Post ads for free and connect with real buyers today",
+  metadataBase: new URL("https://upfrica.com"),
+  title: {
+    default: "Upfrica Marketplace",
+    template: "%s | Upfrica",
+  },
+  description:
+    "Buy and sell online in Ghana. Post free ads for phones, cars, electronics, fashion, and more on Upfrica Marketplace.",
+  keywords: [
+    "Ghana",
+    "marketplace",
+    "phones",
+    "cars",
+    "fashion",
+    "electronics",
+    "Upfrica",
+    "buy and sell",
+    "free ads",
+  ],
+  openGraph: {
+    type: "website",
+    title: "Upfrica Marketplace",
+    description:
+      "Buy and sell online in Ghana. Post free ads for phones, cars, electronics, fashion, and more.",
+    url: "https://upfrica.com",
+    siteName: "Upfrica",
+    images: [
+      {
+        url: "/default-og-banner.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Upfrica Marketplace",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Upfrica Marketplace",
+    description:
+      "Buy and sell online in Ghana. Post free ads for phones, cars, electronics, fashion, and more.",
+    images: ["/default-og-banner.jpg"],
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${roboto.variable}`}>
+      <body className={roboto.variable}>
         <Providers>{children}</Providers>
       </body>
     </html>
