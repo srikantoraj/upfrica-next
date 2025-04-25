@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
 import { FaStar } from 'react-icons/fa';
 import { AiOutlineFilter, AiOutlineClose } from 'react-icons/ai';
-// import PriceRange from './priceRange';
-// import './PriceRange.css';
+import PriceRange from './priceRange';
+import './PriceRange.css';
 
 function FilterGroup({ title, children, defaultOpen = true }) {
     const [open, setOpen] = useState(defaultOpen);
-
     return (
         <div className="border-b border-gray-200 py-3">
             <button
@@ -20,57 +20,60 @@ function FilterGroup({ title, children, defaultOpen = true }) {
                 <h2 className="font-semibold text-base lg:text-lg text-gray-700">
                     {title}
                 </h2>
-                {open
-                    ? <IoIosArrowUp className="h-5 w-5 text-gray-600" />
-                    : <IoIosArrowDown className="h-5 w-5 text-gray-600" />
-                }
+               
+                
             </button>
             {open && <div className="mt-2">{children}</div>}
         </div>
     );
 }
 
-export default function FilterPage() {
-    // Mobile drawer state
+export default function Filter() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const [isOpen, setIsOpen] = useState(false);
     const sidebarRef = useRef();
 
-    const toggle = () => setIsOpen(o => !o);
-    const close = () => setIsOpen(false);
+    // helper to update URL params
+    const updateFilter = (key, value) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (value) params.set(key, value);
+        else params.delete(key);
+        params.set('page', '1'); // reset to first page
+        router.push(`?${params.toString()}`);
+    };
 
-    // Dummy filter state
-    const [selectedCategory, setSelectedCategory] = useState('');
-    const [selectedCondition, setSelectedCondition] = useState('');
-    const [sortOption, setSortOption] = useState('');
+    // API-fetched data
+    const [categories, setCategories] = useState([]);
+    const [conditions, setConditions] = useState([]);
+    const [brands, setBrands] = useState([]);
 
-    // Dummy data
-    const categories = [
-        { id: 1, name: 'Electronics', slug: 'electronics' },
-        { id: 2, name: 'Clothing', slug: 'clothing' },
-        { id: 3, name: 'Home & Garden', slug: 'home-garden' },
-    ];
-    const conditions = [
-        { id: 1, name: 'New', slug: 'new' },
-        { id: 2, name: 'Used', slug: 'used' },
-        { id: 3, name: 'Refurbished', slug: 'refurbished' },
-    ];
-    const brands = [
-        'Bissell', 'Rubbermaid', 'O-Cedar', 'Scrub Daddy',
-        'CLOROX', 'OXO', 'Shark', 'Holikme'
-    ];
-    const departments = [
-        'Household Cleaning Tools',
-        'Household Mops, Buckets &',
-        'Household Squeegees',
-        'Fruit & Vegetable Tools'
-    ];
-    const sellers = ['Amazon.com', 'Triplenet Pricing INC'];
+    useEffect(() => {
+        fetch('https://media.upfrica.com/api/categories/')
+            .then(res => res.ok ? res.json() : Promise.reject(res))
+            .then(data => setCategories(data.results ?? data))
+            .catch(err => console.error('Failed to load categories:', err));
+    }, []);
 
-    // Close on outside click
+    useEffect(() => {
+        fetch('https://media.upfrica.com/api/conditions/')
+            .then(res => res.ok ? res.json() : Promise.reject(res))
+            .then(data => setConditions(data.results ?? data))
+            .catch(err => console.error('Failed to load conditions:', err));
+    }, []);
+
+    useEffect(() => {
+        fetch('https://media.upfrica.com/api/brands/')
+            .then(res => res.ok ? res.json() : Promise.reject(res))
+            .then(data => setBrands(data.results ?? data))
+            .catch(err => console.error('Failed to load brands:', err));
+    }, []);
+
+    // close drawer on outside click
     useEffect(() => {
         const handleClick = e => {
             if (isOpen && sidebarRef.current && !sidebarRef.current.contains(e.target)) {
-                close();
+                setIsOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClick);
@@ -82,7 +85,7 @@ export default function FilterPage() {
             {/* Mobile “Filters” button */}
             <div className="md:hidden p-4">
                 <button
-                    onClick={toggle}
+                    onClick={() => setIsOpen(o => !o)}
                     className="flex items-center space-x-2 border rounded px-4 py-2"
                 >
                     <AiOutlineFilter />
@@ -94,11 +97,11 @@ export default function FilterPage() {
             {isOpen && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-40"
-                    onClick={close}
+                    onClick={() => setIsOpen(false)}
                 />
             )}
 
-            {/* Sidebar (always full width) */}
+            {/* Sidebar */}
             <aside
                 ref={sidebarRef}
                 className={`
@@ -111,7 +114,7 @@ export default function FilterPage() {
                 {/* Mobile header */}
                 <div className="flex items-center justify-between md:hidden mb-4">
                     <h2 className="text-xl font-semibold">Filters</h2>
-                    <button onClick={close} className="p-1 rounded hover:bg-gray-100">
+                    <button onClick={() => setIsOpen(false)} className="p-1 rounded hover:bg-gray-100">
                         <AiOutlineClose size={24} />
                     </button>
                 </div>
@@ -119,13 +122,15 @@ export default function FilterPage() {
                 {/* 1. Category */}
                 <FilterGroup title="Category">
                     <select
-                        value={selectedCategory}
-                        onChange={e => setSelectedCategory(e.target.value)}
+                        value={searchParams.get('category') || ''}
+                        onChange={e => updateFilter('category', e.target.value)}
                         className="w-full rounded border px-3 py-2"
                     >
                         <option value="">All Categories</option>
                         {categories.map(c => (
-                            <option key={c.id} value={c.slug}>{c.name}</option>
+                            <option key={c.id} value={c.id}>
+                                {c.name}
+                            </option>
                         ))}
                     </select>
                 </FilterGroup>
@@ -133,22 +138,40 @@ export default function FilterPage() {
                 {/* 2. Condition */}
                 <FilterGroup title="Condition">
                     <select
-                        value={selectedCondition}
-                        onChange={e => setSelectedCondition(e.target.value)}
+                        value={searchParams.get('condition') || ''}
+                        onChange={e => updateFilter('condition', e.target.value)}
                         className="w-full rounded border px-3 py-2"
                     >
                         <option value="">All Conditions</option>
                         {conditions.map(c => (
-                            <option key={c.id} value={c.slug}>{c.name}</option>
+                            <option key={c.id} value={c.id}>
+                                {c.name}
+                            </option>
                         ))}
                     </select>
                 </FilterGroup>
 
-                {/* 3. Sort By */}
+                {/* 3. Brand */}
+                <FilterGroup title="Brand">
+                    <select
+                        value={searchParams.get('brand') || ''}
+                        onChange={e => updateFilter('brand', e.target.value)}
+                        className="w-full rounded border px-3 py-2"
+                    >
+                        <option value="">All Brands</option>
+                        {brands.map(b => (
+                            <option key={b.id} value={b.id}>
+                                {b.name}
+                            </option>
+                        ))}
+                    </select>
+                </FilterGroup>
+
+                {/* 4. Sort By */}
                 <FilterGroup title="Sort By">
                     <select
-                        value={sortOption}
-                        onChange={e => setSortOption(e.target.value)}
+                        value={searchParams.get('ordering') || ''}
+                        onChange={e => updateFilter('ordering', e.target.value)}
                         className="w-full rounded border px-3 py-2"
                     >
                         <option value="">Sort by</option>
@@ -157,12 +180,12 @@ export default function FilterPage() {
                     </select>
                 </FilterGroup>
 
-                {/* 4. Price Range */}
-                {/* <FilterGroup title="Price Range">
+                {/* 5. Price Range */}
+                <FilterGroup title="Price Range">
                     <PriceRange />
-                </FilterGroup> */}
+                </FilterGroup>
 
-                {/* 5. Ratings */}
+                {/* 6. Ratings (static) */}
                 <FilterGroup title="Ratings">
                     <div className="flex items-center">
                         {[...Array(5)].map((_, i) => (
@@ -172,7 +195,7 @@ export default function FilterPage() {
                     </div>
                 </FilterGroup>
 
-                {/* 6. Customer Reviews */}
+                {/* 7. Customer Reviews (static) */}
                 <FilterGroup title="Customer Reviews">
                     <ul className="space-y-2 text-base text-gray-600">
                         {[5, 4, 3, 2, 1].map(n => (
@@ -184,85 +207,15 @@ export default function FilterPage() {
                     </ul>
                 </FilterGroup>
 
-                {/* 7. Deals & Discounts */}
+                {/* 8. Deals & Discounts (static) */}
                 <FilterGroup title="Deals & Discounts">
                     <ul className="space-y-1 text-gray-600">
-                        <li>
-                            <a href="#allDiscounts" className="hover:text-blue-700">
-                                All Discounts
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#todaysDeals" className="hover:text-blue-700">
-                                Today's Deals
-                            </a>
-                        </li>
+                        <li><a href="#allDiscounts" className="hover:text-blue-700">All Discounts</a></li>
+                        <li><a href="#todaysDeals" className="hover:text-blue-700">Today's Deals</a></li>
                     </ul>
                 </FilterGroup>
 
-                {/* 8. Brands */}
-                <FilterGroup title="Brands">
-                    <ul className="space-y-1 text-gray-600">
-                        {brands.map(name => (
-                            <li key={name} className="flex items-center space-x-2">
-                                <input type="checkbox" id={name} />
-                                <label htmlFor={name}>{name}</label>
-                            </li>
-                        ))}
-                    </ul>
-                </FilterGroup>
-
-                {/* 9. Department */}
-                <FilterGroup title="Department">
-                    {departments.map(name => (
-                        <div key={name} className="flex items-center space-x-2 text-gray-600">
-                            <input type="checkbox" id={name} />
-                            <label htmlFor={name}>{name}</label>
-                        </div>
-                    ))}
-                </FilterGroup>
-
-                {/* 10. All Top Brands */}
-                <FilterGroup title="All Top Brands">
-                    <div className="flex items-center space-x-2 text-gray-600">
-                        <input type="checkbox" id="topBrands" />
-                        <label htmlFor="topBrands">Top Brands</label>
-                    </div>
-                </FilterGroup>
-
-                {/* 11. Seller */}
-                <FilterGroup title="Seller">
-                    {sellers.map(name => (
-                        <div key={name} className="flex items-center space-x-2 text-gray-600">
-                            <input type="checkbox" id={name} />
-                            <label htmlFor={name}>{name}</label>
-                        </div>
-                    ))}
-                </FilterGroup>
-
-                {/* 12. From Our Brands */}
-                <FilterGroup title="From Our Brands">
-                    <div className="flex items-center space-x-2 text-gray-600">
-                        <input type="checkbox" id="ourBrands" />
-                        <label htmlFor="ourBrands">Amazon Brands</label>
-                    </div>
-                </FilterGroup>
-
-                {/* 13. More Sustainable Products */}
-                <FilterGroup title="More Sustainable Products">
-                    <div className="flex items-center space-x-2 text-gray-600">
-                        <input type="checkbox" id="climatePledge" />
-                        <label htmlFor="climatePledge">Climate Pledge Friendly</label>
-                    </div>
-                </FilterGroup>
-
-                {/* 14. HSA / FSA Eligible */}
-                <FilterGroup title="HSA / FSA Eligible">
-                    <div className="flex items-center space-x-2 text-gray-600">
-                        <input type="checkbox" id="hsaFsa" />
-                        <label htmlFor="hsaFsa">FSA or HSA Eligible</label>
-                    </div>
-                </FilterGroup>
+                {/* …add other static groups as needed… */}
             </aside>
         </div>
     );
