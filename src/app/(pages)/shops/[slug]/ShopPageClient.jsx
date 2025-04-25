@@ -303,11 +303,17 @@ export default function ShopPageClient({ slug }) {
       <div className="absolute inset-0 flex flex-col md:flex-row justify-between items-center px-4 md:px-10 py-4">
         {/* Shop Logo + Info */}
         <div className="flex items-center gap-4 md:gap-6 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg">
-          <img
-            src="https://via.placeholder.com/64x64.png?text=Logo"
-            alt="Shop Logo"
-            className="h-16 w-16 md:h-20 md:w-20 rounded-full border-2 border-white shadow object-cover"
-          />
+        {shop?.shop_logo ? (
+  <img
+    src={shop.shop_logo}
+    alt="Shop Logo"
+    className="h-16 w-16 md:h-20 md:w-20 rounded-full border-2 border-white shadow object-cover text-center"
+  />
+) : (
+  <div className="h-16 w-16 md:h-20 md:w-20 bg-gray-100 rounded-full flex items-center justify-center border-2 border-white shadow text-gray-400">
+    
+  </div>
+)}
 <div>
   <h1 className="text-2xl md:text-3xl font-bold">{shop?.name}</h1>
   <p className="text-sm text-gray-600">{shopType}</p>
@@ -356,7 +362,7 @@ export default function ShopPageClient({ slug }) {
             />
 
 {/* TOP NAV */}
-<nav className="bg-white border-t border-b shadow-sm">
+<nav className="bg-white border-t border-b shadow-sm sticky top-0 z-30">
   <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-3 px-4 md:px-6 py-3">
 
     {/* Tabs */}
@@ -583,7 +589,7 @@ export default function ShopPageClient({ slug }) {
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search products..."
+                            placeholder={`Search products in ${shop?.name || 'this shop'}...`}
                             className="w-full rounded-full border border-gray-700 px-10 py-2 focus:outline-none"
                         />
                         {searchQuery ? (
