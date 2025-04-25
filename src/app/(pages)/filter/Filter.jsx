@@ -5,8 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
 import { FaStar } from 'react-icons/fa';
 import { AiOutlineFilter, AiOutlineClose } from 'react-icons/ai';
-import PriceRange from './priceRange';
-import './PriceRange.css';
+// import PriceRange from './priceRange';
+// import './PriceRange.css';
 
 function FilterGroup({ title, children, defaultOpen = true }) {
     const [open, setOpen] = useState(defaultOpen);
@@ -181,9 +181,9 @@ export default function Filter() {
                 </FilterGroup>
 
                 {/* 5. Price Range */}
-                <FilterGroup title="Price Range">
+                {/* <FilterGroup title="Price Range">
                     <PriceRange />
-                </FilterGroup>
+                </FilterGroup> */}
 
                 {/* 6. Ratings (static) */}
                 <FilterGroup title="Ratings">
