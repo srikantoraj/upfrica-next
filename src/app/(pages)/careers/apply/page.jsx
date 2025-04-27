@@ -301,7 +301,7 @@ const CareerWithUs = () => {
                     <div>
                         <button
                             type="submit"
-                            className="w-full py-3 bg-purple-400 text-white font-medium rounded-md hover:bg-pink-600 transition duration-200"
+                            className="w-full py-3 bg-purple-400 text-white font-medium rounded-md hover:bg-purple-500 transition duration-200"
                         >
                             Submit
                         </button>
