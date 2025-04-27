@@ -129,6 +129,7 @@ const navItems = [
   { name: 'Categories', href: '/categories' },
   { name: 'How It Works', href: '/how-it-works' },
   { name: 'UK Site', href: 'https://upfrica.co.uk', external: true },
+  { name: 'Careers', href: '/careers', external: true },
 ];
 
 const NavTitle = ({ isOpen }) => {

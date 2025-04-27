@@ -23,9 +23,7 @@ export default function JoinUpfrica() {
 
     return (
         <section className="px-4 py-8 bg-white">
-            <h1 className="text-center text-4xl md:text-7xl font-extrabold text-purple-400 mb-8 py-4 md:py-12">
-                Join <span className='text-purple-400'>Upfrica !</span>
-            </h1>
+            
             <div className="container mx-auto grid md:grid-cols-2 gap-12">
                 {/* Left: Join Content */}
                 <div className='md:hidden'>

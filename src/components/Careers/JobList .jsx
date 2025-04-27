@@ -229,11 +229,17 @@ const JobDetails = () => {
                                         </dl>
 
                                         <div className="mt-6">
-                                            <Link href="/careers/apply">
+                                            {/* <Link href="/careers/apply">
                                                 <span className="block w-full text-center py-3 bg-primary-500 border border-purple-500 font-semibold rounded-md hover:bg-primary-600 transition duration-300">
                                                     Apply Now
                                                 </span>
-                                            </Link>
+                                            </Link> */}
+                                            <a
+                                                href="/careers/apply"
+                                                className=" self-center inline-block bg-white border border-[#5d2eee] text-[#5d2eee] font-semibold py-2 px-8 rounded-full hover:opacity-90 transition"
+                                            >
+                                                APPLY NOW
+                                            </a>
                                         </div>
                                     </div>
                                 </aside>
