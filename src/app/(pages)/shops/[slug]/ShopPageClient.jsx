@@ -303,11 +303,22 @@ export default function ShopPageClient({ slug }) {
       <div className="absolute inset-0 flex flex-col md:flex-row justify-between items-center px-4 md:px-10 py-4">
         {/* Shop Logo + Info */}
         <div className="flex items-center gap-4 md:gap-6 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg">
-          <img
+          {/* <img
             src="https://via.placeholder.com/64x64.png?text=Logo"
             alt="Shop Logo"
             className="h-16 w-16 md:h-20 md:w-20 rounded-full border-2 border-white shadow object-cover"
-          />
+          /> */}
+            {shop.shop_logo ? (
+                <img
+                    src={shop.shop_logo}
+                    alt="Shop Logo"
+                    className="h-16 w-16 md:h-20 md:w-20 rounded-full border-2 border-white shadow object-center"
+                />
+            ) : (
+                <div className="h-16 w-16 md:h-20 md:w-20 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
+                    N/A
+                </div>
+            )}
 <div>
   <h1 className="text-2xl md:text-3xl font-bold">{shop?.name}</h1>
   <p className="text-sm text-gray-600">{shopType}</p>

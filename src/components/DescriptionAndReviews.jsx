@@ -5,10 +5,12 @@ import { FaTrashAlt, FaEdit } from "react-icons/fa";
 import CustomerReviewsSection from "./CustomerReviewsSection";
 import CreateReves from './CreateReviews';
 import Link from "next/link";
+import { useSelector } from "react-redux";
 
 export default function DescriptionAndReviews({ details, condition, user, shop ,product}) {
     const [showPhone, setShowPhone] = useState(false);
     const [openTab, setOpenTab] = useState("specifics"); // default open
+    const { user: currentUser } = useSelector((state) => state.auth);
 
     const condition_value = condition?.name || "N/A";
     const phoneText = showPhone ? user?.phone_number : "Click to view number";
@@ -37,10 +39,11 @@ export default function DescriptionAndReviews({ details, condition, user, shop ,
                     </button>
                     {openTab === 'specifics' && (
                         <div className="p-4 border-t text-sm text-gray-700 space-y-1">
-                            <Link href={`/products/edit/specifics/${product?.id}`} className="flex items-center gap-2">
-                                <FaEdit className="h-4 w-4 text-violet-700" />
-                                <span className="text-violet-700 hover:underline">Edit Specifics</span>
-                            </Link>
+                            {currentUser?.username === user?.username || currentUser?.admin==true &&<Link href={`/products/edit/specifics/${product?.id}`} className="flex items-center gap-2">
+                            <FaEdit className="h-4 w-4 text-violet-700" />
+                            <span className="text-violet-700 hover:underline">Edit Specifics</span>
+                            </Link>}
+
                             <p><b>Seller location:</b> {user?.town} - {user?.country}</p>
                             <p><b>Condition:</b> {condition_value}</p>
                             {/* Add more static/dynamic specifics if needed */}
@@ -78,11 +81,17 @@ export default function DescriptionAndReviews({ details, condition, user, shop ,
                 <div className="lg:p-4 md:p-6">
                     <div className="flex flex-col gap-4">
                         <div className="flex items-center gap-4">
-                            <img
-                                src="https://img.kwcdn.com/supplier-public-tag/1f66680860/7a1dec98-d11b-460c-89e2-25cc4703fa53_300x300.jpeg?imageView2/2/w/300/q/70/format/webp"
-                                alt="Avatar"
-                                className="w-16 h-16 rounded-full shadow"
-                            />
+                            {shop?.shop_logo ? (
+                                <img
+                                    src={shop.shop_logo}
+                                    alt={shop?.name}
+                                    className="w-16 h-16 rounded-full shadow center"
+                                />
+                            ) : (
+                                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
+                                    N/A
+                                </div>
+                            )}
                             <div>
                                 <h6 className="text-sm md:text-base lg:text-lg font-medium mb-1">
                                     {user?.username}
