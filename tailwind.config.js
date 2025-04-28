@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: 'class', // ✅ Add this line
+  darkMode: 'class',
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -11,6 +11,7 @@ module.exports = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        purpleBrand: "#A435F0", // ✅ add this
       },
       fontSize: {
         'responsive': 'calc(1.575rem + 3.9vw)',
@@ -24,10 +25,21 @@ module.exports = {
           lg: '1024px',
           xl: '1280px',
           '2xl': '1536px',
-          // '3xl': '1800px',
         },
+      },
+      // 🔥 Add these for animations
+      keyframes: {
+        fadeInUp: {
+          '0%': { opacity: 0, transform: 'translateY(20px)' },
+          '100%': { opacity: 1, transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        fadeInUp: 'fadeInUp 0.6s ease-out',
       },
     },
   },
-  plugins: [require('flowbite/plugin')],
+  plugins: [
+    require('flowbite/plugin'),
+  ],
 };
