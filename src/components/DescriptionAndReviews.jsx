@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { MdOutlinePhone } from "react-icons/md";
+import { FaTrashAlt, FaEdit } from "react-icons/fa";
 import CustomerReviewsSection from "./CustomerReviewsSection";
 import CreateReves from './CreateReviews';
 import Link from "next/link";
@@ -36,6 +37,10 @@ export default function DescriptionAndReviews({ details, condition, user, shop ,
                     </button>
                     {openTab === 'specifics' && (
                         <div className="p-4 border-t text-sm text-gray-700 space-y-1">
+                            <Link href={`/products/edit/specifics/${product?.id}`} className="flex items-center gap-2">
+                                <FaEdit className="h-4 w-4 text-violet-700" />
+                                <span className="text-violet-700 hover:underline">Edit Specifics</span>
+                            </Link>
                             <p><b>Seller location:</b> {user?.town} - {user?.country}</p>
                             <p><b>Condition:</b> {condition_value}</p>
                             {/* Add more static/dynamic specifics if needed */}
