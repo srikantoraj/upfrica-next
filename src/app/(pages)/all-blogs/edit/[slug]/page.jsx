@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from 'next/dynamic'
 import React, { useState, useEffect } from "react";
 import { Formik, FieldArray } from "formik";
 import Link from "next/link";

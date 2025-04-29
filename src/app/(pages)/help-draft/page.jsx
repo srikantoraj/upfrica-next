@@ -42,7 +42,7 @@ const HelpBlogDrafts = () => {
                 };
 
                 const response = await fetch(
-                    "https://media.upfrica.com/api/admin/help-blogs/drafts/",
+                    "https://media.upfrica.com/api/admin/helpblogs/drafts/",
                     requestOptions
                 );
                 const data = await response.json();

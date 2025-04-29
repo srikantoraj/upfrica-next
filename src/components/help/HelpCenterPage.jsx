@@ -9,15 +9,11 @@ import { FaEdit } from 'react-icons/fa';
 import { FaSearch, FaBars } from 'react-icons/fa'
 import Footer from '@/components/common/footer/Footer'
 import { useSelector } from 'react-redux';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm'; // 👈 import it
 
 
-// 👉 Step 1: Utility function to strip HTML tags
-const stripHtml = (html) => {
-    if (!html) return '';
-    return html.replace(/<[^>]*>?/gm, '');
-};
+import dynamic from 'next/dynamic';
+
+const Viewer = dynamic(() => import('@toast-ui/react-editor').then((mod) => mod.Viewer), { ssr: false });
 
 
 // Dark Mode Toggle Hook
@@ -62,8 +58,7 @@ const CardSkeleton = () => (
 )
 
 // Main Page Component with Search Features
-export default function HelpCenterPage({ params }) {
-    const { slug } = params
+export default function HelpCenterPage({ slug }) {   // 🚀 Accept slug directly
     const { user, token } = useSelector((state) => state.auth)
 
     // Article Data States
@@ -108,21 +103,30 @@ export default function HelpCenterPage({ params }) {
     useEffect(() => {
         const requestOptions = {
             method: "GET",
-            redirect: "follow"
-        }
-
-        fetch(`https://media.upfrica.com/api/helpblogs/${slug}`, requestOptions)
-            .then((response) => response.json())
+            redirect: "follow",
+            headers: {
+              "Cache-Control": "no-cache",
+              "Pragma": "no-cache",
+            }
+        };
+    
+        fetch(`https://media.upfrica.com/api/helpblogs/${slug}/`, requestOptions)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then((result) => {
-                setData(result)
-                setLoading(false)
+                setData(result);
+                setLoading(false);
             })
             .catch((err) => {
-                console.error(err)
-                setError(err)
-                setLoading(false)
-            })
-    }, [slug])
+                console.error(err);
+                setError(err);
+                setLoading(false);
+            });
+    }, [slug]);
 
     // --- Search States and Debounce Logic ---
     const [searchQuery, setSearchQuery] = useState("")
@@ -146,7 +150,7 @@ export default function HelpCenterPage({ params }) {
         // Set debounce delay: 400ms
         debounceTimeout.current = setTimeout(() => {
             const encodedQuery = encodeURIComponent(searchQuery.trim())
-            fetch(`https://media.upfrica.com/api/help-blogs/search/?q=${encodedQuery}`)
+            fetch(`https://media.upfrica.com/api/helpblogs/search/?q=${encodedQuery}`)
                 .then((response) => response.json())
                 .then((data) => {
                     setSearchResults(data)
@@ -188,7 +192,7 @@ export default function HelpCenterPage({ params }) {
                 <Sidebar data={staticSidebar} />
                 <main className="lg:col-span-3 space-y-8 ">
                     <ArticleContent data={data} />
-
+                   
                 </main>
             </div>
             <VoteSection />
@@ -375,7 +379,7 @@ const Sidebar = ({ data }) => {
     return (
         <aside className="space-y-8  dark:bg-gray-900 text-gray-900 dark:text-gray-100">
             <SidebarToggleButton onClick={() => setIsOpen(!isOpen)} />
-            <div className={`${isOpen ? 'block' : 'hidden'} lg:block space-y-8 `}>
+            <div className={`${isOpen ? 'block' : 'hidden'} lg:block space-y-8 `}> 
                 <Card title="Help Topics">
                     <ul className="list-disc pl-4 text-gray-700 dark:text-dark">
                         {data?.helpTopics?.map((link) => (
@@ -410,10 +414,10 @@ const ArticleContent = ({ data }) => (
     <article className="space-y-8 bg-white  dark:bg-zinc-900 dark:text-white rounded p-4 shadow text-[18px] leading-[32px] tracking-[-0.003em] font-normal ">
         <header>
             {/* {user?.id === data?.user && ( */}
-            <Link href={`/all-blogs/edit/${data?.slug}`} className="text-violet-700 hover:underline flex items-center gap-1">
-                <FaEdit />
-                Edit
-            </Link>
+                <Link href={`/all-blogs/edit/${data?.slug}`} className="text-violet-700 hover:underline flex items-center gap-1">
+                    <FaEdit />
+                    Edit
+                </Link>
             {/* )} */}
 
             <h1
@@ -425,28 +429,14 @@ const ArticleContent = ({ data }) => (
             </h1>
         </header>
         {data?.summary && (
-  <div className="prose prose-lg dark:prose-invert max-w-none">
-<ReactMarkdown
-  remarkPlugins={[remarkGfm]}
-  components={{
-    a: ({ node, ...props }) => (
-      <a {...props} className="text-violet-700 underline" target="_blank" rel="noopener noreferrer" />
-    ),
-    ol: ({ node, ...props }) => (
-      <ol {...props} className="list-decimal list-outside pl-6" />
-    ),
-    ul: ({ node, ...props }) => (
-      <ul {...props} className="list-disc list-outside pl-6" />
-    ),
-    li: ({ node, children, ...props }) => (
-      <li {...props} className="mb-1">
-        {children}
-      </li>
-    ),
-  }}
->
-  {data.summary}
-</ReactMarkdown>
+  <div className="mb-2">
+   <Viewer
+  initialValue={data.summary}
+  usageStatistics={false}  // Hide Google Analytics
+  height="auto"
+  theme="light"
+  plugins={[]}
+/>
   </div>
 )}
         {data?.sections?.map((section, index) => (
@@ -458,30 +448,22 @@ const ArticleContent = ({ data }) => (
                 <h2 className="text-2xl font-bold mt-4 mb-2  dark:text-white">
                     {section.sectionTitle}
                 </h2>
-
-                {/* {section.sectionType === "paragraph" && (
-                    <p>{section.sectionContent}</p>
-                )} */}
-
-                {/* 👉 updated: html tag remove and only text */}
                 {section.sectionType === "paragraph" && (
-                    <p>{stripHtml(section.sectionContent)}</p>
+                    <p>{section.sectionContent}</p>
                 )}
 
-{section.sectionType === "bullet" && (
-  <ul className="prose prose-lg list-disc list-outside pl-6 dark:prose-invert max-w-none">
-    {section.bulletItems?.map((item, i) => (
-      <li key={i} className="mb-1">
-        {item}
-      </li>
-    ))}
-  </ul>
-)}
+                {section.sectionType === "bullet" && (
+                    <ul className="list-disc pl-6">
+                        {section.bulletItems?.map((item, i) => (
+                            <li key={i}>{item}</li>
+                        ))}
+                    </ul>
+                )}
 
                 {section.sectionType === "highlight" && (
                     <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 dark:bg-yellow-200/30">
                         <p className="font-semibold">Important:</p>
-                        <p>{stripHtml(section.sectionContent)}</p>
+                        <p>{section.sectionContent}</p>
                     </div>
                 )}
 

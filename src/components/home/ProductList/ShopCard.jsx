@@ -1,9 +1,10 @@
 'use client';
+
 import { useState } from 'react';
 import Link from 'next/link';
-import { convertPrice } from '@/app/utils/utils';
 import { useSelector } from 'react-redux';
-import { AiOutlineShoppingCart, AiOutlineHeart } from 'react-icons/ai';
+import { convertPrice } from '@/app/utils/utils';
+import { AiOutlineHeart, AiOutlineShoppingCart } from 'react-icons/ai';
 
 export default function ShopCard({ product }) {
     const {
@@ -12,61 +13,58 @@ export default function ShopCard({ product }) {
         price_cents,
         price_currency,
         seller_country,
-        seller_town,
         seo_slug,
     } = product;
 
     const [imageOk, setImageOk] = useState(true);
     const country = seller_country?.toLowerCase() || 'gh';
-
     const exchangeRates = useSelector((state) => state.exchangeRates.rates);
+
     const convertedPrice = convertPrice(price_cents / 100, price_currency, 'GHS', exchangeRates);
-    const imageUrl = product_images?.[0];
+    const imageUrl = imageOk ? product_images?.[0] : '/placeholder.png'; // fallback if broken image
 
     if (!imageUrl) return null;
 
     return (
-        <div className="mt-4">
-            <div className="bg-white shadow p-2 pb-0 h-full rounded-t-md border border-[#dee2e6] drop-shadow-[0_0_10px_rgba(0,0,0,0.1)]">
-                <div className="relative">
+        <div className="bg-white border border-gray-200 rounded-lg shadow hover:shadow-md transition p-2 flex flex-col">
+            {/* Product Image */}
+            <Link href={`/${country}/${seo_slug}`} target="_blank" className="relative group">
+                <img
+                    src={imageUrl}
+                    alt={title}
+                    onError={() => setImageOk(false)}
+                    className="rounded-md w-full h-60 object-cover bg-gray-50 group-hover:scale-105 transition-transform"
+                />
+
+                {/* Like Button */}
+                <Link href="/login" className="absolute top-2 right-2">
+                    <span className="bg-white rounded-full p-2 shadow hover:bg-gray-100">
+                        <AiOutlineHeart className="text-gray-700" />
+                    </span>
+                </Link>
+            </Link>
+
+            {/* Product Info */}
+            <div className="flex-1 mt-3 px-1">
+                <h5 className="text-sm font-semibold leading-tight line-clamp-2">
                     <Link href={`/${country}/${seo_slug}`} target="_blank">
-                        <img
-                            src={imageUrl}
-                            alt={title}
-                            onError={() => setImageOk(false)}
-                            className="w-full h-[16.6rem] bg-[#F7F8FA] rounded-md object-cover transition-transform duration-300 group-hover:scale-105"
-                            loading="lazy"
-                        />
+                        {title}
                     </Link>
+                </h5>
+            </div>
 
-                    <Link href="/login">
-                        <div className="absolute top-2 right-2 z-10">
-                            <span className="inline-flex items-center justify-center bg-white rounded-full p-1 shadow hover:bg-gray-100">
-                                <AiOutlineHeart className="text-lg text-gray-700" />
-                            </span>
-                        </div>
-                    </Link>
+            {/* Price + Buy Button */}
+            <div className="mt-3 flex items-center justify-between px-1 pb-2">
+                <div className="text-gray-900 font-semibold text-sm">
+                    GHS {convertedPrice?.toFixed(2)}
                 </div>
-
-                <div className="px-2 pt-3" style={{ maxHeight: '3.5rem' }}>
-                    <h5 className="text-sm font-semibold leading-tight line-clamp-2">
-                        <Link href={`/${country}/${seo_slug}`} target="_blank">
-                            {title}
-                        </Link>
-                    </h5>
-                </div>
-
-                <div className="border-t mt-2 py-1 px-2">
-                    <div className="flex justify-between items-center">
-                        <h6 className="text-sm text-gray-900 font-medium">GHS {convertedPrice?.toFixed(2)}</h6>
-                        <button
-                            title="Add to basket"
-                            className="border border-white p-1 rounded hover:bg-gray-100"
-                        >
-                            <AiOutlineShoppingCart className="text-base text-gray-700" />
-                        </button>
-                    </div>
-                </div>
+                <button
+                    title="Buy Now"
+                    className="flex items-center gap-1 text-sm text-white bg-violet-600 hover:bg-violet-700 px-3 py-1 rounded-full transition"
+                >
+                    <AiOutlineShoppingCart className="text-base" />
+                    Buy
+                </button>
             </div>
         </div>
     );
