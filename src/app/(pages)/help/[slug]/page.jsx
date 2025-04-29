@@ -453,7 +453,7 @@ const ArticleContent = ({ data }) => (
                 {section.sectionType === "highlight" && (
                     <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 dark:bg-yellow-200/30">
                         <p className="font-semibold">Important:</p>
-                        <p>{section.sectionContent}</p>
+                        <p>{stripHtml(section.sectionContent)}</p>
                     </div>
                 )}
 
