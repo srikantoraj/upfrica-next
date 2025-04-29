@@ -76,12 +76,8 @@ const ProductSlider = ({ mediaItems = [] }) => {
       {/* Main display (588×588) */}
       <div
         ref={containerRef}
-        className="relative border rounded-md mx-auto overflow-hidden cursor-zoom-in"
-        style={{
-          width: 588,
-          height: 588,
-          background: current.type === "image" ? bgGradient : "transparent",
-        }}
+        className="relative border rounded-md mx-auto overflow-hidden cursor-zoom-in w-full md:w-[588px] bg-gray-100"
+      
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
         onClick={openModal}
