@@ -11,6 +11,13 @@ import Footer from '@/components/common/footer/Footer'
 import { useSelector } from 'react-redux';
 
 
+// 👉 Step 1: Utility function to strip HTML tags
+const stripHtml = (html) => {
+    if (!html) return '';
+    return html.replace(/<[^>]*>?/gm, '');
+};
+
+
 // Dark Mode Toggle Hook
 const useDarkMode = () => {
     const [enabled, setEnabled] = useState(false)
@@ -179,7 +186,7 @@ export default function HelpCenterPage({ params }) {
                 <Sidebar data={staticSidebar} />
                 <main className="lg:col-span-3 space-y-8 ">
                     <ArticleContent data={data} />
-                   
+
                 </main>
             </div>
             <VoteSection />
@@ -366,7 +373,7 @@ const Sidebar = ({ data }) => {
     return (
         <aside className="space-y-8  dark:bg-gray-900 text-gray-900 dark:text-gray-100">
             <SidebarToggleButton onClick={() => setIsOpen(!isOpen)} />
-            <div className={`${isOpen ? 'block' : 'hidden'} lg:block space-y-8 `}> 
+            <div className={`${isOpen ? 'block' : 'hidden'} lg:block space-y-8 `}>
                 <Card title="Help Topics">
                     <ul className="list-disc pl-4 text-gray-700 dark:text-dark">
                         {data?.helpTopics?.map((link) => (
@@ -401,10 +408,10 @@ const ArticleContent = ({ data }) => (
     <article className="space-y-8 bg-white  dark:bg-zinc-900 dark:text-white rounded p-4 shadow text-[18px] leading-[32px] tracking-[-0.003em] font-normal ">
         <header>
             {/* {user?.id === data?.user && ( */}
-                <Link href={`/all-blogs/edit/${data?.slug}`} className="text-violet-700 hover:underline flex items-center gap-1">
-                    <FaEdit />
-                    Edit
-                </Link>
+            <Link href={`/all-blogs/edit/${data?.slug}`} className="text-violet-700 hover:underline flex items-center gap-1">
+                <FaEdit />
+                Edit
+            </Link>
             {/* )} */}
 
             <h1
@@ -425,8 +432,14 @@ const ArticleContent = ({ data }) => (
                 <h2 className="text-2xl font-bold mt-4 mb-2  dark:text-white">
                     {section.sectionTitle}
                 </h2>
-                {section.sectionType === "paragraph" && (
+
+                {/* {section.sectionType === "paragraph" && (
                     <p>{section.sectionContent}</p>
+                )} */}
+
+                {/* 👉 updated: html tag remove and only text */}
+                {section.sectionType === "paragraph" && (
+                    <p>{stripHtml(section.sectionContent)}</p>
                 )}
 
                 {section.sectionType === "bullet" && (
