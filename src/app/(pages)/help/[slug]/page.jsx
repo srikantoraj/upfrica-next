@@ -421,34 +421,10 @@ const ArticleContent = ({ data }) => (
                 className="text-3xl font-bold text-gray-900  dark:text-white mb-4"
                 title={data?.title}
             >
-                {data?.title}
+                {stripHtml(data?.title)}
             </h1>
         </header>
-        {data?.summary && (
-  <div className="prose prose-lg dark:prose-invert max-w-none">
-<ReactMarkdown
-  remarkPlugins={[remarkGfm]}
-  components={{
-    a: ({ node, ...props }) => (
-      <a {...props} className="text-violet-700 underline" target="_blank" rel="noopener noreferrer" />
-    ),
-    ol: ({ node, ...props }) => (
-      <ol {...props} className="list-decimal list-outside pl-6" />
-    ),
-    ul: ({ node, ...props }) => (
-      <ul {...props} className="list-disc list-outside pl-6" />
-    ),
-    li: ({ node, children, ...props }) => (
-      <li {...props} className="mb-1">
-        {children}
-      </li>
-    ),
-  }}
->
-  {data.summary}
-</ReactMarkdown>
-  </div>
-)}
+        {data?.summary && <p className="mb-2">{stripHtml(data.summary)}</p>}
         {data?.sections?.map((section, index) => (
             <section
                 key={index}
@@ -456,7 +432,7 @@ const ArticleContent = ({ data }) => (
                 className="border-t pt-0  dark:text-white"
             >
                 <h2 className="text-2xl font-bold mt-4 mb-2  dark:text-white">
-                    {section.sectionTitle}
+                    {stripHtml(section.sectionTitle)}
                 </h2>
 
                 {/* {section.sectionType === "paragraph" && (
