@@ -419,10 +419,10 @@ const ArticleContent = ({ data }) => (
                 className="text-3xl font-bold text-gray-900  dark:text-white mb-4"
                 title={data?.title}
             >
-                {data?.title}
+                {stripHtml(data?.title)}
             </h1>
         </header>
-        {data?.summary && <p className="mb-2">{data.summary}</p>}
+        {data?.summary && <p className="mb-2">{stripHtml(data.summary)}</p>}
         {data?.sections?.map((section, index) => (
             <section
                 key={index}
@@ -430,7 +430,7 @@ const ArticleContent = ({ data }) => (
                 className="border-t pt-0  dark:text-white"
             >
                 <h2 className="text-2xl font-bold mt-4 mb-2  dark:text-white">
-                    {section.sectionTitle}
+                    {stripHtml(section.sectionTitle)}
                 </h2>
 
                 {/* {section.sectionType === "paragraph" && (

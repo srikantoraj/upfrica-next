@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AiOutlineSearch, AiOutlineClose } from 'react-icons/ai'
 import { FaArrowRight } from 'react-icons/fa'
+import Image from 'next/image'
 
 // — Skeleton placeholder while loading search results
 function SearchResultSkeleton() {
@@ -69,6 +70,8 @@ export default function ShopGrid({ bgColor = '#E8EAED' }) {
             try {
                 const res = await fetch('https://media.upfrica.com/api/shops/')
                 const data = await res.json()
+                console.log(data);
+                
                 setShops(data)
             } catch (err) {
                 console.error('Error fetching shops:', err)
@@ -137,11 +140,11 @@ export default function ShopGrid({ bgColor = '#E8EAED' }) {
         ))
 
     return (
-<div className="px-4 container mx-auto" style={{ backgroundColor: bgColor }}>
+        <div className="px-4 max-w-7xl mx-auto" >
             {/* — Search Box — */}
             <div
                 ref={containerRef}
-                className="max-w-lg mx-auto mt-10 mb-6 relative "
+                className="max-w-lg mx-auto my-10 mb-6 relative "
             >
                 <AiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-700 text-xl" />
                 <input
@@ -197,18 +200,19 @@ export default function ShopGrid({ bgColor = '#E8EAED' }) {
             </div>
 
             {/* — Shop Grid — */}
-            <div className="mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <div className="mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  gap-8 py-5">
                 {loadingShops
                     ? renderGridSkeletons()
-                    : shops&&shops.map((shop) => (
-                        <div key={shop.id} className="relative mb-24">
+                    : shops && shops.map((shop) => (
+                        <div key={shop.id} className="relative mb-16">
                             <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-                                <div className="h-[400px]">
+                                <div className="h-[300px] lg:h-[400px]">
                                     {shop.top_banner ? (
-                                        <img
+                                        <Image
                                             src={shop.top_banner}
                                             alt={shop.name}
-                                            className="w-full h-full object-cover rounded-t-lg"
+                                            fill
+                                            className="w-full h-full object-cover rounded-lg"
                                         />
                                     ) : (
                                         <div
@@ -220,8 +224,8 @@ export default function ShopGrid({ bgColor = '#E8EAED' }) {
                                     )}
                                 </div>
                             </div>
-                            <div className="p-6 bg-white absolute -bottom-24 left-1/2 transform -translate-x-1/2 w-4/5 shadow-lg rounded-lg flex flex-col items-center">
-                                <h2 className="text-2xl font-bold text-gray-900 truncate">
+                            <div className="p-4 bg-white absolute -bottom-16 left-1/2 transform -translate-x-1/2 w-4/5 shadow-lg rounded-lg flex flex-col items-center">
+                                <h2 className="text-base lg:text-lg  font-bold  text-gray-900 overflow-hidden text-wrap text-center hover:text-[#8710D8] cursor-pointer">
                                     {shop.name}
                                 </h2>
                                 <button
@@ -237,7 +241,7 @@ export default function ShopGrid({ bgColor = '#E8EAED' }) {
                                         </div>
                                     ) : (
                                         <>
-                                            Visit Shop <FaArrowRight />
+                                            <span className='text-sm font-bold flex items-center gap-2'>Visit Shop <FaArrowRight /></span>
                                         </>
                                     )}
                                 </button>
