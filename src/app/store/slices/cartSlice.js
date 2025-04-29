@@ -1,9 +1,9 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 // Helper to load basket items from localStorage if available
 const loadBasketFromLocalStorage = () => {
-  if (typeof window !== 'undefined') {
-    const basket = localStorage.getItem('basket');
+  if (typeof window !== "undefined") {
+    const basket = localStorage.getItem("basket");
     return basket ? JSON.parse(basket) : [];
   }
   return [];
@@ -14,50 +14,66 @@ const initialState = {
 };
 
 const basketSlice = createSlice({
-  name: 'basket',
+  name: "basket",
   initialState,
   reducers: {
     setBasket: (state, action) => {
       state.items = action.payload;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('basket', JSON.stringify(state.items));
+      if (typeof window !== "undefined") {
+        localStorage.setItem("basket", JSON.stringify(state.items));
       }
     },
     addToBasket: (state, action) => {
-      const existingIndex = state.items.findIndex(item => item.id === action.payload.id);
+      // const existingIndex = state.items.findIndex(item => item.id === action.payload.id);
+      // if (existingIndex !== -1) {
+      //   state.items[existingIndex].quantity += 1;
+      // } else {
+      //   state.items.push({ ...action.payload, quantity: 1 });
+      // }
+      // if (typeof window !== 'undefined') {
+      //   localStorage.setItem('basket', JSON.stringify(state.items));
+      // }
+
+      const existingIndex = state.items.findIndex((item) =>
+          item.id === action.payload.id && item.sku === action.payload.sku
+      );
+
       if (existingIndex !== -1) {
-        state.items[existingIndex].quantity += 1;
+        // যদি আগেই থাকে, তাহলে quantity আপডেট করো (+= না করে নতুনটা বসাও)
+        state.items[existingIndex].quantity = action.payload.quantity;
       } else {
-        state.items.push({ ...action.payload, quantity: 1 });
+        // নতুন হলে, পাঠানো quantity সেট করো
+        state.items.push({ ...action.payload });
       }
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('basket', JSON.stringify(state.items));
+
+      // localStorage-এ সংরক্ষণ
+      if (typeof window !== "undefined") {
+        localStorage.setItem("basket", JSON.stringify(state.items));
       }
     },
+
+
+
     removeFromBasket: (state, action) => {
-      state.items = state.items.filter(item => item.id !== action.payload);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('basket', JSON.stringify(state.items));
+      state.items = state.items.filter((item) => item.id !== action.payload);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("basket", JSON.stringify(state.items));
       }
     },
     updateQuantity: (state, action) => {
       const { id, quantity } = action.payload;
-      const item = state.items.find(item => item.id === id);
+      const item = state.items.find((item) => item.id === id);
       if (item) {
         item.quantity = quantity;
       }
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('basket', JSON.stringify(state.items));
+      if (typeof window !== "undefined") {
+        localStorage.setItem("basket", JSON.stringify(state.items));
       }
     },
   },
 });
 
-export const {
-  setBasket,
-  addToBasket,
-  removeFromBasket,
-  updateQuantity,
-} = basketSlice.actions;
+export const { setBasket, addToBasket, removeFromBasket, updateQuantity } =
+  basketSlice.actions;
 
 export default basketSlice.reducer;

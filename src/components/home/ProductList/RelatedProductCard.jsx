@@ -6,7 +6,7 @@ import { convertPrice } from "@/app/utils/utils";
 import { useSelector } from "react-redux";
 
 export default function RelatedProductCard({ product }) {
-  console.log(product);
+  // console.log(product);
 
   // Extract only the necessary properties
   const { image_url, title, price_cents, price_currency, slug, seo_slug, sale_end_date, sale_price_cents
