@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from 'next/dynamic'
 import React, { useState, useEffect } from "react";
 import { Formik, FieldArray } from "formik";
 import Link from "next/link";
@@ -8,6 +9,11 @@ import Footer from "@/components/common/footer/Footer";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import LoadingSkeleton from "./LoadingSkeleton";
+import ReactMarkdown from 'react-markdown';
+// Lazy-load ToastEditor to prevent SSR issues
+const Editor = dynamic(() => import('../../../../../components/ToastEditor'), { ssr: false })
+import ToastEditor from '@/components/ToastEditor'
+
 
 const UpdateHelpBlogPage = ({ params }) => {
     const { slug } = params;
@@ -141,24 +147,34 @@ const UpdateHelpBlogPage = ({ params }) => {
                                 )}
                             </div>
 
-                            {/* Summary Field */}
-                            <div>
-                                <label className="block text-gray-700 font-bold mb-1">
-                                    Summary <span className="text-red-500">*</span>
-                                </label>
-                                <textarea
-                                    name="summary"
-                                    placeholder="Enter a short summary"
-                                    rows="3"
-                                    value={values.summary}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="w-full border border-violet-700 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
-                                />
-                                {touched.summary && errors.summary && (
-                                    <div className="text-red-600 text-sm">{errors.summary}</div>
-                                )}
-                            </div>
+{/* Summary Field */}
+<div>
+  <label className="block text-gray-700 font-bold mb-1">
+    Summary <span className="text-red-500">*</span>
+  </label>
+  <textarea
+    name="summary"
+    placeholder="Enter a short summary (Markdown supported)"
+    rows="3"
+    value={values.summary}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    className="w-full border border-violet-700 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
+  />
+  {touched.summary && errors.summary && (
+    <div className="text-red-600 text-sm">{errors.summary}</div>
+  )}
+</div>
+
+{/* 👇 Live Markdown Preview */}
+{values.summary && (
+  <div className="mt-4 p-4 bg-gray-100 rounded border border-gray-300">
+    <h3 className="text-lg font-bold mb-2 text-gray-700">Summary Preview:</h3>
+    <div className="prose dark:prose-invert max-w-none">
+      <ReactMarkdown>{values.summary}</ReactMarkdown>
+    </div>
+  </div>
+)}
 
                             {/* Tags Field */}
                             <div>
@@ -275,16 +291,14 @@ const UpdateHelpBlogPage = ({ params }) => {
                                                                     <label className="block text-gray-700 font-bold mb-1">
                                                                         Content
                                                                     </label>
-                                                                    <textarea
-                                                                        name={`sections[${secIndex}].sectionContent`}
-                                                                        placeholder="Enter content"
-                                                                        rows="4"
-                                                                        value={section.sectionContent}
-                                                                        onChange={handleChange}
-                                                                        onBlur={handleBlur}
-                                                                        className="w-full border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
-                                                                    />
-                                                                </div>
+                                                                    <ToastEditor
+  initialValue={section.sectionContent}
+  onChange={(content) => {
+    const updatedSections = [...values.sections]; // <-- Formik's sections
+    updatedSections[secIndex].sectionContent = content;
+    setFieldValue('sections', updatedSections);  // <-- Update Formik
+  }}
+/>                                                           </div>
                                                             )}
 
                                                         {section.sectionType === "bullet" && (

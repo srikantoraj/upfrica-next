@@ -66,7 +66,7 @@ export default function Shopping() {
         // Set a new debounce: 400ms delay
         debounceTimeout.current = setTimeout(() => {
             const encodedQuery = encodeURIComponent(searchQuery.trim());
-            fetch(`https://media.upfrica.com/api/help-blogs/search/?q=${encodedQuery}`)
+            fetch(`https://media.upfrica.com/api/helpblogs/search/?q=${encodedQuery}`)
                 .then((response) => response.json())
                 .then((data) => {
                     setSearchResults(data)

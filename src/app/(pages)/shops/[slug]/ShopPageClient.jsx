@@ -228,7 +228,7 @@ export default function ShopPageClient({ slug }) {
   </nav>
 
   {/* === PAGE MAIN CONTENT === */}
-  <main className="mx-auto max-w-6xl gap-8 px-2 py-10 md:grid md:grid-cols-[240px_1fr]">
+  <main className="mx-auto max-w-6xl gap-8 px-2 py-10 pb-32 md:grid md:grid-cols-[240px_1fr]">
 
     {/* Desktop Sidebar (Filters) */}
     {activeTab === 'products' && (
@@ -472,7 +472,7 @@ export default function ShopPageClient({ slug }) {
 )}             </div>
           {/* PRODUCT GRID */}
           {/*<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">*/}
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2">
           {(mainLoading || filterLoading) ? (
           [...Array(8)].map((_, i) => <ProductCardSkeleton key={i} />)
           ) : (
