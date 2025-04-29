@@ -121,6 +121,12 @@ export default function UserMenu() {
                   <span className="ml-2">Create a Help Blog</span>
                 </div>
               </Link>
+              <Link href="/dashboard/create-job/">
+                <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
+                  <BsFillBookmarkHeartFill className="h-5 w-5 text-gray-500" />
+                  <span className="ml-2">Create a Job Post</span>
+                </div>
+              </Link>
               <Link href="/settings">
                 <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
                   <MdSettings className="h-5 w-5 text-gray-500" />
