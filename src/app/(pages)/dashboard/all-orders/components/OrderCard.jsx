@@ -82,28 +82,30 @@ const OrderCard = ({
         </div>
       </div>
 
-      <div className=" gap-4 mt-4 flex-wrap">
-        <img
-          src={imageUrl}
-          alt={productTitle}
-          className="w-20 h-20 rounded-md object-cover"
-        />
-        <div>
-          <div className="font-semibold">{productTitle}</div>
-          <div className="text-sm text-gray-500">
-            Sold by:{" "}
-            <span className="underline text-black cursor-pointer">{seller} ›</span>
-          </div>
-          <div className="text-sm">{price}</div>
-          <div className="text-sm">Returns accepted until {returnDate}</div>
+      <div className="flex gap-4 mt-4 flex-wrap">
+  {/* Left section: image */}
+  <img
+    src={imageUrl}
+    alt={productTitle}
+    className="w-20 h-20 rounded-md object-cover"
+  />
+  {/* Right section: text */}
+  <div className="flex-1 min-w-0">
+    <div className="font-semibold">{productTitle}</div>
+    <div className="text-sm text-gray-500">
+      Sold by: <span className="underline text-black cursor-pointer">{seller} ›</span>
+    </div>
+    <div className="text-sm">{price}</div>
+    <div className="text-sm">Returns accepted until {returnDate}</div>
 
-          <div className="mt-3 w-full overflow-x-auto">
-  <div className="flex gap-2 whitespace-nowrap min-w-max pr-4">
-    <button className="upfrica-btn-primary-outline-sm text-black">🔁 Buy it again</button>
-    <button className="upfrica-btn-primary-outline-sm text-black">✍️ Write a review</button>
-    <button className="upfrica-btn-primary-outline-sm text-black">🛍️ Seller's items</button>
-  </div>
-</div>
+    {/* Scrollable buttons container */}
+    <div className="mt-3 w-full overflow-x-auto">
+      <div className="flex gap-2 whitespace-nowrap min-w-max pr-4">
+        <button className="upfrica-btn-primary-outline-sm text-black">🔁 Buy it again</button>
+        <button className="upfrica-btn-primary-outline-sm text-black">✍️ Write a review</button>
+        <button className="upfrica-btn-primary-outline-sm text-black">🛍️ Seller's items</button>
+      </div>
+    </div>
 
         </div>
       </div>
