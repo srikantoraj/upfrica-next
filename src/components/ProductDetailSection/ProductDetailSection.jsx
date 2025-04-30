@@ -14,7 +14,7 @@ import { convertPrice } from "@/app/utils/utils";
 import { useDispatch, useSelector } from "react-redux";
 import { addToBasket, updateQuantity, removeFromBasket } from "../../app/store/slices/cartSlice";
 import { MdArrowRightAlt } from "react-icons/md";
-import { FaMinus, FaPlus, FaRegHeart, FaSearch , FaEdit} from "react-icons/fa";
+import { FaMinus, FaPlus, FaRegHeart, FaSearch, FaEdit } from "react-icons/fa";
 import { ImInfo } from "react-icons/im";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -57,19 +57,19 @@ const Breadcrumbs = ({ categoryTree, title }) => {
     );
 };
 
-export default function ProductDetailSection({ product }) {
-    const { token,  user:currentUser } = useSelector((state) => state.auth);
+export default function ProductDetailSection({ product, relatedProducts }) {
+    const { token, user: currentUser } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
     const currentPath = usePathname();
     const basket = useSelector((state) => state.basket.items) || [];
     const exchangeRates = useSelector((state) => state.exchangeRates.rates);
     const router = useRouter();
 
-       // Component state
-       const [loading, setLoading] = useState(false);
-       const [quantity, setQuantity] = useState(1);
-       const [isModalVisible, setIsModalVisible] = useState(false);
-       const [isDirectBuyPopupVisible, setIsDirectBuyPopupVisible] = useState(false);
+    // Component state
+    const [loading, setLoading] = useState(false);
+    const [quantity, setQuantity] = useState(1);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isDirectBuyPopupVisible, setIsDirectBuyPopupVisible] = useState(false);
 
     const {
         id,
@@ -246,7 +246,7 @@ export default function ProductDetailSection({ product }) {
     };
 
     // console.log("quantity",quantity);
-    
+
 
     const handleAddToBasket = () => {
         const productData = {
@@ -267,11 +267,11 @@ export default function ProductDetailSection({ product }) {
         dispatch(updateQuantity({ id, quantity: newQty }));
     const handleRemoveProduct = (id) => dispatch(removeFromBasket(id));
 
- 
+
 
 
     // console.log(quantity);
-    
+
 
     return (
         <section className="pt-6 md:pt-8 lg:pt-10">
@@ -289,10 +289,10 @@ export default function ProductDetailSection({ product }) {
 
                         {/* MOBILE CTA */}
                         <section className="block xl:hidden mt-5">
-                           < Link href={`/products/edit/${product?.slug}`} className="flex items-center gap-2">
-                            <FaEdit className="h-4 w-4 text-violet-700" />
-                            <span className="text-violet-700 hover:underline">Edit</span>
-                        </Link>
+                            < Link href={`/products/edit/${product?.slug}`} className="flex items-center gap-2">
+                                <FaEdit className="h-4 w-4 text-violet-700" />
+                                <span className="text-violet-700 hover:underline">Edit</span>
+                            </Link>
                             <div className="bg-white space-y-4 p-4">
                                 <h1 className="heading-lg text-base md:text-lg lg:text-xl font-bold text-gray-800">
                                     {title}
@@ -423,7 +423,7 @@ export default function ProductDetailSection({ product }) {
                     {/* RIGHT SIDEBAR */}
                     <aside className="order-2 hidden xl:block xl:col-span-5">
                         <div className="sticky top-0 space-y-4 p-5">
-                            {currentUser?.username === product?.user?.username || currentUser?.admin===true && <Link href={`/products/edit/${product?.slug}`} className="flex items-center gap-2">
+                            {currentUser?.username === product?.user?.username || currentUser?.admin === true && <Link href={`/products/edit/${product?.slug}`} className="flex items-center gap-2">
                                 <FaEdit className="h-4 w-4 text-violet-700" />
                                 <span className="text-violet-700 hover:underline">Edit</span>
                             </Link>}
@@ -444,7 +444,7 @@ export default function ProductDetailSection({ product }) {
                                 <span className="underline text-blue-600">595 Reviews</span>
                                 <span className="text-green-600">✅ Verified Seller</span>
                             </div>
-                            
+
                             {/* Dynamic Variant Selectors for Desktop */}
                             <div className="space-y-4 my-4">
 
@@ -452,52 +452,52 @@ export default function ProductDetailSection({ product }) {
                                     <FaEdit className="h-4 w-4 text-violet-700" />
                                     <span className="text-violet-700 hover:underline">Edit Variants</span>
                                 </Link>}
-    
+
                                 {variants && variants.length > 0 && (
                                     <>
-                                    <hr className="my-3 border-gray-200" />
-                                    {/* <Link href={`/products/edit/variants/${product?.id}`} className="flex items-center gap-2">
+                                        <hr className="my-3 border-gray-200" />
+                                        {/* <Link href={`/products/edit/variants/${product?.id}`} className="flex items-center gap-2">
                                         <FaEdit className="h-4 w-4 text-violet-700" />
                                         <span className="text-violet-700 hover:underline">Edit Variants</span>
                                     </Link> */}
-                                    {variants.map((variant) => (
-                                        variant.values && variant.values.length > 0 && (
-                                        <div key={variant.id}>
-                                            <div className="flex items-center justify-between">
-                                            <p className="text-sm font-medium text-gray-700 mb-1">
-                                                {variant.label}
-                                            </p>
-                                            <span className="text-sm text-gray-400">{sku}</span>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2">
-                                            {variant.values.map((val) => (
-                                                <button
-                                                key={val.id}
-                                                onClick={() =>
-                                                    setSelectedVariants(prev => ({
-                                                    ...prev,
-                                                    [variant.id]: val,
-                                                    }))
-                                                }
-                                                className={`px-4 ${val.additional_price_cents == 0 && 'py-2'} border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
-                                                    ? "border-black font-semibold"
-                                                    : "border-gray-300 text-gray-700"
-                                                    }`}
-                                                >
-                                                <div>{val.value}</div>
-                                                <div className=" text-gray-900 text-[10px]">
-                                                    {val.additional_price_cents > 0 &&
-                                                    ` (+₵${(convertPrice(val.additional_price_cents / 100, price_currency, "GHS", exchangeRates)).toFixed(2)})`}
+                                        {variants.map((variant) => (
+                                            variant.values && variant.values.length > 0 && (
+                                                <div key={variant.id}>
+                                                    <div className="flex items-center justify-between">
+                                                        <p className="text-sm font-medium text-gray-700 mb-1">
+                                                            {variant.label}
+                                                        </p>
+                                                        <span className="text-sm text-gray-400">{sku}</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {variant.values.map((val) => (
+                                                            <button
+                                                                key={val.id}
+                                                                onClick={() =>
+                                                                    setSelectedVariants(prev => ({
+                                                                        ...prev,
+                                                                        [variant.id]: val,
+                                                                    }))
+                                                                }
+                                                                className={`px-4 ${val.additional_price_cents == 0 && 'py-2'} border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
+                                                                    ? "border-black font-semibold"
+                                                                    : "border-gray-300 text-gray-700"
+                                                                    }`}
+                                                            >
+                                                                <div>{val.value}</div>
+                                                                <div className=" text-gray-900 text-[10px]">
+                                                                    {val.additional_price_cents > 0 &&
+                                                                        ` (+₵${(convertPrice(val.additional_price_cents / 100, price_currency, "GHS", exchangeRates)).toFixed(2)})`}
+                                                                </div>
+                                                            </button>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                                </button>
-                                            ))}
-                                            </div>
-                                        </div>
-                                        )
-                                    ))}
+                                            )
+                                        ))}
                                     </>
                                 )}
-                                </div>
+                            </div>
                             <hr className="my-3 border-gray-200" />
 
                             {/* Price & countdown */}
@@ -601,6 +601,7 @@ export default function ProductDetailSection({ product }) {
 
             {isDirectBuyPopupVisible && (
                 <DirectBuyPopup
+                    relatedProducts={relatedProducts}
                     quantity={quantity}
                     product={product}
                     isVisible={isDirectBuyPopupVisible}
