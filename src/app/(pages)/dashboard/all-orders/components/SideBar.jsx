@@ -4,7 +4,7 @@ import React from 'react';
 
 export default function SideBar() {
   return (
-    <aside className="w-[240px] bg-[#D6D43A] p-4 text-black hidden md:block min-h-screen">
+    <aside className="w-[240px] p-2 text-black hidden md:block rounded-md overflow-y-auto max-h-[calc(100vh-25rem)]">
       <h2 className="text-lg font-bold mb-4">Filters</h2>
 
       <div className="mb-6 p-5 bg-white border rounded-t-[5px] drop-shadow">

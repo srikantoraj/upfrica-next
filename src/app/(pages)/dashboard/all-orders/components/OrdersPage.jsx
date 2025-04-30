@@ -83,7 +83,7 @@ export default function OrdersPage() {
   );
 
   return (
-    <div className="p-4 bg-gray-100 min-h-screen text-black font-sans">
+    <div className="p-0 bg-gray-100 min-h-screen text-black font-sans">
       {/* Search Bar */}
       <div className="relative max-w-xl mx-auto mb-6">
         <AiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-700" />
@@ -102,12 +102,12 @@ export default function OrdersPage() {
         )}
       </div>
 
-      <div className="flex gap-6 mb-4 font-semibold overflow-x-auto whitespace-nowrap">
-        <div className="border-b-2 border-black pb-1">All Purchases</div>
-        <div>Processing</div>
-        <div>Unpaid</div>
-        <div>Returns & Cancelled</div>
-      </div>
+      <div className="flex gap-6 mb-4 font-semibold overflow-x-auto whitespace-nowrap px-2 scrollbar-hide">
+  <div className="border-b-2 border-black pb-1">All Purchases</div>
+  <div>Processing</div>
+  <div>Unpaid</div>
+  <div>Returns & Cancelled</div>
+</div>
 
       <h1 className="text-2xl font-bold mb-6">My Orders</h1>
 

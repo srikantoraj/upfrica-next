@@ -69,15 +69,28 @@ h3 {
     @apply border border-gray-300 text-gray-600 hover:bg-gray-100;
   }
 
-  /* Scrollbar hiding */
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
+  /* This is correct and avoids redundancy */
+.upfrica-btn-primary-outline-sm {
+  @apply rounded-full border border-[#A435F0] py-1 px-4 text-sm whitespace-nowrap;
+}
 
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+.upfrica-btn-black-outline-sm {
+  @apply rounded-full border border-[#000000] py-1 px-4 text-sm whitespace-nowrap;
+}
+
+.upfrica-btn-primary-sm {
+  @apply bg-[#A435F0] rounded-full border border-[#A435F0] py-1 px-4 text-sm whitespace-nowrap;
+}
+
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari, Opera */
+}
 
   /* styles.css */
 select {

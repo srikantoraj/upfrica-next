@@ -29,7 +29,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 
   return (
     <div className="mt-10 flex justify-center overflow-x-auto">
-      <div className="inline-flex items-center space-x-2 px-2 whitespace-nowrap">
+      <div className="inline-flex items-center space-x-2 whitespace-nowrap px-2 overflow-x-auto scrollbar-hide">
         <button
           onClick={() => handlePageClick(currentPage - 1)}
           disabled={currentPage === 1}
