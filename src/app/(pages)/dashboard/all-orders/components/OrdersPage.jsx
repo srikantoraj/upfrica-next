@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import OrderCard from "./OrderCard";
+import Pagination from "@/components/Pagination";
+import { AiOutlineSearch, AiOutlineClose } from "react-icons/ai";
 
 const PAGE_SIZE = 20;
 
@@ -17,6 +19,10 @@ export default function OrdersPage() {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const debounceRef = useRef(null);
 
   useEffect(() => {
     if (!token) return;
@@ -42,8 +48,60 @@ export default function OrdersPage() {
 
   const totalPages = Math.ceil(count / PAGE_SIZE);
 
+  const goToPage = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      router.push(`/dashboard/all-orders?page=${newPage}`);
+    }
+  };
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setSearchLoading(false);
+      return;
+    }
+
+    setSearchLoading(true);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const lowerQuery = searchQuery.toLowerCase();
+      const filtered = orders.flatMap(order =>
+        order.order_items.filter(item =>
+          item.product.title.toLowerCase().includes(lowerQuery) ||
+          String(order.id).includes(lowerQuery)
+        ).map(item => ({ ...item, order }))
+      );
+      setSearchResults(filtered);
+      setSearchLoading(false);
+    }, 300);
+
+    return () => clearTimeout(debounceRef.current);
+  }, [searchQuery, orders]);
+
+  const displayItems = searchQuery ? searchResults : orders.flatMap(order =>
+    order.order_items.map(item => ({ ...item, order }))
+  );
+
   return (
     <div className="p-4 bg-gray-100 min-h-screen text-black font-sans">
+      {/* Search Bar */}
+      <div className="relative max-w-xl mx-auto mb-6">
+        <AiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-700" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search orders by product name or order #..."
+          className="w-full rounded-full border border-gray-300 px-10 py-2 focus:outline-none"
+        />
+        {searchQuery && (
+          <AiOutlineClose
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-xl text-gray-600 cursor-pointer"
+            onClick={() => setSearchQuery("")}
+          />
+        )}
+      </div>
+
       <div className="flex gap-6 mb-4 font-semibold overflow-x-auto whitespace-nowrap">
         <div className="border-b-2 border-black pb-1">All Purchases</div>
         <div>Processing</div>
@@ -59,21 +117,18 @@ export default function OrdersPage() {
         <p className="text-red-600 text-center">Error loading orders: {error}</p>
       ) : (
         <div className="space-y-6">
-          {orders.length === 0 && (
-            <p className="text-center text-gray-500">You have no orders yet.</p>
-          )}
-          {orders.map((order) =>
-            order.order_items.map((item, index) => (
+          {displayItems.length === 0 ? (
+            <p className="text-center text-gray-500">No matching orders found.</p>
+          ) : (
+            displayItems.map((item, index) => (
               <OrderCard
-                key={`${order.id}-${item.id}-${index}`}
+                key={`${item.order.id}-${item.id}-${index}`}
                 status={item.receive_status === 1 ? "Received" : "Processing"}
-                date={new Date(order.created_at).toLocaleDateString()}
+                date={new Date(item.order.created_at).toLocaleDateString()}
                 total={`GHS ${(item.price_cents * item.quantity / 100).toFixed(2)}`}
-                orderNumber={String(order.id).padStart(8, "0")}
+                orderNumber={String(item.order.id).padStart(8, "0")}
                 productTitle={item.product.title}
-                seller={
-                  item.product.user_display_name || `Seller ${item.product.user}`
-                }
+                seller={item.product.user_display_name || `Seller ${item.product.user}`}
                 price={`GHS ${(item.price_cents / 100).toFixed(2)}`}
                 returnDate="12 May"
                 imageUrl={item.product.product_images?.[0] || "/placeholder.png"}
@@ -83,10 +138,12 @@ export default function OrdersPage() {
         </div>
       )}
 
-      {totalPages > 1 && (
-        <div className="mt-10 text-center text-gray-500">
-          Page {pageParam} of {totalPages}
-        </div>
+      {!searchQuery && totalPages > 1 && (
+        <Pagination
+          currentPage={pageParam}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+        />
       )}
     </div>
   );

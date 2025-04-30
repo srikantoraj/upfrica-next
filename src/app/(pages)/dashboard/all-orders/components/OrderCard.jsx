@@ -25,7 +25,7 @@ const OrderCard = ({
   }, []);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm mb-6 p-4">
+    <div className="bg-white rounded-xl shadow-upfrica mb-6 p-4">
       <div className="flex flex-col md:flex-row justify-between bg-gray-100 rounded-lg p-4">
         <div>
           <div className="text-green-600 font-bold flex items-center mb-2">

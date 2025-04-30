@@ -13,6 +13,9 @@ module.exports = {
         foreground: "var(--foreground)",
         purpleBrand: "#A435F0", // ✅ add this
       },
+      boxShadow: {
+        'upfrica': '0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)',
+      },
       fontSize: {
         'responsive': 'calc(1.575rem + 3.9vw)',
       },
