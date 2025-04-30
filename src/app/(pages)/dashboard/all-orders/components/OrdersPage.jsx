@@ -1,0 +1,93 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import OrderCard from "./OrderCard";
+
+const PAGE_SIZE = 20;
+
+export default function OrdersPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const token = useSelector((state) => state.auth.token);
+
+  const pageParam = parseInt(searchParams.get("page") || "1", 10);
+  const [orders, setOrders] = useState([]);
+  const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!token) return;
+
+    setLoading(true);
+    fetch(`https://media.upfrica.com/api/buyer/orders/?page=${pageParam}`, {
+      headers: {
+        Authorization: `Token ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        setOrders(data.results);
+        setCount(data.count);
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [token, pageParam]);
+
+  const totalPages = Math.ceil(count / PAGE_SIZE);
+
+  return (
+    <div className="p-4 bg-gray-100 min-h-screen text-black font-sans">
+      <div className="flex gap-6 mb-4 font-semibold overflow-x-auto whitespace-nowrap">
+        <div className="border-b-2 border-black pb-1">All Purchases</div>
+        <div>Processing</div>
+        <div>Unpaid</div>
+        <div>Returns & Cancelled</div>
+      </div>
+
+      <h1 className="text-2xl font-bold mb-6">My Orders</h1>
+
+      {loading ? (
+        <div className="text-center text-gray-600">Loading your orders...</div>
+      ) : error ? (
+        <p className="text-red-600 text-center">Error loading orders: {error}</p>
+      ) : (
+        <div className="space-y-6">
+          {orders.length === 0 && (
+            <p className="text-center text-gray-500">You have no orders yet.</p>
+          )}
+          {orders.map((order) =>
+            order.order_items.map((item, index) => (
+              <OrderCard
+                key={`${order.id}-${item.id}-${index}`}
+                status={item.receive_status === 1 ? "Received" : "Processing"}
+                date={new Date(order.created_at).toLocaleDateString()}
+                total={`GHS ${(item.price_cents * item.quantity / 100).toFixed(2)}`}
+                orderNumber={String(order.id).padStart(8, "0")}
+                productTitle={item.product.title}
+                seller={
+                  item.product.user_display_name || `Seller ${item.product.user}`
+                }
+                price={`GHS ${(item.price_cents / 100).toFixed(2)}`}
+                returnDate="12 May"
+                imageUrl={item.product.product_images?.[0] || "/placeholder.png"}
+              />
+            ))
+          )}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-10 text-center text-gray-500">
+          Page {pageParam} of {totalPages}
+        </div>
+      )}
+    </div>
+  );
+}
