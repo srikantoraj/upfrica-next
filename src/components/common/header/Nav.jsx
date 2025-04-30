@@ -10,6 +10,7 @@ const Navbar = () => {
     { title: "Categories", id: 5, url: "/categories" },
     { title: "Help", id: 6, url: "/help" },
     { title: "UK Site", id: 7, url: "/uk-site" },
+    { title: "Careers", id: 7, url: "/careers" },
   ];
 
   return (

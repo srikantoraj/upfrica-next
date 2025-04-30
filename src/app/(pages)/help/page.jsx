@@ -81,6 +81,12 @@ export default function Shopping() {
         return () => clearTimeout(debounceTimeout.current)
     }, [searchQuery])
 
+
+    const stripHtml = (html) => {
+        if (!html) return '';
+        return html.replace(/<[^>]*>?/gm, '');
+    };
+
     return (
         <>
             <Head>
@@ -145,7 +151,7 @@ export default function Shopping() {
                                     }}
                                     className="w-full pl-10 pr-10 py-3 rounded-full border border-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-700 text-gray-500"
                                 />
-                                
+
                             </div>
                             {/* Floating search results panel */}
                             {isFocused && searchQuery.trim() && (
@@ -218,7 +224,7 @@ export default function Shopping() {
                 {/* Main Content */}
                 <section className="mb-12 container mx-auto px-4 py-8">
                     {/* If no search query, show featured articles */}
-                    { (
+                    {(
                         <>
                             <h2 className="text-2xl font-semibold text-center mb-8">
                                 Featured articles
@@ -238,9 +244,9 @@ export default function Shopping() {
                                                     {post.title}
                                                 </h3>
                                                 <p className="text-gray-700">
-                                                    {post.summary.length > 150
+                                                {stripHtml(post.summary.length > 150
                                                         ? post.summary.substring(0, 150) + "..."
-                                                        : post.summary}
+                                                        : post.summary)}
                                                 </p>
                                             </div>
                                         </Link>

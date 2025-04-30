@@ -13,7 +13,7 @@ const LoadingDots = ({ color = "white" }) => (
     </div>
 );
 
-const DirectBuyPopup = ({ product, isVisible, onClose }) => {
+const DirectBuyPopup = ({ product, isVisible, onClose, quantity }) => {
     const router = useRouter();
     const { token } = useSelector((state) => state.auth) || {};
 
@@ -24,7 +24,7 @@ const DirectBuyPopup = ({ product, isVisible, onClose }) => {
     const [paymentMethod, setPaymentMethod] = useState("paystack");
     const [acceptedPolicy, setAcceptedPolicy] = useState(true);
 
-    const [directBuyQuantity, setDirectBuyQuantity] = useState(1);
+    const [directBuyQuantity, setDirectBuyQuantity] = useState(quantity);
     const [isConfirmLoading, setIsConfirmLoading] = useState(false);
     const [error, setError] = useState("");
 

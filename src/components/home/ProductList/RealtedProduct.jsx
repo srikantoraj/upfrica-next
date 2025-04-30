@@ -38,7 +38,7 @@ const FetchProductData = ({ productSlug, productTitle, location = "Ghana" }) => 
         return response.json();
       })
       .then((result) => {
-        console.log(result?.results);
+        // console.log(result?.results);
         setProducts(result?.results || []);
         setLoading(false);
       })
@@ -67,7 +67,7 @@ const FetchProductData = ({ productSlug, productTitle, location = "Ghana" }) => 
     return <p>No related items found.</p>;
   }
 
-  console.log('products',products);
+  // console.log('products',products);
   
 
   return (

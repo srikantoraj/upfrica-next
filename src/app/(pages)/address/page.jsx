@@ -12,36 +12,6 @@ const useFetchAddresses = () => {
 
   console.log(data);
 
-  // useEffect(() => {
-  //   const fetchAddresses = async () => {
-  //     try {
-  //       const myHeaders = new Headers();
-  //       myHeaders.append("Authorization", "Bearer 7pTf7h9BZgf9JFy3ssZbs2DQ");
-
-  //       const response = await fetch(
-  //         "https://upfrica-staging.herokuapp.com/api/v1/addresses",
-  //         {
-  //           method: "GET",
-  //           headers: myHeaders,
-  //         }
-  //       );
-  //       const result = await response.json();
-
-  //       if (response.ok && result.addresses) {
-  //         setData(result.addresses);
-  //       } else {
-  //         setError("No addresses found.");
-  //       }
-  //     } catch (err) {
-  //       setError("Failed to fetch addresses. Please try again later.");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchAddresses();
-  // }, []);
-
   return { data, error, loading };
 };
 

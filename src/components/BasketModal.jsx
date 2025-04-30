@@ -12,7 +12,11 @@ export default function BasketModal({
   basket,
   handleQuantityChange,
   handleRemoveProduct,
+  quantity
 }) {
+
+  // console.log(basket);
+
   const router = useRouter();
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [isViewBasketLoading, setIsViewBasketLoading] = useState(false);

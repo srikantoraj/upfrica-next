@@ -13,6 +13,13 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'; // 👈 import it
 
 
+// 👉 Step 1: Utility function to strip HTML tags
+const stripHtml = (html) => {
+    if (!html) return '';
+    return html.replace(/<[^>]*>?/gm, '');
+};
+
+
 // Dark Mode Toggle Hook
 const useDarkMode = () => {
     const [enabled, setEnabled] = useState(false)
@@ -181,7 +188,7 @@ export default function HelpCenterPage({ params }) {
                 <Sidebar data={staticSidebar} />
                 <main className="lg:col-span-3 space-y-8 ">
                     <ArticleContent data={data} />
-                   
+
                 </main>
             </div>
             <VoteSection />
@@ -368,7 +375,7 @@ const Sidebar = ({ data }) => {
     return (
         <aside className="space-y-8  dark:bg-gray-900 text-gray-900 dark:text-gray-100">
             <SidebarToggleButton onClick={() => setIsOpen(!isOpen)} />
-            <div className={`${isOpen ? 'block' : 'hidden'} lg:block space-y-8 `}> 
+            <div className={`${isOpen ? 'block' : 'hidden'} lg:block space-y-8 `}>
                 <Card title="Help Topics">
                     <ul className="list-disc pl-4 text-gray-700 dark:text-dark">
                         {data?.helpTopics?.map((link) => (
@@ -403,10 +410,10 @@ const ArticleContent = ({ data }) => (
     <article className="space-y-8 bg-white  dark:bg-zinc-900 dark:text-white rounded p-4 shadow text-[18px] leading-[32px] tracking-[-0.003em] font-normal ">
         <header>
             {/* {user?.id === data?.user && ( */}
-                <Link href={`/all-blogs/edit/${data?.slug}`} className="text-violet-700 hover:underline flex items-center gap-1">
-                    <FaEdit />
-                    Edit
-                </Link>
+            <Link href={`/all-blogs/edit/${data?.slug}`} className="text-violet-700 hover:underline flex items-center gap-1">
+                <FaEdit />
+                Edit
+            </Link>
             {/* )} */}
 
             <h1
@@ -414,34 +421,10 @@ const ArticleContent = ({ data }) => (
                 className="text-3xl font-bold text-gray-900  dark:text-white mb-4"
                 title={data?.title}
             >
-                {data?.title}
+                {stripHtml(data?.title)}
             </h1>
         </header>
-        {data?.summary && (
-  <div className="prose prose-lg dark:prose-invert max-w-none">
-<ReactMarkdown
-  remarkPlugins={[remarkGfm]}
-  components={{
-    a: ({ node, ...props }) => (
-      <a {...props} className="text-violet-700 underline" target="_blank" rel="noopener noreferrer" />
-    ),
-    ol: ({ node, ...props }) => (
-      <ol {...props} className="list-decimal list-outside pl-6" />
-    ),
-    ul: ({ node, ...props }) => (
-      <ul {...props} className="list-disc list-outside pl-6" />
-    ),
-    li: ({ node, children, ...props }) => (
-      <li {...props} className="mb-1">
-        {children}
-      </li>
-    ),
-  }}
->
-  {data.summary}
-</ReactMarkdown>
-  </div>
-)}
+        {data?.summary && <p className="mb-2">{stripHtml(data.summary)}</p>}
         {data?.sections?.map((section, index) => (
             <section
                 key={index}
@@ -449,14 +432,17 @@ const ArticleContent = ({ data }) => (
                 className="border-t pt-0  dark:text-white"
             >
                 <h2 className="text-2xl font-bold mt-4 mb-2  dark:text-white">
-                    {section.sectionTitle}
+                    {stripHtml(section.sectionTitle)}
                 </h2>
+
+                {/* {section.sectionType === "paragraph" && (
+                    <p>{section.sectionContent}</p>
+                )} */}
+
+                {/* 👉 updated: html tag remove and only text */}
                 {section.sectionType === "paragraph" && (
-  <div
-    className="prose prose-lg dark:prose-invert max-w-none"
-    dangerouslySetInnerHTML={{ __html: section.sectionContent }}
-  />
-)}
+                    <p>{stripHtml(section.sectionContent)}</p>
+                )}
 
 {section.sectionType === "bullet" && (
   <ul className="prose prose-lg list-disc list-outside pl-6 dark:prose-invert max-w-none">
@@ -468,17 +454,12 @@ const ArticleContent = ({ data }) => (
   </ul>
 )}
 
-{section.sectionType === "highlight" && (
-  <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded dark:bg-yellow-200/30">
-    <p className="font-semibold mb-2 text-yellow-800 dark:text-yellow-300">
-      Important:
-    </p>
-    <div
-      className="prose prose-lg dark:prose-invert max-w-none"
-      dangerouslySetInnerHTML={{ __html: section.sectionContent }}
-    />
-  </div>
-)}
+                {section.sectionType === "highlight" && (
+                    <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 dark:bg-yellow-200/30">
+                        <p className="font-semibold">Important:</p>
+                        <p>{stripHtml(section.sectionContent)}</p>
+                    </div>
+                )}
 
                 {section.sectionType === "table" &&
                     section.tableHeaders &&

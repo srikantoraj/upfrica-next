@@ -13,7 +13,7 @@ import { useSelector } from 'react-redux';
 
 import dynamic from 'next/dynamic';
 
-const Viewer = dynamic(() => import('@toast-ui/react-editor').then((mod) => mod.Viewer), { ssr: false });
+// const Viewer = dynamic(() => import('@toast-ui/react-editor').then((mod) => mod.Viewer), { ssr: false });
 
 
 // Dark Mode Toggle Hook
@@ -430,13 +430,13 @@ const ArticleContent = ({ data }) => (
         </header>
         {data?.summary && (
   <div className="mb-2">
-   <Viewer
+   {/* <Viewer
   initialValue={data.summary}
   usageStatistics={false}  // Hide Google Analytics
   height="auto"
   theme="light"
   plugins={[]}
-/>
+/> */}
   </div>
 )}
         {data?.sections?.map((section, index) => (
