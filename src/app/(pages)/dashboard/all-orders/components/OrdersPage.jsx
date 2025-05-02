@@ -121,18 +121,20 @@ export default function OrdersPage() {
             <p className="text-center text-gray-500">No matching orders found.</p>
           ) : (
             displayItems.map((item, index) => (
-              <OrderCard
-                key={`${item.order.id}-${item.id}-${index}`}
-                status={item.receive_status === 1 ? "Received" : "Processing"}
-                date={new Date(item.order.created_at).toLocaleDateString()}
-                total={`GHS ${(item.price_cents * item.quantity / 100).toFixed(2)}`}
-                orderNumber={String(item.order.id).padStart(8, "0")}
-                productTitle={item.product.title}
-                seller={item.product.user_display_name || `Seller ${item.product.user}`}
-                price={`GHS ${(item.price_cents / 100).toFixed(2)}`}
-                returnDate="12 May"
-                imageUrl={item.product.product_images?.[0] || "/placeholder.png"}
-              />
+<OrderCard
+  key={`${item.order.id}-${item.id}-${index}`}
+  order={item.order} // ✅ Add this
+  product={item.product} // ✅ Pass product as well if needed
+  status={item.receive_status === 1 ? "Received" : "Processing"}
+  date={new Date(item.order.created_at).toLocaleDateString()}
+  total={`GHS ${(item.price_cents * item.quantity / 100).toFixed(2)}`}
+  orderNumber={String(item.order.id).padStart(8, "0")}
+  productTitle={item.product.title}
+  seller={item.product.user_display_name || `Seller ${item.product.user}`}
+  price={`GHS ${(item.price_cents / 100).toFixed(2)}`}
+  returnDate="12 May"
+  imageUrl={item.product.product_images?.[0] || "/placeholder.png"}
+/>
             ))
           )}
         </div>

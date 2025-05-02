@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation"; // ✅ Add this
 import {
   AiOutlineHome,
   AiOutlineUser,
   AiOutlinePhone,
 } from "react-icons/ai";
+
 
 const OrderCard = ({
   status = "Processing",
@@ -35,6 +37,7 @@ const OrderCard = ({
     },
   },
 }) => {
+  const router = useRouter(); // ✅ Initialize router
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showFullInfo, setShowFullInfo] = useState(false);
   const dropdownRef = useRef();
@@ -85,7 +88,12 @@ const OrderCard = ({
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-          <button className="h-8 text-white upfrica-btn-primary-sm">View details</button>
+        <button
+            className="h-8 text-white upfrica-btn-primary-sm"
+            onClick={() => router.push(`/dashboard/all-orders/${order.id}`)}
+          >
+            View details
+          </button>
           <div className="relative w-full sm:w-auto" ref={dropdownRef}>
             <button
               className="h-8 upfrica-btn-primary-outline-sm w-full sm:w-auto"
