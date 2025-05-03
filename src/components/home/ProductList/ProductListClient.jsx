@@ -7,6 +7,9 @@ import { setExchangeRates } from '@/app/store/slices/exchangeRatesSlice';
 import { IoIosArrowRoundForward } from 'react-icons/io';
 
 export default function ProductListClient({ title, productsData }) {
+
+    console.log("product data", productsData.results);
+
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -19,7 +22,7 @@ export default function ProductListClient({ title, productsData }) {
         <div className="container bg-white  py-5 md:py-10 font-sans ">
             {/* Header */}
             <div className="md-4 lg:mb-8">
-                
+
                 <div className="flex gap-4 pb-4 items-center justify-between md:justify-start">
                     <h1 className="text-xl md:text-3xl font-extrabold tracking-wide">{title}</h1>
                     <IoIosArrowRoundForward className="h-10 w-10 text-gray-700" />
