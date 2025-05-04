@@ -1,27 +1,31 @@
 // components/RecentlyViewedList.js
 'use client'
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+
 import ProductCard from './ProductCard';
-import RecentProductCard from './RecentProductCard';
+// import RecentProductCard from './RecentProductCard';
 import { IoIosArrowRoundForward } from 'react-icons/io';
 
 const RECENTLY_VIEWED_KEY = 'upfricaRecentlyViewed';
 
 const RecentlyViewedList = ({ title }) => {
     const [items, setItems] = useState([]);
-
-    console.log("recently prevew  product", items);
+   
+    
+   
 
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
-            if (stored) {
-                setItems(JSON.parse(stored));
+            if (stored && stored.length > 0) {
+                const parsedItems = JSON.parse(stored);
+                setItems(parsedItems);
+                console.log("recently preview product", parsedItems); // এখানে log করো
             }
         }
     }, []);
+    
 
     if (items.length === 0) return null;
 

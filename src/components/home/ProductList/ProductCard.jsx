@@ -94,52 +94,53 @@ import { convertPrice } from "@/app/utils/utils";
 import { useSelector } from "react-redux";
 
 export default function ProductCard({ product }) {
-  // console.log("recently vew product", product);
-  const {
-    product_images,
-    title,
-    sale_end_date,
-    price_cents,
-    sale_price_cents,
-    price_currency,
-    category,
-    slug,
-    seo_slug,
-    seller_country,
-    seller_town,
-    on_sales
-  } = product;
+  console.log("card product",product);
+  
+    const {
+      product_images,
+      title,
+      sale_end_date,
+      price_cents,
+      sale_price_cents,
+      price_currency,
+      category,
+      slug,
+      seo_slug,
+      seller_country,
+      seller_town,
+      on_sales
+    } = product;
 
-  const country = seller_country?.toLowerCase() || 'gh';
-  const town = seller_town?.toLowerCase() || 'accra';
+    const country = seller_country?.toLowerCase() || 'gh';
+    const town = seller_town?.toLowerCase() || 'accra';
   const exchangeRates = useSelector((state) => state.exchangeRates.rates);
 
-  // Convert the regular price to the destination currency (GHS)
-  const convertedPrice = convertPrice(price_cents / 100, price_currency, 'GHS', exchangeRates);
+    // Convert the regular price to the destination currency (GHS)
+    const convertedPrice = convertPrice(price_cents / 100, price_currency, 'GHS', exchangeRates);
 
 
- 
 
 
-  // Determine if the sale is active
-  const isOnSaleActive =
+
+    // Determine if the sale is active
+    const isOnSaleActive =
     (sale_end_date && new Date(sale_end_date) > new Date() && sale_price_cents > 0) ||
     on_sales;
 
-  // Calculate the converted sale price if applicable
-  const convertedSalePrice =
+    // Calculate the converted sale price if applicable
+    const convertedSalePrice =
     isOnSaleActive && sale_price_cents
-      ? convertPrice(sale_price_cents / 100, price_currency, 'GHS', exchangeRates)
-      : null;
+    ? convertPrice(sale_price_cents / 100, price_currency, 'GHS', exchangeRates)
+    : null;
 
-  if (!product_images || product_images.length === 0) return null;
+    if (!product_images || product_images.length === 0) return null;
 
-  return (
+    return (
     <div className="bg-white rounded-lg shadow overflow-hidden flex flex-col justify-between w-full h-[300px] lg:h-[370px] font-sans">
       {/* Image Section */}
       <div className="relative w-full ">
         {product_images.length > 0 && (
-          <Link href={`/${country}/${seo_slug}/`}>
+          <Link href={`/${country}/${seo_slug || slug}/`}>
             <span className="block relative w-full h-[200px] lg:h-[250px]">
               <img
                 src={product_images[0]}
@@ -186,7 +187,7 @@ export default function ProductCard({ product }) {
                   ₵ {convertedSalePrice?.toFixed(2)}
                 </p>
                 <p className="text-sm text-gray-500 line-through">
-                   {convertedPrice?.toFixed(2)}
+                  {convertedPrice?.toFixed(2)}
                 </p>
 
               </>
@@ -204,6 +205,6 @@ export default function ProductCard({ product }) {
         </div>
       </div>
     </div>
-  );
+    );
 }
 

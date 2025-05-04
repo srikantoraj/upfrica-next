@@ -17,7 +17,7 @@ const Addresses = ({ options, onSelect, placeholder = 'Select an option' }) => {
       <option value="" disabled>
         {placeholder}
       </option>
-      {options.map((option) => (
+      {options?.map((option) => (
         <option key={option.id} value={option.id}>
           {option.value}
         </option>

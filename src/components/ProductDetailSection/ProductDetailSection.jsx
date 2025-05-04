@@ -58,6 +58,8 @@ const Breadcrumbs = ({ categoryTree, title }) => {
 };
 
 export default function ProductDetailSection({ product, relatedProducts }) {
+    console.log("detles product", product);
+
     const { token, user: currentUser } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
     const currentPath = usePathname();

@@ -7,6 +7,8 @@ import React from 'react';
 
 // Update getProductData to accept a string slug directly
 async function getProductData(slug) {
+    console.log("slug",slug);
+    
     if (!slug) {
         throw new Error('No product selected');
     }
@@ -77,7 +79,7 @@ export default async function ProductDetails({ params }) {
     const productSlug = slugArray[slugArray.length - 1];
 
     const product = await getProductData(productSlug);
-    // console.log("product",product);
+    console.log("product data get", product);
 
     const relatedProducts = await getRelatedProducts(product?.slug);
     // console.log("related product", relatedProducts);
