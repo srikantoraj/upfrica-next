@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
+import OrderCardSkeleton from "./OrderCardSkeleton";
 import OrderCard from "./OrderCard";
 import Pagination from "@/components/Pagination";
 import { AiOutlineSearch, AiOutlineClose } from "react-icons/ai";
@@ -112,7 +113,11 @@ export default function OrdersPage() {
       <h1 className="text-2xl font-bold mb-6">My Orders</h1>
 
       {loading ? (
-        <div className="text-center text-gray-600">Loading your orders...</div>
+  <div className="space-y-6 px-4">
+    {Array.from({ length: 3 }).map((_, index) => (
+      <OrderCardSkeleton key={index} />
+    ))}
+  </div>
       ) : error ? (
         <p className="text-red-600 text-center">Error loading orders: {error}</p>
       ) : (
@@ -121,20 +126,19 @@ export default function OrdersPage() {
             <p className="text-center text-gray-500">No matching orders found.</p>
           ) : (
             displayItems.map((item, index) => (
-<OrderCard
-  key={`${item.order.id}-${item.id}-${index}`}
-  order={item.order} // ✅ Add this
-  product={item.product} // ✅ Pass product as well if needed
-  status={item.receive_status === 1 ? "Received" : "Processing"}
-  date={new Date(item.order.created_at).toLocaleDateString()}
-  total={`GHS ${(item.price_cents * item.quantity / 100).toFixed(2)}`}
-  orderNumber={String(item.order.id).padStart(8, "0")}
-  productTitle={item.product.title}
-  seller={item.product.user_display_name || `Seller ${item.product.user}`}
-  price={`GHS ${(item.price_cents / 100).toFixed(2)}`}
-  returnDate="12 May"
-  imageUrl={item.product.product_images?.[0] || "/placeholder.png"}
-/>
+              <OrderCard
+                key={`${item.order.id}-${item.id}-${index}`}
+                order={item.order}
+                product={{ ...item.product, shop: item.shop }} // ✅ Ensure shop is included
+                status={item.receive_status === 1 ? "Received" : "Processing"}
+                date={new Date(item.order.created_at).toLocaleDateString()}
+                total={`GHS ${(item.price_cents * item.quantity / 100).toFixed(2)}`}
+                orderNumber={String(item.order.id).padStart(8, "0")}
+                productTitle={item.product.title}
+                price={`GHS ${(item.price_cents / 100).toFixed(2)}`}
+                returnDate="12 May"
+                imageUrl={item.product.product_images?.[0] || "/placeholder.png"}
+              />
             ))
           )}
         </div>

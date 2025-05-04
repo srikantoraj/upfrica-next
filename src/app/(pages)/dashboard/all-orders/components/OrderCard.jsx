@@ -1,13 +1,25 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation"; // ✅ Add this
-import {
-  AiOutlineHome,
-  AiOutlineUser,
-  AiOutlinePhone,
-} from "react-icons/ai";
+import { useRouter } from "next/navigation";
+import { AiOutlineHome, AiOutlineUser, AiOutlinePhone } from "react-icons/ai";
 
+// ✅ Helper to get seller display name
+function getSellerName(product) {
+  if (product?.shop?.name && typeof product.shop.name === "string" && product.shop.name.trim() !== "") {
+    return product.shop.name;
+  }
+  if (product?.shop?.user?.username) {
+    return product.shop.user.username;
+  }
+  if (typeof product?.user === "object" && product.user?.username) {
+    return product.user.username;
+  }
+  if (typeof product?.user === "number") {
+    return `Seller ${product.user}`;
+  }
+  return "Seller";
+}
 
 const OrderCard = ({
   status = "Processing",
@@ -18,7 +30,7 @@ const OrderCard = ({
   price = "GHS 200",
   returnDate = "12 May",
   imageUrl = "/placeholder.png",
-  product, // ✅ receives full product object
+  product,
   order = {
     buyer: {
       first_name: "John",
@@ -37,7 +49,7 @@ const OrderCard = ({
     },
   },
 }) => {
-  const router = useRouter(); // ✅ Initialize router
+  const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showFullInfo, setShowFullInfo] = useState(false);
   const dropdownRef = useRef();
@@ -55,21 +67,15 @@ const OrderCard = ({
     "$1 ***"
   );
 
-  const sellerName =
-    typeof product?.shop?.name === "string" && product.shop.name
-      ? product.shop.name
-      : typeof product?.user?.username === "string"
-      ? product.user.username
-      : "Seller";
+  const sellerName = getSellerName(product);
+  const sellerLink = product?.shop?.slug ? `/shops/${product.shop.slug}` : "#";
 
   return (
     <div className="bg-white rounded-xl shadow-upfrica mb-6 p-4">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between bg-gray-100 rounded-lg p-4 gap-4 md:gap-0">
         <div className="flex-1 min-w-0">
-          <div className="text-green-600 font-bold flex items-center mb-2">
-            ✅ {status}
-          </div>
+          <div className="text-green-600 font-bold flex items-center mb-2">✅ {status}</div>
           <div className="flex flex-wrap gap-6 text-sm text-black">
             <div>
               <span className="block font-bold text-green-600">Order #</span>
@@ -88,7 +94,7 @@ const OrderCard = ({
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-        <button
+          <button
             className="h-8 text-white upfrica-btn-primary-sm"
             onClick={() => router.push(`/dashboard/all-orders/${order.id}`)}
           >
@@ -127,26 +133,24 @@ const OrderCard = ({
 
       {/* Product Info + Delivery */}
       <div className="mt-4">
-        {/* Top: Image + Info */}
         <div className="flex gap-4 mb-4">
           <div className="w-20 h-20 shrink-0">
             <img src={imageUrl} alt={productTitle} className="w-20 h-20 object-cover rounded-md" />
           </div>
-
           <div className="flex-1 min-w-0">
             <div className="font-semibold">{productTitle}</div>
             <div className="text-sm text-gray-500">
               Sold by:{" "}
-              <span className="underline text-black cursor-pointer">
+              <a href={sellerLink} className="underline text-black cursor-pointer">
                 {sellerName} ›
-              </span>
+              </a>
             </div>
             <div className="text-sm">{price}</div>
             <div className="text-sm">Returns accepted until {returnDate}</div>
           </div>
         </div>
 
-        {/* Bottom: Buttons + Address */}
+        {/* Bottom */}
         <div>
           <div className="flex gap-2 mb-4 w-full overflow-x-auto scrollbar-hide">
             <button className="upfrica-btn-primary-outline-sm text-black">🔁 Buy it again</button>
