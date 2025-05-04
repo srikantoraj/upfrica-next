@@ -23,10 +23,10 @@ const ProfileCard = () => {
             <hr className="my-6" />
             <div className="space-y-4">
                 {/* My Profile Page */}
-                <Link href="/profile">
+                <Link href="/dashboard">
                     <div className="flex items-center cursor-pointer hover:text-purple-600 mb-6">
                         <FaUserCircle className="text-xl mr-3" />
-                        <span className="text-lg font-medium">My Profile Page</span>
+                        <span className="text-lg font-medium">Dashboard</span>
                     </div>
                 </Link>
                 {/* My Saved Items */}

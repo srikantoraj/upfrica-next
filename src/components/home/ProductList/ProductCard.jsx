@@ -94,6 +94,7 @@ import { convertPrice } from "@/app/utils/utils";
 import { useSelector } from "react-redux";
 
 export default function ProductCard({ product }) {
+  // console.log("recently vew product", product);
   const {
     product_images,
     title,
