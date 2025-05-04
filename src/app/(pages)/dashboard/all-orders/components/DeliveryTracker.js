@@ -4,7 +4,8 @@ import React from "react";
 
 export default function DeliveryTracker({ stage = 0, steps = [] }) {
   return (
-    <div className="flex justify-between items-center bg-gray-50 rounded-md py-4 px-6">
+    <div className="border-b-2"><h4 className="text-[16px] sm:text-[18px] leading-6 font-bold text-[#0f1111] mb-1 mt-4">Tracking details</h4>
+    <div className="flex justify-between items-center py-4 px-6">
       {steps.map((step, index) => {
         const isCompleted = index <= stage;
         const isLast = index === steps.length - 1;
@@ -46,6 +47,6 @@ export default function DeliveryTracker({ stage = 0, steps = [] }) {
           </div>
         );
       })}
-    </div>
+    </div></div>
   );
 }

@@ -88,6 +88,16 @@ h3 {
   scrollbar-width: none;     /* Firefox */
 }
 
+.upfricaBlack {
+  color: #0f1111 !important;
+}
+
+.upfricaTextStrong-18 {
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  line-height: 24px !important;
+}
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;             /* Chrome, Safari, Opera */
 }

@@ -30,6 +30,13 @@ export default function OrderDetailsPage() {
         if (!res.ok) throw new Error(`Failed to fetch order: ${res.status}`);
         const data = await res.json();
         setOrder(data);
+  
+        // ✅ Log seller IDs after fetching the order
+        const sellerIds = data.order_items.map((item) =>
+          typeof item.product.user === "object" ? item.product.user.id : item.product.user
+        );
+        console.log("✅ Seller IDs:", sellerIds);
+  
       } catch (err) {
         console.error(err);
       } finally {
@@ -89,17 +96,25 @@ export default function OrderDetailsPage() {
       </div>
 
       {/* Product Info */}
-      <div className="mt-6">
-        <h3 className="font-semibold text-lg mb-2">Item info</h3>
+      <div className="mt-6 border-b-2 mb-4">
+        <h3 className="text-[16px] sm:text-[18px] leading-6 font-bold text-[#0f1111] mb-1">Item info</h3>
         <div className="flex items-start gap-4">
           <img
             src={product?.product_images?.[0] || "/placeholder.png"}
             alt={product?.title}
             className="w-20 h-20 object-cover rounded-md"
           />
-          <div>
+          <div className='mb-4'>
             <p className="font-medium">{product.title}</p>
-            <p className="text-sm">Seller item no.: {product.id}</p>
+            <p className="text-sm"><p className="text-sm">
+  Sold by:{" "}
+  <span className="font-semibold text-black">
+    {typeof product.user === "object"
+      ? product.user.email
+      : `Seller ${product.user}`}
+  </span>
+</p>
+<p className="text-sm">Seller item no.: {product.id}</p></p>
             <p className="text-sm">GHS {(item.price_cents / 100).toFixed(2)}</p>
             <p className="text-xs text-gray-500">Returns accepted until 12 May</p>
           </div>
@@ -108,8 +123,9 @@ export default function OrderDetailsPage() {
 
       {/* Delivery & Payment */}
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+ 
         <div>
-          <h4 className="font-semibold mb-1">Delivery info</h4>
+          <h4 className="text-[16px] sm:text-[18px] leading-6 font-bold text-[#0f1111] mb-1">Delivery info</h4>
           <div className="flex items-center gap-2 text-gray-700">
             <AiOutlineHome />
             <span>{showFullInfo ? order.address.address_data.address_line_1 : `${order.address.address_data.town}, ${order.address.address_data.country}`}</span>
@@ -131,7 +147,7 @@ export default function OrderDetailsPage() {
         </div>
 
         <div>
-          <h4 className="font-semibold mb-1">Payment method</h4>
+          <h4 className="text-[16px] sm:text-[18px] leading-6 font-bold text-[#0f1111] mb-1">Payment method</h4>
           <p>{order.payment_method || "N/A"}</p>
           <p>1 item &nbsp;&nbsp;&nbsp;&nbsp; +{(item.price_cents / 100).toFixed(2)}</p>
           <p>Discount &nbsp;&nbsp;&nbsp;&nbsp; -0.00</p>
