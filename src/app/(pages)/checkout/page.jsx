@@ -645,7 +645,7 @@ import { useSelector } from "react-redux";
 const Checkout = () => {
   const userInfo = useAuth();
   const { user, token } = useSelector((state) => state.auth);
-  //  console.log(userInfo)
+   console.log("token",token)
   const [country, setCountry] = useState("Bangladesh");
   const [isOpen, setIsOpen] = useState(false);
   const [basket, setBasket] = useState([]);
@@ -787,16 +787,16 @@ const Checkout = () => {
 
   const formik = useFormik({
     initialValues: {
-      full_name: "",
+      full_name: "John Doe",
       default: true,
       owner_id: userInfo?.user?.id || 1,
       owner_type: "USER",
       address_data: {
-        street: "",
-        city: "",
-        state: "",
-        zip_code: "",
-        country: ""
+        street: "123 Main St",
+        city: "Springfield",
+        state: "IL",
+        zip_code: "62704",
+        country: "USA"
       }
     },
     onSubmit: async (values) => {
