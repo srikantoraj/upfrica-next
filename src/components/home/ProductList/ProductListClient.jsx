@@ -8,7 +8,7 @@ import { IoIosArrowRoundForward } from 'react-icons/io';
 
 export default function ProductListClient({ title, productsData }) {
 
-    console.log("product data", productsData.results);
+    // console.log("product data", productsData.results);
 
     const dispatch = useDispatch();
 

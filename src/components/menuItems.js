@@ -16,6 +16,7 @@ import {
       route: "/dashboard/chart",
       icon: FaHome,
       children: [
+        { label: "Analytics", route: "/dashboard/analytics" },
         { label: "Sales & Revenue", route: "/dashboard/revenue" },
         { label: "Live Tour Items", route: "/dashboard/live-tour-items" },
         { label: "Live Hotel Items", route: "/dashboard/live-hotel-items" },

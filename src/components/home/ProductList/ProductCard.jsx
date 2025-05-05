@@ -94,7 +94,7 @@ import { convertPrice } from "@/app/utils/utils";
 import { useSelector } from "react-redux";
 
 export default function ProductCard({ product }) {
-  console.log("card product",product);
+  // console.log("card product",product);
   
     const {
       product_images,

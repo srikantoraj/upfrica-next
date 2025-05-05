@@ -1,5 +1,5 @@
 
-// /app/components/ProductList.server.jsx
+
 import ProductListClient from './ProductListClient';
 
 export default async function ProductList({ title }) {
@@ -20,9 +20,6 @@ export default async function ProductList({ title }) {
 
   const data = await res.json();
 
-  // console.log(' product list data',data);
-  
 
-  // Pass the fetched data (including exchange_rates) as props to the client component
   return <ProductListClient title={title} productsData={data} />;
 }

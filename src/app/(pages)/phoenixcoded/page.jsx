@@ -83,38 +83,16 @@ const ProductTablePage = () => {
     );
 
     return (
-        <div className="px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex flex-col">
-                <div>
-                    <nav className="text-sm text-gray-500" aria-label="Breadcrumb">
-                        <ol className="flex items-center space-x-2">
-                            <li>
-                                <Link href="/dashboard/index" className="hover:underline text-blue-600">
-                                    Home
-                                </Link>
-                                <span className="mx-2">/</span>
-                            </li>
-                            <li>
-                                <span className="text-gray-700">E-commerce</span>
-                                <span className="mx-2">/</span>
-                            </li>
-                            <li className="text-gray-900 font-medium">Products list</li>
-                        </ol>
-                    </nav>
-                </div>
+        <div className="">
+            
 
-                <div>
-                    <h2 className="text-2xl font-semibold text-gray-800">Products list</h2>
-                </div>
-            </div>
-
-            <div className="  min-h-screen">
+            <div className="min-h-screen">
                 <div className="">
                     {/* Add Button */}
                     <div className="flex justify-end mb-6">
                         <a
                             href="/application/ecom_product-add.html"
-                            className="bg-blue-600 text-white px-5 py-2.5 rounded hover:bg-blue-700 transition flex items-center gap-2 text-sm font-medium"
+                            className="bg-[#04A9F5] text-white px-3 py-2 rounded hover:bg-blue-700 transition flex items-center gap-2 text-sm font-medium"
                         >
                             <span className="text-xl">＋</span> Add Product
                         </a>
@@ -149,7 +127,7 @@ const ProductTablePage = () => {
                     </div>
 
                     {/* Table */}
-                    <div className="overflow-auto bg-white rounded-lg shadow border border-gray-200">
+                    <div className="overflow-auto bg-white rounded-md  border border-gray-200">
                         <table className="min-w-full text-sm">
                             <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
                                 <tr>
