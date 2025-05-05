@@ -30,8 +30,8 @@ export default function Sidebar() {
 
         <ul className="nav flex-column">
           <li className="nav-item mb-2">
-            <Link href="/users/srikanto" className="nav-link d-flex align-items-center text-dark">
-              <BiPerson className="me-2" /> My Profile Page
+            <Link href="/dashboard" className="nav-link d-flex align-items-center text-dark">
+              <BiPerson className="me-2" /> Dashboard
             </Link>
           </li>
           <li className="nav-item mb-2">
