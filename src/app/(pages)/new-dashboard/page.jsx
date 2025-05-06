@@ -7,9 +7,9 @@ import Analytics from '@/components/analytics/Analytics';
 const Dashboard = () => {
   return (
     <div className='w-full py-10 px-4 space-y-4'>
-      <HeaderControls />
-      {/* <ProductTablePage /> */}
-      <Analytics />
+      {/* <HeaderControls /> */}
+      <ProductTablePage />
+      {/* <Analytics /> */}
     </div>
   );
 };

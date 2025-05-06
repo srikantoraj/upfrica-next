@@ -91,7 +91,7 @@ const HeaderControls = () => {
   };
 
   return (
-    <div>
+    <div className="">
       {/* // menu and search ber */}
       <ResponsiveHeader handleToggleClick={handleToggleClick} />
 
@@ -116,7 +116,7 @@ const HeaderControls = () => {
         </div>
 
         <div>
-          <h2 className="text-2xl font-semibold text-gray-800">Products list</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 pt-5">Products list</h2>
         </div>
       </div>
     </div>
