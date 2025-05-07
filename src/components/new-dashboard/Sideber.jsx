@@ -12,7 +12,7 @@ const Sideber = () => {
                 "transition-all duration-500 ease-in-out h-full bg-white shadow-md overflow-hidden",
                 "fixed top-0 left-0 z-50",
                 "xl:relative xl:z-auto",
-                toggle ? "w-64 opacity-100" : "w-0 opacity-0",
+                toggle ? "w-64 opacity-100 shrink-0" : "w-0 opacity-0",
                 " xl:opacity-100 xl:translate-x-0"
             )}
         >

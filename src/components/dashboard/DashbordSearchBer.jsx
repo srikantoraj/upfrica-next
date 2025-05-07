@@ -20,7 +20,7 @@
 
 //   const handleClose = () =>{
 //     console.log("click");
-    
+
 //     dispatch(clearToggle())
 
 //   }
@@ -131,42 +131,39 @@ const DashbordSearchBer = () => {
       {/* Navigation Menu */}
       <ul className="space-y-5">
         {menuItems.map((item, index) => {
-          const isActive = pathname.startsWith(item.route);
+          // const isActive = pathname.startsWith(item.route);
           const isOpen = openMenu === index;
 
           return (
             <li key={index}>
               <div
-                className={`flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-gray-100 transition rounded-md ${
-                  isActive ? "bg-gray-100 font-semibold" : ""
-                }`}
+                className={`flex items-center justify-between px-4 py-2 cursor-pointer  transition rounded-md ${isOpen ? "bg-blue-100 font-semibold text-blue-400" :  ""
+                  }`}
                 onClick={() => handleToggleMenu(index)}
               >
                 <div className="flex items-center gap-3">
-                  <item.icon className="text-gray-600" />
+                  <item.icon className="" />
                   <span>{item.label}</span>
                 </div>
                 {item.children && (
                   <FaChevronRight
-                    className={`transition-transform duration-200 ${
-                      isOpen ? "rotate-90" : ""
-                    }`}
+                    className={`transition-transform duration-200 ${isOpen ? "rotate-90 " : ""
+                      }`}
                   />
                 )}
               </div>
 
               {/* Submenu */}
               {item.children && isOpen && (
-                <ul className="ml-8 mt-1 space-y-1 text-gray-600 list-disc">
+                <ul className="ml-8 mt-1 space-y-1 text-gray-600 ">
                   {item.children.map((child, childIdx) => {
                     const isChildActive = pathname === child.route;
                     return (
-                      <li key={childIdx}>
+                      <li className={`list-disc ${isChildActive ? "text-blue-600 font-medium" : ""
+                        }`} key={childIdx}>
                         <Link
                           href={child.route}
-                          className={`block px-2 py-1 rounded hover:bg-gray-200 ${
-                            isChildActive ? "text-blue-600 font-medium" : ""
-                          }`}
+                          className={`block px-2 py-1 rounded hover:bg-gray-200  `}
                         >
                           {child.label}
                         </Link>
