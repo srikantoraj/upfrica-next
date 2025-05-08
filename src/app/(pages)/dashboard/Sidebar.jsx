@@ -65,3 +65,120 @@ export default function Sidebar() {
         </aside>
     )
 }
+
+
+// // components/Sidebar.js
+// import Link from 'next/link';
+// import { useRouter } from 'next/navigation'; 
+
+// const groups = [
+//     {
+//         title: 'Navigation',
+//         items: [
+//             { label: 'Dashboard', href: '/dashboard', icon: '🏠' },
+//             { label: 'Layouts', href: '/layouts', icon: '📐' },
+//         ],
+//     },
+//     {
+//         title: 'Widget',
+//         items: [
+//             { label: 'Statistics', href: '/statistics', icon: '📊' },
+//             { label: 'User', href: '/user', icon: '👤' },
+//             { label: 'Data', href: '/data', icon: '💾' },
+//             { label: 'Chart', href: '/chart', icon: '📈' },
+//         ],
+//     },
+//     {
+//         title: 'Application',
+//         items: [
+//             { label: 'Calendar', href: '/calendar', icon: '📅' },
+//             { label: 'Chat', href: '/chat', icon: '💬' },
+//             { label: 'Gallery', href: '/gallery', icon: '🖼️' },
+//             {
+//                 label: 'Ecommerce', href: '#', icon: '🛒', children: [
+//                     { label: 'Product List', href: '/products' },
+//                     { label: 'Product Detail', href: '/products/1' },
+//                 ]
+//             },
+//         ],
+//     },
+// ];
+
+// export default function Sidebar() {
+//     const router = useRouter();
+//     return (
+//         <aside className="w-64 h-screen bg-white border-r flex flex-col">
+//             <div className="p-4 flex items-center space-x-2 border-b">
+//                 <img src="/logo.png" alt="Logo" className="h-6 w-6" />
+//                 <span className="font-bold text-lg">Light able</span>
+//             </div>
+
+//             <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-4">
+//                 {groups.map((g) => (
+//                     <div key={g.title}>
+//                         <h6 className="text-xs font-semibold text-gray-500 uppercase px-2 mb-2">
+//                             {g.title}
+//                         </h6>
+//                         <ul className="space-y-1">
+//                             {g.items.map((it) => (
+//                                 <li key={it.label}>
+//                                     {!it.children ? (
+//                                         <Link href={it.href}>
+//                                             <span
+//                                                 className={`flex items-center px-2 py-2 text-sm rounded hover:bg-gray-100 ${router.pathname === it.href
+//                                                         ? 'bg-gray-200 font-medium'
+//                                                         : 'text-gray-700'
+//                                                     }`}
+//                                             >
+//                                                 <span className="mr-3">{it.icon}</span>
+//                                                 {it.label}
+//                                             </span>
+//                                         </Link>
+//                                     ) : (
+//                                         <details className="group">
+//                                             <summary
+//                                                 className="flex items-center px-2 py-2 text-sm rounded hover:bg-gray-100 cursor-pointer
+//                           group-open:bg-gray-200"
+//                                             >
+//                                                 <span className="mr-3">{it.icon}</span>
+//                                                 {it.label}
+//                                             </summary>
+//                                             <ul className="ml-8 mt-1 space-y-1">
+//                                                 {it.children.map((child) => (
+//                                                     <li key={child.label}>
+//                                                         <Link href={child.href}>
+//                                                             <span
+//                                                                 className={`block px-2 py-1 text-sm rounded hover:bg-gray-100 ${router.pathname === child.href
+//                                                                         ? 'bg-gray-200 font-medium'
+//                                                                         : 'text-gray-600'
+//                                                                     }`}
+//                                                             >
+//                                                                 {child.label}
+//                                                             </span>
+//                                                         </Link>
+//                                                     </li>
+//                                                 ))}
+//                                             </ul>
+//                                         </details>
+//                                     )}
+//                                 </li>
+//                             ))}
+//                         </ul>
+//                     </div>
+//                 ))}
+//             </nav>
+
+//             <div className="p-4 border-t flex items-center space-x-3">
+//                 <img
+//                     src="/avatar.png"
+//                     alt="User avatar"
+//                     className="w-8 h-8 rounded-full object-cover"
+//                 />
+//                 <div>
+//                     <div className="font-medium">John Smith</div>
+//                     <div className="text-xs text-gray-500">Administrator</div>
+//                 </div>
+//             </div>
+//         </aside>
+//     );
+// }

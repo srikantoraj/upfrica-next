@@ -90,43 +90,49 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
+import { useSelector, useDispatch } from "react-redux";
 import { usePathname } from "next/navigation";
-import { useDispatch } from "react-redux";
-import { clearToggle } from "@/app/store/slices/toggleSlice";
+import Link from "next/link";
+import clsx from "clsx";
 import { RxCross2 } from "react-icons/rx";
 import { FaChevronRight } from "react-icons/fa";
+
 import { menuItems } from "@/components/menuItems";
+import { clearToggle } from "@/app/store/slices/toggleSlice";
 
 const DashbordSearchBer = () => {
-  const [openMenu, setOpenMenu] = useState(null);
-  const pathname = usePathname();
   const dispatch = useDispatch();
+  const isOpen = useSelector((state) => state.toggle.toggle);
+  const pathname = usePathname();
+  const [openMenu, setOpenMenu] = useState(null);
 
-  const handleToggleMenu = (index) => {
-    setOpenMenu(openMenu === index ? null : index);
-  };
-
-  const handleSidebarClose = () => {
-    dispatch(clearToggle());
-  };
+  const toggleMenu = (idx) =>
+    setOpenMenu((prev) => (prev === idx ? null : idx));
+  const handleClose = () => dispatch(clearToggle());
 
   return (
-    <aside className="w-64 min-h-screen bg-white shadow-lg px-4 pt-10">
-      {/* Logo & Close Button */}
-      <div className="flex justify-between items-center mb-6">
-        <Link href="/">
+    <>
+      {/* Sidebar */}
+      <aside
+        className={clsx(
+          "fixed inset-y-0 left-0 w-64 bg-white shadow-xl z-20 h-screen pt-10 px-4",
+          // animate transform over 700ms
+          "transform transition-transform duration-700 ease-in-out",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
           <img
             src="https://d26ukeum83vx3b.cloudfront.net/assets/upfrica-com-logo-dark_170x-94d438d62a4c6b2c2c70fe1084c008f4584357ed2847dac5fc38818a0de6459d.webp"
             alt="Upfrica Logo"
-            className="w-[80px] md:w-[100px] h-auto"
+            className="w-20 md:w-24"
           />
-        </Link>
-        <RxCross2
-          onClick={handleSidebarClose}
-          className="w-5 h-5 cursor-pointer text-gray-600 hover:text-red-500 transition"
-        />
-      </div>
+          <RxCross2
+            onClick={handleClose}
+            className="h-6 w-6 cursor-pointer text-gray-600 hover:text-gray-900 transition-colors"
+          />
+        </div>
 
       {/* Navigation Menu */}
       <ul className="space-y-5">
@@ -163,20 +169,37 @@ const DashbordSearchBer = () => {
                         }`} key={childIdx}>
                         <Link
                           href={child.route}
-                          className={`block px-2 py-1 rounded hover:bg-gray-200  `}
+                          className={clsx(
+                            "block px-3 py-1 rounded hover:bg-gray-200 transition-colors",
+                            pathname === child.route &&
+                            "text-blue-600 font-medium"
+                          )}
                         >
                           {child.label}
                         </Link>
                       </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </aside>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </aside>
+
+      {/* Overlay */}
+      <div
+        className={clsx(
+          "fixed inset-0 bg-black bg-opacity-30 z-10",
+          // animate opacity over 500ms
+          "transition-opacity duration-500 ease-in-out",
+          isOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        )}
+        onClick={handleClose}
+      />
+    </>
   );
 };
 
