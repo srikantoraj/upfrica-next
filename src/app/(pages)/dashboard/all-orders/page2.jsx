@@ -486,389 +486,401 @@
 // }
 
 
-'use client'
+// 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { useSelector } from 'react-redux'
-import { MdCheck, MdChat } from 'react-icons/md'
-import {
-  AiOutlineLeft,
-  AiOutlineRight,
-  AiOutlineUser,
-  AiOutlineMail,
-  AiOutlinePhone,
-  AiOutlineHome,
-} from 'react-icons/ai'
+// import React, { useState, useEffect } from 'react'
+// import { useSearchParams, useRouter } from 'next/navigation'
+// import { useSelector } from 'react-redux'
+// import { MdCheck, MdChat } from 'react-icons/md'
+// import {
+//   AiOutlineLeft,
+//   AiOutlineRight,
+//   AiOutlineUser,
+//   AiOutlineMail,
+//   AiOutlinePhone,
+//   AiOutlineHome,
+// } from 'react-icons/ai'
 
-const PAGE_SIZE = 20
-const STATUSES = ['Ordered', 'Processing', 'Shipped', 'Received']
+// const PAGE_SIZE = 20
+// const STATUSES = ['Ordered', 'Processing', 'Shipped', 'Received']
 
-function Pagination({ currentPage, totalPages, onPageChange }) {
-  const [isMobile, setIsMobile] = useState(false)
+// function Pagination({ currentPage, totalPages, onPageChange }) {
+//   const [isMobile, setIsMobile] = useState(false)
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768)
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+//   useEffect(() => {
+//     const handleResize = () => setIsMobile(window.innerWidth <= 768)
+//     handleResize()
+//     window.addEventListener('resize', handleResize)
+//     return () => window.removeEventListener('resize', handleResize)
+//   }, [])
 
-  const pages = isMobile
-    ? totalPages <= 2
-      ? [1, ...(totalPages === 2 ? [2] : [])]
-      : [1, 2, '...']
-    : totalPages <= 5
-      ? Array.from({ length: totalPages }, (_, i) => i + 1)
-      : currentPage <= 3
-        ? [1, 2, 3, 4, '...', totalPages]
-        : currentPage >= totalPages - 2
-          ? [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
-          : [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages]
+//   const pages = isMobile
+//     ? totalPages <= 2
+//       ? [1, ...(totalPages === 2 ? [2] : [])]
+//       : [1, 2, '...']
+//     : totalPages <= 5
+//       ? Array.from({ length: totalPages }, (_, i) => i + 1)
+//       : currentPage <= 3
+//         ? [1, 2, 3, 4, '...', totalPages]
+//         : currentPage >= totalPages - 2
+//           ? [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
+//           : [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages]
 
-  return (
-    <div className="mt-8 flex justify-center overflow-x-auto">
-      <div className="inline-flex items-center space-x-2 px-2">
-        <button
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-3 py-1 flex items-center rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
-        >
-          <AiOutlineLeft className="mr-1" />
-          Prev
-        </button>
-        {pages.map((p, i) =>
-          typeof p === 'number' ? (
-            <button
-              key={i}
-              onClick={() => onPageChange(p)}
-              className={`px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 ${p === currentPage ? 'bg-violet-700 text-white font-semibold' : ''
-                }`}
-            >
-              {p}
-            </button>
-          ) : (
-            <span key={i} className="px-3 py-1 text-gray-500">
-              …
-            </span>
-          )
-        )}
-        <button
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="px-3 py-1 flex items-center rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
-        >
-          Next
-          <AiOutlineRight className="ml-1" />
-        </button>
-      </div>
-    </div>
-  )
-}
+//   return (
+//     <div className="mt-8 flex justify-center overflow-x-auto">
+//       <div className="inline-flex items-center space-x-2 px-2">
+//         <button
+//           onClick={() => onPageChange(currentPage - 1)}
+//           disabled={currentPage === 1}
+//           className="px-3 py-1 flex items-center rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+//         >
+//           <AiOutlineLeft className="mr-1" />
+//           Prev
+//         </button>
+//         {pages.map((p, i) =>
+//           typeof p === 'number' ? (
+//             <button
+//               key={i}
+//               onClick={() => onPageChange(p)}
+//               className={`px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 ${p === currentPage ? 'bg-violet-700 text-white font-semibold' : ''
+//                 }`}
+//             >
+//               {p}
+//             </button>
+//           ) : (
+//             <span key={i} className="px-3 py-1 text-gray-500">
+//               …
+//             </span>
+//           )
+//         )}
+//         <button
+//           onClick={() => onPageChange(currentPage + 1)}
+//           disabled={currentPage === totalPages}
+//           className="px-3 py-1 flex items-center rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+//         >
+//           Next
+//           <AiOutlineRight className="ml-1" />
+//         </button>
+//       </div>
+//     </div>
+//   )
+// }
 
-function ListingSkeletonCard() {
-  return (
-    <div className="bg-white rounded-lg shadow p-6 space-y-6 animate-pulse">
-      <div className="h-6 bg-gray-200 rounded w-1/4" />
-      <div className="h-5 bg-gray-200 rounded w-1/6 mt-2" />
-      <div className="flex items-center space-x-4 mt-4">
-        <div className="w-24 h-24 bg-gray-300 rounded" />
-        <div className="flex-1 space-y-2">
-          <div className="h-4 bg-gray-200 rounded w-1/2" />
-          <div className="h-4 bg-gray-200 rounded w-1/3" />
-        </div>
-        <div className="w-24 h-8 bg-gray-300 rounded-full" />
-      </div>
-      <div className="relative mt-6">
-        <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 rounded" />
-        <div className="relative flex justify-between z-10">
-          {STATUSES.map((_, i) => (
-            <div key={i} className="w-8 h-8 bg-gray-200 rounded-full" />
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
+// function ListingSkeletonCard() {
+//   return (
+//     <div className="bg-white rounded-lg shadow p-6 space-y-6 animate-pulse">
+//       <div className="h-6 bg-gray-200 rounded w-1/4" />
+//       <div className="h-5 bg-gray-200 rounded w-1/6 mt-2" />
+//       <div className="flex items-center space-x-4 mt-4">
+//         <div className="w-24 h-24 bg-gray-300 rounded" />
+//         <div className="flex-1 space-y-2">
+//           <div className="h-4 bg-gray-200 rounded w-1/2" />
+//           <div className="h-4 bg-gray-200 rounded w-1/3" />
+//         </div>
+//         <div className="w-24 h-8 bg-gray-300 rounded-full" />
+//       </div>
+//       <div className="relative mt-6">
+//         <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 rounded" />
+//         <div className="relative flex justify-between z-10">
+//           {STATUSES.map((_, i) => (
+//             <div key={i} className="w-8 h-8 bg-gray-200 rounded-full" />
+//           ))}
+//         </div>
+//       </div>
+//     </div>
+//   )
+// }
 
-export default function OrdersPage() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const token = useSelector((state) => state.auth.token)
+// export default function OrdersPage() {
+//   const searchParams = useSearchParams()
+//   const router = useRouter()
+//   const token = useSelector((state) => state.auth.token)
 
-  const pageParam = parseInt(searchParams.get('page') || '1', 10)
-  const [orders, setOrders] = useState([])
-  const [count, setCount] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [statusesByOrder, setStatusesByOrder] = useState({})
-  const [loadingReceiveBy, setLoadingReceiveBy] = useState({})
+//   const pageParam = parseInt(searchParams.get('page') || '1', 10)
+//   const [orders, setOrders] = useState([])
+//   const [count, setCount] = useState(0)
+//   const [loading, setLoading] = useState(true)
+//   const [error, setError] = useState(null)
+//   const [statusesByOrder, setStatusesByOrder] = useState({})
+//   const [loadingReceiveBy, setLoadingReceiveBy] = useState({})
 
-  useEffect(() => {
-    if (!token) return
-    setLoading(true)
-    fetch(`https://media.upfrica.com/api/buyer/orders/?page=${pageParam}`, {
-      headers: { Authorization: `Token ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return res.json()
-      })
-      .then((data) => {
-        setOrders(data.results)
-        setCount(data.count)
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
-  }, [token, pageParam])
+//   useEffect(() => {
+//     if (!token) return
+//     setLoading(true)
+//     fetch(`https://media.upfrica.com/api/buyer/orders/?page=${pageParam}`, {
+//       headers: { Authorization: `Token ${token}` },
+//     })
+//       .then((res) => {
+//         if (!res.ok) throw new Error(`HTTP ${res.status}`)
+//         return res.json()
+//       })
+//       .then((data) => {
+//         setOrders(data.results)
+//         setCount(data.count)
+//       })
+//       .catch((err) => setError(err.message))
+//       .finally(() => setLoading(false))
+//   }, [token, pageParam])
 
-  useEffect(() => {
-    const init = {}
-    orders.forEach((order) => {
-      const bySeller = {}
-      order.order_items.forEach((item) => {
-        const sid = item.product.user
-        bySeller[sid] =
-          bySeller[sid] ?? (item.receive_status === 1 ? STATUSES.length - 1 : 0)
-      })
-      init[order.id] = bySeller
-    })
-    setStatusesByOrder(init)
-  }, [orders])
+//   useEffect(() => {
+//     const init = {}
+//     orders.forEach((order) => {
+//       const bySeller = {}
+//       order.order_items.forEach((item) => {
+//         const sid = item.product.user
+//         bySeller[sid] =
+//           bySeller[sid] ?? (item.receive_status === 1 ? STATUSES.length - 1 : 0)
+//       })
+//       init[order.id] = bySeller
+//     })
+//     setStatusesByOrder(init)
+//   }, [orders])
 
-  const totalPages = Math.ceil(count / PAGE_SIZE)
-  const gotoPage = (p) => router.push(`/orders?page=${p}`)
+//   const totalPages = Math.ceil(count / PAGE_SIZE)
+//   const gotoPage = (p) => router.push(`/orders?page=${p}`)
 
-  const handleReceive = async (orderId, sellerId) => {
-    const key = `${orderId}_${sellerId}`
-    const idx = statusesByOrder[orderId]?.[sellerId] ?? 0
-    const lastIdx = STATUSES.length - 1
-    if (idx === lastIdx) return
-    if (
-      !window.confirm('Confirm you have received all items from this seller.')
-    )
-      return
+//   const handleReceive = async (orderId, sellerId) => {
+//     const key = `${orderId}_${sellerId}`
+//     const idx = statusesByOrder[orderId]?.[sellerId] ?? 0
+//     const lastIdx = STATUSES.length - 1
+//     if (idx === lastIdx) return
+//     if (
+//       !window.confirm('Confirm you have received all items from this seller.')
+//     )
+//       return
 
-    setLoadingReceiveBy((p) => ({ ...p, [key]: true }))
-    try {
-      const order = orders.find((o) => o.id === orderId)
-      const items = order.order_items.filter(
-        (it) => it.product.user === sellerId
-      )
-      const headers = new Headers({
-        Authorization: `Token ${token}`,
-        'Content-Type': 'application/json',
-      })
-      const body = JSON.stringify({ receive_status: 1 })
-      await Promise.all(
-        items.map((it) =>
-          fetch(
-            `https://media.upfrica.com/api/buyer/order-item/${it.id}/`,
-            { method: 'PATCH', headers, body }
-          ).then((r) => {
-            if (!r.ok) throw new Error(`Item ${it.id} failed`)
-            return r.json()
-          })
-        )
-      )
-      setStatusesByOrder((prev) => ({
-        ...prev,
-        [orderId]: { ...prev[orderId], [sellerId]: lastIdx },
-      }))
-      alert('Items marked as received.')
-    } catch (err) {
-      console.error(err)
-      alert('Failed to mark received: ' + err.message)
-    } finally {
-      setLoadingReceiveBy((p) => ({ ...p, [key]: false }))
-    }
-  }
+//     setLoadingReceiveBy((p) => ({ ...p, [key]: true }))
+//     try {
+//       const order = orders.find((o) => o.id === orderId)
+//       const items = order.order_items.filter(
+//         (it) => it.product.user === sellerId
+//       )
+//       const headers = new Headers({
+//         Authorization: `Token ${token}`,
+//         'Content-Type': 'application/json',
+//       })
+//       const body = JSON.stringify({ receive_status: 1 })
+//       await Promise.all(
+//         items.map((it) =>
+//           fetch(
+//             `https://media.upfrica.com/api/buyer/order-item/${it.id}/`,
+//             { method: 'PATCH', headers, body }
+//           ).then((r) => {
+//             if (!r.ok) throw new Error(`Item ${it.id} failed`)
+//             return r.json()
+//           })
+//         )
+//       )
+//       setStatusesByOrder((prev) => ({
+//         ...prev,
+//         [orderId]: { ...prev[orderId], [sellerId]: lastIdx },
+//       }))
+//       alert('Items marked as received.')
+//     } catch (err) {
+//       console.error(err)
+//       alert('Failed to mark received: ' + err.message)
+//     } finally {
+//       setLoadingReceiveBy((p) => ({ ...p, [key]: false }))
+//     }
+//   }
 
-  if (loading) {
-    return (
-      <main className="space-y-6 max-w-6xl mx-auto px-4 py-8">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <ListingSkeletonCard key={i} />
-        ))}
-      </main>
-    )
-  }
-  if (error) {
-    return <p className="p-6 text-center text-red-600">Error: {error}</p>
-  }
+//   if (loading) {
+//     return (
+//       <main className="space-y-6 max-w-6xl mx-auto px-4 py-8">
+//         {Array.from({ length: 3 }).map((_, i) => (
+//           <ListingSkeletonCard key={i} />
+//         ))}
+//       </main>
+//     )
+//   }
+//   if (error) {
+//     return <p className="p-6 text-center text-red-600">Error: {error}</p>
+//   }
 
-  return (
-    <main className="max-w-6xl mx-auto px-4 py-8 space-y-8">
-      <h1 className="text-3xl font-bold">My Orders</h1>
+//   return (
+//     <main className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+//       <h1 className="text-3xl font-bold">My Orders</h1>
 
-      <div className="space-y-8">
-        {orders.map((order) => {
-          const placedDate = new Date(order.created_at).toLocaleDateString(
-            undefined,
-            { year: 'numeric', month: 'long', day: 'numeric' }
-          )
-          const itemsBySeller = order.order_items.reduce((acc, item) => {
-            const sid = item.product.user
-              ; (acc[sid] ||= []).push(item)
-            return acc
-          }, {})
+//       <div className="space-y-8">
+//         {orders.map((order) => {
+//           const placedDate = new Date(order.created_at).toLocaleDateString(
+//             undefined,
+//             { year: 'numeric', month: 'long', day: 'numeric' }
+//           )
+//           const itemsBySeller = order.order_items.reduce((acc, item) => {
+//             const sid = item.product.user
+//               ; (acc[sid] ||= []).push(item)
+//             return acc
+//           }, {})
 
-          return (
-            <div
-              key={order.id}
-              className="bg-white rounded-lg shadow p-6 space-y-1 border border-gray-200"
-            >
-              {/* header + view details */}
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-xl font-semibold">
-                    Order #{String(order.id).padStart(5, '0')}
-                  </h2>
-                  <p className="text-gray-600 text-sm">Placed {placedDate}</p>
-                </div>
-                <div
-                  onClick={() => router.push(`/dashboard/all-orders/${order.id}`)}
-                  className="flex items-center space-x-1 text-violet-600 cursor-pointer hover:underline"
-                >
-                  <span>View Details</span>
-                  <AiOutlineRight />
-                </div>
-              </div>
+//           return (
+//             <div
+//               key={order.id}
+//               className="bg-white rounded-lg shadow p-6 space-y-1 border border-gray-200"
+//             >
+//               {/* header + view details */}
+//               <div className="flex justify-between items-center">
+//                 <div>
+//                   <h2 className="text-xl font-semibold">
+//                     Order #{String(order.id).padStart(5, '0')}
+//                   </h2>
+//                   <p className="text-gray-600 text-sm">Placed {placedDate}</p>
+//                 </div>
+//                 <div
+//                   onClick={() => router.push(`/dashboard/all-orders/${order.id}`)}
+//                   className="flex items-center space-x-1 text-violet-600 cursor-pointer hover:underline"
+//                 >
+//                   <span>View Details</span>
+//                   <AiOutlineRight />
+//                 </div>
+//               </div>
 
-              {/* buyer & delivery address */}
-              <span>Delivery Info:</span>
-              <div className="grid grid-cols-1 items-center ">
-                <div className="flex items-center space-x-2">
-                  <AiOutlineHome className="text-violet-600" size={18} />
-                  <span className="text-gray-700">
-                    {order.address.address_data.address_line_1}
-                    {order.address.address_data.address_line_2 &&
-                      `, ${order.address.address_data.address_line_2}`}
-                    , {order.address.address_data.local_area},{' '}
-                    {order.address.address_data.town},{' '}
-                    {order.address.address_data.country}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <AiOutlineUser className="text-violet-600" size={18} />
-                  <span className="text-gray-700">
-                    {order.buyer.first_name} {order.buyer.last_name}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <AiOutlineMail className="text-violet-600" size={18} />
-                  <span className="text-gray-700">{order.buyer.email}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <AiOutlinePhone className="text-violet-600" size={18} />
-                  <span className="text-gray-700">
-                    {order.address.address_data.phone_number}
-                  </span>
-                </div>
+//               {/* buyer & delivery address */}
+//               <span>Delivery Info:</span>
+//               <div className="grid grid-cols-1 items-center ">
+//                 <div className="flex items-center space-x-2">
+//                   <AiOutlineHome className="text-violet-600" size={18} />
+//                   <span className="text-gray-700">
+//                     {order.address.address_data.address_line_1}
+//                     {order.address.address_data.address_line_2 &&
+//                       `, ${order.address.address_data.address_line_2}`}
+//                     , {order.address.address_data.local_area},{' '}
+//                     {order.address.address_data.town},{' '}
+//                     {order.address.address_data.country}
+//                   </span>
+//                 </div>
+//                 <div className="flex items-center space-x-2">
+//                   <AiOutlineUser className="text-violet-600" size={18} />
+//                   <span className="text-gray-700">
+//                     {order.buyer.first_name} {order.buyer.last_name}
+//                   </span>
+//                 </div>
+//                 <div className="flex items-center space-x-2">
+//                   <AiOutlineMail className="text-violet-600" size={18} />
+//                   <span className="text-gray-700">{order.buyer.email}</span>
+//                 </div>
+//                 <div className="flex items-center space-x-2">
+//                   <AiOutlinePhone className="text-violet-600" size={18} />
+//                   <span className="text-gray-700">
+//                     {order.address.address_data.phone_number}
+//                   </span>
+//                 </div>
                 
-              </div>
+//               </div>
 
-              {/* per-seller sections */}
-              {Object.entries(itemsBySeller).map(([sellerId, items]) => {
-                const idx = statusesByOrder[order.id]?.[sellerId] ?? 0
-                const key = `${order.id}_${sellerId}`
-                const isLoading = loadingReceiveBy[key]
+//               {/* per-seller sections */}
+//               {Object.entries(itemsBySeller).map(([sellerId, items]) => {
+//                 const idx = statusesByOrder[order.id]?.[sellerId] ?? 0
+//                 const key = `${order.id}_${sellerId}`
+//                 const isLoading = loadingReceiveBy[key]
 
-                return (
-                  <section key={sellerId} className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-medium">
-                        Seller #{sellerId}
-                      </h3>
-                      <button
-                        // onClick={() => router.push(`/chat/${sellerId}`)}
-                        className="flex items-center space-x-1 px-4 py-2 bg-violet-600 text-white rounded-full hover:bg-violet-700 transition"
-                      >
-                        <MdChat size={18} />
-                        <span>Contact Seller</span>
-                      </button>
-                    </div>
+//                 return (
+//                   <section key={sellerId} className="space-y-4">
+//                     <div className="flex justify-between items-center">
+//                       <h3 className="text-lg font-medium">
+//                         Seller #{sellerId}
+//                       </h3>
+//                       <button
+//                         // onClick={() => router.push(`/chat/${sellerId}`)}
+//                         className="flex items-center space-x-1 px-4 py-2 bg-violet-600 text-white rounded-full hover:bg-violet-700 transition"
+//                       >
+//                         <MdChat size={18} />
+//                         <span>Contact Seller</span>
+//                       </button>
+//                     </div>
 
-                    {/* products */}
-                    <div className="space-y-4">
-                      {items.map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex items-center bg-gray-50 p-4 rounded-lg shadow-sm"
-                        >
-                          <img
-                            src={item.product.product_images[0]}
-                            alt={item.product.title}
-                            className="w-24 h-24 object-cover rounded"
-                          />
-                          <div className="ml-4 flex-1">
-                            <h4 className="font-semibold">
-                              {item.product.title}
-                            </h4>
-                            <p className="text-gray-700 mt-1">
-                              ${(item.price_cents / 100).toFixed(2)} ×{' '}
-                              {item.quantity}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() =>
-                              handleReceive(order.id, Number(sellerId))
-                            }
-                            disabled={idx === STATUSES.length - 1 || isLoading}
-                            className={`px-4 py-2 rounded-full font-medium transition ${idx === STATUSES.length - 1
-                                ? 'bg-gray-300 text-gray-600 cursor-default'
-                                : 'bg-violet-600 text-white hover:bg-violet-700'
-                              }`}
-                          >
-                            {isLoading
-                              ? 'Receiving…'
-                              : idx === STATUSES.length - 1
-                                ? 'Received'
-                                : 'Mark Received'}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+//                     {/* products */}
+//                     <div className="space-y-4">
+//                       {items.map((item) => (
+//                         <div
+//                           key={item.id}
+//                           className="flex items-center bg-gray-50 p-4 rounded-lg shadow-sm"
+//                         >
+//                           <img
+//                             src={item.product.product_images[0]}
+//                             alt={item.product.title}
+//                             className="w-24 h-24 object-cover rounded"
+//                           />
+//                           <div className="ml-4 flex-1">
+//                             <h4 className="font-semibold">
+//                               {item.product.title}
+//                             </h4>
+//                             <p className="text-gray-700 mt-1">
+//                               ${(item.price_cents / 100).toFixed(2)} ×{' '}
+//                               {item.quantity}
+//                             </p>
+//                           </div>
+//                           <button
+//                             onClick={() =>
+//                               handleReceive(order.id, Number(sellerId))
+//                             }
+//                             disabled={idx === STATUSES.length - 1 || isLoading}
+//                             className={`px-4 py-2 rounded-full font-medium transition ${idx === STATUSES.length - 1
+//                                 ? 'bg-gray-300 text-gray-600 cursor-default'
+//                                 : 'bg-violet-600 text-white hover:bg-violet-700'
+//                               }`}
+//                           >
+//                             {isLoading
+//                               ? 'Receiving…'
+//                               : idx === STATUSES.length - 1
+//                                 ? 'Received'
+//                                 : 'Mark Received'}
+//                           </button>
+//                         </div>
+//                       ))}
+//                     </div>
 
-                    {/* status bar */}
-                    <div className="relative my-6">
-                      <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 rounded" />
-                      <div className="relative flex justify-between z-10">
-                        {STATUSES.map((_, i) => (
-                          <div
-                            key={i}
-                            className={`w-8 h-8 flex items-center justify-center rounded-full ${i <= idx
-                                ? 'bg-violet-600 text-white'
-                                : 'bg-gray-200 text-gray-400'
-                              }`}
-                          >
-                            {i <= idx && <MdCheck />}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="relative flex justify-between mt-2 text-sm text-center">
-                        {STATUSES.map((label, i) => (
-                          <span key={i} className="w-16">
-                            {label}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </section>
-                )
-              })}
-            </div>
-          )
-        })}
-      </div>
+//                     {/* status bar */}
+//                     <div className="relative my-6">
+//                       <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 rounded" />
+//                       <div className="relative flex justify-between z-10">
+//                         {STATUSES.map((_, i) => (
+//                           <div
+//                             key={i}
+//                             className={`w-8 h-8 flex items-center justify-center rounded-full ${i <= idx
+//                                 ? 'bg-violet-600 text-white'
+//                                 : 'bg-gray-200 text-gray-400'
+//                               }`}
+//                           >
+//                             {i <= idx && <MdCheck />}
+//                           </div>
+//                         ))}
+//                       </div>
+//                       <div className="relative flex justify-between mt-2 text-sm text-center">
+//                         {STATUSES.map((label, i) => (
+//                           <span key={i} className="w-16">
+//                             {label}
+//                           </span>
+//                         ))}
+//                       </div>
+//                     </div>
+//                   </section>
+//                 )
+//               })}
+//             </div>
+//           )
+//         })}
+//       </div>
 
-      {totalPages > 1 && (
-        <Pagination
-          currentPage={pageParam}
-          totalPages={totalPages}
-          onPageChange={gotoPage}
-        />
-      )}
-    </main>
-  )
-}
+//       {totalPages > 1 && (
+//         <Pagination
+//           currentPage={pageParam}
+//           totalPages={totalPages}
+//           onPageChange={gotoPage}
+//         />
+//       )}
+//     </main>
+//   )
+// }
+
+import React from 'react';
+
+const page1 = () => {
+  return (
+    <div>
+      <h1>orders2</h1>
+    </div>
+  );
+};
+
+export default page1;

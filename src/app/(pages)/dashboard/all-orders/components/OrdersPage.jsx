@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -103,11 +102,11 @@ export default function OrdersPage() {
       </div>
 
       <div className="flex gap-6 mb-4 font-semibold overflow-x-auto whitespace-nowrap px-2 scrollbar-hide">
-  <div className="border-b-2 border-black pb-1">All Purchases</div>
-  <div>Processing</div>
-  <div>Unpaid</div>
-  <div>Returns & Cancelled</div>
-</div>
+        <div className="border-b-2 border-black pb-1">All Purchases</div>
+        <div>Processing</div>
+        <div>Unpaid</div>
+        <div>Returns & Cancelled</div>
+      </div>
 
       <h1 className="text-2xl font-bold mb-6">My Orders</h1>
 
@@ -121,20 +120,20 @@ export default function OrdersPage() {
             <p className="text-center text-gray-500">No matching orders found.</p>
           ) : (
             displayItems.map((item, index) => (
-<OrderCard
-  key={`${item.order.id}-${item.id}-${index}`}
-  order={item.order} // ✅ Add this
-  product={item.product} // ✅ Pass product as well if needed
-  status={item.receive_status === 1 ? "Received" : "Processing"}
-  date={new Date(item.order.created_at).toLocaleDateString()}
-  total={`GHS ${(item.price_cents * item.quantity / 100).toFixed(2)}`}
-  orderNumber={String(item.order.id).padStart(8, "0")}
-  productTitle={item.product.title}
-  seller={item.product.user_display_name || `Seller ${item.product.user}`}
-  price={`GHS ${(item.price_cents / 100).toFixed(2)}`}
-  returnDate="12 May"
-  imageUrl={item.product.product_images?.[0] || "/placeholder.png"}
-/>
+              <OrderCard
+                key={`${item.order.id}-${item.id}-${index}`}
+                order={item.order} // ✅ Add this
+                product={item.product} // ✅ Pass product as well if needed
+                status={item.receive_status === 1 ? "Received" : "Processing"}
+                date={new Date(item.order.created_at).toLocaleDateString()}
+                total={`GHS ${(item.price_cents * item.quantity / 100).toFixed(2)}`}
+                orderNumber={String(item.order.id).padStart(8, "0")}
+                productTitle={item.product.title}
+                seller={item.product.user_display_name || `Seller ${item.product.user}`}
+                price={`GHS ${(item.price_cents / 100).toFixed(2)}`}
+                returnDate="12 May"
+                imageUrl={item.product.product_images?.[0] || "/placeholder.png"}
+              />
             ))
           )}
         </div>
