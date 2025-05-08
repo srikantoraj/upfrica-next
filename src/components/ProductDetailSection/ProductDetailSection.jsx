@@ -170,23 +170,6 @@ export default function ProductDetailSection({ product, relatedProducts }) {
         seconds: 0,
     });
 
-    // useEffect(() => {
-    //     if (!saleActive) return;
-
-    //     const update = () => {
-    //         const diff = saleEndDate - new Date();
-    //         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    //         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    //         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    //         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-    //         setTimeRemaining({ days, hours, minutes, seconds });
-    //     };
-
-    //     update();
-    //     const intervalId = setInterval(update, 1000);
-    //     return () => clearInterval(intervalId);
-    // }, [saleEndDate, saleActive]);
 
     useEffect(() => {
         if (!sale_end_date) return;                // depend on the *string* prop
@@ -243,7 +226,8 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                     body: JSON.stringify({ product_id: id, note: "" }),
                 }
             );
-            console.log(await response.json());
+            const res = await response.json();
+            console.log(res)
         } catch (error) {
             console.error(error);
         } finally {
@@ -431,7 +415,11 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                     </button>
                                 </div>
 
-                                <PaymentDeliveryReturns />
+                                <PaymentDeliveryReturns
+                                    secondaryData={product?.secondary_data}
+                                    dispatchTime={product?.dispatch_time_in_days}
+                                />
+
                             </div>
                         </section>
 
@@ -620,7 +608,11 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                 </button>
                             </div>
 
-                            <PaymentDeliveryReturns />
+                            <PaymentDeliveryReturns
+                                secondaryData={product?.secondary_data}
+                                dispatchTime={product?.dispatch_time_in_days}
+                            
+                            />
                         </div>
                     </aside>
                     {/* END RIGHT SIDEBAR */}

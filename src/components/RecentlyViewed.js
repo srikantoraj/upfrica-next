@@ -1,11 +1,12 @@
-// components/RecentlyViewed.js
+
 // 'use client'
 // import { useEffect } from 'react';
 
 // const RECENTLY_VIEWED_KEY = 'upfricaRecentlyViewed';
 
 // const RecentlyViewed = ({ product }) => {
-//     useEffect(() => {
+//   useEffect(() => {
+//       console.log("new recently vew product", product);
 //         if (typeof window !== 'undefined' && product) {
 //             // Retrieve the existing list from localStorage
 //             const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
