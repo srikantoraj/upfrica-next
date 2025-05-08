@@ -137,7 +137,7 @@ const DashbordSearchBer = () => {
           return (
             <li key={index}>
               <div
-                className={`flex items-center justify-between px-4 py-2 cursor-pointer  transition rounded-md ${isOpen ? "bg-blue-100 font-semibold text-blue-400" :  ""
+                className={`flex items-center justify-between px-4 py-2 cursor-pointer  transition rounded-md ${isOpen ? "bg-blue-100 font-semibold text-[#04A9F5]" :  ""
                   }`}
                 onClick={() => handleToggleMenu(index)}
               >
@@ -159,7 +159,7 @@ const DashbordSearchBer = () => {
                   {item.children.map((child, childIdx) => {
                     const isChildActive = pathname === child.route;
                     return (
-                      <li className={`list-disc ${isChildActive ? "text-blue-600 font-medium" : ""
+                      <li className={`list-disc ${isChildActive ? "text-[#04A9F5] font-medium" : ""
                         }`} key={childIdx}>
                         <Link
                           href={child.route}

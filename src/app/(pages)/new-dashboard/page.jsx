@@ -8,9 +8,7 @@ import ProductList from '@/components/e-commerce/products-list/ProductList';
 const Dashboard = () => {
   return (
     <div className='w-full py-10 px-4 space-y-4'>
-      {/* <HeaderControls /> */}
-      <ProductList/>
-      {/* <Analytics /> */}
+      <ProductList />
     </div>
   );
 };
