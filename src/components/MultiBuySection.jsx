@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 
-export default function MultiBuySection({ product }) {
+export default function MultiBuySection({ product, onTierSelect, selectedTier }) {
   const { secondary_data } = product || {};
+  console.log("secondary_data", secondary_data);
+
   const tiers = secondary_data?.multi_buy === "yes" ? secondary_data.multi_buy_tiers : [];
 
   // Don't render if no multi-buy tiers
@@ -29,18 +31,23 @@ export default function MultiBuySection({ product }) {
   });
 
   // Active selection state
-  const [activeIndex, setActiveIndex] = useState(null);
+  // const [activeIndex, setActiveIndex] = useState(null);
 
   return (
     <div className="mt-4 space-y-2">
       <p className="font-medium text-base text-gray-800">Multi-buy:</p>
       <div className="flex space-x-3 overflow-x-auto scrollbar-hide">
         {multiBuyOptions.map((opt, idx) => {
-          const isActive = idx === activeIndex;
+          // const isActive = idx === activeIndex;
+          // ➍: parent থেকে পাওয়া selectedTier দিয়ে চেক
+          const isActive = selectedTier?.minQuantity === opt.minQuantity;
           return (
             <div
               key={idx}
-              onClick={() => setActiveIndex(idx)}
+              // onClick={() => setActiveIndex(idx)}
+              onClick={() => {
+                onTierSelect(opt);  // ➎: parent state আপডেট
+              }}
               className={`min-w-[120px] cursor-pointer border rounded-md text-center p-2 hover:bg-gray-50 transition-all
                 ${isActive ? "border-black border-2 font-semibold" : "border-gray-300"}
               `}

@@ -58,7 +58,11 @@ const Breadcrumbs = ({ categoryTree, title }) => {
 };
 
 export default function ProductDetailSection({ product, relatedProducts }) {
-    console.log("detles product", product);
+    // console.log("detles product", product);
+    const [selectedMultiBuyTier, setSelectedMultiBuyTier] = useState(null);
+
+    // console.log("selectedMultiBuyTier",selectedMultiBuyTier);
+    
 
     const { token, user: currentUser } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
@@ -250,19 +254,38 @@ export default function ProductDetailSection({ product, relatedProducts }) {
     // console.log("quantity",quantity);
 
 
+    // const handleAddToBasket = () => {
+    //     const productData = {
+    //         id,
+    //         title,
+    //         price_cents: activePriceCents,
+    //         quantity,
+    //         image: product_images,
+    //         variants: selectedVariants,
+    //         sku,
+    //     };
+    //     dispatch(addToBasket(productData));
+    //     setIsModalVisible(true);
+    // };
+
+
     const handleAddToBasket = () => {
         const productData = {
-            id,
-            title,
-            price_cents: activePriceCents,
-            quantity,
-            image: product_images,
-            variants: selectedVariants,
-            sku,
+          id,
+          title,
+          price_cents: activePriceCents,
+          quantity: selectedMultiBuyTier
+            ? selectedMultiBuyTier.minQuantity  // টিয়ার অনুযায়ী qty
+            : quantity,                         // না থাকলে যেটা default
+          image: product_images,
+          variants: selectedVariants,
+          sku,
+          // চাইলে price_each: selectedMultiBuyTier?.price
         };
         dispatch(addToBasket(productData));
         setIsModalVisible(true);
-    };
+      };
+      
 
     const handleCloseModal = () => setIsModalVisible(false);
     const handleQuantityChange = (id, newQty) =>
@@ -550,7 +573,19 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                 </div>
                             </div>
 
-                            {product_quantity > 1 && <MultiBuySection product={product} />}
+                            {/* MultiBuySection */}
+
+                            {/* {product_quantity > 1 && <MultiBuySection product={product} />} */}
+
+                            {/* আগের কোড */}
+                            {product_quantity > 1 && (
+                                <MultiBuySection
+                                    product={product}
+                                    onTierSelect={setSelectedMultiBuyTier}  // ➋: পাস করি setter ফাংশন
+                                    selectedTier={selectedMultiBuyTier}     // ➌: পাস করি আপনা একটিভ টিয়ার
+                                />
+                            )}
+
 
                             <div className="mt-4 space-y-2">
                                 <button
@@ -594,6 +629,8 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                         isModalVisible={isModalVisible}
                         handleCloseModal={handleCloseModal}
                         basket={basket}
+                        saleActive={saleActive}
+                        activePrice={activePrice}
                         quantity={quantity}
                         handleQuantityChange={handleQuantityChange}
                         handleRemoveProduct={handleRemoveProduct}

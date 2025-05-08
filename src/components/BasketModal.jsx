@@ -12,6 +12,8 @@ export default function BasketModal({
   basket,
   handleQuantityChange,
   handleRemoveProduct,
+  saleActive,
+  activePrice,
   quantity
 }) {
 
@@ -153,7 +155,8 @@ export default function BasketModal({
                     </div>
 
                     <p className="text-sm sm:text-base md:text-lg font-medium text-gray-900">
-                      {((product.price_cents / 100) * product.quantity).toFixed(2)}
+                      {/* {((product.price_cents / 100) * product.quantity).toFixed(2)} */}
+                      {saleActive ? `₵${activePrice} x ${product.quantity}` : ''}
                     </p>
                   </div>
                 </div>
