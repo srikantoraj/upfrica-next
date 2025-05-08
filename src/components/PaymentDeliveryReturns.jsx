@@ -1,7 +1,24 @@
 // components/PaymentDeliveryReturns.js
 import React from 'react';
 
-const PaymentDeliveryReturns = () => {
+const PaymentDeliveryReturns = ({ secondaryData, dispatchTime }) => {
+  const { cancellable, cancellation_policy } = secondaryData || {};
+
+
+
+  const dispatchDays = parseInt(dispatchTime) || 0;
+
+  // Compute delivery date = today + dispatchDays
+  const today = new Date();
+  const deliveryDate = new Date(today);
+  deliveryDate.setDate(today.getDate() + dispatchDays);
+
+  // Format as "Tue, 25 Feb"
+  const deliveryDateString = deliveryDate.toLocaleDateString("en-US", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
   // 1. Define your payment methods in an array of objects
   const paymentMethods = [
     {
@@ -54,9 +71,8 @@ const PaymentDeliveryReturns = () => {
           <p className="text-base lg:text-lg font-semibold">Delivery:</p>
           <div>
             <p className="text-base lg:text-lg">
-              Fast Delivery Available:
-              <span className="font-bold"> Tue, 25 Feb</span> -
-              <span className="font-bold"> Thu, 27 Feb</span>
+              Fast Delivery Available:&nbsp;
+              <span className="font-bold">{deliveryDateString}</span>
             </p>
             <p className="text-sm lg:text-base text-gray-500">
               if ordered today
@@ -68,16 +84,20 @@ const PaymentDeliveryReturns = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-y-2 lg:gap-y-0 lg:gap-x-6">
           <p className="text-base lg:text-lg font-semibold">Returns:</p>
           <div>
-            <p className="text-base lg:text-lg">
-              The seller won't accept returns for this item..
-              <span
-                className="ml-1 cursor-pointer text-gray-500"
-                data-bs-toggle="modal"
-                data-bs-target="#conditionModal"
-              >
-                i
-              </span>
-            </p>
+            {!cancellable && <p className="text-base lg:text-lg">
+              The seller won't accept returns for this item.
+             
+             
+            </p>}
+            {
+              cancellable && (
+                <p className="text-base lg:text-lg">
+                  You can return this item within
+                  <span className="font-bold"> 7 days</span> of receiving it.
+
+                </p>
+              )
+            }
           </div>
         </div>
 
