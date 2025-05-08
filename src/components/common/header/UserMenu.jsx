@@ -90,7 +90,7 @@ export default function UserMenu() {
 
             {/* Menu Items */}
             <div className="flex flex-col">
-              <Link href="/dashboard">
+              <Link href="/new-dashboard">
                 <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
                   <BsFillPersonLinesFill className="h-5 w-5 text-gray-500" />
                   <span className="ml-2">Dashboard</span>

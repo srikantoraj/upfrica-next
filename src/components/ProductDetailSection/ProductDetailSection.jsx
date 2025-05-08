@@ -436,10 +436,18 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                     {/* RIGHT SIDEBAR */}
                     <aside className="order-2 hidden xl:block xl:col-span-5">
                         <div className="sticky top-0 space-y-4 p-5">
-                            {currentUser?.username === product?.user?.username || currentUser?.admin === true && <Link href={`/products/edit/${product?.slug}`} className="flex items-center gap-2">
-                                <FaEdit className="h-4 w-4 text-violet-700" />
-                                <span className="text-violet-700 hover:underline">Edit</span>
-                            </Link>}
+                            {(
+                                currentUser?.username === product?.user?.username ||
+                                currentUser?.admin === true
+                            ) && (
+                                    <Link
+                                        href={`/products/edit/${product?.slug}`}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <FaEdit className="h-4 w-4 text-violet-700" />
+                                        <span className="text-violet-700 hover:underline">Edit</span>
+                                    </Link>
+                                )}
                             <h1 className="heading-lg text-lg md:text-xl lg:text-2xl font-semibold text-gray-800">
                                 {title}
                             </h1>
@@ -461,11 +469,20 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                             {/* Dynamic Variant Selectors for Desktop */}
                             <div className="space-y-4 my-4">
 
-                                {currentUser?.username === product?.user?.username || currentUser?.admin == true && <Link href={`/products/edit/variants/${product?.id}`} className="flex items-center gap-2">
-                                    <FaEdit className="h-4 w-4 text-violet-700" />
-                                    <span className="text-violet-700 hover:underline">Edit Variants</span>
-                                </Link>}
-
+                                {(
+                                    currentUser?.username === product?.user?.username ||
+                                    currentUser?.admin === true
+                                ) && (
+                                        <Link
+                                            href={`/products/edit/variants/${product?.id}`}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <FaEdit className="h-4 w-4 text-violet-700" />
+                                            <span className="text-violet-700 hover:underline">
+                                                Edit Variants
+                                            </span>
+                                        </Link>
+                                    )}
                                 {variants && variants.length > 0 && (
                                     <>
                                         <hr className="my-3 border-gray-200" />
