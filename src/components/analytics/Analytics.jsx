@@ -7,7 +7,7 @@ import UserFeedbackSection from './UserFeedbackSection.jsx';
 
 const Analytics = () => {
     return (
-        <>
+        <div className='space-y-4'>
             <SalesCardGroup />
 
             <AnalyticsSection />
@@ -15,7 +15,7 @@ const Analytics = () => {
             <SocialCardGroup />
 
             <UserFeedbackSection />
-        </>
+        </div>
     );
 };
 

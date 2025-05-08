@@ -9,6 +9,7 @@ import {
     FaThLarge,
     FaSignInAlt,
   } from "react-icons/fa";
+import { IoMdCart } from "react-icons/io";
   
   export const menuItems = [
     {
@@ -16,7 +17,7 @@ import {
       route: "/dashboard/chart",
       icon: FaHome,
       children: [
-        { label: "Analytics", route: "/dashboard/analytics" },
+        { label: "Analytics", route: "/new-dashboard/analytics" },
         { label: "Sales & Revenue", route: "/dashboard/revenue" },
         { label: "Live Tour Items", route: "/dashboard/live-tour-items" },
         { label: "Live Hotel Items", route: "/dashboard/live-hotel-items" },
@@ -26,6 +27,19 @@ import {
         { label: "All Users", route: "/dashboard/all-users" },
         { label: "All Stories", route: "/dashboard/stories" },
         { label: "All Videos", route: "/dashboard/videos" },
+      ],
+    },
+    {
+      label: "E-commerce",
+      route: "/dashboard/chart",
+      icon: IoMdCart,
+      children: [
+        { label: "Product", route: "/new-dashboard/product" },
+        { label: "Product - Detels", route: "/new-dashboard/product-detels" },
+        { label: "Products - List", route: "/new-dashboard/porducts-list" },
+        { label: "Product - Add", route: "/new-dashboard/product-add" },
+        { label: "Checkout", route: "/new-dashboard/checkout" },
+       
       ],
     },
     {
