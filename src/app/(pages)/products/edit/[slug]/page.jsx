@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useFormik } from 'formik';
-import { FaMinus, FaPlus, FaTimes, FaArrowLeft, FaEye} from 'react-icons/fa';
+import { FaMinus, FaPlus, FaTimes, FaArrowLeft, FaEye } from 'react-icons/fa';
 import { IoMdNotifications } from 'react-icons/io';
 import { useRouter } from 'next/navigation';
 
@@ -104,7 +104,7 @@ export default function EditProductPage({ params }) {
                 let tiers = [];
                 if (data.secondary_data?.multi_buy_tiers) {
                     try {
-                        tiers = JSON.parse(data.secondary_data.multi_buy_tiers) || [];
+                        tiers = JSON.parse(data.secondary_data.multi_buy_tiers) || [{}];
                     } catch { tiers = []; }
                 }
                 if (!tiers.length) tiers = [{ min_quantity: '', price_each: '' }];
@@ -187,6 +187,9 @@ export default function EditProductPage({ params }) {
             formData.append('multi_buy', values.multi_buy);
             if (values.multi_buy === 'yes') {
                 formData.append('multi_buy_tiers', JSON.stringify(values.multi_buy_tiers));
+                
+            } else {
+                formData.append('multi_buy_tiers', '');
             }
             formData.append('cancellable', values.cancellable ? 'yes' : 'no');
             if (values.cancellable) {
@@ -212,6 +215,32 @@ export default function EditProductPage({ params }) {
             selectedImages
                 .filter(img => img.file)
                 .forEach(img => formData.append('images', img.file, img.file.name));
+            
+            
+                // selectedImages.forEach((img, idx) => {
+                // const identifier = img.data_url || (img.file && img.file.name) || 'unknown';
+                // console.log(`Image position ${idx + 1}:`, identifier);
+                // })
+            
+            
+                    selectedImages.forEach((img, idx) => {
+                        if (img.file) {
+                                // Local file: just the filename
+                                    console.log(`Image position ${idx + 1}: ${img.file.name}`);
+                            } else {
+                            // Already-uploaded image: log its URL
+                                console.log(`Image position ${idx + 1}: ${img.data_url}`);
+                            }
+                    });
+            const imageOrder = selectedImages.map(img =>
+                img.file ? img.file.name : img.data_url
+            );
+            // …and log it
+            console.log('Image order array:', imageOrder);
+
+            // Now append that array (stringified) to your form data
+            // return;
+            formData.append('image_positions', JSON.stringify(imageOrder));
 
             try {
                 const res = await fetch(
@@ -343,7 +372,7 @@ export default function EditProductPage({ params }) {
                             {formik.isSubmitting ? 'Saving…' : 'Save Changes'}
                         </button>
 
-                        
+
                         <button
                             type="button"
                             onClick={() => router.back()}

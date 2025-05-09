@@ -4,7 +4,7 @@ export default function MultiBuySection({ product, onTierSelect, selectedTier })
   const { secondary_data } = product || {};
   console.log("secondary_data", secondary_data);
 
-  const tiers = secondary_data?.multi_buy === "yes" ? secondary_data.multi_buy_tiers : [];
+  const tiers = secondary_data?.multi_buy === "yes" ? JSON.parse(secondary_data.multi_buy_tiers) : [];
 
   // Don't render if no multi-buy tiers
   if (!tiers?.length) {
