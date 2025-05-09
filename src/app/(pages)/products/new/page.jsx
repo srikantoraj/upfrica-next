@@ -161,20 +161,27 @@ const AddNewProducts = () => {
         "cancellation_policy", cancel =='no'?'':JSON.stringify(cancellationPolicy)
       );
 
-      // Append images
+      // // Append images
+      // if (selectedImages.length > 0) {
+      //   formData.append(
+      //     "images",
+      //     selectedImages[0].file,
+      //     "upload_image.png"
+      //   );
+      //   if (selectedImages.length > 1) {
+      //     formData.append(
+      //       "images",
+      //       selectedImages[1].file,
+      //       "background_image.png"
+      //     );
+      //   }
+      // }
+
+
       if (selectedImages.length > 0) {
-        formData.append(
-          "images",
-          selectedImages[0].file,
-          "upload_image.png"
-        );
-        if (selectedImages.length > 1) {
-          formData.append(
-            "images",
-            selectedImages[1].file,
-            "background_image.png"
-          );
-        }
+        selectedImages.forEach((img, index) => {
+          formData.append("images", img.file, img.file.name || `image_${index}.png`);
+        });
       }
 
 

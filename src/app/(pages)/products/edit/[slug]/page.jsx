@@ -101,15 +101,41 @@ export default function EditProductPage({ params }) {
             try {
                 const res = await fetch(`https://media.upfrica.com/api/products/${slug}/`);
                 const data = await res.json();
+                // let tiers = [];
+                // if (data.secondary_data?.multi_buy_tiers) {
+                //     try {
+                //         tiers = JSON.parse(data.secondary_data.multi_buy_tiers) || [{}];
+                //     } catch { tiers = []; }
+                // }
+                // if (!tiers.length) tiers = [{ min_quantity: '', price_each: '' }];
+                // setProduct(data);
+                // setMultiBuyTiers(tiers);
+
+
+
                 let tiers = [];
+
                 if (data.secondary_data?.multi_buy_tiers) {
-                    try {
-                        tiers = JSON.parse(data.secondary_data.multi_buy_tiers) || [{}];
-                    } catch { tiers = []; }
+                    const rawTiers = data.secondary_data.multi_buy_tiers;
+
+                    if (typeof rawTiers === 'string') {
+                        try {
+                            tiers = JSON.parse(rawTiers) || [{}];
+                        } catch {
+                            tiers = [];
+                        }
+                    } else if (Array.isArray(rawTiers)) {
+                        tiers = rawTiers;
+                    }
                 }
-                if (!tiers.length) tiers = [{ min_quantity: '', price_each: '' }];
+
+                if (!tiers.length) {
+                    tiers = [{ min_quantity: '', price_each: '' }];
+                }
+
                 setProduct(data);
                 setMultiBuyTiers(tiers);
+                
                 setSelectedImages((data.product_images || []).map(url => ({ data_url: url })));
             } catch (err) {
                 console.error(err);
