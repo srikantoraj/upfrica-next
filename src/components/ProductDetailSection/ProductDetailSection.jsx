@@ -1,5 +1,6 @@
 
 "use client";
+import { useCallback } from "react";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import MultiBuySection from "../MultiBuySection";
@@ -60,6 +61,11 @@ const Breadcrumbs = ({ categoryTree, title }) => {
 export default function ProductDetailSection({ product, relatedProducts }) {
     // console.log("detles product", product);
     const [selectedMultiBuyTier, setSelectedMultiBuyTier] = useState(null);
+    const handleTierSelect = useCallback((tier) => {
+        setSelectedMultiBuyTier((prev) =>
+            prev?.minQuantity === tier.minQuantity ? prev : tier
+        );
+    }, []);
 
     // console.log("selectedMultiBuyTier",selectedMultiBuyTier);
     
@@ -342,7 +348,11 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                     )}
                                 </div>
 
-                                <MultiBuySection product={product} />
+                                <MultiBuySection
+                                    product={product}
+                                    onTierSelect={handleTierSelect}
+                                    selectedTier={selectedMultiBuyTier}
+                                />
 
                                 {/* Variant selectors */}
                                 <div className="space-y-4 my-4">
@@ -583,13 +593,11 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                             {/* {product_quantity > 1 && <MultiBuySection product={product} />} */}
 
                             {/* আগের কোড */}
-                            {product_quantity > 1 && (
-                                <MultiBuySection
-                                    product={product}
-                                    onTierSelect={setSelectedMultiBuyTier}  // ➋: পাস করি setter ফাংশন
-                                    selectedTier={selectedMultiBuyTier}     // ➌: পাস করি আপনা একটিভ টিয়ার
-                                />
-                            )}
+                            <MultiBuySection
+                                product={product}
+                                onTierSelect={handleTierSelect}
+                                selectedTier={selectedMultiBuyTier}
+                            />
 
 
                             <div className="mt-4 space-y-2">
