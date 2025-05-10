@@ -29,8 +29,8 @@ import { IoMdCart } from "react-icons/io";
       route: "/dashboard/chart",
       icon: IoMdCart,
       children: [
-        { label: "Product", route: "/new-dashboard/product" },
-        { label: "Product - Detels", route: "/new-dashboard/product-detels" },
+        { label: "Orders", route: "/new-dashboard/orders" },
+        { label: "Product - Details", route: "/new-dashboard/" },
         { label: "Products - List", route: "/new-dashboard/porducts-list" },
         { label: "Product - Add", route: "/new-dashboard/product-add" },
         { label: "Checkout", route: "/new-dashboard/checkout" },
