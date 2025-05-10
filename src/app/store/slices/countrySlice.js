@@ -1,9 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 const countries = [
-    { name: 'Ghana', code: 'GHS', symbol: '₵' },
-    { name: 'United Kingdom', code: 'GBP', symbol: '£' },
-    { name: 'Bangladesh', code: 'BDT', symbol: '৳' },
+    { name: 'Ghana', code: 'GHS', symbol: '₵', region:'gh' },
+    { name: 'United Kingdom', code: 'GBP', symbol: '£', region:'uk' },
+    { name: 'Bangladesh', code: 'BDT', symbol: '৳', region:'bd' },
 ]
 
 const initialState = {
