@@ -1,6 +1,5 @@
 // src/data/analyticsData.js
 export const earningsData = {
-    title: "Users From United States",
     total: "$249.95",
     chart: [
       { month: "Jan", value: 40 },

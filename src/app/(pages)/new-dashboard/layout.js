@@ -7,7 +7,10 @@ const Layout = ({ children }) => {
   return (
     <div className="flex relative w-full">
       {/* Sidebar */}
-      <Sideber />
+      <div >
+        <Sideber />
+      </div>
+      
 
       {/* Main Content */}
       <div className={clsx("flex-1 transition-all duration-300 px-4 py-5")}>

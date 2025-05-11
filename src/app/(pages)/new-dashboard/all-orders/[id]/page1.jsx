@@ -142,7 +142,7 @@ export default function OrderDetails({ params }) {
       await Promise.all(
         items.map((it) =>
           fetch(
-            `https://media.upfrica.com/api/buyer/order-item/${it.id}/`,
+            `https://media.upfrica.com/api/seller/order-items/${it.id}/`,
             { method: 'PATCH', headers, body }
           ).then((r) => {
             if (!r.ok) throw new Error(`Item ${it.id} failed`)

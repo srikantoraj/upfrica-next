@@ -7,9 +7,8 @@ import { earningsData } from "./earningsData";
 
 const EarningsChart = () => (
   <div className="bg-white rounded-xl p-4 shadow-md">
-    <h3 className="text-sm font-semibold text-gray-600">{earningsData.title}</h3>
     <p className="text-lg font-bold text-gray-800">Total Earnings: {earningsData.total}</p>
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={100}>
       <LineChart data={earningsData.chart}>
         <XAxis dataKey="month" />
         <YAxis />

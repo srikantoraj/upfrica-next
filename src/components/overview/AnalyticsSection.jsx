@@ -7,10 +7,11 @@ import MapPlaceholder from "./MapPlaceholder";
 
 const AnalyticsSection = () => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <MapPlaceholder className="col-span-1 lg:col-span-2" />
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
       <EarningsChart />
-      {/* <SummaryGroup /> */}
+      
+     
     </div>
   );
 };

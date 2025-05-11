@@ -1,82 +1,129 @@
-// src/data/menuItems.js
 import {
-    FaHome,
-    FaUserCircle,
-    FaRegEdit,
-    FaCog,
-    FaEllipsisH,
-    FaChartBar,
-    FaThLarge,
-    FaSignInAlt,
-  } from "react-icons/fa";
-import { IoMdCart } from "react-icons/io";
-  
-  export const menuItems = [
-    {
-      label: "Dashboard",
-      route: "/dashboard/chart",
-      icon: FaHome,
-      children: [
-        { label: "Analytics", route: "/new-dashboard/analytics" },
-        { label: "Affiliate", route: "/new-dashboard/affiliate" },
-        { label: "finance", route: "/new-dashboard/finance" },
-        { label: "Invoice", route: "/new-dashboard/invoice" },
-        { label: "Helpdesk", route: "/new-dashboard/helpdesk" },
-      ],
-    },
-    {
-      label: "E-commerce",
-      route: "/dashboard/chart",
-      icon: IoMdCart,
-      children: [
-        { label: "Orders", route: "/new-dashboard/orders" },
-        { label: "Product - Details", route: "/new-dashboard/" },
-        { label: "Products - List", route: "/new-dashboard/porducts-list" },
-        { label: "Product - Add", route: "/new-dashboard/product-add" },
-        { label: "Checkout", route: "/new-dashboard/checkout" },
-       
-      ],
-    },
-    {
-      label: "Profile",
-      route: "/profile",
-      icon: FaUserCircle,
-    },
-    {
-      label: "Create Itineraries",
-      route: "#",
-      icon: FaRegEdit,
-      children: [
-        { label: "Create Tour Itinerary", route: "/dashboard/create-tour-itienrary" },
-        { label: "Add new Hotel", route: "/dashboard/create-hotel-itienrary" },
-        { label: "Add new Story", route: "/dashboard/add-new-story" },
-        { label: "Add new Video", route: "/dashboard/add-new-video" },
-      ],
-    },
-    {
-      label: "Settings",
-      route: "/settings",
-      icon: FaCog,
-    },
-    {
-      label: "Others",
-      route: "/others",
-      icon: FaEllipsisH,
-    },
-    {
-      label: "Analytics",
-      route: "/dashboard/chart",
-      icon: FaChartBar,
-    },
-    {
-      label: "Upadte Pages UI",
-      route: "#",
-      icon: FaThLarge,
-    },
-    {
-      label: "Sign Out",
-      route: "#",
-      icon: FaSignInAlt,
-    },
-  ];
-  
+  FaTachometerAlt,
+  FaPlus,
+  FaEnvelope,
+  FaClipboardList,
+  FaBoxOpen,
+  FaTag,
+  FaChartBar,
+  FaWallet,
+  FaStore,
+  FaShippingFast,
+  FaFileAlt,
+  FaStar,
+  FaQuestionCircle,
+  FaBalanceScale,
+  FaInbox,
+  FaBullhorn,
+  FaLifeRing,
+  FaTicketAlt,
+  FaComments,
+  FaUserCircle,
+  FaSignOutAlt
+} from "react-icons/fa";
+
+export const menuItems = [
+  {
+    label: "Dashboard",
+    route: "/new-dashboard",
+    icon: FaTachometerAlt,
+    children: [
+      {
+        label: "Overview",
+        route: "/new-dashboard/overview"
+      },
+      {
+        label: "Quick Actions",
+        route: "/new-dashboard/quick-actions",
+        children: [
+          {
+            label: "➕ Add New Product",
+            route: "/new-dashboard/quick-actions/add-product",
+            icon: FaPlus
+          },
+          {
+            label: "💬 Message Admin",
+            route: "/new-dashboard/quick-actions/message-admin",
+            icon: FaEnvelope
+          }
+        ]
+      }
+    ]
+  },
+  {
+    label: "Orders",
+    route: "/orders",
+    icon: FaClipboardList,
+    children: [
+      { label: "All Orders", route: "/orders/all" },
+      { label: "Pending Fulfillment", route: "/orders/pending" },
+      { label: "Shipped Orders", route: "/orders/shipped" },
+      { label: "Cancelled / Refunded", route: "/orders/cancelled" },
+      { label: "Order Returns", route: "/orders/returns" }
+    ]
+  },
+  {
+    label: "Products",
+    route: "/products",
+    icon: FaBoxOpen,
+    children: [
+      { label: "All Products", route: "/products/all" },
+      { label: "Add New Product", route: "/products/add" },
+      { label: "Drafts", route: "/products/drafts" },
+      { label: "Out-of-Stock", route: "/products/out-of-stock" },
+      { label: "Bulk Import / Export", route: "/products/import-export" }
+    ]
+  },
+  {
+    label: "Promotions",
+    route: "/promotions",
+    icon: FaTag,
+    children: [
+      { label: "My Coupons", route: "/promotions/coupons" },
+      { label: "Flash Sales", route: "/promotions/flash-sales" },
+      { label: "Banner Ads", route: "/promotions/banner-ads" }
+    ]
+  },
+  {
+    label: "Reports",
+    route: "/reports",
+    icon: FaChartBar,
+    children: [
+      { label: "Sales by Product", route: "/reports/sales-by-product" },
+      { label: "Traffic & Conversion", route: "/reports/traffic-conversion" },
+      { label: "Top Customers", route: "/reports/top-customers" },
+      { label: "Payout History", route: "/reports/payout-history" }
+    ]
+  },
+  {
+    label: "Payments",
+    route: "/payments",
+    icon: FaWallet,
+    children: [
+      { label: "Payout Settings", route: "/payments/settings" },
+      { label: "Upcoming Payouts", route: "/payments/upcoming" },
+      { label: "Transaction Logs", route: "/payments/logs" }
+    ]
+  },
+  {
+    label: "Help & Support",
+    route: "/support",
+    icon: FaLifeRing,
+    children: [
+      { label: "Seller FAQ", route: "/support/faq" },
+      { label: "Submit a Ticket", route: "/support/ticket" },
+      { label: "Live Chat with Admin", route: "/support/live-chat" }
+    ]
+  },
+  // Sticky profile/logout at bottom
+  {
+    label: "My Profile",
+    route: "/profile",
+    icon: FaUserCircle
+  },
+  {
+    label: "Sign Out",
+    route: "/logout",
+    icon: FaSignOutAlt
+  }
+];
