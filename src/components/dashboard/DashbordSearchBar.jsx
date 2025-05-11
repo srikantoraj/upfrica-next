@@ -11,7 +11,7 @@ import { RxCross2 } from "react-icons/rx";
 import { FaChevronRight } from "react-icons/fa";
 import { menuItems } from "@/components/menuItems";
 
-const DashbordSearchBer = () => {
+const DashbordSearchBar = () => {
   const [openMenu, setOpenMenu] = useState(null);
   const pathname = usePathname();
   const dispatch = useDispatch();
@@ -93,4 +93,4 @@ const DashbordSearchBer = () => {
   );
 };
 
-export default DashbordSearchBer;
+export default DashbordSearchBar;

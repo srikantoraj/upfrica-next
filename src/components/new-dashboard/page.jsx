@@ -2,9 +2,9 @@
 import React from 'react';
 import { useSelector } from "react-redux";
 import clsx from "clsx";
-import DashbordSearchBer from '../dashboard/DashbordSearchBer';
+import DashbordSearchBar from '../dashboard/DashbordSearchBar';
 
-const Sideber = () => {
+const Dashboard = () => {
     const toggle = useSelector((state) => state.toggle.toggle);
     return (
         <div
@@ -16,9 +16,9 @@ const Sideber = () => {
                 " xl:opacity-100 xl:translate-x-0"
             )}
         >
-            <DashbordSearchBer />
+            <DashbordSearchBar />
         </div>
     );
 };
 
-export default Sideber;
+export default Dashboard;

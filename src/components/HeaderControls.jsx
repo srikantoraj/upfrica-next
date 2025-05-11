@@ -98,7 +98,7 @@ const HeaderControls = () => {
       {/* text  */}
       <div className="flex flex-col">
         <div>
-          <nav className="text-sm text-gray-500" aria-label="Breadcrumb">
+          {/* <nav className="text-sm text-gray-500" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-2">
               <li>
                 <Link href="/dashboard/index" className="hover:underline text-blue-600">
@@ -112,12 +112,9 @@ const HeaderControls = () => {
               </li>
               <li className="text-gray-900 font-medium">Products list</li>
             </ol>
-          </nav>
+          </nav> */}
         </div>
 
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-800 pt-5">Products list</h2>
-        </div>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import React from "react";
 import clsx from "clsx";
 import HeaderControls from "@/components/HeaderControls";
-import Sideber from "@/components/new-dashboard/Sideber";
+import Sideber from "@/components/new-dashboard/page";
 
 const Layout = ({ children }) => {
   return (
