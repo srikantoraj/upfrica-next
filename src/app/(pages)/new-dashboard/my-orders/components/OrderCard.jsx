@@ -1,0 +1,417 @@
+
+
+
+// "use client";
+
+// import React, { useState, useRef, useEffect } from "react";
+// import { useRouter } from "next/navigation";
+// import {
+//   AiOutlineHome,
+//   AiOutlineUser,
+//   AiOutlinePhone,
+// } from "react-icons/ai";
+
+// export default function OrderCard({
+//   order,
+//   items = [], // array of order_items to render
+// }) {
+//   const router = useRouter();
+//   const [dropdownOpen, setDropdownOpen] = useState(false);
+//   const [itemDropdown, setItemDropdown] = useState(null);
+//   const [showFullInfo, setShowFullInfo] = useState(false);
+//   const dropdownRef = useRef();
+
+//   useEffect(() => {
+//     const handler = (e) => {
+//       if (!dropdownRef.current?.contains(e.target)) {
+//         setDropdownOpen(false);
+//       }
+//     };
+//     document.addEventListener("mousedown", handler);
+//     return () => document.removeEventListener("mousedown", handler);
+//   }, []);
+
+//   const phone = order.address.address_data.phone_number;
+//   const maskedPhone = phone.replace(/(\+\d{3})\s\d{2}\s\d{3}/, "$1 ***");
+
+//   return (
+//     <div className=" md:w-full bg-white rounded-xl shadow-upfrica mb-6 p-4">
+//       {/* — Order Header — */}
+//       <div className="flex flex-col md:flex-row justify-between bg-gray-100 rounded-lg p-4 gap-4">
+//         <div className="flex-1 min-w-0">
+//           <div className="text-green-600 font-bold flex items-center mb-2 text-sm sm:text-base">
+//             ✅{" "}
+//             {order.order_items.every(i => i.receive_status === 1)
+//               ? "Received"
+//               : "Processing"}
+//           </div>
+//           <div className="flex flex-wrap gap-4 text-xs sm:text-sm text-black">
+//             <div>
+//               <span className="block font-bold text-green-600">Order #</span>
+//               {String(order.id).padStart(8, "0")}
+//             </div>
+//             <div>
+//               <span className="block font-bold text-green-600">Date</span>
+//               {new Date(order.created_at).toLocaleDateString()}
+//             </div>
+//             <div>
+//               <span className="block font-bold text-green-600">Total</span>
+//               GHS {(order.total_fee_cents / 100).toFixed(2)}
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+//           <button
+//             className="w-1/2 sm:w-auto h-8 text-white upfrica-btn-primary-sm text-sm"
+//             onClick={() => router.push(`/new-dashboard/my-orders/${order.id}`)}
+//           >
+//             View details
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* — Items List — */}
+//       <div className="mt-4 space-y-4">
+//         {items.map((item) => {
+//           const status = item.receive_status === 1 ? "Received" : "Processing";
+//           return (
+//             <div
+//               key={item.id}
+//               className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-gray-50 rounded-lg p-3 relative"
+//             >
+//               <img
+//                 src={item.product.product_images?.[0] || "/placeholder.png"}
+//                 alt={item.product.title}
+//                 className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-md flex-shrink-0"
+//               />
+
+//               <div className="flex-1 min-w-0 space-y-1">
+//                 <h3 className="font-semibold truncate text-sm sm:text-base">
+//                   {item.product.title}
+//                 </h3>
+//                 <p className="text-xs sm:text-sm text-gray-600">
+//                   <strong>Status:</strong> {status}
+//                 </p>
+//                 <p className="text-xs sm:text-sm text-gray-600">
+//                   <strong>Item ID:</strong> {item.id}
+//                 </p>
+//                 <p className="text-xs sm:text-sm text-gray-600">
+//                   <strong>Price:</strong> GHS{" "}
+//                   {(item.price_cents / 100).toFixed(2)}
+//                 </p>
+//               </div>
+
+//               {/* per‐item More Actions dropdown */}
+//               <div className="relative self-start sm:self-auto">
+//                 <button
+//                   className="text-sm upfrica-btn-primary-outline-sm px-2 py-1"
+//                   onClick={() =>
+//                     setItemDropdown(open =>
+//                       open === item.id ? null : item.id
+//                     )
+//                   }
+//                 >
+//                   More Actions ▼
+//                 </button>
+//                 {itemDropdown === item.id && (
+//                   <div className="absolute right-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-40">
+//                     {[
+//                       "Contact seller",
+//                       "Return this item",
+//                       "I didn’t receive it",
+//                       "Sell this item",
+//                       "Add note",
+//                       "Hide Order",
+//                       "Help & report",
+//                     ].map((label, i) => (
+//                       <button
+//                         key={i}
+//                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+//                       >
+//                         {label}
+//                       </button>
+//                     ))}
+//                   </div>
+//                 )}
+//               </div>
+
+
+
+              
+//             </div>
+//           );
+//         })}
+//       </div>
+
+//       {/* — Delivery Info — */}
+//       <hr className="border-t border-gray-200 my-4" />
+//       <div className="text-sm text-gray-700 space-y-2">
+//         <span className="font-semibold text-gray-800">Delivery Info:</span>
+//         <div className="space-y-2">
+//           <div className="flex items-center space-x-2">
+//             <AiOutlineHome size={18} />
+//             <span className="text-xs sm:text-sm">
+//               {showFullInfo
+//                 ? `${order.address.address_data.address_line_1}${order.address.address_data.address_line_2
+//                   ? ", " + order.address.address_data.address_line_2
+//                   : ""
+//                 }, ${order.address.address_data.local_area}, ${order.address.address_data.town
+//                 }, ${order.address.address_data.country}`
+//                 : `${order.address.address_data.town}, ${order.address.address_data.country}`}
+//             </span>
+//           </div>
+//           <div className="flex items-center space-x-2">
+//             <AiOutlineUser size={18} />
+//             <span className="text-xs sm:text-sm">
+//               {showFullInfo
+//                 ? `${order.buyer.first_name} ${order.buyer.last_name}`
+//                 : `${order.buyer.first_name} ${order.buyer.last_name[0]}.`}
+//             </span>
+//           </div>
+//           <div className="flex items-center space-x-2">
+//             <AiOutlinePhone size={18} />
+//             <span className="text-xs sm:text-sm">
+//               {showFullInfo ? phone : maskedPhone}
+//             </span>
+//           </div>
+//         </div>
+//         <button
+//           onClick={() => setShowFullInfo(v => !v)}
+//           className="text-sm text-purple-600 mt-2 underline"
+//         >
+//           {showFullInfo ? "Hide full info ▲" : "Show full info ▼"}
+//         </button>
+//       </div>
+//     </div>
+//   );
+// }
+
+"use client";
+
+import React, { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  AiOutlineHome,
+  AiOutlineUser,
+  AiOutlinePhone,
+  AiOutlineShoppingCart,
+  AiOutlineEdit,
+  AiOutlineShop,
+} from "react-icons/ai";
+
+export default function OrderCard({
+  order,
+  items = [], // array of order_items to render
+}) {
+  const router = useRouter();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [itemDropdown, setItemDropdown] = useState(null);
+  const [showFullInfo, setShowFullInfo] = useState(false);
+  const dropdownRef = useRef();
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (!dropdownRef.current?.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const phone = order.address.address_data.phone_number;
+  const maskedPhone = phone.replace(/(\+\d{3})\s\d{2}\s\d{3}/, "$1 ***");
+
+  // --- New handlers for our buttons ---
+  const handleBuyAgain = (item) => {
+    // navigate to product page so user can re-order
+    router.push(`/product/${item.product.id}`);
+  };
+
+  const handleWriteReview = (item) => {
+    // navigate to review form
+    router.push(`/product/${item.product.id}/review`);
+  };
+
+  const handleViewSellerItems = (item) => {
+    // navigate to seller's storefront
+    router.push(`/seller/${item.product.seller.id}/items`);
+  };
+
+  return (
+    <div className="md:w-full bg-white rounded-xl shadow-upfrica mb-6 p-4">
+      {/* — Order Header — */}
+      <div className="flex flex-col md:flex-row justify-between bg-gray-100 rounded-lg p-4 gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="text-green-600 font-bold flex items-center mb-2 text-sm sm:text-base">
+            ✅{" "}
+            {order.order_items.every(i => i.receive_status === 1)
+              ? "Received"
+              : "Processing"}
+          </div>
+          <div className="flex flex-wrap gap-4 text-xs sm:text-sm text-black">
+            <div>
+              <span className="block font-bold text-green-600">Order #</span>
+              {String(order.id).padStart(8, "0")}
+            </div>
+            <div>
+              <span className="block font-bold text-green-600">Date</span>
+              {new Date(order.created_at).toLocaleDateString()}
+            </div>
+            <div>
+              <span className="block font-bold text-green-600">Total</span>
+              GHS {(order.total_fee_cents / 100).toFixed(2)}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <button
+            className="w-1/2 sm:w-auto h-8 text-white upfrica-btn-primary-sm text-sm"
+            onClick={() => router.push(`/new-dashboard/my-orders/${order.id}`)}
+          >
+            View details
+          </button>
+        </div>
+      </div>
+
+      {/* — Items List — */}
+      <div className="mt-4 space-y-4">
+        {items.map((item) => {
+          const status = item.receive_status === 1 ? "Received" : "Processing";
+          return (
+            <div
+              key={item.id}
+              className="bg-gray-50"
+            >
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-gray-50 rounded-lg p-3 relative"
+               >
+                <img
+                  src={item.product.product_images?.[0] || "/placeholder.png"}
+                  alt={item.product.title}
+                  className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-md flex-shrink-0"
+                />
+
+                <div className="flex-1 min-w-0 space-y-1">
+                  <h3 className="font-semibold truncate text-sm sm:text-base">
+                    {item.product.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    <strong>Status:</strong> {status}
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    <strong>Item ID:</strong> {item.id}
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    <strong>Price:</strong> GHS{" "}
+                    {(item.price_cents / 100).toFixed(2)}
+                  </p>
+                </div>
+
+                {/* per-item More Actions dropdown */}
+                <div className="relative self-start sm:self-auto">
+                  <button
+                    className="text-sm upfrica-btn-primary-outline-sm px-2 py-1"
+                    onClick={() =>
+                      setItemDropdown(open =>
+                        open === item.id ? null : item.id
+                      )
+                    }
+                  >
+                    More Actions ▼
+                  </button>
+                  {itemDropdown === item.id && (
+                    <div className="absolute right-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-40">
+                      {[
+                        "Contact seller",
+                        "Return this item",
+                        "I didn’t receive it",
+                        "Sell this item",
+                        "Add note",
+                        "Hide Order",
+                        "Help & report",
+                      ].map((label, i) => (
+                        <button
+                          key={i}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+
+              {/* — New per-item buttons — */}
+              <div className=" p-2 flex gap-2">
+                <button
+                  onClick={() => handleBuyAgain(item)}
+                  className="flex items-center text-sm upfrica-btn-primary-outline-sm px-2 py-1"
+                >
+                  <AiOutlineShoppingCart className="mr-1" size={16} />
+                  Buy it again
+                </button>
+                <button
+                  onClick={() => handleWriteReview(item)}
+                  className="flex items-center text-sm upfrica-btn-primary-outline-sm px-2 py-1"
+                >
+                  <AiOutlineEdit className="mr-1" size={16} />
+                  Write a review
+                </button>
+                <button
+                  onClick={() => handleViewSellerItems(item)}
+                  className="flex items-center text-sm upfrica-btn-primary-outline-sm px-2 py-1"
+                >
+                  <AiOutlineShop className="mr-1" size={16} />
+                  Seller’s items
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* — Delivery Info — */}
+      <hr className="border-t border-gray-200 my-4" />
+      <div className="text-sm text-gray-700 space-y-2">
+        <span className="font-semibold text-gray-800">Delivery Info:</span>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <AiOutlineHome size={18} />
+            <span className="text-xs sm:text-sm">
+              {showFullInfo
+                ? `${order.address.address_data.address_line_1}${order.address.address_data.address_line_2
+                  ? ", " + order.address.address_data.address_line_2
+                  : ""
+                }, ${order.address.address_data.local_area}, ${order.address.address_data.town
+                }, ${order.address.address_data.country}`
+                : `${order.address.address_data.town}, ${order.address.address_data.country}`}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <AiOutlineUser size={18} />
+            <span className="text-xs sm:text-sm">
+              {showFullInfo
+                ? `${order.buyer.first_name} ${order.buyer.last_name}`
+                : `${order.buyer.first_name} ${order.buyer.last_name[0]}.`}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <AiOutlinePhone size={18} />
+            <span className="text-xs sm:text-sm">
+              {showFullInfo ? phone : maskedPhone}
+            </span>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowFullInfo(v => !v)}
+          className="text-sm text-purple-600 mt-2 underline"
+        >
+          {showFullInfo ? "Hide full info ▲" : "Show full info ▼"}
+        </button>
+      </div>
+    </div>
+  );
+}

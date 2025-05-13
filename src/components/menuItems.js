@@ -51,6 +51,18 @@ export const menuItems = [
     ]
   },
   {
+    label: "My Orders",
+    route: "/new-dashboard/all-orders",
+    icon: FaClipboardList,
+    children: [
+      { label: "All Purchases", route: "/new-dashboard/my-orders" },
+      { label: "Processing", route: "/new-dashboard/my-orders/processing" },
+      { label: "Unpaid", route: "/new-dashboard/my-orders/unpaid" },
+      { label: "Returns & Cancelled", route: "/new-dashboard/my-orders/return-cancelled" },
+     
+    ]
+  },
+  {
     label: "Orders",
     route: "/orders",
     icon: FaClipboardList,
@@ -64,12 +76,12 @@ export const menuItems = [
   },
   {
     label: "Products",
-    route: "/products",
+    route: "/all-products",
     icon: FaBoxOpen,
     children: [
-      { label: "All Products", route: "/products/all" },
-      { label: "Add New Product", route: "/products/add" },
-      { label: "Drafts", route: "/products/drafts" },
+      { label: "All Products", route: "/new-dashboard/all-products" },
+      { label: "Add New Product", route: "/new-dashboard/add-new-product" },
+      { label: "Drafts", route: "/new-dashboard/draft" },
       { label: "Out-of-Stock", route: "/products/out-of-stock" },
       { label: "Bulk Import / Export", route: "/products/import-export" }
     ]

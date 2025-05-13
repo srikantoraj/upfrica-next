@@ -1,11 +1,10 @@
-
-import ProductsPage from '@/components/e-commerce/products/ProductsPage';
 import React from 'react';
+import OrdersPage from './components/OrdersPage';
 
 const page = () => {
     return (
         <div>
-            <ProductsPage/>
+            <OrdersPage /> 
         </div>
     );
 };

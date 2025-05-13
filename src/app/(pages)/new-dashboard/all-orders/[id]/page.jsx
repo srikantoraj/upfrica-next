@@ -280,7 +280,7 @@ export default function OrderDetailsPage() {
         steps={[
           {
             label: "Ordered",
-            date: new Date(order.created_at).toLocaleDateString()
+            date: new Date(order.order_date).toLocaleDateString()
           },
           {
             label: "Dispatched",

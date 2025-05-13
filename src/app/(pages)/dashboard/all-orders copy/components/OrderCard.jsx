@@ -90,7 +90,7 @@ const OrderCard = ({
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
         <button
             className="h-8 text-white upfrica-btn-primary-sm"
-            onClick={() => router.push(`/new-dashboard/my-orders/${order.id}`)}
+            onClick={() => router.push(`/dashboard/all-orders/${order.id}`)}
           >
             View details
           </button>
