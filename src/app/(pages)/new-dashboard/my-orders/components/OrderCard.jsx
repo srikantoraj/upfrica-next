@@ -725,7 +725,7 @@ export default function OrderCard({ order, items = [] }) {
   }, []);
 
   const phone = order.address.address_data.phone_number;
-  const maskedPhone = phone.replace(/(\+\d{3})\s\d{2}\s\d{3}/, "$1 ***");
+  const maskedPhone = phone?.replace(/(\+\d{3})\s\d{2}\s\d{3}/, "$1 ***");
 
   const handleBuyAgain = item => {
     setPopupItem(item.product);
