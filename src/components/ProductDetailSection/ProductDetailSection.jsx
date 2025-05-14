@@ -68,7 +68,7 @@
 //     }, []);
 
 //     // console.log("selectedMultiBuyTier",selectedMultiBuyTier);
-    
+
 
 //     const { token, user: currentUser } = useSelector((state) => state.auth);
 //     const dispatch = useDispatch();
@@ -275,7 +275,7 @@
 //         dispatch(addToBasket(productData));
 //         setIsModalVisible(true);
 //       };
-      
+
 
 //     const handleCloseModal = () => setIsModalVisible(false);
 //     const handleQuantityChange = (id, newQty) =>
@@ -636,7 +636,7 @@
 //                             <PaymentDeliveryReturns
 //                                 secondaryData={product?.secondary_data}
 //                                 dispatchTime={product?.dispatch_time_in_days}
-                            
+
 //                             />
 //                         </div>
 //                     </aside>
