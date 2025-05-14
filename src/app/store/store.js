@@ -5,6 +5,7 @@ import basketReducer from './slices/cartSlice';
 import userReducer from './slices/userSlice'
 import toggleReducer from './slices/toggleSlice'
 import countryReducer from './slices/countrySlice'
+import reviewsReducer from './slices/reviewsSlice'
 
 export const store = configureStore({
     reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
         auth: userReducer,
         toggle: toggleReducer,
         country: countryReducer,
+        reviews: reviewsReducer,
 
     },
 });

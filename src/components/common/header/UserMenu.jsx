@@ -96,24 +96,7 @@ export default function UserMenu() {
                   <span className="ml-2">Dashboard</span>
                 </div>
               </Link>
-              <Link href="/purchases">
-                <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
-                  <MdOutlineReceipt className="h-5 w-5 text-gray-500" />
-                  <span className="ml-2">Purchases History</span>
-                </div>
-              </Link>
-              <Link href="/sales">
-                <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
-                  <IoMdCash className="h-5 w-5 text-gray-500" />
-                  <span className="ml-2">Sales History</span>
-                </div>
-              </Link>
-              <Link href="/sidebar">
-                <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
-                  <BsFillBookmarkHeartFill className="h-5 w-5 text-gray-500" />
-                  <span className="ml-2">Sidebar</span>
-                </div>
-              </Link>
+              
 
               <Link href="/dashboard/create-help-blog/">
                 <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
@@ -133,12 +116,7 @@ export default function UserMenu() {
                   <span className="ml-2">Profile Settings</span>
                 </div>
               </Link>
-              <Link href="/help">
-                <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
-                  <IoInformationCircleOutline className="h-5 w-5 text-gray-500" />
-                  <span className="ml-2">Help Center</span>
-                </div>
-              </Link>
+             
               <Link href="/dashboard/all-orders">
                 <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
                   <BsSpeedometer2 className="h-5 w-5 text-gray-500" />
@@ -163,24 +141,14 @@ export default function UserMenu() {
                   <span className="ml-2">Users</span>
                 </div>
               </Link>
-              <Link href="/admin/users">
-                <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
-                  <FaHouseChimney className="h-5 w-5 text-gray-500" />
-                  <span className="ml-2">Homepage Items</span>
-                </div>
-              </Link>
+         
               <Link href="/admin/users">
                 <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
                   <BsBarChartSteps className="h-5 w-5 text-gray-500" />
                   <span className="ml-2">Homepage Data</span>
                 </div>
               </Link>
-              <Link href="/price-updated">
-                <div className="flex items-center py-2 cursor-pointer hover:bg-gray-100 rounded">
-                  <IoMdCash className="h-5 w-5 text-gray-500" />
-                  <span className="ml-2">Price Updated</span>
-                </div>
-              </Link>
+              
             </div>
             <hr className="my-2" />
 
