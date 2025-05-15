@@ -87,6 +87,18 @@ export const menuItems = [
     ]
   },
   {
+    label: "Revews",
+    route: "/new-dashboard/lavel",
+    icon: FaClipboardList,
+    children: [
+      { label: "Panding", route: "/new-dashboard/panding" },
+      // { label: "Processing", route: "/new-dashboard/my-orders/processing" },
+      // { label: "Unpaid", route: "/new-dashboard/my-orders/unpaid" },
+      // { label: "Returns & Cancelled", route: "/new-dashboard/my-orders/return-cancelled" },
+     
+    ]
+  },
+  {
     label: "Promotions",
     route: "/promotions",
     icon: FaTag,
