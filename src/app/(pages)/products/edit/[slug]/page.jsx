@@ -15,6 +15,8 @@ import Conditon from '@/components/inpute/Conditon';
 import Brand from '@/components/inpute/Brand';
 import PriceSection from '@/components/inpute/PriceSection';
 import Promotions from '@/components/inpute/Promotions';
+import SellersPaymentTerms from '@/components/inpute/SellersPaymentTerms';
+
 import DeliverySection from '@/components/inpute/DeliverySection';
 import CancellationReturns from '@/components/inpute/CancellationReturns';
 import ApprovalNotesSelect from '@/components/inpute/ApprovalNotesSelect';
@@ -184,6 +186,7 @@ export default function EditProductPage({ params }) {
             brand: product?.brand?.id || '',
             category: product?.category?.id || '',
             condition: product?.condition?.id || '',
+            seller_payment_terms: product?.seller_payment_terms || '',
         },
         onSubmit: async values => {
             const formData = new FormData();
@@ -232,6 +235,7 @@ export default function EditProductPage({ params }) {
                 );
             }
             formData.append('approval_notes', values.approval_notes);
+            formData.append('seller_payment_terms', values.seller_payment_terms);
             const existingUrls = selectedImages
                 .filter(img => !img.file)
                 .map(img => img.data_url);
@@ -385,6 +389,8 @@ export default function EditProductPage({ params }) {
                     <PriceSection formik={formik} />
                     <DeliverySection formik={formik} />
                     <Promotions formik={formik} />
+                    {/* ← Insert Seller’s Payment Terms here */}
+                    <SellersPaymentTerms formik={formik} />
                     <CancellationReturns formik={formik} />
                     <ApprovalNotesSelect formik={formik} />
 

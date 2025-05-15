@@ -69,9 +69,9 @@ export default function ProductCard({ product }) {
         )}
 
         {/* Favorite Icon */}
-        <div className="absolute top-2 right-2 bg-gray-200 border p-[5px] rounded-full">
+        {/* <div className="absolute top-2 right-2 bg-gray-200 border p-[5px] rounded-full">
           <FaHeart className="w-4 lg:w-4 h-4 lg:h-4 text-gray-900" />
-        </div>
+        </div> */}
 
         {/* Sales Badge - only shown when a sale is active */}
         {isOnSaleActive && (

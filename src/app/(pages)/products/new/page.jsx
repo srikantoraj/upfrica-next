@@ -15,11 +15,21 @@ import { useSelector } from "react-redux";
 import PriceSection from "@/components/inpute/PriceSection";
 import Promotions from "@/components/inpute/Promotions";
 import DeliverySection from "@/components/inpute/DeliverySection";
+import SellersPaymentTerms from '@/components/inpute/SellersPaymentTerms';
+
 import CancellationReturns from "@/components/inpute/CancellationReturns";
 import ApprovalNotesSelect from "@/components/inpute/ApprovalNotesSelect";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+
+
+
+const defaultPaymentTerms = `
+  <p>✅ Pay Online (Available at checkout)</p>
+  <p>❌ Pay on Delivery (Not available)</p>
+  <p>❌ Pay on Collection (Not available)</p>
+`;
 const AddNewProducts = () => {
   const { user, token } = useSelector((state) => state.auth);
   const router = useRouter();
@@ -84,6 +94,7 @@ const AddNewProducts = () => {
       autoCancelUnpaidHours: 48,
       abuseFlagThreshold: 5,
       approval_notes: "",
+      seller_payment_terms: defaultPaymentTerms,
     },
     onSubmit: async (values) => {
       const formData = new FormData();
@@ -126,6 +137,7 @@ const AddNewProducts = () => {
       }
       // Approval notes
       formData.append("approval_notes", values.approval_notes);
+      formData.append('seller_payment_terms', values.seller_payment_terms);
       // Cancellation policy
       let cancel = values.cancellable ? "yes" : "no";
       formData.append("cancellable", cancel);
@@ -422,6 +434,7 @@ const AddNewProducts = () => {
         <PriceSection formik={formik} />
         <DeliverySection formik={formik} />
         <Promotions formik={formik} />
+        <SellersPaymentTerms formik={formik} />
         <CancellationReturns formik={formik} />
         <ApprovalNotesSelect formik={formik} />
 

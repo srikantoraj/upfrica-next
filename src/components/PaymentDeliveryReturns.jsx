@@ -1,7 +1,7 @@
 // components/PaymentDeliveryReturns.js
 import React from 'react';
 
-const PaymentDeliveryReturns = ({ secondaryData, dispatchTime }) => {
+const PaymentDeliveryReturns = ({ secondaryData, dispatchTime, seller_payment_terms = '' }) => {
   const { cancellable, cancellation_policy } = secondaryData || {};
 
 
@@ -51,15 +51,19 @@ const PaymentDeliveryReturns = ({ secondaryData, dispatchTime }) => {
         <p className="text-base lg:text-lg font-semibold mb-1">
           Seller's Payment Terms:
         </p>
-        <ul className="space-y-1 text-base lg:text-lg">
+        {/* <ul className="space-y-1 text-base lg:text-lg">
           <li>✅ Pay Online (Available at checkout)</li>
           <li>❌ Pay on Delivery (Not available)</li>
           <li>✅ Pay &amp; Collect (Available at checkout)</li>
-        </ul>
+        </ul> */}
+        <div
+          className='space-y-1 text-base lg:text-lg'
+          dangerouslySetInnerHTML={{ __html: seller_payment_terms }}
+        />
         <div className="mt-2">
-          <a href="#" className="text-blue-600 underline text-sm lg:text-base">
+          <span className="text-blue-600 underline text-sm lg:text-base">
             See details
-          </a>
+          </span>
           <i className="bi bi-info-circle ml-1 align-middle" />
         </div>
       </div>

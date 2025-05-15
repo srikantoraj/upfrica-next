@@ -1,34 +1,46 @@
 
-// "use client";
-// import { useCallback } from "react";
-// import React, { useEffect, useState } from "react";
+
+// 'use client'
+
+// import React, { useEffect, useState, useCallback } from "react";
 // import Link from "next/link";
+// import { useDispatch, useSelector } from "react-redux";
+// import { useRouter, usePathname } from "next/navigation";
+// import { MdArrowRightAlt } from "react-icons/md";
+// import {
+//     FaMinus,
+//     FaPlus,
+//     FaRegHeart,
+//     FaEdit,
+//     FaStar,
+//     FaStarHalfAlt,
+//     FaRegStar,
+// } from "react-icons/fa";
+
 // import MultiBuySection from "../MultiBuySection";
 // import BasketModal from "../BasketModal";
 // import PaymentDeliveryReturns from "../PaymentDeliveryReturns";
 // import DescriptionAndReviews from "../DescriptionAndReviews";
 // import RecentlyViewed from "../RecentlyViewed";
 // import ProductSlider from "./ProductSlider";
-// import InfoPopover from "../InfoPopover";
 // import DirectBuyPopup from "../DirectBuyPopup";
-// import { convertPrice } from "@/app/utils/utils";
-// import { useDispatch, useSelector } from "react-redux";
-// import { addToBasket, updateQuantity, removeFromBasket } from "../../app/store/slices/cartSlice";
-// import { MdArrowRightAlt } from "react-icons/md";
-// import { FaMinus, FaPlus, FaRegHeart, FaSearch, FaEdit } from "react-icons/fa";
-// import { ImInfo } from "react-icons/im";
-// import { useRouter, usePathname } from "next/navigation";
 
-// /**
-//  * Breadcrumbs Component
-//  */
+// import { convertPrice } from "@/app/utils/utils";
+// import { addToBasket, updateQuantity, removeFromBasket } from "../../app/store/slices/cartSlice";
+// import { selectSelectedCountry } from "@/app/store/slices/countrySlice";
+// import {
+//     fetchReviewsStart,
+//     fetchReviewsSuccess,
+//     fetchReviewsFailure,
+// } from "@/app/store/slices/reviewsSlice";
+
 // const Breadcrumbs = ({ categoryTree, title }) => {
 //     const flattenCategoryChain = (node) => {
 //         const chain = [];
 //         let current = node;
 //         while (current) {
 //             chain.push(current);
-//             if (current.children && current.children.length > 0) {
+//             if (current.children && current.children.length) {
 //                 current = current.children[0];
 //             } else {
 //                 break;
@@ -41,9 +53,7 @@
 
 //     return (
 //         <div className="flex items-center space-x-2 mb-4 overflow-x-auto whitespace-nowrap scrollbar-thin text-sm text-gray-500 scrollbar-hide">
-//             <Link href="/">
-//                 <span className="text-blue-600 hover:underline">Upfrica</span>
-//             </Link>
+//             <Link href="/"><span className="text-blue-600 hover:underline">Upfrica</span></Link>
 //             {categoryChain.map((cat) => (
 //                 <React.Fragment key={cat.id}>
 //                     <span className="text-blue-600">&gt;</span>
@@ -59,7 +69,60 @@
 // };
 
 // export default function ProductDetailSection({ product, relatedProducts }) {
-//     // console.log("detles product", product);
+//     const dispatch = useDispatch();
+//     const router = useRouter();
+//     const currentPath = usePathname();
+
+//     // Auth, basket, currency
+//     const { token, user: currentUser } = useSelector((s) => s.auth);
+//     const basket = useSelector((s) => s.basket.items) || [];
+//     const exchangeRates = useSelector((s) => s.exchangeRates.rates);
+//     const selectedCountry = useSelector(selectSelectedCountry);
+//     const symbol = selectedCountry?.symbol ?? "₵";
+//     const currencyCode = selectedCountry?.code ?? "GHS";
+
+//     // Reviews slice
+//     const {
+//         summary: { average_rating, review_count, rating_percent },
+//         loading: reviewsLoading,
+//         error: reviewsError,
+//         reviews: reviewsList,
+//     } = useSelector((s) => s.reviews);
+
+//     // Fetch reviews on mount / when product changes
+//     useEffect(() => {
+//         if (!product?.id) return;
+//         dispatch(fetchReviewsStart());
+//         fetch(`/api/products/${product.id}/reviews`)
+//             .then((res) => res.json())
+//             .then((data) => {
+//                 dispatch(
+//                     fetchReviewsSuccess({
+//                         results: data.reviews,
+//                         average_rating: data.average_rating,
+//                         review_count: data.review_count,
+//                         rating_percent: data.rating_percent,
+//                     })
+//                 );
+//             })
+//             .catch((err) => dispatch(fetchReviewsFailure(err.toString())));
+//     }, [dispatch, product?.id]);
+
+//     // Helpers
+//     const renderStars = (rating) => {
+//         const full = Math.floor(rating);
+//         const half = rating - full >= 0.5;
+//         const empty = 5 - full - (half ? 1 : 0);
+//         return (
+//             <>
+//                 {[...Array(full)].map((_, i) => <FaStar key={`full${i}`} />)}
+//                 {half && <FaStarHalfAlt />}
+//                 {[...Array(empty)].map((_, i) => <FaRegStar key={`empty${i}`} />)}
+//             </>
+//         );
+//     };
+
+//     // Multi-buy tier
 //     const [selectedMultiBuyTier, setSelectedMultiBuyTier] = useState(null);
 //     const handleTierSelect = useCallback((tier) => {
 //         setSelectedMultiBuyTier((prev) =>
@@ -67,22 +130,13 @@
 //         );
 //     }, []);
 
-//     // console.log("selectedMultiBuyTier",selectedMultiBuyTier);
-
-
-//     const { token, user: currentUser } = useSelector((state) => state.auth);
-//     const dispatch = useDispatch();
-//     const currentPath = usePathname();
-//     const basket = useSelector((state) => state.basket.items) || [];
-//     const exchangeRates = useSelector((state) => state.exchangeRates.rates);
-//     const router = useRouter();
-
-//     // Component state
+//     // Quantity & modals
 //     const [loading, setLoading] = useState(false);
 //     const [quantity, setQuantity] = useState(1);
 //     const [isModalVisible, setIsModalVisible] = useState(false);
 //     const [isDirectBuyPopupVisible, setIsDirectBuyPopupVisible] = useState(false);
 
+//     // Destructure product props
 //     const {
 //         id,
 //         title,
@@ -91,99 +145,82 @@
 //         sale_price_cents,
 //         price_currency,
 //         sale_end_date,
-//         sale_start_date,
 //         product_video,
 //         product_images,
 //         condition,
 //         category,
 //         shop,
 //         user,
-//         product_quantity,
-//         variants
+//         variants,
 //     } = product || {};
 
-//     // Variant selection state
+//     // Variant defaults
 //     const [selectedVariants, setSelectedVariants] = useState({});
 //     useEffect(() => {
-//         if (variants && variants.length > 0) {
+//         if (variants?.length) {
 //             const defaults = {};
-//             variants.forEach((variant) => {
-//                 if (variant.values && variant.values.length > 0) {
-//                     defaults[variant.id] = variant.values[0];
-//                 }
+//             variants.forEach((v) => {
+//                 if (v.values?.length) defaults[v.id] = v.values[0];
 //             });
 //             setSelectedVariants(defaults);
 //         }
 //     }, [variants]);
 
-//     // Emit color change for slider
+//     // Color dispatch for slider
 //     useEffect(() => {
-//         if (variants && variants.length > 0) {
-//             const colorVariant = variants.find((v) =>
-//                 v.label.toLowerCase().includes("color")
+//         const colorVariant = variants?.find((v) =>
+//             v.label.toLowerCase().includes("color")
+//         );
+//         if (colorVariant && selectedVariants[colorVariant.id]) {
+//             window.dispatchEvent(
+//                 new CustomEvent("updateSelectedColor", {
+//                     detail: selectedVariants[colorVariant.id].value.toLowerCase(),
+//                 })
 //             );
-//             if (colorVariant && selectedVariants[colorVariant.id]) {
-//                 window.dispatchEvent(
-//                     new CustomEvent("updateSelectedColor", {
-//                         detail: selectedVariants[colorVariant.id].value.toLowerCase(),
-//                     })
-//                 );
-//             }
 //         }
 //     }, [selectedVariants, variants]);
 
-//     // SKU and additional pricing
+//     // SKU & add-ons
 //     const sku =
 //         "SKU-" +
 //         Object.values(selectedVariants)
 //             .map((opt) => opt.value.replace(/\s+/g, "-").toUpperCase())
 //             .join("-");
 //     const totalAdditionalCents = Object.values(selectedVariants).reduce(
-//         (acc, opt) => acc + (opt.additional_price_cents || 0),
+//         (sum, opt) => sum + (opt.additional_price_cents || 0),
 //         0
 //     );
 
-//     // Sale logic & prices
-//     const saleEndDate = sale_end_date ? new Date(sale_end_date) : null;
+//     // Sale logic & pricing
+//     const saleEnd = sale_end_date ? new Date(sale_end_date) : null;
 //     const now = new Date();
-//     const saleActive = saleEndDate && saleEndDate > now;
-
-//     const basePriceCents = saleActive ? sale_price_cents : price_cents;
-//     const activePriceCents = basePriceCents + totalAdditionalCents;
+//     const saleActive = saleEnd && saleEnd > now && sale_price_cents > 0;
+//     const baseCents = saleActive ? sale_price_cents : price_cents;
+//     const activePriceCents = baseCents + totalAdditionalCents;
 //     const originalPriceCents = price_cents + totalAdditionalCents;
 
 //     const activePrice = convertPrice(
 //         activePriceCents / 100,
 //         price_currency,
-//         "GHS",
+//         currencyCode,
 //         exchangeRates
 //     ).toFixed(2);
-
 //     const originalPrice = saleActive
 //         ? convertPrice(
 //             originalPriceCents / 100,
 //             price_currency,
-//             "GHS",
+//             currencyCode,
 //             exchangeRates
 //         ).toFixed(2)
 //         : null;
 
-//     // Countdown state
-//     const [timeRemaining, setTimeRemaining] = useState({
-//         days: 0,
-//         hours: 0,
-//         minutes: 0,
-//         seconds: 0,
-//     });
-
-
+//     // Countdown
+//     const [timeRemaining, setTimeRemaining] = useState({});
 //     useEffect(() => {
-//         if (!sale_end_date) return;                // depend on the *string* prop
-
-//         const saleEnd = new Date(sale_end_date);   // build the Date inside the effect
-
-//         const update = () => {
-//             const diff = saleEnd - new Date();
+//         if (!sale_end_date) return;
+//         const end = new Date(sale_end_date);
+//         const tick = () => {
+//             const diff = end - new Date();
 //             setTimeRemaining({
 //                 days: Math.floor(diff / 86400000),
 //                 hours: Math.floor((diff % 86400000) / 3600000),
@@ -191,17 +228,16 @@
 //                 seconds: Math.floor((diff % 60000) / 1000),
 //             });
 //         };
+//         tick();
+//         const iv = setInterval(tick, 1000);
+//         return () => clearInterval(iv);
+//     }, [sale_end_date]);
 
-//         update();
-//         const id = setInterval(update, 1000);
-//         return () => clearInterval(id);
-//     }, [sale_end_date]);  // 
-
-//     // Media items (video first, then images)
+//     // Media items
 //     const mediaItems = product_video
 //         ? [
 //             { type: "video", src: product_video },
-//             ...product_images.map((img) => ({ type: "image", src: img })),
+//             ...product_images.map((src) => ({ type: "image", src })),
 //         ]
 //         : product_images;
 
@@ -221,72 +257,41 @@
 //         }
 //         setLoading(true);
 //         try {
-//             const response = await fetch(
-//                 "https://media.upfrica.com/api/wishlist/",
-//                 {
-//                     method: "POST",
-//                     headers: {
-//                         "Authorization": "Token " + token,
-//                         "Content-Type": "application/json",
-//                     },
-//                     body: JSON.stringify({ product_id: id, note: "" }),
-//                 }
-//             );
-//             const res = await response.json();
-//             console.log(res)
-//         } catch (error) {
-//             console.error(error);
+//             await fetch("https://media.upfrica.com/api/wishlist/", {
+//                 method: "POST",
+//                 headers: {
+//                     Authorization: "Token " + token,
+//                     "Content-Type": "application/json",
+//                 },
+//                 body: JSON.stringify({ product_id: id, note: "" }),
+//             });
+//         } catch (e) {
+//             console.error(e);
 //         } finally {
 //             setLoading(false);
 //         }
 //     };
 
-//     // console.log("quantity",quantity);
-
-
-//     // const handleAddToBasket = () => {
-//     //     const productData = {
-//     //         id,
-//     //         title,
-//     //         price_cents: activePriceCents,
-//     //         quantity,
-//     //         image: product_images,
-//     //         variants: selectedVariants,
-//     //         sku,
-//     //     };
-//     //     dispatch(addToBasket(productData));
-//     //     setIsModalVisible(true);
-//     // };
-
-
 //     const handleAddToBasket = () => {
-//         const productData = {
-//           id,
-//           title,
-//           price_cents: activePriceCents,
-//           quantity: selectedMultiBuyTier
-//             ? selectedMultiBuyTier.minQuantity  // টিয়ার অনুযায়ী qty
-//             : quantity,                         // না থাকলে যেটা default
-//           image: product_images,
-//           variants: selectedVariants,
-//           sku,
-//           // চাইলে price_each: selectedMultiBuyTier?.price
-//         };
-//         dispatch(addToBasket(productData));
+//         dispatch(
+//             addToBasket({
+//                 id,
+//                 title,
+//                 price_cents: activePriceCents,
+//                 quantity: selectedMultiBuyTier
+//                     ? selectedMultiBuyTier.minQuantity
+//                     : quantity,
+//                 image: product_images,
+//                 variants: selectedVariants,
+//                 sku,
+//             })
+//         );
 //         setIsModalVisible(true);
-//       };
-
-
+//     };
 //     const handleCloseModal = () => setIsModalVisible(false);
-//     const handleQuantityChange = (id, newQty) =>
-//         dispatch(updateQuantity({ id, quantity: newQty }));
-//     const handleRemoveProduct = (id) => dispatch(removeFromBasket(id));
-
-
-
-
-//     // console.log(quantity);
-
+//     const handleQuantityChange = (pid, q) =>
+//         dispatch(updateQuantity({ id: pid, quantity: q }));
+//     const handleRemoveProduct = (pid) => dispatch(removeFromBasket(pid));
 
 //     return (
 //         <section className="pt-6 md:pt-8 lg:pt-10">
@@ -294,29 +299,32 @@
 
 //             <div data-sticky-container>
 //                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-//                     {/* LEFT CONTENT */}
+//                     {/* LEFT */}
 //                     <div className="order-1 xl:col-span-7">
 //                         <Breadcrumbs categoryTree={category?.category_tree} title={title} />
-
 //                         <section className="mt-2">
 //                             <ProductSlider mediaItems={mediaItems} />
 //                         </section>
 
 //                         {/* MOBILE CTA */}
 //                         <section className="block xl:hidden mt-5">
-//                             < Link href={`/products/edit/${product?.slug}`} className="flex items-center gap-2">
+//                             <Link
+//                                 href={`/products/edit/${product?.slug}`}
+//                                 className="flex items-center gap-2"
+//                             >
 //                                 <FaEdit className="h-4 w-4 text-violet-700" />
 //                                 <span className="text-violet-700 hover:underline">Edit</span>
 //                             </Link>
-//                             <div className="bg-white space-y-4 p-4">
+//                             <div className="bg-white p-4 space-y-4">
 //                                 <h1 className="heading-lg text-base md:text-lg lg:text-xl font-bold text-gray-800">
 //                                     {title}
 //                                 </h1>
 //                                 {shop && (
 //                                     <div className="text-sm text-gray-500">
 //                                         <Link href={`/shops/${shop.slug}`}>
-//                                             <b>4480 sold</b> — Visit the{" "}
-//                                             <b className="text-[#8710D8]">{shop.name}</b> Shop — Accra, GH
+//                                             <b>{product?.secondary_data?.sold_count || 'No'} sold</b> — Visit{" "}
+//                                             <b className="text-[#8710D8]">{shop.name}</b> Shop — Accra,
+//                                             GH
 //                                         </Link>
 //                                     </div>
 //                                 )}
@@ -325,14 +333,19 @@
 //                                 <div>
 //                                     {saleActive ? (
 //                                         <div className="flex items-baseline space-x-2">
-//                                             <span className="text-2xl font-bold text-green-700 tracking-tight">
-//                                                 ₵{activePrice}
+//                                             <span className="text-2xl font-bold text-green-700">
+//                                                 {symbol}
+//                                                 {activePrice}
 //                                             </span>
-//                                             <del className="text-gray-400">₵{originalPrice}</del>
+//                                             <del className="text-gray-400">
+//                                                 {symbol}
+//                                                 {originalPrice}
+//                                             </del>
 //                                         </div>
 //                                     ) : (
-//                                         <span className="text-2xl font-bold text-green-700 tracking-tight">
-//                                             ₵{activePrice}
+//                                         <span className="text-2xl font-bold text-green-700">
+//                                             {symbol}
+//                                             {activePrice}
 //                                         </span>
 //                                     )}
 //                                     {saleActive && (
@@ -354,49 +367,48 @@
 //                                     selectedTier={selectedMultiBuyTier}
 //                                 />
 
-//                                 {/* Variant selectors */}
+//                                 {/* Variants */}
 //                                 <div className="space-y-4 my-4">
-//                                     {variants &&
-//                                         variants.map((variant) =>
-//                                             variant.values && variant.values.length > 0 ? (
-//                                                 <div key={variant.id}>
-//                                                     <p className="text-sm font-medium text-gray-700 mb-1">
-//                                                         {variant.label}
-//                                                     </p>
-//                                                     <div className="flex flex-wrap gap-2">
-//                                                         {variant.values.map((val) => (
-//                                                             <button
-//                                                                 key={val.id}
-//                                                                 onClick={() =>
-//                                                                     setSelectedVariants((prev) => ({
-//                                                                         ...prev,
-//                                                                         [variant.id]: val,
-//                                                                     }))
-//                                                                 }
-//                                                                 className={`px-4 ${val.additional_price_cents === 0 && "py-2"
-//                                                                     } border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
-//                                                                         ? "border-black font-semibold"
-//                                                                         : "border-gray-300 text-gray-700"
-//                                                                     }`}
-//                                                             >
-//                                                                 <div>{val.value}</div>
-//                                                                 {val.additional_price_cents > 0 && (
-//                                                                     <div className="text-gray-900 text-[10px]">
-//                                                                         +₵
-//                                                                         {convertPrice(
-//                                                                             val.additional_price_cents / 100,
-//                                                                             price_currency,
-//                                                                             "GHS",
-//                                                                             exchangeRates
-//                                                                         ).toFixed(2)}
-//                                                                     </div>
-//                                                                 )}
-//                                                             </button>
-//                                                         ))}
-//                                                     </div>
+//                                     {variants?.map((variant) =>
+//                                         variant.values?.length ? (
+//                                             <div key={variant.id}>
+//                                                 <p className="text-sm font-medium text-gray-700 mb-1">
+//                                                     {variant.label}
+//                                                 </p>
+//                                                 <div className="flex flex-wrap gap-2">
+//                                                     {variant.values.map((val) => (
+//                                                         <button
+//                                                             key={val.id}
+//                                                             onClick={() =>
+//                                                                 setSelectedVariants((prev) => ({
+//                                                                     ...prev,
+//                                                                     [variant.id]: val,
+//                                                                 }))
+//                                                             }
+//                                                             className={`px-4 ${val.additional_price_cents === 0 && "py-2"
+//                                                                 } border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
+//                                                                     ? "border-black font-semibold"
+//                                                                     : "border-gray-300 text-gray-700"
+//                                                                 }`}
+//                                                         >
+//                                                             {val.value}
+//                                                             {val.additional_price_cents > 0 && (
+//                                                                 <div className="text-gray-900 text-[10px]">
+//                                                                     +{symbol}
+//                                                                     {convertPrice(
+//                                                                         val.additional_price_cents / 100,
+//                                                                         price_currency,
+//                                                                         currencyCode,
+//                                                                         exchangeRates
+//                                                                     ).toFixed(2)}
+//                                                                 </div>
+//                                                             )}
+//                                                         </button>
+//                                                     ))}
 //                                                 </div>
-//                                             ) : null
-//                                         )}
+//                                             </div>
+//                                         ) : null
+//                                     )}
 //                                 </div>
 
 //                                 <div className="grid gap-2">
@@ -428,8 +440,8 @@
 //                                 <PaymentDeliveryReturns
 //                                     secondaryData={product?.secondary_data}
 //                                     dispatchTime={product?.dispatch_time_in_days}
+//                                     seller_payment_terms={product?.seller_payment_terms}
 //                                 />
-
 //                             </div>
 //                         </section>
 
@@ -439,101 +451,125 @@
 //                             user={user}
 //                             shop={shop}
 //                             product={product}
+//                             reviews={reviewsList}
+//                             loading={reviewsLoading}
+//                             error={reviewsError}
 //                         />
 //                     </div>
-//                     {/* END LEFT CONTENT */}
 
 //                     {/* RIGHT SIDEBAR */}
 //                     <aside className="order-2 hidden xl:block xl:col-span-5">
-//                         <div className="sticky top-0 space-y-4 p-5">
-//                             {(
-//                                 currentUser?.username === product?.user?.username ||
-//                                 currentUser?.admin === true
-//                             ) && (
-//                                     <Link
-//                                         href={`/products/edit/${product?.slug}`}
-//                                         className="flex items-center gap-2"
-//                                     >
-//                                         <FaEdit className="h-4 w-4 text-violet-700" />
-//                                         <span className="text-violet-700 hover:underline">Edit</span>
-//                                     </Link>
-//                                 )}
+//                         <div className="sticky top-0 p-5 space-y-4">
+//                             {(currentUser?.username === user?.username || currentUser?.admin) && (
+//                                 <Link
+//                                     href={`/products/edit/${product?.slug}`}
+//                                     className="flex items-center gap-2"
+//                                 >
+//                                     <FaEdit className="h-4 w-4 text-violet-700" />
+//                                     <span className="text-violet-700 hover:underline">Edit</span>
+//                                 </Link>
+//                             )}
+
 //                             <h1 className="heading-lg text-lg md:text-xl lg:text-2xl font-semibold text-gray-800">
 //                                 {title}
 //                             </h1>
 //                             {shop && (
 //                                 <div className="text-sm text-gray-500">
-//                                     <Link href={`/shops/${shop?.slug}`}>
-//                                         <b>4480 sold</b> | Sold by the <b className="text-[#8710D8]">{shop.name}</b> Shop — Accra, GH
+//                                     <Link href={`/shops/${shop.slug}`}>
+//                                         <b>{product?.secondary_data?.sold_count || 'No'} sold</b> — Visit{" "}
+//                                         <b className="text-[#8710D8]">{shop.name}</b> — Accra, GH
 //                                     </Link>
 //                                 </div>
 //                             )}
+
+//                             {/* ←— REVIEW SUMMARY */}
 //                             <div className="flex items-center text-sm text-yellow-400 gap-2">
-//                                 <MdArrowRightAlt className="h-4 w-4" />
-//                                 <span>4.5</span>
-//                                 <span>★★★★☆</span>
-//                                 <span className="underline text-blue-600">595 Reviews</span>
+                                
+
+//                                 {review_count > 0 ? (
+//                                     <>
+                                        
+//                                         <span>{average_rating.toFixed(1)}</span>
+//                                         <span className="flex">{renderStars(average_rating)}</span>
+//                                         <button
+//                                             className="underline text-blue-600"
+//                                             onClick={() => {
+//                                                 /* scroll to reviews list */
+//                                             }}
+//                                         >
+//                                             {review_count} Reviews
+//                                         </button>
+//                                     </>
+//                                 ) : (
+//                                     /* no reviews fallback */
+//                                         <span className="text-yellow-400"></span>
+//                                 )}
+
 //                                 <span className="text-green-600">✅ Verified Seller</span>
 //                             </div>
 
-//                             {/* Dynamic Variant Selectors for Desktop */}
+//                             {/* Variants for desktop */}
 //                             <div className="space-y-4 my-4">
-
-//                                 {(
-//                                     currentUser?.username === product?.user?.username ||
-//                                     currentUser?.admin === true
-//                                 ) && (
-//                                         <Link
-//                                             href={`/products/edit/variants/${product?.id}`}
-//                                             className="flex items-center gap-2"
-//                                         >
-//                                             <FaEdit className="h-4 w-4 text-violet-700" />
-//                                             <span className="text-violet-700 hover:underline">
-//                                                 Edit Variants
-//                                             </span>
-//                                         </Link>
-//                                     )}
-//                                 {variants && variants.length > 0 && (
+//                                 {(currentUser?.username === user?.username || currentUser?.admin) && (
+//                                     <Link
+//                                         href={`/products/edit/variants/${product?.id}`}
+//                                         className="flex items-center gap-2"
+//                                     >
+//                                         <FaEdit className="h-4 w-4 text-violet-700" />
+//                                         <span className="text-violet-700 hover:underline">
+//                                             Edit Variants
+//                                         </span>
+//                                     </Link>
+//                                 )}
+//                                 {variants?.length > 0 && (
 //                                     <>
 //                                         <hr className="my-3 border-gray-200" />
-//                                         {/* <Link href={`/products/edit/variants/${product?.id}`} className="flex items-center gap-2">
-//                                         <FaEdit className="h-4 w-4 text-violet-700" />
-//                                         <span className="text-violet-700 hover:underline">Edit Variants</span>
-//                                     </Link> */}
 //                                         {variants.map((variant) => (
-//                                             variant.values && variant.values.length > 0 && (
-//                                                 <div key={variant.id}>
-//                                                     <div className="flex items-center justify-between">
-//                                                         <p className="text-sm font-medium text-gray-700 mb-1">
-//                                                             {variant.label}
-//                                                         </p>
-//                                                         <span className="text-sm text-gray-400">{sku}</span>
-//                                                     </div>
-//                                                     <div className="flex flex-wrap gap-2">
-//                                                         {variant.values.map((val) => (
+//                                             <div key={variant.id}>
+//                                                 <div className="flex items-center justify-between">
+//                                                     <p className="text-sm font-medium text-gray-700 mb-1">
+//                                                         {variant.label}
+//                                                     </p>
+//                                                     <span className="text-sm text-gray-400">{sku}</span>
+//                                                 </div>
+//                                                 <div className="flex flex-wrap gap-2">
+//                                                     {variant.values.map((val) => {
+//                                                         const isSel =
+//                                                             selectedVariants[variant.id]?.id === val.id;
+//                                                         return (
 //                                                             <button
 //                                                                 key={val.id}
 //                                                                 onClick={() =>
-//                                                                     setSelectedVariants(prev => ({
+//                                                                     setSelectedVariants((prev) => ({
 //                                                                         ...prev,
 //                                                                         [variant.id]: val,
 //                                                                     }))
 //                                                                 }
-//                                                                 className={`px-4 ${val.additional_price_cents == 0 && 'py-2'} border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
-//                                                                     ? "border-black font-semibold"
-//                                                                     : "border-gray-300 text-gray-700"
+//                                                                 className={`px-4 ${val.additional_price_cents == 0 && "py-2"
+//                                                                     } border rounded-full text-sm ${isSel
+//                                                                         ? "border-black font-semibold"
+//                                                                         : "border-gray-300 text-gray-700"
 //                                                                     }`}
 //                                                             >
-//                                                                 <div>{val.value}</div>
-//                                                                 <div className=" text-gray-900 text-[10px]">
-//                                                                     {val.additional_price_cents > 0 &&
-//                                                                         ` (+₵${(convertPrice(val.additional_price_cents / 100, price_currency, "GHS", exchangeRates)).toFixed(2)})`}
-//                                                                 </div>
+//                                                                 {val.value}
+//                                                                 {val.additional_price_cents > 0 && (
+//                                                                     <div className="text-gray-900 text-[10px]">
+//                                                                         (+
+//                                                                         {symbol}
+//                                                                         {convertPrice(
+//                                                                             val.additional_price_cents / 100,
+//                                                                             price_currency,
+//                                                                             currencyCode,
+//                                                                             exchangeRates
+//                                                                         ).toFixed(2)}
+//                                                                         )
+//                                                                     </div>
+//                                                                 )}
 //                                                             </button>
-//                                                         ))}
-//                                                     </div>
+//                                                         );
+//                                                     })}
 //                                                 </div>
-//                                             )
+//                                             </div>
 //                                         ))}
 //                                     </>
 //                                 )}
@@ -541,30 +577,38 @@
 //                             <hr className="my-3 border-gray-200" />
 
 //                             {/* Price & countdown */}
-//                             <div className="gap-4">
+//                             <div>
 //                                 {saleActive ? (
 //                                     <div className="flex items-baseline space-x-2">
-//                                         <span className="text-3xl font-bold text-green-700 tracking-tight">
-//                                             ₵{activePrice}
+//                                         <span className="text-3xl font-bold text-green-700">
+//                                             {symbol}
+//                                             {activePrice}
 //                                         </span>
-//                                         <del className="text-gray-400 text-sm">₵{originalPrice}</del>
+//                                         <del className="text-gray-400 text-sm">
+//                                             {symbol}
+//                                             {originalPrice}
+//                                         </del>
 //                                     </div>
 //                                 ) : (
-//                                     <span className="text-3xl font-bold text-green-700 tracking-tight">
-//                                         ₵{activePrice}
+//                                     <span className="text-3xl font-bold text-green-700">
+//                                         {symbol}
+//                                         {activePrice}
 //                                     </span>
 //                                 )}
 //                             </div>
 //                             {saleActive && (
 //                                 <div className="text-sm text-red-700 font-medium mt-1">
 //                                     Sale ends in{" "}
-//                                     {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ""}
+//                                     {timeRemaining.days > 0
+//                                         ? `${timeRemaining.days}d `
+//                                         : ""}
 //                                     {String(timeRemaining.hours).padStart(2, "0")}:
 //                                     {String(timeRemaining.minutes).padStart(2, "0")}:
 //                                     {String(timeRemaining.seconds).padStart(2, "0")}
 //                                 </div>
 //                             )}
 
+//                             {/* Quantity */}
 //                             <div className="flex items-center gap-4 mb-6">
 //                                 <span className="text-sm font-medium text-gray-800">
 //                                     In stock
@@ -572,33 +616,27 @@
 //                                 <div className="flex items-center rounded-md border border-gray-300 overflow-hidden w-fit">
 //                                     <button
 //                                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
-//                                         className="w-10 h-10 text-lg font-semibold text-gray-500 hover:text-black focus:outline-none"
+//                                         className="w-10 h-10 text-lg font-semibold text-gray-500 hover:text-black"
 //                                     >
 //                                         –
 //                                     </button>
-//                                     <div className="w-12 h-10 flex items-center justify-center border-x text-lg font-medium text-black">
+//                                     <div className="w-12 h-10 flex items-center justify-center border-x text-lg font-medium">
 //                                         {quantity}
 //                                     </div>
 //                                     <button
 //                                         onClick={() => setQuantity(quantity + 1)}
-//                                         className="w-10 h-10 text-lg font-semibold text-gray-500 hover:text-black focus:outline-none"
+//                                         className="w-10 h-10 text-lg font-semibold text-gray-500 hover:text-black"
 //                                     >
 //                                         +
 //                                     </button>
 //                                 </div>
 //                             </div>
 
-//                             {/* MultiBuySection */}
-
-//                             {/* {product_quantity > 1 && <MultiBuySection product={product} />} */}
-
-//                             {/* আগের কোড */}
 //                             <MultiBuySection
 //                                 product={product}
 //                                 onTierSelect={handleTierSelect}
 //                                 selectedTier={selectedMultiBuyTier}
 //                             />
-
 
 //                             <div className="mt-4 space-y-2">
 //                                 <button
@@ -614,15 +652,15 @@
 //                                     Add to Basket
 //                                 </button>
 //                                 <button
-//                                     onClick={handleAddToWatchlist}
 //                                     className="btn-base btn-outline w-full flex items-center justify-center gap-2"
+//                                     onClick={handleAddToWatchlist}
 //                                     disabled={loading}
 //                                 >
 //                                     {loading ? (
 //                                         <div className="flex space-x-2 justify-center items-center h-6">
-//                                             <div className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]" />
-//                                             <div className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]" />
 //                                             <div className="h-2 w-2 bg-current rounded-full animate-bounce" />
+//                                             <div className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]" />
+//                                             <div className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]" />
 //                                         </div>
 //                                     ) : (
 //                                         <>
@@ -636,12 +674,12 @@
 //                             <PaymentDeliveryReturns
 //                                 secondaryData={product?.secondary_data}
 //                                 dispatchTime={product?.dispatch_time_in_days}
-
+//                                 seller_payment_terms={product?.seller_payment_terms}
 //                             />
 //                         </div>
 //                     </aside>
-//                     {/* END RIGHT SIDEBAR */}
 
+//                     {/* Basket Modal */}
 //                     <BasketModal
 //                         isModalVisible={isModalVisible}
 //                         handleCloseModal={handleCloseModal}
@@ -655,6 +693,7 @@
 //                 </div>
 //             </div>
 
+//             {/* Direct Buy Popup */}
 //             {isDirectBuyPopupVisible && (
 //                 <DirectBuyPopup
 //                     relatedProducts={relatedProducts}
@@ -667,37 +706,50 @@
 //         </section>
 //     );
 // }
+
+
+
 'use client'
-import { useCallback } from "react";
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useDispatch, useSelector } from "react-redux";
+import { useRouter, usePathname } from "next/navigation";
+import {
+    FaMinus,
+    FaPlus,
+    FaRegHeart,
+    FaHeart,
+    FaEdit,
+    FaStar,
+    FaStarHalfAlt,
+    FaRegStar,
+} from "react-icons/fa";
+
 import MultiBuySection from "../MultiBuySection";
 import BasketModal from "../BasketModal";
 import PaymentDeliveryReturns from "../PaymentDeliveryReturns";
 import DescriptionAndReviews from "../DescriptionAndReviews";
 import RecentlyViewed from "../RecentlyViewed";
 import ProductSlider from "./ProductSlider";
-import InfoPopover from "../InfoPopover";
 import DirectBuyPopup from "../DirectBuyPopup";
+
 import { convertPrice } from "@/app/utils/utils";
-import { useDispatch, useSelector } from "react-redux";
 import { addToBasket, updateQuantity, removeFromBasket } from "../../app/store/slices/cartSlice";
 import { selectSelectedCountry } from "@/app/store/slices/countrySlice";
-import { MdArrowRightAlt } from "react-icons/md";
-import { FaMinus, FaPlus, FaRegHeart, FaSearch, FaEdit } from "react-icons/fa";
-import { ImInfo } from "react-icons/im";
-import { useRouter, usePathname } from "next/navigation";
+import {
+    fetchReviewsStart,
+    fetchReviewsSuccess,
+    fetchReviewsFailure,
+} from "@/app/store/slices/reviewsSlice";
 
-/**
- * Breadcrumbs Component
- */
 const Breadcrumbs = ({ categoryTree, title }) => {
     const flattenCategoryChain = (node) => {
         const chain = [];
         let current = node;
         while (current) {
             chain.push(current);
-            if (current.children && current.children.length > 0) {
+            if (current.children && current.children.length) {
                 current = current.children[0];
             } else {
                 break;
@@ -710,9 +762,7 @@ const Breadcrumbs = ({ categoryTree, title }) => {
 
     return (
         <div className="flex items-center space-x-2 mb-4 overflow-x-auto whitespace-nowrap scrollbar-thin text-sm text-gray-500 scrollbar-hide">
-            <Link href="/">
-                <span className="text-blue-600 hover:underline">Upfrica</span>
-            </Link>
+            <Link href="/"><span className="text-blue-600 hover:underline">Upfrica</span></Link>
             {categoryChain.map((cat) => (
                 <React.Fragment key={cat.id}>
                     <span className="text-blue-600">&gt;</span>
@@ -732,15 +782,56 @@ export default function ProductDetailSection({ product, relatedProducts }) {
     const router = useRouter();
     const currentPath = usePathname();
 
-    // Redux state
-    const { token, user: currentUser } = useSelector((state) => state.auth);
-    const basket = useSelector((state) => state.basket.items) || [];
-    const exchangeRates = useSelector((state) => state.exchangeRates.rates);
+    // Auth, basket, currency
+    const { token, user: currentUser } = useSelector((s) => s.auth);
+    const basket = useSelector((s) => s.basket.items) || [];
+    const exchangeRates = useSelector((s) => s.exchangeRates.rates);
     const selectedCountry = useSelector(selectSelectedCountry);
-    const symbol = selectedCountry?.symbol || "₵";
-    const currencyCode = selectedCountry?.code || "GHS";
+    const symbol = selectedCountry?.symbol ?? "₵";
+    const currencyCode = selectedCountry?.code ?? "GHS";
 
-    // Multi‐buy tier
+    // Reviews slice
+    const {
+        summary: { average_rating, review_count, rating_percent },
+        loading: reviewsLoading,
+        error: reviewsError,
+        reviews: reviewsList,
+    } = useSelector((s) => s.reviews);
+
+    // Fetch reviews on mount / when product changes
+    useEffect(() => {
+        if (!product?.id) return;
+        dispatch(fetchReviewsStart());
+        fetch(`/api/products/${product.id}/reviews`)
+            .then((res) => res.json())
+            .then((data) => {
+                dispatch(
+                    fetchReviewsSuccess({
+                        results: data.reviews,
+                        average_rating: data.average_rating,
+                        review_count: data.review_count,
+                        rating_percent: data.rating_percent,
+                    })
+                );
+            })
+            .catch((err) => dispatch(fetchReviewsFailure(err.toString())));
+    }, [dispatch, product?.id]);
+
+    // Helpers
+    const renderStars = (rating) => {
+        const full = Math.floor(rating);
+        const half = rating - full >= 0.5;
+        const empty = 5 - full - (half ? 1 : 0);
+        return (
+            <>
+                {[...Array(full)].map((_, i) => <FaStar key={`full${i}`} />)}
+                {half && <FaStarHalfAlt />}
+                {[...Array(empty)].map((_, i) => <FaRegStar key={`empty${i}`} />)}
+            </>
+        );
+    };
+
+    // Multi-buy tier
     const [selectedMultiBuyTier, setSelectedMultiBuyTier] = useState(null);
     const handleTierSelect = useCallback((tier) => {
         setSelectedMultiBuyTier((prev) =>
@@ -748,93 +839,126 @@ export default function ProductDetailSection({ product, relatedProducts }) {
         );
     }, []);
 
-    // Quantity / modals
+    // Quantity & modals
     const [loading, setLoading] = useState(false);
     const [quantity, setQuantity] = useState(1);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isDirectBuyPopupVisible, setIsDirectBuyPopupVisible] = useState(false);
 
-    // Product props
-    const {
-        id,
-        title,
-        description,
-        price_cents,
-        sale_price_cents,
-        price_currency,
-        sale_end_date,
-        sale_start_date,
-        product_video,
-        product_images,
-        condition,
-        category,
-        shop,
-        user,
-        product_quantity,
-        variants
-    } = product || {};
+    // Wishlist state
+    const [isWishlisted, setIsWishlisted] = useState(false);
 
-    // Variant selection state
+    const { id, title, description, price_cents, sale_price_cents, price_currency, sale_end_date,
+        product_video, product_images, condition, category, shop, user, variants } = product || {};
+
+    // Initial fetch of wishlist status
+    useEffect(() => {
+        if (!token || !id) return;
+        const url = `https://media.upfrica.com/api/wishlist/${id}/`;
+        fetch(url, {
+            method: "GET",
+            headers: {
+                Authorization: "Token " + token,
+                "Content-Type": "application/json",
+            },
+        })
+            .then((res) => {
+                setIsWishlisted(res.ok);
+            })
+            .catch((err) => {
+                console.error("Error checking wishlist status:", err);
+            });
+    }, [token, id]);
+
+    // Toggle wishlist
+    const handleToggleWishlist = async () => {
+        if (!token) {
+            router.push(`/signin?next=${encodeURIComponent(currentPath)}`);
+            return;
+        }
+        setLoading(true);
+        const url = `https://media.upfrica.com/api/wishlist/${id}/`;
+        try {
+            if (isWishlisted) {
+                // Remove from wishlist
+                await fetch(url, {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: "Token " + token,
+                        "Content-Type": "application/json",
+                    },
+                });
+                setIsWishlisted(false);
+            } else {
+                // Add to wishlist
+                await fetch("https://media.upfrica.com/api/wishlist/", {
+                    method: "POST",
+                    headers: {
+                        Authorization: "Token " + token,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ product_id: id, note: "" }),
+                });
+                setIsWishlisted(true);
+            }
+        } catch (e) {
+            console.error("Wishlist toggle error:", e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Variant defaults
     const [selectedVariants, setSelectedVariants] = useState({});
     useEffect(() => {
-        if (variants && variants.length > 0) {
+        if (variants?.length) {
             const defaults = {};
-            variants.forEach((variant) => {
-                if (variant.values && variant.values.length > 0) {
-                    defaults[variant.id] = variant.values[0];
-                }
+            variants.forEach((v) => {
+                if (v.values?.length) defaults[v.id] = v.values[0];
             });
             setSelectedVariants(defaults);
         }
     }, [variants]);
 
-    // Emit color change for slider
+    // Color dispatch for slider
     useEffect(() => {
-        if (variants && variants.length > 0) {
-            const colorVariant = variants.find((v) =>
-                v.label.toLowerCase().includes("color")
+        const colorVariant = variants?.find((v) =>
+            v.label.toLowerCase().includes("color")
+        );
+        if (colorVariant && selectedVariants[colorVariant.id]) {
+            window.dispatchEvent(
+                new CustomEvent("updateSelectedColor", {
+                    detail: selectedVariants[colorVariant.id].value.toLowerCase(),
+                })
             );
-            if (colorVariant && selectedVariants[colorVariant.id]) {
-                window.dispatchEvent(
-                    new CustomEvent("updateSelectedColor", {
-                        detail: selectedVariants[colorVariant.id].value.toLowerCase(),
-                    })
-                );
-            }
         }
     }, [selectedVariants, variants]);
 
-    // SKU and additional pricing
+    // SKU & add-ons
     const sku =
         "SKU-" +
         Object.values(selectedVariants)
             .map((opt) => opt.value.replace(/\s+/g, "-").toUpperCase())
             .join("-");
     const totalAdditionalCents = Object.values(selectedVariants).reduce(
-        (acc, opt) => acc + (opt.additional_price_cents || 0),
+        (sum, opt) => sum + (opt.additional_price_cents || 0),
         0
     );
 
-    // Sale logic & prices
-    const saleEndDate = sale_end_date ? new Date(sale_end_date) : null;
+    // Sale logic & pricing
+    const saleEnd = sale_end_date ? new Date(sale_end_date) : null;
     const now = new Date();
-    const saleActive =
-        saleEndDate &&
-        saleEndDate > now &&
-        sale_price_cents > 0;
-
-    const basePriceCents = saleActive ? sale_price_cents : price_cents;
-    const activePriceCents = basePriceCents + totalAdditionalCents;
+    const saleActive = saleEnd && saleEnd > now && sale_price_cents > 0;
+    const baseCents = saleActive ? sale_price_cents : price_cents;
+    const activePriceCents = baseCents + totalAdditionalCents;
     const originalPriceCents = price_cents + totalAdditionalCents;
 
-    // Convert amounts into selected currency
     const activePrice = convertPrice(
         activePriceCents / 100,
         price_currency,
         currencyCode,
         exchangeRates
     ).toFixed(2);
-
     const originalPrice = saleActive
         ? convertPrice(
             originalPriceCents / 100,
@@ -844,18 +968,13 @@ export default function ProductDetailSection({ product, relatedProducts }) {
         ).toFixed(2)
         : null;
 
-    // Countdown state
-    const [timeRemaining, setTimeRemaining] = useState({
-        days: 0,
-        hours: 0,
-        minutes: 0,
-        seconds: 0,
-    });
+    // Countdown
+    const [timeRemaining, setTimeRemaining] = useState({});
     useEffect(() => {
         if (!sale_end_date) return;
-        const saleEnd = new Date(sale_end_date);
-        const update = () => {
-            const diff = saleEnd - new Date();
+        const end = new Date(sale_end_date);
+        const tick = () => {
+            const diff = end - new Date();
             setTimeRemaining({
                 days: Math.floor(diff / 86400000),
                 hours: Math.floor((diff % 86400000) / 3600000),
@@ -863,16 +982,16 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                 seconds: Math.floor((diff % 60000) / 1000),
             });
         };
-        update();
-        const id = setInterval(update, 1000);
-        return () => clearInterval(id);
+        tick();
+        const iv = setInterval(tick, 1000);
+        return () => clearInterval(iv);
     }, [sale_end_date]);
 
-    // Media items (video first, then images)
+    // Media items
     const mediaItems = product_video
         ? [
             { type: "video", src: product_video },
-            ...product_images.map((img) => ({ type: "image", src: img })),
+            ...product_images.map((src) => ({ type: "image", src })),
         ]
         : product_images;
 
@@ -883,28 +1002,6 @@ export default function ProductDetailSection({ product, relatedProducts }) {
             return;
         }
         setIsDirectBuyPopupVisible(true);
-    };
-
-    const handleAddToWatchlist = async () => {
-        if (!token) {
-            router.push(`/signin?next=${encodeURIComponent(currentPath)}`);
-            return;
-        }
-        setLoading(true);
-        try {
-            await fetch("https://media.upfrica.com/api/wishlist/", {
-                method: "POST",
-                headers: {
-                    Authorization: "Token " + token,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ product_id: id, note: "" }),
-            });
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
     };
 
     const handleAddToBasket = () => {
@@ -923,11 +1020,10 @@ export default function ProductDetailSection({ product, relatedProducts }) {
         );
         setIsModalVisible(true);
     };
-
     const handleCloseModal = () => setIsModalVisible(false);
-    const handleQuantityChange = (id, newQty) =>
-        dispatch(updateQuantity({ id, quantity: newQty }));
-    const handleRemoveProduct = (id) => dispatch(removeFromBasket(id));
+    const handleQuantityChange = (pid, q) =>
+        dispatch(updateQuantity({ id: pid, quantity: q }));
+    const handleRemoveProduct = (pid) => dispatch(removeFromBasket(pid));
 
     return (
         <section className="pt-6 md:pt-8 lg:pt-10">
@@ -935,13 +1031,9 @@ export default function ProductDetailSection({ product, relatedProducts }) {
 
             <div data-sticky-container>
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-                    {/* LEFT CONTENT */}
+                    {/* LEFT */}
                     <div className="order-1 xl:col-span-7">
-                        <Breadcrumbs
-                            categoryTree={category?.category_tree}
-                            title={title}
-                        />
-
+                        <Breadcrumbs categoryTree={category?.category_tree} title={title} />
                         <section className="mt-2">
                             <ProductSlider mediaItems={mediaItems} />
                         </section>
@@ -953,22 +1045,17 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                 className="flex items-center gap-2"
                             >
                                 <FaEdit className="h-4 w-4 text-violet-700" />
-                                <span className="text-violet-700 hover:underline">
-                                    Edit
-                                </span>
+                                <span className="text-violet-700 hover:underline">Edit</span>
                             </Link>
-                            <div className="bg-white space-y-4 p-4">
+                            <div className="bg-white p-4 space-y-4">
                                 <h1 className="heading-lg text-base md:text-lg lg:text-xl font-bold text-gray-800">
                                     {title}
                                 </h1>
                                 {shop && (
                                     <div className="text-sm text-gray-500">
                                         <Link href={`/shops/${shop.slug}`}>
-                                            <b>4480 sold</b> — Visit the{" "}
-                                            <b className="text-[#8710D8]">
-                                                {shop.name}
-                                            </b>{" "}
-                                            Shop — Accra, GH
+                                            <b>{product?.secondary_data?.sold_count || 'No'} sold</b> — Visit{" "}
+                                            <b className="text-[#8710D8]">{shop.name}</b> Shop — Accra, GH
                                         </Link>
                                     </div>
                                 )}
@@ -977,7 +1064,7 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                 <div>
                                     {saleActive ? (
                                         <div className="flex items-baseline space-x-2">
-                                            <span className="text-2xl font-bold text-green-700 tracking-tight">
+                                            <span className="text-2xl font-bold text-green-700">
                                                 {symbol}
                                                 {activePrice}
                                             </span>
@@ -987,7 +1074,7 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                             </del>
                                         </div>
                                     ) : (
-                                        <span className="text-2xl font-bold text-green-700 tracking-tight">
+                                        <span className="text-2xl font-bold text-green-700">
                                             {symbol}
                                             {activePrice}
                                         </span>
@@ -998,18 +1085,9 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                             {timeRemaining.days > 0
                                                 ? `${timeRemaining.days}d `
                                                 : ""}
-                                            {String(timeRemaining.hours).padStart(
-                                                2,
-                                                "0"
-                                            )}
-                                            :
-                                            {String(
-                                                timeRemaining.minutes
-                                            ).padStart(2, "0")}
-                                            :
-                                            {String(
-                                                timeRemaining.seconds
-                                            ).padStart(2, "0")}
+                                            {String(timeRemaining.hours).padStart(2, "0")}:
+                                            {String(timeRemaining.minutes).padStart(2, "0")}:
+                                            {String(timeRemaining.seconds).padStart(2, "0")}
                                         </p>
                                     )}
                                 </div>
@@ -1020,75 +1098,48 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                     selectedTier={selectedMultiBuyTier}
                                 />
 
-                                {/* Variant selectors */}
+                                {/* Variants */}
                                 <div className="space-y-4 my-4">
-                                    {variants &&
-                                        variants.map((variant) =>
-                                            variant.values &&
-                                                variant.values.length > 0 ? (
-                                                <div key={variant.id}>
-                                                    <p className="text-sm font-medium text-gray-700 mb-1">
-                                                        {variant.label}
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {variant.values.map(
-                                                            (val) => (
-                                                                <button
-                                                                    key={val.id}
-                                                                    onClick={() =>
-                                                                        setSelectedVariants(
-                                                                            (
-                                                                                prev
-                                                                            ) =>
-                                                                            ({
-                                                                                ...prev,
-                                                                                [
-                                                                                    variant
-                                                                                        .id
-                                                                                ]: val,
-                                                                            })
-                                                                        )
-                                                                    }
-                                                                    className={`px-4 ${val.additional_price_cents ===
-                                                                        0 &&
-                                                                        "py-2"
-                                                                        } border rounded-full text-sm ${selectedVariants[
-                                                                            variant
-                                                                                .id
-                                                                        ]?.id ===
-                                                                            val.id
-                                                                            ? "border-black font-semibold"
-                                                                            : "border-gray-300 text-gray-700"
-                                                                        }`}
-                                                                >
-                                                                    <div>
-                                                                        {
-                                                                            val.value
-                                                                        }
-                                                                    </div>
-                                                                    {val.additional_price_cents >
-                                                                        0 && (
-                                                                            <div className="text-gray-900 text-[10px]">
-                                                                                +
-                                                                                {symbol}
-                                                                                {convertPrice(
-                                                                                    val.additional_price_cents /
-                                                                                    100,
-                                                                                    price_currency,
-                                                                                    currencyCode,
-                                                                                    exchangeRates
-                                                                                ).toFixed(
-                                                                                    2
-                                                                                )}
-                                                                            </div>
-                                                                        )}
-                                                                </button>
-                                                            )
-                                                        )}
-                                                    </div>
+                                    {variants?.map((variant) =>
+                                        variant.values?.length ? (
+                                            <div key={variant.id}>
+                                                <p className="text-sm font-medium text-gray-700 mb-1">
+                                                    {variant.label}
+                                                </p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {variant.values.map((val) => (
+                                                        <button
+                                                            key={val.id}
+                                                            onClick={() =>
+                                                                setSelectedVariants((prev) => ({
+                                                                    ...prev,
+                                                                    [variant.id]: val,
+                                                                }))
+                                                            }
+                                                            className={`px-4 ${val.additional_price_cents === 0 && "py-2"
+                                                                } border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
+                                                                    ? "border-black font-semibold"
+                                                                    : "border-gray-300 text-gray-700"
+                                                                }`}
+                                                        >
+                                                            {val.value}
+                                                            {val.additional_price_cents > 0 && (
+                                                                <div className="text-gray-900 text-[10px]">
+                                                                    +{symbol}
+                                                                    {convertPrice(
+                                                                        val.additional_price_cents / 100,
+                                                                        price_currency,
+                                                                        currencyCode,
+                                                                        exchangeRates
+                                                                    ).toFixed(2)}
+                                                                </div>
+                                                            )}
+                                                        </button>
+                                                    ))}
                                                 </div>
-                                            ) : null
-                                        )}
+                                            </div>
+                                        ) : null
+                                    )}
                                 </div>
 
                                 <div className="grid gap-2">
@@ -1109,19 +1160,31 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                     </button>
                                     <button
                                         className="btn-base btn-outline flex items-center justify-center gap-2"
-                                        onClick={handleAddToWatchlist}
+                                        onClick={handleToggleWishlist}
                                         disabled={loading}
                                     >
-                                        <FaRegHeart />
-                                        Add to Watchlist
+                                        {loading
+                                            ? <div className="flex space-x-2 justify-center items-center h-6">
+                                                <div className="h-2 w-2 bg-current rounded-full animate-bounce" />
+                                                <div className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                                <div className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                            </div>
+                                            : isWishlisted
+                                                ? <>
+                                                    <FaHeart className="w-6 h-6 text-violet-700 hover:text-violet-500 transition-colors" />
+                                                    <span>Remove from Watchlist</span>
+                                                </>
+                                                : <>
+                                                    <FaRegHeart />
+                                                    <span>Add to Watchlist</span>
+                                                </>}
                                     </button>
                                 </div>
 
                                 <PaymentDeliveryReturns
                                     secondaryData={product?.secondary_data}
-                                    dispatchTime={
-                                        product?.dispatch_time_in_days
-                                    }
+                                    dispatchTime={product?.dispatch_time_in_days}
+                                    seller_payment_terms={product?.seller_payment_terms}
                                 />
                             </div>
                         </section>
@@ -1132,143 +1195,120 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                             user={user}
                             shop={shop}
                             product={product}
+                            reviews={reviewsList}
+                            loading={reviewsLoading}
+                            error={reviewsError}
                         />
                     </div>
-                    {/* END LEFT CONTENT */}
 
                     {/* RIGHT SIDEBAR */}
                     <aside className="order-2 hidden xl:block xl:col-span-5">
-                        <div className="sticky top-0 space-y-4 p-5">
-                            {(
-                                currentUser?.username === product?.user?.username ||
-                                currentUser?.admin === true
-                            ) && (
-                                    <Link
-                                        href={`/products/edit/${product?.slug}`}
-                                        className="flex items-center gap-2"
-                                    >
-                                        <FaEdit className="h-4 w-4 text-violet-700" />
-                                        <span className="text-violet-700 hover:underline">
-                                            Edit
-                                        </span>
-                                    </Link>
-                                )}
+                        <div className="sticky top-0 p-5 space-y-4">
+                            {(currentUser?.username === user?.username || currentUser?.admin) && (
+                                <Link
+                                    href={`/products/edit/${product?.slug}`}
+                                    className="flex items-center gap-2"
+                                >
+                                    <FaEdit className="h-4 w-4 text-violet-700" />
+                                    <span className="text-violet-700 hover:underline">Edit</span>
+                                </Link>
+                            )}
+
                             <h1 className="heading-lg text-lg md:text-xl lg:text-2xl font-semibold text-gray-800">
                                 {title}
                             </h1>
                             {shop && (
                                 <div className="text-sm text-gray-500">
-                                    <Link href={`/shops/${shop?.slug}`}>
-                                        <b>4480 sold</b> | Sold by the{" "}
-                                        <b className="text-[#8710D8]">
-                                            {shop.name}
-                                        </b>{" "}
-                                        Shop — Accra, GH
+                                    <Link href={`/shops/${shop.slug}`}>
+                                        <b>{product?.secondary_data?.sold_count || 'No'} sold</b> — Visit{" "}
+                                        <b className="text-[#8710D8]">{shop.name}</b> — Accra, GH
                                     </Link>
                                 </div>
                             )}
+
+                            {/* Review Summary */}
                             <div className="flex items-center text-sm text-yellow-400 gap-2">
-                                <MdArrowRightAlt className="h-4 w-4" />
-                                <span>4.5</span>
-                                <span>★★★★☆</span>
-                                <span className="underline text-blue-600">
-                                    595 Reviews
-                                </span>
-                                <span className="text-green-600">
-                                    ✅ Verified Seller
-                                </span>
+                                {review_count > 0 ? (
+                                    <>
+                                        <span>{average_rating.toFixed(1)}</span>
+                                        <span className="flex">{renderStars(average_rating)}</span>
+                                        <button
+                                            className="underline text-blue-600"
+                                            onClick={() => {
+                                                /* scroll to reviews list */
+                                            }}
+                                        >
+                                            {review_count} Reviews
+                                        </button>
+                                    </>
+                                ) : (
+                                    <span className="text-yellow-400"></span>
+                                )}
+                                <span className="text-green-600">✅ Verified Seller</span>
                             </div>
 
-                            {/* Dynamic Variant Selectors for Desktop */}
+                            {/* Variants for desktop */}
                             <div className="space-y-4 my-4">
-                                {(
-                                    currentUser?.username === product?.user
-                                        ?.username ||
-                                    currentUser?.admin === true
-                                ) && (
-                                        <Link
-                                            href={`/products/edit/variants/${product?.id}`}
-                                            className="flex items-center gap-2"
-                                        >
-                                            <FaEdit className="h-4 w-4 text-violet-700" />
-                                            <span className="text-violet-700 hover:underline">
-                                                Edit Variants
-                                            </span>
-                                        </Link>
-                                    )}
-                                {variants && variants.length > 0 && (
+                                {(currentUser?.username === user?.username || currentUser?.admin) && (
+                                    <Link
+                                        href={`/products/edit/variants/${product?.id}`}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <FaEdit className="h-4 w-4 text-violet-700" />
+                                        <span className="text-violet-700 hover:underline">
+                                            Edit Variants
+                                        </span>
+                                    </Link>
+                                )}
+                                {variants?.length > 0 && (
                                     <>
                                         <hr className="my-3 border-gray-200" />
                                         {variants.map((variant) => (
-                                            variant.values &&
-                                            variant.values.length > 0 && (
-                                                <div key={variant.id}>
-                                                    <div className="flex items-center justify-between">
-                                                        <p className="text-sm font-medium text-gray-700 mb-1">
-                                                            {variant.label}
-                                                        </p>
-                                                        <span className="text-sm text-gray-400">
-                                                            {sku}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {variant.values.map(
-                                                            (val) => {
-                                                                const isSel =
-                                                                    selectedVariants[variant.id]
-                                                                        ?.id ===
-                                                                    val.id;
-                                                                return (
-                                                                    <button
-                                                                        key={
-                                                                            val.id
-                                                                        }
-                                                                        onClick={() =>
-                                                                            setSelectedVariants(
-                                                                                (
-                                                                                    prev
-                                                                                ) => ({
-                                                                                    ...prev,
-                                                                                    [
-                                                                                        variant
-                                                                                            .id
-                                                                                    ]: val,
-                                                                                })
-                                                                            )
-                                                                        }
-                                                                        className={`px-4 ${val.additional_price_cents ==
-                                                                            0 &&
-                                                                            "py-2"
-                                                                            } border rounded-full text-sm ${isSel
-                                                                                ? "border-black font-semibold"
-                                                                                : "border-gray-300 text-gray-700"
-                                                                            }`}
-                                                                    >
-                                                                        <div>
-                                                                            {
-                                                                                val.value
-                                                                            }
-                                                                        </div>
-                                                                        <div className="text-gray-900 text-[10px]">
-                                                                            {val.additional_price_cents >
-                                                                                0 &&
-                                                                                ` (+${symbol}${convertPrice(
-                                                                                    val.additional_price_cents /
-                                                                                    100,
-                                                                                    price_currency,
-                                                                                    currencyCode,
-                                                                                    exchangeRates
-                                                                                ).toFixed(
-                                                                                    2
-                                                                                )})`}
-                                                                        </div>
-                                                                    </button>
-                                                                )
-                                                            }
-                                                        )}
-                                                    </div>
+                                            <div key={variant.id}>
+                                                <div className="flex items-center justify-between">
+                                                    <p className="text-sm font-medium text-gray-700 mb-1">
+                                                        {variant.label}
+                                                    </p>
+                                                    <span className="text-sm text-gray-400">{sku}</span>
                                                 </div>
-                                            )
+                                                <div className="flex flex-wrap gap-2">
+                                                    {variant.values.map((val) => {
+                                                        const isSel =
+                                                            selectedVariants[variant.id]?.id === val.id;
+                                                        return (
+                                                            <button
+                                                                key={val.id}
+                                                                onClick={() =>
+                                                                    setSelectedVariants((prev) => ({
+                                                                        ...prev,
+                                                                        [variant.id]: val,
+                                                                    }))
+                                                                }
+                                                                className={`px-4 ${val.additional_price_cents == 0 && "py-2"
+                                                                    } border rounded-full text-sm ${isSel
+                                                                        ? "border-black font-semibold"
+                                                                        : "border-gray-300 text-gray-700"
+                                                                    }`}
+                                                            >
+                                                                {val.value}
+                                                                {val.additional_price_cents > 0 && (
+                                                                    <div className="text-gray-900 text-[10px]">
+                                                                        (+
+                                                                        {symbol}
+                                                                        {convertPrice(
+                                                                            val.additional_price_cents / 100,
+                                                                            price_currency,
+                                                                            currencyCode,
+                                                                            exchangeRates
+                                                                        ).toFixed(2)}
+                                                                        )
+                                                                    </div>
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
                                         ))}
                                     </>
                                 )}
@@ -1276,10 +1316,10 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                             <hr className="my-3 border-gray-200" />
 
                             {/* Price & countdown */}
-                            <div className="gap-4">
+                            <div>
                                 {saleActive ? (
                                     <div className="flex items-baseline space-x-2">
-                                        <span className="text-3xl font-bold text-green-700 tracking-tight">
+                                        <span className="text-3xl font-bold text-green-700">
                                             {symbol}
                                             {activePrice}
                                         </span>
@@ -1289,7 +1329,7 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                         </del>
                                     </div>
                                 ) : (
-                                    <span className="text-3xl font-bold text-green-700 tracking-tight">
+                                    <span className="text-3xl font-bold text-green-700">
                                         {symbol}
                                         {activePrice}
                                     </span>
@@ -1302,37 +1342,29 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                         ? `${timeRemaining.days}d `
                                         : ""}
                                     {String(timeRemaining.hours).padStart(2, "0")}:
-                                    {String(timeRemaining.minutes).padStart(
-                                        2,
-                                        "0"
-                                    )}
-                                    :
-                                    {String(timeRemaining.seconds).padStart(
-                                        2,
-                                        "0"
-                                    )}
+                                    {String(timeRemaining.minutes).padStart(2, "0")}:
+                                    {String(timeRemaining.seconds).padStart(2, "0")}
                                 </div>
                             )}
 
+                            {/* Quantity */}
                             <div className="flex items-center gap-4 mb-6">
                                 <span className="text-sm font-medium text-gray-800">
                                     In stock
                                 </span>
                                 <div className="flex items-center rounded-md border border-gray-300 overflow-hidden w-fit">
                                     <button
-                                        onClick={() =>
-                                            setQuantity(Math.max(1, quantity - 1))
-                                        }
-                                        className="w-10 h-10 text-lg font-semibold text-gray-500 hover:text-black focus:outline-none"
+                                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                        className="w-10 h-10 text-lg font-semibold text-gray-500 hover:text-black"
                                     >
                                         –
                                     </button>
-                                    <div className="w-12 h-10 flex items-center justify-center border-x text-lg font-medium text-black">
+                                    <div className="w-12 h-10 flex items-center justify-center border-x text-lg font-medium">
                                         {quantity}
                                     </div>
                                     <button
                                         onClick={() => setQuantity(quantity + 1)}
-                                        className="w-10 h-10 text-lg font-semibold text-gray-500 hover:text-black focus:outline-none"
+                                        className="w-10 h-10 text-lg font-semibold text-gray-500 hover:text-black"
                                     >
                                         +
                                     </button>
@@ -1359,33 +1391,37 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                     Add to Basket
                                 </button>
                                 <button
-                                    onClick={handleAddToWatchlist}
                                     className="btn-base btn-outline w-full flex items-center justify-center gap-2"
+                                    onClick={handleToggleWishlist}
                                     disabled={loading}
                                 >
-                                    {loading ? (
-                                        <div className="flex space-x-2 justify-center items-center h-6">
-                                            <div className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                            <div className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                    {loading
+                                        ? <div className="flex space-x-2 justify-center items-center h-6">
                                             <div className="h-2 w-2 bg-current rounded-full animate-bounce" />
+                                            <div className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                            <div className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]" />
                                         </div>
-                                    ) : (
-                                        <>
-                                            <FaRegHeart />
-                                            <span>Add to Watchlist</span>
-                                        </>
-                                    )}
+                                        : isWishlisted
+                                            ? <>
+                                                <FaHeart className="w-6 h-6 text-violet-700 hover:text-violet-500 transition-colors" />
+                                                <span>Remove from Watchlist</span>
+                                            </>
+                                            : <>
+                                                <FaRegHeart />
+                                                <span>Add to Watchlist</span>
+                                            </>}
                                 </button>
                             </div>
 
                             <PaymentDeliveryReturns
                                 secondaryData={product?.secondary_data}
                                 dispatchTime={product?.dispatch_time_in_days}
+                                seller_payment_terms={product?.seller_payment_terms}
                             />
                         </div>
                     </aside>
-                    {/* END RIGHT SIDEBAR */}
 
+                    {/* Basket Modal */}
                     <BasketModal
                         isModalVisible={isModalVisible}
                         handleCloseModal={handleCloseModal}
@@ -1399,6 +1435,7 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                 </div>
             </div>
 
+            {/* Direct Buy Popup */}
             {isDirectBuyPopupVisible && (
                 <DirectBuyPopup
                     relatedProducts={relatedProducts}
