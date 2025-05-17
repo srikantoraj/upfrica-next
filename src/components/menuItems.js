@@ -87,7 +87,7 @@ export const menuItems = [
     ]
   },
   {
-    label: "Revews",
+    label: "Reviews",
     route: "/new-dashboard/lavel",
     icon: FaClipboardList,
     children: [
