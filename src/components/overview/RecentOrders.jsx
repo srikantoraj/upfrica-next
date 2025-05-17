@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { FiSearch } from 'react-icons/fi';
-import { MdRemoveRedEye, MdDelete } from 'react-icons/md';
+import { MdRemoveRedEye, MdDelete, MdCheckCircle, MdOutlineRemoveRedEye } from 'react-icons/md';
 import { FaEdit } from "react-icons/fa";
 import Pagination from '@/components/Pagination';
 
@@ -93,7 +93,9 @@ export default function RecentOrdersPage() {
                 )}
             </div>
 
-            <div className="bg-white p-4 rounded-lg shadow-sm">
+            {/* old card  */}
+
+            {/* <div className="bg-white p-4 rounded-lg shadow-sm">
                 <table className="w-full text-left">
                     <thead>
                         <tr className="border-b border-gray-200">
@@ -197,7 +199,139 @@ export default function RecentOrdersPage() {
                         )}
                     </tbody>
                 </table>
-            </div>
+            </div> */}
+
+            {loading ? (
+                // loading skeletons
+                <div className="space-y-6">
+                    {[...Array(3)].map((_, i) => (
+                        <div key={i} className="space-y-4">
+                            <div className="animate-pulse flex items-center bg-green-50 p-4 rounded-lg h-12" />
+                            <div className="animate-pulse flex items-start bg-white p-4 rounded-lg h-32" />
+                            <div className="animate-pulse bg-white p-4 rounded-lg h-24" />
+                        </div>
+                    ))}
+                </div>
+            ) : filteredItems.length === 0 ? (
+                <p className="text-center text-gray-500">No orders found!</p>
+            ) : (
+                <div className="space-y-6">
+                    {filteredItems.map((item) => {
+                        const { product } = item;
+                        const statusText =
+                            item.dispatch_status === 0 ? 'Pending' : 'Received';
+                        const statusColor =
+                            item.dispatch_status === 0 ? 'yellow' : 'green';
+
+                        return (
+                            <div key={item.id} className="space-y-4">
+                                {/* 1) Header */}
+                                <div className="flex items-center justify-between bg-green-50 p-4 rounded-lg">
+                                    <div className="flex space-x-6 text-sm text-gray-700">
+                                        <div>
+                                            <span className="font-medium">Order #</span>{' '}
+                                            {item.order_number}
+                                        </div>
+                                        <div>
+                                            <span className="font-medium">Date</span>{' '}
+                                            {new Date(item.order_date).toLocaleDateString()}
+                                        </div>
+                                        <div>
+                                            <span className="font-medium">Total</span> GHS{' '}
+                                             {(item.price_cents / 100).toFixed(2)}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <MdCheckCircle
+                                            className={`w-6 h-6 text-${statusColor}-500`}
+                                        />
+                                        <span
+                                            className={`text-${statusColor}-800 font-semibold`}
+                                        >
+                                            {statusText}
+                                        </span>
+                                    </div>
+
+                                </div>
+
+                                {/* 2) Product Detail */}
+                                <div className="bg-white p-4 rounded-lg shadow">
+                                    <div className="flex items-start">
+                                        {/* Image */}
+                                        {product.product_images[0] ? (
+                                            <img
+                                                src={product.product_images[0]}
+                                                alt={product.title}
+                                                className="w-20 h-20 object-cover rounded-lg mr-4"
+                                            />
+                                        ) : (
+                                            <div className="w-20 h-20 bg-gray-100 rounded-lg mr-4" />
+                                        )}
+
+                                        {/* Details */}
+                                        <div className="flex-1">
+                                            <h2 className="font-semibold text-lg">
+                                                {product.title}
+                                            </h2>
+                                            <div className="mt-2 space-y-1 text-sm text-gray-600">
+                                                <div>
+                                                    <span className="font-medium text-gray-800">
+                                                        Status:
+                                                    </span>{' '}
+                                                    {statusText}
+                                                </div>
+                                                <div>
+                                                    <span className="font-medium text-gray-800">
+                                                        Item ID:
+                                                    </span>{' '}
+                                                    {item.id}
+                                                </div>
+                                                <div>
+                                                    <span className="font-medium text-gray-800">
+                                                        Price:
+                                                    </span>{' '}
+                                                    GHS{' '}
+                                                    {(item.price_cents / 100).toFixed(2)}
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                        {/* actions button  */}
+                                        <div className="py-3 flex space-x-2">
+                                            <button
+                                                onClick={() => handleView(item.id)}
+                                                className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full font-bold text-gray-700"
+                                                aria-label="View"
+                                            >
+                                                <MdOutlineRemoveRedEye size={20} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleEdit(item.id)}
+                                                className="p-2 bg-blue-100 hover:bg-blue-200 rounded-full font-bold text-blue-700"
+                                                aria-label="Edit"
+                                            >
+                                                <FaEdit size={20} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(item.id)}
+                                                disabled={deletingId === item.id}
+                                                className={`p-2 rounded-full font-bold ${deletingId === item.id
+                                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                    : 'bg-red-100 hover:bg-red-200 text-red-700'
+                                                    }`}
+                                                aria-label="Delete"
+                                            >
+                                                <MdDelete size={20} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {totalPages > 1 && (
                 <div className="flex justify-center mt-4">
