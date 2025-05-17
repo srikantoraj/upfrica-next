@@ -4,7 +4,7 @@ import { FaStore, FaShoppingCart, FaBox } from "react-icons/fa";
 
 const sellerOrders = [
   {
-    seller: "Amazon",
+    seller: "New",
     Icon: FaStore,
     orders: 23540,
     growth: "+5.1%",
@@ -13,7 +13,7 @@ const sellerOrders = [
     color: "text-yellow-600",
   },
   {
-    seller: "eBay",
+    seller: "Pending",
     Icon: FaShoppingCart,
     orders: 12430,
     growth: "+3.2%",
@@ -22,7 +22,7 @@ const sellerOrders = [
     color: "text-blue-600",
   },
   {
-    seller: "Etsy",
+    seller: "Shipped",
     Icon: FaBox,
     orders: 8430,
     growth: "+4.7%",

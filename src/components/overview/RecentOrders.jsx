@@ -11,7 +11,7 @@ import Pagination from '@/components/Pagination';
 const PAGE_SIZE = 20;
 
 export default function RecentOrdersPage() {
-    const { token } = useSelector((state) => state.auth);
+    const { token, user } = useSelector((state) => state.auth);
     const router = useRouter();
 
     const [orderItems, setOrderItems] = useState([]);
@@ -43,7 +43,7 @@ export default function RecentOrdersPage() {
         fetchOrderItems();
     }, [token, currentPage]);
 
-    const handleView = (id) => router.push(`/new-dashboard/order-view/${id}`);
+    const handleView = (slug) => router.push(`/${user?.country?.toLocaleDateString() || 'gh'}/${slug}`);
     const handleEdit = (id) => router.push(`/new-dashboard/all-orders/${id}`);
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this item?')) return;
@@ -166,7 +166,7 @@ export default function RecentOrdersPage() {
                                         <td>{item.quantity}</td>
                                         <td className="py-3 flex space-x-2">
                                             <button
-                                                onClick={() => handleView(item.id)}
+                                                onClick={() => handleView( item.seo_slug)}
                                                 className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full font-bold text-gray-700"
                                                 aria-label="View"
                                             >

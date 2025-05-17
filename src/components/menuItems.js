@@ -51,27 +51,14 @@ export const menuItems = [
     ]
   },
   {
-    label: "My Orders",
-    route: "/new-dashboard/all-orders",
-    icon: FaClipboardList,
-    children: [
-      { label: "All Purchases", route: "/new-dashboard/my-orders" },
-      { label: "Processing", route: "/new-dashboard/my-orders/processing" },
-      { label: "Unpaid", route: "/new-dashboard/my-orders/unpaid" },
-      { label: "Returns & Cancelled", route: "/new-dashboard/my-orders/return-cancelled" },
-     
-    ]
-  },
-  {
     label: "Orders",
     route: "/orders",
     icon: FaClipboardList,
     children: [
       { label: "All Orders", route: "/orders/all" },
-      { label: "Pending Fulfillment", route: "/orders/pending" },
+      { label: "Pending Orders", route: "/orders/pending" },
       { label: "Shipped Orders", route: "/orders/shipped" },
       { label: "Cancelled / Refunded", route: "/orders/cancelled" },
-      { label: "Order Returns", route: "/orders/returns" }
     ]
   },
   {
@@ -82,8 +69,20 @@ export const menuItems = [
       { label: "All Products", route: "/new-dashboard/all-products" },
       { label: "Add New Product", route: "/new-dashboard/add-new-product" },
       { label: "Drafts", route: "/new-dashboard/draft" },
-      { label: "Out-of-Stock", route: "/products/out-of-stock" },
-      { label: "Bulk Import / Export", route: "/products/import-export" }
+      { label: "Out-of-Stock", route: "/new-dashboard/out-of-stock" },
+      // { label: "Bulk Import / Export", route: "/products/import-export" }
+    ]
+  },
+  {
+    label: "My Orders",
+    route: "/new-dashboard/all-orders",
+    icon: FaClipboardList,
+    children: [
+      { label: "All Purchases", route: "/new-dashboard/my-orders" },
+      { label: "Processing", route: "/new-dashboard/my-orders/processing" },
+      { label: "Unpaid", route: "/new-dashboard/my-orders/unpaid" },
+      { label: "Returns & Cancelled", route: "/new-dashboard/my-orders/return-cancelled" },
+
     ]
   },
   {
@@ -91,7 +90,7 @@ export const menuItems = [
     route: "/new-dashboard/lavel",
     icon: FaClipboardList,
     children: [
-      { label: "Panding", route: "/new-dashboard/panding" },
+      { label: "Pending Reviews", route: "/new-dashboard/pending-reviews" },
       // { label: "Processing", route: "/new-dashboard/my-orders/processing" },
       // { label: "Unpaid", route: "/new-dashboard/my-orders/unpaid" },
       // { label: "Returns & Cancelled", route: "/new-dashboard/my-orders/return-cancelled" },
