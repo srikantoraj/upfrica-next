@@ -750,12 +750,21 @@ export default function OrderCard({ order, items = [] }) {
       {/* — Order Header — */}
       <div className="flex flex-col md:flex-row justify-between bg-gray-100 rounded-lg p-4 gap-4">
         <div className="flex-1 min-w-0">
-          <div className="text-green-600 font-bold flex items-center mb-2 text-sm sm:text-base">
+          {/* <div className="text-green-600 font-bold flex items-center mb-2 text-sm sm:text-base">
             ✅{" "}
             {order.order_items.every(i => i.receive_status === 1)
               ? "Received"
               : "Processing"}
-          </div>
+          </div> */}
+          {order.order_items && (
+            <div className="text-green-600 font-bold flex items-center mb-2 text-sm sm:text-base">
+              ✅{" "}
+              {order.order_items.every(i => i.receive_status === 1)
+                ? "Received"
+                : "Processing"}
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-4 text-xs sm:text-sm text-black">
             <div>
               <span className="block font-bold text-green-600">Order #</span>
