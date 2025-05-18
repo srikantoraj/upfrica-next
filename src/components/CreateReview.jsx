@@ -1,13 +1,10 @@
 
 
-import React, { use } from "react";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import { useSelector } from "react-redux";
-import { useRouter } from "next/navigation";
 
-const CreateReviews = ({slug}) => {
-  const { token } = useSelector((state) => state.auth);
-  const router = useRouter();
+import React from "react";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+
+const CreateReves = ({slug}) => {
   const initialValues = {
     title: "",
     rating: "",
@@ -26,12 +23,8 @@ const CreateReviews = ({slug}) => {
     return errors;
   };
 
+
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
-    console.log("Submitted values:", values); // 🔍 এখানে ডেটা দেখা যাবে
-    if (!token) {
-      router.push("/signin");
-      return;
-    }
     const payload = {
       title: values.title,
       rating: parseInt(values.rating),
@@ -41,28 +34,31 @@ const CreateReviews = ({slug}) => {
         value: values.value,
       },
     };
-
+  
+    // Token localStorage থেকে নেওয়া
+    const token = localStorage.getItem("token");
+    console.log("token",token);
+    
+  
     try {
       const response = await fetch(
-        "https://media.upfrica.com/api/products/redmi-power-bank-18w-fast-power-charger/reviews/",
+        `https://media.upfrica.com/api/products/${slug}/reviews/`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            'Authorization': `Token ${token}`,
+            "Authorization": `Token ${token}` 
           },
           body: JSON.stringify(payload),
         }
       );
-
+  
       if (!response.ok) {
         throw new Error("Failed to post review");
       }
-
+  
       alert("Review submitted successfully!");
       resetForm();
-      console.log('revews', response);
-
     } catch (error) {
       console.error(error);
       alert("Something went wrong while submitting.");
@@ -70,6 +66,8 @@ const CreateReviews = ({slug}) => {
       setSubmitting(false);
     }
   };
+  
+
 
   return (
     <section className="mt-12">
@@ -191,26 +189,13 @@ const CreateReviews = ({slug}) => {
             </div>
 
             {/* Submit */}
-            {!isSubmitting && <button
+            <button
               type="submit"
               disabled={isSubmitting}
               className="bg-[#A435F0] text-white px-6 py-2 rounded font-semibold"
             >
-              {"Post Review"}
-            </button>}
-            {isSubmitting && (
-              <button
-                type="button"
-                disabled
-                className="bg-[#A435F0] text-white px-6 py-2 rounded font-semibold"
-              >
-                <div className="flex space-x-2 justify-center items-center h-6">
-                  <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
-                  <div className="h-2 w-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
-                  <div className="h-2 w-2 bg-white rounded-full animate-bounce" />
-                </div>
-              </button>
-            )}
+              {isSubmitting ? "Posting..." : "Post Review"}
+            </button>
           </Form>
         )}
       </Formik>
@@ -218,5 +203,5 @@ const CreateReviews = ({slug}) => {
   );
 };
 
-export default CreateReviews;
+export default CreateReves;
 

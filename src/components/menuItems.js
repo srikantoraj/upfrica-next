@@ -32,22 +32,22 @@ export const menuItems = [
         label: "Overview",
         route: "/new-dashboard/overview"
       },
-      {
-        label: "Quick Actions",
-        route: "/new-dashboard/quick-actions",
-        children: [
-          {
-            label: "➕ Add New Product",
-            route: "/new-dashboard/quick-actions/add-product",
-            icon: FaPlus
-          },
-          {
-            label: "💬 Message Admin",
-            route: "/new-dashboard/quick-actions/message-admin",
-            icon: FaEnvelope
-          }
-        ]
-      }
+      // {
+      //   label: "Quick Actions",
+      //   route: "/new-dashboard/quick-actions",
+      //   children: [
+      //     {
+      //       label: "➕ Add New Product",
+      //       route: "/new-dashboard/quick-actions/add-product",
+      //       icon: FaPlus
+      //     },
+      //     {
+      //       label: "💬 Message Admin",
+      //       route: "/new-dashboard/quick-actions/message-admin",
+      //       icon: FaEnvelope
+      //     }
+      //   ]
+      // }
     ]
   },
   {
@@ -57,7 +57,7 @@ export const menuItems = [
     children: [
       { label: "All Orders", route: "/new-dashboard/all-orders" },
       { label: "Pending Orders", route: "/new-dashboard/pending-orders" },
-      { label: "Shipped Orders", route: "/new-dahsboard/shipped-orders" },
+      { label: "Shipped Orders", route: "/new-dashboard/shipped-orders" },
       { label: "Cancelled / Refunded", route: "/new-dashboard/cancelled-orders" },
     ]
   },

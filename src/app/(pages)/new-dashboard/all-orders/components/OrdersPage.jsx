@@ -1,194 +1,234 @@
 
 
+'use client';
 
-
-"use client";
-
-import React, { useEffect, useState, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useSelector } from "react-redux";
-import OrderCard from "./OrderCard";
-import Pagination from "@/components/Pagination";
-import { AiOutlineSearch, AiOutlineClose } from "react-icons/ai";
+import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
+import { FiSearch } from 'react-icons/fi';
+import { MdRemoveRedEye, MdDelete, MdCheckCircle, MdOutlineRemoveRedEye } from 'react-icons/md';
+import { FaEdit } from "react-icons/fa";
+import Pagination from '@/components/Pagination';
 
 const PAGE_SIZE = 20;
 
-export default function OrdersPage() {
-  const searchParams = useSearchParams();
+export default function RecentOrdersPage() {
+  const { token, user } = useSelector((state) => state.auth);
   const router = useRouter();
-  const token = useSelector((state) => state.auth.token);
 
-  const pageParam = parseInt(searchParams.get("page") || "1", 10);
+  const [orderItems, setOrderItems] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
-  // will hold the flat list of order-items
-  const [items, setItems] = useState([]);
-  const [count, setCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const debounceRef = useRef(null);
-
-  // Fetch the flat list of order-items
   useEffect(() => {
     if (!token) return;
 
-    setLoading(true);
-    fetch(
-      `https://media.upfrica.com/api/seller/order-items/?page=${pageParam}`,
-      {
-        headers: {
-          Authorization: `Token ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    )
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        setItems(data.results);
-        setCount(data.count);
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [token, pageParam]);
+    const fetchOrderItems = async () => {
+      setLoading(true);
+      try {
+        // build query params
+        const params = new URLSearchParams();
+        params.append('page', currentPage);
+        // if there’s a search term, hit the search endpoint
+        const isSearch = Boolean(searchTerm.trim());
+        if (isSearch) {
+          params.append('q', searchTerm.trim());
+        }
 
-  const totalPages = Math.ceil(count / PAGE_SIZE);
-  const goToPage = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      router.push(`/dashboard/all-orders?page=${newPage}`);
+        const url = isSearch
+          ? `https://media.upfrica.com/api/seller/orders/search/?${params.toString()}`
+          : `https://media.upfrica.com/api/seller/order-items/?${params.toString()}`;
+
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: { Authorization: `Token ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+
+        setOrderItems(data.results || []);
+        setTotalPages(Math.ceil((data.count || 0) / PAGE_SIZE));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrderItems();
+  }, [token, currentPage, searchTerm]);
+
+  const handleView = (slug) => {
+    router.push(`/${user?.country?.toLocaleDateString() || 'gh'}/${slug}`);
+  };
+  const handleEdit = (id) => router.push(`/new-dashboard/all-orders/${id}`);
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this item?')) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(
+        `https://media.upfrica.com/api/seller/order-items/${id}/`,
+        { method: 'DELETE', headers: { Authorization: `Token ${token}` } }
+      );
+      if (!res.ok) throw new Error('Delete failed');
+      setOrderItems((prev) => prev.filter((item) => item.id !== id));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeletingId(null);
     }
   };
 
-  // Debounced client‐side search over the flat items array
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      setSearchLoading(false);
-      return;
-    }
-    setSearchLoading(true);
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      const q = searchQuery.toLowerCase();
-      const filtered = items
-        .filter(
-          (item) =>
-            item.product.title.toLowerCase().includes(q) ||
-            String(item.order_id).includes(q)
-        )
-        // inject an `order` object so <OrderCard> API stays the same
-        .map((item) => ({
-          ...item,
-          order: { id: item.order_id, created_at: item.order_date },
-        }));
-      setSearchResults(filtered);
-      setSearchLoading(false);
-    }, 300);
-
-    return () => clearTimeout(debounceRef.current);
-  }, [searchQuery, items]);
-
-  // determine which list to render
-  const displayItems = searchQuery
-    ? searchResults
-    : // for non-search case, also inject `order`
-    items.map((item) => ({
-      ...item,
-      order: { id: item.order_id, created_at: item.order_date },
-    }));
-
   return (
-    <div className="p-0 bg-gray-100 min-h-screen text-black font-sans">
-      {/* Search Bar */}
-      <div className="relative max-w-xl mx-auto mb-6">
-        <AiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-700" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search orders by product name or order #..."
-          className="w-full rounded-full border border-gray-300 px-10 py-2 focus:outline-none"
-        />
-        {searchQuery && (
-          <AiOutlineClose
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-xl text-gray-600 cursor-pointer"
-            onClick={() => setSearchQuery("")}
+    <div className="w-full mx-auto p-6">
+      <h1 className="text-2xl font-semibold mb-4">All Orders</h1>
+
+      {/* Search + Pagination */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="relative w-1/2">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            placeholder="Search orders with product or order ID ..."
+            className="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 text-gray-900 placeholder-gray-500 focus:outline-none font-medium"
+          />
+        </div>
+        {totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
           />
         )}
       </div>
 
-      {/* Tabs (unchanged) */}
-      {/* <div className="flex gap-6 mb-4 font-semibold overflow-x-auto whitespace-nowrap px-2 scrollbar-hide">
-        <div className="border-b-2 border-black pb-1">All Purchases</div>
-        <div>Processing</div>
-        <div>Unpaid</div>
-        <div>Returns &amp; Cancelled</div>
-      </div> */}
-
-      {/* <h1 className="text-2xl font-bold mb-6">My Orders</h1> */}
-
       {loading ? (
-        <div className="text-center text-gray-600">
-          Loading your orders...
+        <div className="space-y-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="animate-pulse bg-gray-50 p-4 rounded-lg h-24" />
+          ))}
         </div>
-      ) : error ? (
-        <p className="text-red-600 text-center">
-          Error loading orders: {error}
-        </p>
       ) : (
         <div className="space-y-6">
-          {displayItems.length === 0 ? (
-            <p className="text-center text-gray-500">
-              {searchQuery
-                ? searchLoading
-                  ? "Searching..."
-                  : "No matching orders found."
-                : "No orders yet."}
-            </p>
-          ) : (
-            displayItems.map((item, idx) => (
-              <OrderCard
-                key={`${item.order.id}-${item.id}-${idx}`}
-                order={item.order}
-                product={item.product}
-                status={
-                  item.dispatch_status === 1 ? "Dispatched" : "Processing"
-                }
-                date={new Date(
-                  item.order.created_at
-                ).toLocaleDateString()}
-                total={`GHS ${(
-                  (item.price_cents * item.quantity) /
-                  100
-                ).toFixed(2)}`}
-                orderNumber={String(item.order.id).padStart(8, "0")}
-                productTitle={item.product.title}
-                seller={
-                  item.product.user_display_name ||
-                  `Seller ${item.product.user}`
-                }
-                price={`GHS ${(item.price_cents / 100).toFixed(2)}`}
-                returnDate="12 May"
-                imageUrl={
-                  item.product.product_images?.[0] || "/placeholder.png"
-                }
-              />
-            ))
-          )}
+          {orderItems.map((item) => {
+            const { product } = item;
+            const statusText = item.dispatch_status === 0 ? 'Pending' : 'Dispatched';
+            const statusColor = item.dispatch_status === 0 ? 'yellow' : 'green';
+
+            return (
+              <div key={item.id} className="space-y-0 ">
+                <div
+                  className="
+                  flex items-center justify-between 
+                  bg-gray-50 p-4 
+                  rounded-t-lg 
+                  shadow-[0_-4px_6px_rgba(0,0,0,0.1)]
+                "
+                >      
+                  <div className="flex space-x-6 text-sm text-gray-700 ">
+                    <div>
+                      <span className="font-medium">Order #{item.order_id}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Date</span>{" "}
+                      {new Date(item.order_date).toLocaleDateString()}
+                    </div>
+                    <div>
+                      <span className="font-medium">Total</span> GHS{" "}
+                      {(item.price_cents / 100).toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <MdCheckCircle className={`w-6 h-6 text-${statusColor}-500`} />
+                    <span className={`text-${statusColor}-800 font-semibold`}>
+                      {statusText}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Product Detail — bottom corners rounded, bottom‐only shadow */}
+                <div
+                  className="
+    bg-white px-4 py-3 
+    rounded-b-lg 
+    shadow-[0_4px_6px_rgba(0,0,0,0.1)]
+  "
+                >
+                  <div className="flex items-start">
+                    {product.product_images[0] ? (
+                      <img
+                        src={product.product_images[0]}
+                        alt={product.title}
+                        className="w-20 h-20 object-cover rounded-lg mr-4"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 bg-gray-100 rounded-lg mr-4" />
+                    )}
+                    <div className="flex-1">
+                      <h2 className="font-semibold text-lg">{product.title}</h2>
+                      <div className="mt-2 space-y-1 text-sm text-gray-600">
+                        <div>
+                          <span className="font-medium text-gray-800">Status:</span>{" "}
+                          {statusText}
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-800">Item ID:</span>{" "}
+                          {item.id}
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-800">Price:</span>{" "}
+                          GHS {(item.price_cents / 100).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="py-3 flex space-x-2">
+                      <button
+                        onClick={() => handleEdit(item.id)}
+                        className="p-2 bg-gray-100 hover:bg-blue-200 rounded-full text-gray-700 hover:text-blue-700"
+                        aria-label="Edit"
+                      >
+                        <FaEdit size={20} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        disabled={deletingId === item.id}
+                        className={`
+          p-2 rounded-full font-bold
+          ${deletingId === item.id
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-gray-100 hover:bg-red-200 hover:text-red-700"
+                          }
+        `}
+                        aria-label="Delete"
+                      >
+                        <MdDelete size={20} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {!searchQuery && totalPages > 1 && (
-        <Pagination
-          currentPage={pageParam}
-          totalPages={totalPages}
-          onPageChange={goToPage}
-        />
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-4">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
       )}
     </div>
   );
