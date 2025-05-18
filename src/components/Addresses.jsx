@@ -2,7 +2,9 @@
 
 import React from 'react';
 
-const Addresses = ({ options, onSelect, placeholder = 'Select an option' }) => {
+const Addresses = ({addresses, options, onSelect, placeholder = 'Select an option' }) => {
+  console.log("addresses",);
+  
   const handleChange = (e) => {
     const selectedId = e.target.value;
     onSelect(selectedId);

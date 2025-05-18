@@ -5,6 +5,8 @@ import { HiMiniXMark } from "react-icons/hi2";
 import { FaHeart } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { selectSelectedCountry } from "@/app/store/slices/countrySlice";
+import { useSelector } from "react-redux";
 
 export default function BasketModal({
   isModalVisible,
@@ -44,6 +46,11 @@ export default function BasketModal({
     router.push("/cart");
   };
 
+
+   // কারেন্সি সিম্বল
+  const selectedCountry = useSelector(selectSelectedCountry);
+  const symbol = selectedCountry?.symbol ?? "₵";
+
   return (
     <div
       className={`
@@ -79,32 +86,34 @@ export default function BasketModal({
           </button>
         </div>
 
-        {/* Modal Body */}
+         {/* Body */}
         <div className="py-2 max-h-[70vh] overflow-y-auto">
-          {basket.length > 0 ? (
-            basket.map((product, index) => (
-              <div
-                key={index}
-                className="flex items-stretch gap-4 py-4 border-b border-gray-200 last:border-b-0"
-              >
-                {/* Product Image */}
+          {basket.length > 0 ? basket.map((product, idx) => {
+            // Sale logic
+            const now = new Date();
+            const saleEnd = product.sale_end_date ? new Date(product.sale_end_date) : null;
+            const isOnSale = saleEnd && saleEnd > now && product.sale_price_cents > 0;
+
+            // Unit & subtotal 계산
+            const unitCents = isOnSale ? product.sale_price_cents : product.price_cents;
+            const unitPrice = unitCents / 100;
+            const subtotal = (unitPrice * product.quantity).toFixed(2);
+
+            return (
+              <div key={idx} className="flex items-stretch gap-4 py-4 border-b border-gray-200 last:border-b-0">
+                {/* Image */}
                 <div className="w-[100px] h-[100px] flex-shrink-0">
                   <img
-                    src={
-                      product?.image?.[0] ||
-                      "https://via.placeholder.com/150"
-                    }
+                    src={product.image?.[0] || "https://via.placeholder.com/150"}
                     alt={product.title}
                     className="h-full w-full object-cover rounded-md"
                   />
                 </div>
 
-                {/* Product Details */}
+                {/* Details */}
                 <div className="flex flex-col justify-center w-full">
                   {product.sku && (
-                    <p className="text-xs text-gray-500 mb-1">
-                      SKU: {product.sku}
-                    </p>
+                    <p className="text-xs text-gray-500 mb-1">SKU: {product.sku}</p>
                   )}
                   <div className="flex items-center justify-between w-full">
                     <p className="text-sm sm:text-base md:text-lg font-semibold text-gray-800">
@@ -112,60 +121,39 @@ export default function BasketModal({
                     </p>
                     <select
                       value={product.quantity}
-                      onChange={(e) =>
-                        handleQuantityChange(
-                          product.id,
-                          parseInt(e.target.value, 10)
-                        )
+                      onChange={e =>
+                        handleQuantityChange(product.id, +e.target.value)
                       }
-                      className="py-1 px-2 border border-gray-300 rounded-md 
-                        focus:outline-none focus:ring-1 focus:ring-indigo-500
-                        text-xs sm:text-sm"
-                      aria-label="Select quantity"
+                      className="py-1 px-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 text-xs sm:text-sm"
                     >
-                      {[...Array(10).keys()].map((num) => (
-                        <option key={num + 1} value={num + 1}>
-                          {num + 1}
-                        </option>
+                      {[...Array(10)].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>{i + 1}</option>
                       ))}
                     </select>
                   </div>
 
-                  {/* Favorites / Remove / Price */}
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                      <button
-                        type="button"
-                        className="inline-flex items-center text-xs sm:text-sm font-medium 
-                          text-gray-500 hover:text-gray-900 hover:underline"
-                      >
-                        <FaHeart className="mr-1.5 h-4 w-4 sm:h-5 sm:w-5" />
-                        Add to Favorites
-                      </button>
-
-                      <button
-                        onClick={() => handleRemoveProduct(product.id)}
-                        type="button"
-                        className="inline-flex items-center text-xs sm:text-sm font-medium 
-                          text-red-600 hover:underline"
-                      >
-                        <HiMiniXMark className="mr-1.5 h-4 w-4 sm:h-5 sm:w-5" />
-                        Remove
-                      </button>
-                    </div>
-
-                    <p className="text-sm sm:text-base md:text-lg font-medium text-gray-900">
-                      {/* {((product.price_cents / 100) * product.quantity).toFixed(2)} */}
-                      {saleActive ? `₵${activePrice} x ${product.quantity}` : ''}
-                    </p>
+                  {/* Price & Subtotal */}
+                  <div className="flex items-center justify-between pt-2">                   
+                    {/* Remove */}
+                  <button
+                    onClick={() => handleRemoveProduct(product.id)}
+                    className="mt-2 inline-flex items-center text-xs sm:text-sm text-red-600 hover:underline"
+                  >
+                    <HiMiniXMark className="mr-1.5 h-4 w-4 sm:h-5 sm:w-5" />
+                    Remove
+                  </button>
+                    {/* Subtotal */}
+                    <span className="text-sm font-semibold text-gray-900">
+                      {symbol}{subtotal}
+                    </span>
                   </div>
+
+                  
                 </div>
               </div>
-            ))
-          ) : (
-            <p className="text-center text-gray-500">
-              No items in the basket.
-            </p>
+            );
+          }) : (
+            <p className="text-center text-gray-500">No items in the basket.</p>
           )}
         </div>
 
@@ -191,3 +179,97 @@ export default function BasketModal({
     </div>
   );
 }
+
+
+{/* Modal Body */}
+    // <div className="py-2 max-h-[70vh] overflow-y-auto">
+        //   {basket.length > 0 ? (
+        //     basket.map((product, index) => (
+
+              
+              
+        //       <div
+        //         key={index}
+        //         className="flex items-stretch gap-4 py-4 border-b border-gray-200 last:border-b-0"
+        //       >
+        //         {/* Product Image */}
+        //         <div className="w-[100px] h-[100px] flex-shrink-0">
+        //           <img
+        //             src={
+        //               product?.image?.[0] ||
+        //               "https://via.placeholder.com/150"
+        //             }
+        //             alt={product.title}
+        //             className="h-full w-full object-cover rounded-md"
+        //           />
+        //         </div>
+
+        //         {/* Product Details */}
+        //         <div className="flex flex-col justify-center w-full">
+        //           {product.sku && (
+        //             <p className="text-xs text-gray-500 mb-1">
+        //               SKU: {product.sku}
+        //             </p>
+        //           )}
+        //           <div className="flex items-center justify-between w-full">
+        //             <p className="text-sm sm:text-base md:text-lg font-semibold text-gray-800">
+        //               {product.title}
+        //             </p>
+        //             <select
+        //               value={product.quantity}
+        //               onChange={(e) =>
+        //                 handleQuantityChange(
+        //                   product.id,
+        //                   parseInt(e.target.value, 10)
+        //                 )
+        //               }
+        //               className="py-1 px-2 border border-gray-300 rounded-md 
+        //                 focus:outline-none focus:ring-1 focus:ring-indigo-500
+        //                 text-xs sm:text-sm"
+        //               aria-label="Select quantity"
+        //             >
+        //               {[...Array(10).keys()].map((num) => (
+        //                 <option key={num + 1} value={num + 1}>
+        //                   {num + 1}
+        //                 </option>
+        //               ))}
+        //             </select>
+        //           </div>
+
+        //           {/* Favorites / Remove / Price */}
+        //           <div className="flex items-center justify-between pt-2">
+        //             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+        //               {/* <button
+        //                 type="button"
+        //                 className="inline-flex items-center text-xs sm:text-sm font-medium 
+        //                   text-gray-500 hover:text-gray-900 hover:underline"
+        //               >
+        //                 <FaHeart className="mr-1.5 h-4 w-4 sm:h-5 sm:w-5" />
+        //                 Add to Favorites
+        //               </button> */}
+
+        //               <button
+        //                 onClick={() => handleRemoveProduct(product.id)}
+        //                 type="button"
+        //                 className="inline-flex items-center text-xs sm:text-sm font-medium 
+        //                   text-red-600 hover:underline"
+        //               >
+        //                 <HiMiniXMark className="mr-1.5 h-4 w-4 sm:h-5 sm:w-5" />
+        //                 Remove
+        //               </button>
+        //             </div>
+
+        //             <p className="text-sm sm:text-base md:text-lg font-medium text-gray-900">
+        //               {/* {((product.price_cents / 100) * product.quantity).toFixed(2)} */}
+        //               {saleActive ? `₵${activePrice} x ${product.quantity}` : ''}
+        //             </p>
+        //           </div>
+        //         </div>
+        //       </div>
+        //     ))
+        //   ) : (
+        //     <p className="text-center text-gray-500">
+        //       No items in the basket.
+        //     </p>
+        //   )}
+   // </div>
