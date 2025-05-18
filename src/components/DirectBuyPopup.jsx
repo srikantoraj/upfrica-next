@@ -1,6 +1,4 @@
 
-
-
 "use client";
 import React, { useState, useEffect } from "react";
 import { HiXMark } from "react-icons/hi2";
@@ -20,10 +18,10 @@ const DirectBuyPopup = ({
   isVisible,
   onClose,
   quantity,
-  relatedProducts =[],
+  relatedProducts = [],
 }) => {
-  console.log("directbyproduct",product);
-  
+  console.log("directbyproduct", product);
+
   const router = useRouter();
   const { token } = useSelector((state) => state.auth) || {};
 
@@ -290,7 +288,7 @@ const DirectBuyPopup = ({
             </p>
           </div>
 
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Shipping Address
             </label>
@@ -311,7 +309,30 @@ const DirectBuyPopup = ({
                 ))}
               </select>
             )}
-          </div>
+          </div> */}
+
+          {!isAddressLoading && addresses.length > 0 && <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Shipping Address
+            </label>
+            {isAddressLoading ? (
+              <div className="animate-pulse">
+                <div className="h-10 bg-gray-300 rounded w-full" />
+              </div>
+            ) : (
+              <select
+                value={selectedAddressId}
+                onChange={(e) => setSelectedAddressId(e.target.value)}
+                className="w-full border border-gray-300 rounded p-2 text-sm"
+              >
+                {addresses.map((addr) => (
+                  <option key={addr.id} value={addr.id}>
+                    {addr.value}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>}
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
@@ -379,6 +400,9 @@ const DirectBuyPopup = ({
 };
 
 export default DirectBuyPopup;
+
+
+
 
 
 

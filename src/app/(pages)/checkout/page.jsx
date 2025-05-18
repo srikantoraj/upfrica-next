@@ -12,12 +12,12 @@ import { useSelector } from "react-redux";
 const Checkout = () => {
   const userInfo = useAuth();
   const { user, token } = useSelector((state) => state.auth);
-   console.log("token",token)
+  console.log("token", token)
   const [country, setCountry] = useState("Bangladesh");
   const [isOpen, setIsOpen] = useState(false);
   const [basket, setBasket] = useState([]);
   const [isChecked, setIsChecked] = useState(false);
-
+  // const [isOpen, setIsOpen] = useState(false);
   const [addresses, setAddresses] = useState([]); // To store fetched addresses
   const [dropdownOptions, setDropdownOptions] = useState([]); // Dropdown options
   const [selectedAddressId, setSelectedAddressId] = useState(null); // Selected address ID
@@ -26,6 +26,7 @@ const Checkout = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+
   const cartId = searchParams.get("cart_id"); // ✅ Get cart_id from URL
 
 
@@ -33,7 +34,6 @@ const Checkout = () => {
 
   // Fetch addresses from the API
   useEffect(() => {
-
 
     const fetchAddresses = async () => {
       try {
@@ -60,10 +60,18 @@ const Checkout = () => {
         setAddresses(data);
 
         // Map addresses to dropdown options
+        // const options = data?.map((address) => ({
+        //   id: address.id,
+        //   value: `${address.address_data.address_line_1}, ${address.address_data.town}, ${address.address_data.country}`,
+        // }));
+
         const options = data?.map((address) => ({
           id: address.id,
-          value: `${address.address_data.address_line_1}, ${address.address_data.town}, ${address.address_data.country}`,
+          value: `${address.address_data.street}, ${address.address_data.city}, ${address.address_data.country}`,
         }));
+
+
+
         setDropdownOptions(options);
         setSelectedAddressId(options?.[0]?.id);
       } catch (error) {
@@ -154,21 +162,46 @@ const Checkout = () => {
 
   const formik = useFormik({
     initialValues: {
-      full_name: "John Doe",
+      full_name: "",
       default: true,
       owner_id: userInfo?.user?.id || 1,
       owner_type: "USER",
       address_data: {
-        street: "123 Main St",
-        city: "Springfield",
-        state: "IL",
-        zip_code: "62704",
-        country: "USA"
+        street: " ",
+        city: " ",
+        state: " ",
+        zip_code: " ",
+        country: " "
       }
     },
     onSubmit: async (values) => {
-      console.log("value",values);
-      
+      console.log("value", values);
+
+      // try {
+      //   const response = await fetch('https://media.upfrica.com/api/addresses/', {
+      //     method: 'POST',
+      //     headers: {
+      //       'Authorization': `Token ${token}`,
+      //       'Content-Type': 'application/json',
+      //     },
+      //     body: JSON.stringify({ values })
+      //   });
+
+      //   const data = await response.JSON();
+      //   // const data = text ? JSON.parse(text) : {};
+
+      //   if (!response.ok) {
+      //     const error = data.message || response.statusText;
+      //     throw new Error(error);
+      //   }
+
+      //   console.log('Submitted Address:', data);
+      //   // এখানে আপনি সফল সাবমিশনের পরবর্তী কার্যক্রম পরিচালনা করতে পারেন
+      // } catch (error) {
+      //   console.error('Submission error:', error);
+      //   // এখানে আপনি ব্যবহারকারীকে ত্রুটি বার্তা প্রদর্শন করতে পারেন
+      // }
+
       try {
         const response = await fetch('https://media.upfrica.com/api/addresses/', {
           method: 'POST',
@@ -176,25 +209,21 @@ const Checkout = () => {
             'Authorization': `Token ${token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ values })
+          body: JSON.stringify(values),
         });
-    
-        const text = await response.text();
-        const data = text ? JSON.parse(text) : {};
-    
+
         if (!response.ok) {
-          const error = data.message || response.statusText;
-          throw new Error(error);
+          throw new Error('Something went wrong with the request');
         }
-    
-        console.log('Submitted Address:', data);
-        // এখানে আপনি সফল সাবমিশনের পরবর্তী কার্যক্রম পরিচালনা করতে পারেন
+
+        const data = await response.json();
+        console.log("post address", data);
       } catch (error) {
-        console.error('Submission error:', error);
-        // এখানে আপনি ব্যবহারকারীকে ত্রুটি বার্তা প্রদর্শন করতে পারেন
+        console.error('Error:', error);
       }
+
     }
-    
+
   });
 
 
@@ -258,6 +287,28 @@ const Checkout = () => {
   );
 
 
+
+  // New click handlers:
+  const handlePaystackClick = () => {
+    if (dropdownOptions.length === 0) {
+      setIsOpen(true);
+      return;
+    }
+    setSelectedPayment("paystack");
+    placeOrder("paystack");
+  };
+
+  const handleStripeClick = () => {
+    if (dropdownOptions.length === 0) {
+      setIsOpen(true);
+      return;
+    }
+    setSelectedPayment("stripe");
+    placeOrder("stripe");
+  };
+
+
+
   return (
     <div>
       {/* Header */}
@@ -295,6 +346,7 @@ const Checkout = () => {
 
             {dropdownOptions?.length > 0 && (
               <Addresses
+                addresses={addresses}
                 options={dropdownOptions}
                 onSelect={handleSelect}
                 placeholder={dropdownOptions[0].value}
@@ -311,123 +363,145 @@ const Checkout = () => {
                   {isOpen ? <FaChevronUp /> : <FaChevronDown />}
                 </span>
               </div>
-              <span className="text-blue-500">Edit</span>
+              {/* <span className="text-blue-500">Edit</span> */}
 
               {/* Modal Popup */}
               {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                  <div className="bg-white w-full max-w-2xl p-6 rounded-lg shadow-lg overflow-y-auto max-h-[90vh] relative">
+                  <div className="bg-white w-full max-w-xl p-8 rounded-lg shadow-xl overflow-y-auto max-h-[90vh] relative">
                     {/* Close Button */}
                     <button
                       onClick={toggleDropdown}
-                      className="absolute top-3 right-4 text-gray-600 text-2xl font-bold"
+                      className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"
                     >
                       &times;
                     </button>
 
+                    {/* Header */}
+                    <div className="mb-6 text-center">
+                      <h3 className="text-2xl font-bold text-gray-800">Add New Address</h3>
+                      {dropdownOptions.length === 0 && (
+                        <p className="mt-2 text-red-500 font-medium">
+                          Please create your address
+                        </p>
+                      )}
+                    </div>
+
                     {/* Address Form */}
-                    <form onSubmit={formik.handleSubmit} className="space-y-4 text-xl">
+                    <form onSubmit={formik.handleSubmit} className="space-y-6">
                       {/* Full Name */}
-                      <div className="space-y-1">
-                        <label className="block font-medium">*Full name</label>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Full Name
+                        </label>
                         <input
                           type="text"
                           name="full_name"
                           value={formik.values.full_name}
                           onChange={formik.handleChange}
-                          className="w-full border px-3 py-2 rounded-md"
                           placeholder="John Doe"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
 
                       {/* Set as Default */}
-                      <div className="space-y-1">
-                        <label className="flex items-center gap-2 font-medium">
-                          <input
-                            type="checkbox"
-                            name="default"
-                            checked={formik.values.default}
-                            onChange={formik.handleChange}
-                          />
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="default"
+                          checked={formik.values.default}
+                          onChange={formik.handleChange}
+                          className="h-4 w-4 text-purple-600 border-gray-300 rounded"
+                        />
+                        <label className="ml-2 text-sm font-medium text-gray-700">
                           Set as default
                         </label>
                       </div>
 
                       {/* Street */}
-                      <div className="space-y-1">
-                        <label className="block font-medium">*Street</label>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Street</label>
                         <input
                           type="text"
                           name="address_data.street"
                           value={formik.values.address_data.street}
                           onChange={formik.handleChange}
-                          className="w-full border px-3 py-2 rounded-md"
                           placeholder="123 Main St"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
 
                       {/* City */}
-                      <div className="space-y-1">
-                        <label className="block font-medium">*City</label>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">City</label>
                         <input
                           type="text"
                           name="address_data.city"
                           value={formik.values.address_data.city}
                           onChange={formik.handleChange}
-                          className="w-full border px-3 py-2 rounded-md"
                           placeholder="Springfield"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
 
                       {/* State */}
-                      <div className="space-y-1">
-                        <label className="block font-medium">State</label>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">State</label>
                         <input
                           type="text"
                           name="address_data.state"
                           value={formik.values.address_data.state}
                           onChange={formik.handleChange}
-                          className="w-full border px-3 py-2 rounded-md"
                           placeholder="IL"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
 
                       {/* Zip Code */}
-                      <div className="space-y-1">
-                        <label className="block font-medium">Zip Code</label>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Zip Code</label>
                         <input
                           type="text"
                           name="address_data.zip_code"
                           value={formik.values.address_data.zip_code}
                           onChange={formik.handleChange}
-                          className="w-full border px-3 py-2 rounded-md"
                           placeholder="62704"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
 
                       {/* Country */}
-                      <div className="space-y-1">
-                        <label className="block font-medium">Country</label>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Country</label>
                         <CountryDropdown
                           name="address_data.country"
                           value={formik.values.address_data.country}
                           onChange={(val) => formik.setFieldValue("address_data.country", val)}
-                          className="w-full border px-3 py-2 rounded-md"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
 
-
                       {/* Submit Button */}
-                      <button
-                        type="submit"
-                        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md"
-                      >
-                        Submit
-                      </button>
+                      <div className="pt-6 border-t">
+                        <button
+                          type="submit"
+                          className="w-full py-2 bg-purple-600 text-white rounded-md font-semibold
+                       hover:bg-purple-700 transition"
+                        >
+                          Save Address
+                        </button>
+                      </div>
                     </form>
                   </div>
                 </div>
               )}
+
             </div>
 
           </div>
@@ -567,12 +641,11 @@ const Checkout = () => {
           </div> */}
 
           <div className="mt-4 md:flex justify-center items-center space-y-5 md:space-y-0 text-center mx-auto w-2/3 md:w-full">
+
+            {/* button one  */}
             <button
-              onClick={() => {
-                setSelectedPayment('paystack');
-                placeOrder('paystack');
-              }}
-              className="text-lg font-semibold text-white bg-[#f7c32e] px-6 py-3 rounded-full hover:bg-[#d6a91d] transition duration-300 ease-in-out shadow-lg focus:outline-none mr-4 flex justify-center items-center gap-2"
+              onClick={handlePaystackClick}
+              className="text-lg font-medium hover:text-white border border-[#f7c32e] hover:bg-[#f7c32e] px-6 lg:px-10 py-2 rounded-full  transition duration-300 ease-in-out shadow-lg focus:outline-none mr-4 flex justify-center items-center gap-2"
               disabled={isLoading}
             >
               {isLoading && selectedPayment === 'paystack' ? (
@@ -582,12 +655,10 @@ const Checkout = () => {
               )}
             </button>
 
+
             <button
-              onClick={() => {
-                setSelectedPayment('stripe');
-                placeOrder('stripe');
-              }}
-              className="text-lg font-semibold text-white bg-[#f7c32e] px-6 py-3  rounded-full hover:bg-[#d6a91d] transition duration-300 ease-in-out shadow-lg focus:outline-none flex justify-center items-center gap-2"
+              onClick={handleStripeClick}
+              className="text-lg font-medium hover:text-white border border-[#f7c32e] hover:bg-[#f7c32e] px-6 lg:px-10 py-2  rounded-full  transition duration-300 ease-in-out shadow-lg focus:outline-none flex justify-center items-center gap-2"
               disabled={isLoading}
             >
               {isLoading && selectedPayment === 'stripe' ? (
@@ -900,7 +971,7 @@ export default Checkout;
 
 //   const placeOrder = async (paymentMethod) => {
 //     const basket = JSON.parse(localStorage.getItem("basket")) || [];
-//     // const selectedAddressId = 7; 
+//     // const selectedAddressId = 7;
 //     if (!basket.length || !selectedAddressId || !cartId) {
 //       console.warn("Missing data");
 //       return;
