@@ -57,7 +57,7 @@ export const menuItems = [
     children: [
       { label: "All Orders", route: "/new-dashboard/all-orders" },
       { label: "Pending Orders", route: "/new-dashboard/pending-orders" },
-      { label: "Shipped Orders", route: "/new-dahsboard/shipped-orders" },
+      { label: "Shipped Orders", route: "/new-dashboard/shipped-orders" },
       { label: "Cancelled / Refunded", route: "/new-dashboard/cancelled-orders" },
     ]
   },
