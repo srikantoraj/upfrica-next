@@ -247,12 +247,12 @@ export default function DraftProducts() {
                                             <td className="py-3">{p.impressions_count ?? 0}</td>
                                             <td className="py-3">{p.likes ?? 0}</td>
                                             <td className="py-3 space-x-4">
-                                                <button
+                                                {/* <button
                                                     onClick={() => handleView(p.slug)}
                                                     title="View"
                                                 >
                                                     <FaEye className="h-4 w-4 text-[#2B3F6C]" />
-                                                </button>
+                                                </button> */}
                                                 <button
                                                     onClick={() => handleEdit(p.slug)}
                                                     title="Edit"

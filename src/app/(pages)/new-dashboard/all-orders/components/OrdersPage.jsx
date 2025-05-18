@@ -1,4 +1,9 @@
+
+
+
+
 "use client";
+
 import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -14,31 +19,38 @@ export default function OrdersPage() {
   const token = useSelector((state) => state.auth.token);
 
   const pageParam = parseInt(searchParams.get("page") || "1", 10);
-  const [orders, setOrders] = useState([]);
+
+  // will hold the flat list of order-items
+  const [items, setItems] = useState([]);
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const debounceRef = useRef(null);
 
+  // Fetch the flat list of order-items
   useEffect(() => {
     if (!token) return;
 
     setLoading(true);
-    fetch(`https://media.upfrica.com/api/buyer/orders/?page=${pageParam}`, {
-      headers: {
-        Authorization: `Token ${token}`,
-        "Content-Type": "application/json",
-      },
-    })
+    fetch(
+      `https://media.upfrica.com/api/seller/order-items/?page=${pageParam}`,
+      {
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    )
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
       .then((data) => {
-        setOrders(data.results);
+        setItems(data.results);
         setCount(data.count);
       })
       .catch((err) => setError(err.message))
@@ -46,40 +58,49 @@ export default function OrdersPage() {
   }, [token, pageParam]);
 
   const totalPages = Math.ceil(count / PAGE_SIZE);
-
   const goToPage = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       router.push(`/dashboard/all-orders?page=${newPage}`);
     }
   };
 
+  // Debounced client‐side search over the flat items array
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
       setSearchLoading(false);
       return;
     }
-
     setSearchLoading(true);
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      const lowerQuery = searchQuery.toLowerCase();
-      const filtered = orders.flatMap(order =>
-        order.order_items.filter(item =>
-          item.product.title.toLowerCase().includes(lowerQuery) ||
-          String(order.id).includes(lowerQuery)
-        ).map(item => ({ ...item, order }))
-      );
+      const q = searchQuery.toLowerCase();
+      const filtered = items
+        .filter(
+          (item) =>
+            item.product.title.toLowerCase().includes(q) ||
+            String(item.order_id).includes(q)
+        )
+        // inject an `order` object so <OrderCard> API stays the same
+        .map((item) => ({
+          ...item,
+          order: { id: item.order_id, created_at: item.order_date },
+        }));
       setSearchResults(filtered);
       setSearchLoading(false);
     }, 300);
 
     return () => clearTimeout(debounceRef.current);
-  }, [searchQuery, orders]);
+  }, [searchQuery, items]);
 
-  const displayItems = searchQuery ? searchResults : orders.flatMap(order =>
-    order.order_items.map(item => ({ ...item, order }))
-  );
+  // determine which list to render
+  const displayItems = searchQuery
+    ? searchResults
+    : // for non-search case, also inject `order`
+    items.map((item) => ({
+      ...item,
+      order: { id: item.order_id, created_at: item.order_date },
+    }));
 
   return (
     <div className="p-0 bg-gray-100 min-h-screen text-black font-sans">
@@ -101,38 +122,61 @@ export default function OrdersPage() {
         )}
       </div>
 
-      <div className="flex gap-6 mb-4 font-semibold overflow-x-auto whitespace-nowrap px-2 scrollbar-hide">
+      {/* Tabs (unchanged) */}
+      {/* <div className="flex gap-6 mb-4 font-semibold overflow-x-auto whitespace-nowrap px-2 scrollbar-hide">
         <div className="border-b-2 border-black pb-1">All Purchases</div>
         <div>Processing</div>
         <div>Unpaid</div>
-        <div>Returns & Cancelled</div>
-      </div>
+        <div>Returns &amp; Cancelled</div>
+      </div> */}
 
-      <h1 className="text-2xl font-bold mb-6">My Orders</h1>
+      {/* <h1 className="text-2xl font-bold mb-6">My Orders</h1> */}
 
       {loading ? (
-        <div className="text-center text-gray-600">Loading your orders...</div>
+        <div className="text-center text-gray-600">
+          Loading your orders...
+        </div>
       ) : error ? (
-        <p className="text-red-600 text-center">Error loading orders: {error}</p>
+        <p className="text-red-600 text-center">
+          Error loading orders: {error}
+        </p>
       ) : (
         <div className="space-y-6">
           {displayItems.length === 0 ? (
-            <p className="text-center text-gray-500">No matching orders found.</p>
+            <p className="text-center text-gray-500">
+              {searchQuery
+                ? searchLoading
+                  ? "Searching..."
+                  : "No matching orders found."
+                : "No orders yet."}
+            </p>
           ) : (
-            displayItems.map((item, index) => (
+            displayItems.map((item, idx) => (
               <OrderCard
-                key={`${item.order.id}-${item.id}-${index}`}
-                order={item.order} // ✅ Add this
-                product={item.product} // ✅ Pass product as well if needed
-                status={item.receive_status === 1 ? "Received" : "Processing"}
-                date={new Date(item.order.created_at).toLocaleDateString()}
-                total={`GHS ${(item.price_cents * item.quantity / 100).toFixed(2)}`}
+                key={`${item.order.id}-${item.id}-${idx}`}
+                order={item.order}
+                product={item.product}
+                status={
+                  item.dispatch_status === 1 ? "Dispatched" : "Processing"
+                }
+                date={new Date(
+                  item.order.created_at
+                ).toLocaleDateString()}
+                total={`GHS ${(
+                  (item.price_cents * item.quantity) /
+                  100
+                ).toFixed(2)}`}
                 orderNumber={String(item.order.id).padStart(8, "0")}
                 productTitle={item.product.title}
-                seller={item.product.user_display_name || `Seller ${item.product.user}`}
+                seller={
+                  item.product.user_display_name ||
+                  `Seller ${item.product.user}`
+                }
                 price={`GHS ${(item.price_cents / 100).toFixed(2)}`}
                 returnDate="12 May"
-                imageUrl={item.product.product_images?.[0] || "/placeholder.png"}
+                imageUrl={
+                  item.product.product_images?.[0] || "/placeholder.png"
+                }
               />
             ))
           )}

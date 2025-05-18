@@ -55,10 +55,10 @@ export const menuItems = [
     route: "/orders",
     icon: FaClipboardList,
     children: [
-      { label: "All Orders", route: "/orders/all" },
-      { label: "Pending Orders", route: "/orders/pending" },
-      { label: "Shipped Orders", route: "/orders/shipped" },
-      { label: "Cancelled / Refunded", route: "/orders/cancelled" },
+      { label: "All Orders", route: "/new-dashboard/all-orders" },
+      { label: "Pending Orders", route: "/new-dashboard/pending-orders" },
+      { label: "Shipped Orders", route: "/new-dahsboard/shipped-orders" },
+      { label: "Cancelled / Refunded", route: "/new-dashboard/cancelled-orders" },
     ]
   },
   {
@@ -74,8 +74,8 @@ export const menuItems = [
     ]
   },
   {
-    label: "My Orders",
-    route: "/new-dashboard/all-orders",
+    label: "My Purchases",
+    route: "/new-dashboard/my-orders",
     icon: FaClipboardList,
     children: [
       { label: "All Purchases", route: "/new-dashboard/my-orders" },

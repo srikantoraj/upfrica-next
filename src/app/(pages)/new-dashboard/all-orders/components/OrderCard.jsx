@@ -50,7 +50,7 @@ const OrderCard = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const maskedPhone = order.address.address_data.phone_number.replace(
+  const maskedPhone = order?.address?.address_data?.phone_number?.replace(
     /(\+\d{3})\s\d{2}\s\d{3}/,
     "$1 ***"
   );
@@ -148,11 +148,7 @@ const OrderCard = ({
 
         {/* Bottom: Buttons + Address */}
         <div>
-          <div className="flex gap-2 mb-4 w-full overflow-x-auto scrollbar-hide">
-            <button className="upfrica-btn-primary-outline-sm text-black">🔁 Buy it again</button>
-            <button className="upfrica-btn-primary-outline-sm text-black">✍️ Write a review</button>
-            <button className="upfrica-btn-primary-outline-sm text-black">🛍️ Seller's items</button>
-          </div>
+        
 
           <hr className="border-t border-gray-200 my-4" />
 
@@ -163,8 +159,8 @@ const OrderCard = ({
                 <AiOutlineHome className="text-violet-600" size={18} />
                 <span>
                   {showFullInfo
-                    ? `${order.address.address_data.address_line_1}${order.address.address_data.address_line_2 ? ", " + order.address.address_data.address_line_2 : ""}, ${order.address.address_data.local_area}, ${order.address.address_data.town}, ${order.address.address_data.country}`
-                    : `${order.address.address_data.town}, ${order.address.address_data.country}`}
+                    ? `${order?.address?.address_data?.address_line_1}${order?.address?.address_data?.address_line_2 ? ", " + order.address.address_data.address_line_2 : ""}, ${order.address.address_data.local_area}, ${order.address.address_data.town}, ${order.address.address_data.country}`
+                    : `${order?.address?.address_data?.town}, ${order?.address?.address_data?.country}`}
                 </span>
               </div>
 
@@ -172,8 +168,8 @@ const OrderCard = ({
                 <AiOutlineUser className="text-violet-600" size={18} />
                 <span>
                   {showFullInfo
-                    ? `${order.buyer.first_name} ${order.buyer.last_name}`
-                    : `${order.buyer.first_name} ${order.buyer.last_name[0]}.`}
+                    ? `${order?.buyer?.first_name} ${order?.buyer?.last_name}`
+                    : `${order?.buyer?.first_name} ${order?.buyer?.last_name[0]}.`}
                 </span>
               </div>
 
