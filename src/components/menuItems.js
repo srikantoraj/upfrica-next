@@ -86,14 +86,13 @@ export const menuItems = [
     ]
   },
   {
-    label: "Reviews",
+    label: "Admin Approvals",
     route: "/new-dashboard/lavel",
     icon: FaClipboardList,
     children: [
+      { label: "Draft Products", route: "/new-dashboard/draft-products" },
       { label: "Pending Reviews", route: "/new-dashboard/pending-reviews" },
-      // { label: "Processing", route: "/new-dashboard/my-orders/processing" },
-      // { label: "Unpaid", route: "/new-dashboard/my-orders/unpaid" },
-      // { label: "Returns & Cancelled", route: "/new-dashboard/my-orders/return-cancelled" },
+    
      
     ]
   },

@@ -1014,6 +1014,8 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                     ? selectedMultiBuyTier.minQuantity
                     : quantity,
                 image: product_images,
+                postage_fee: product?.postage_fee_cents || 0,
+                secondary_postage_fee: product?.secondary_postage_fee_cents || 0,
                 variants: selectedVariants,
                 sku,
             })
