@@ -1,220 +1,483 @@
+// 'use client';
 
+// import { useState, useEffect } from 'react';
+// import { useSelector } from 'react-redux';
+// import {
+//   FiSearch,
+//   FiStar,
+//   FiMessageSquare,
+//   FiHelpCircle,
+//   FiCalendar,
+// } from 'react-icons/fi';
+// import Pagination from '@/components/Pagination';
+// import LoaderButton from '@/components/LoaderButton';
 
+// const PAGE_SIZE = 20;
 
+// export default function PendingReviewsPage() {
+//   const { token } = useSelector((state) => state.auth);
+//   const [reviews, setReviews] = useState([]);
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [totalPages, setTotalPages] = useState(1);
+//   const [loading, setLoading] = useState(false);
+//   const [approvingId, setApprovingId] = useState(null);
+
+//   // Fetch pending reviews
+//   useEffect(() => {
+//     if (!token) return;
+//     const fetchReviews = async () => {
+//       setLoading(true);
+//       try {
+//         const res = await fetch(
+//           `https://media.upfrica.com/api/products-reviews/pending/?page=${currentPage}`,
+//           {
+//             method: 'GET',
+//             headers: { Authorization: `Token ${token}` },
+//           }
+//         );
+//         if (!res.ok) throw new Error('Failed to load reviews');
+//         const data = await res.json();
+//         setReviews(data.results || []);
+//         setTotalPages(Math.ceil((data.count || 0) / PAGE_SIZE));
+//       } catch (err) {
+//         console.error(err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+//     fetchReviews();
+//   }, [token, currentPage]);
+
+//   // Approve a review
+//   const handleApprove = async (id) => {
+//     if (!window.confirm('Approve this review?')) return;
+//     setApprovingId(id);
+//     try {
+//       const res = await fetch(
+//         `https://media.upfrica.com/api/reviews/${id}/approve/`,
+//         {
+//           method: 'POST',
+//           headers: {
+//             Authorization: `Token ${token}`,
+//             'Content-Type': 'application/json',
+//           },
+//           body: JSON.stringify(id),
+//         }
+//       );
+//       if (!res.ok) throw new Error('Approval failed');
+//       setReviews((prev) => prev.filter((r) => r.id !== id));
+//     } catch (err) {
+//       console.error(err);
+//       alert('Could not approve review.');
+//     } finally {
+//       setApprovingId(null);
+//     }
+//   };
+
+//   // Filter by review or product title
+//   const filtered = reviews.filter((r) => {
+//     const rt = r.title?.toLowerCase() || '';
+//     const pt = r.product.title.toLowerCase();
+//     return (
+//       rt.includes(searchTerm.toLowerCase()) ||
+//       pt.includes(searchTerm.toLowerCase())
+//     );
+//   });
+
+//   return (
+//     <div className="w-full max-w-5xl mx-auto p-6">
+//       <h1 className="text-2xl font-semibold mb-6">Pending Reviews</h1>
+
+//       {/* Full-width Search */}
+//       <div className="mb-6">
+//         <div className="relative">
+//           <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+//           <input
+//             type="text"
+//             value={searchTerm}
+//             onChange={(e) => {
+//               setSearchTerm(e.target.value);
+//               setCurrentPage(1);
+//             }}
+//             placeholder="Search reviews or products..."
+//             className="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 text-gray-900 placeholder-gray-500 focus:outline-none font-medium"
+//           />
+//         </div>
+//       </div>
+
+//       {loading ? (
+//         <div className="space-y-6">
+//           {[...Array(3)].map((_, i) => (
+//             <div
+//               key={i}
+//               className="animate-pulse bg-gray-100 h-32 rounded-lg"
+//             />
+//           ))}
+//         </div>
+//       ) : (
+//         <div className="space-y-6">
+//           {filtered.length === 0 && (
+//             <p className="text-center text-gray-500">No reviews found.</p>
+//           )}
+
+//           {filtered.map((r) => (
+//             <div
+//               key={r.id}
+//               className="bg-white shadow rounded-lg p-4 flex items-center space-x-4"
+//             >
+//               {/* Image */}
+//               <div className="w-24 h-24 flex-shrink-0 rounded overflow-hidden bg-gray-200">
+//                 {r.product.product_images[0] && (
+//                   <img
+//                     src={r.product.product_images[0]}
+//                     alt={r.product.title}
+//                     className="w-full h-full object-cover"
+//                   />
+//                 )}
+//               </div>
+
+//               {/* Info Grid */}
+//               <div className="flex-1 grid grid-cols-2 gap-4 text-sm text-gray-700">
+//                 {/* Product Title */}
+//                 <div>
+//                   <span className="font-medium text-gray-800">Product:</span>{' '}
+//                   {r.product.title || 'N/A'}
+//                 </div>
+
+//                 {/* Review Title */}
+//                 <div>
+//                   <span className="font-medium text-gray-800">Review:</span>{' '}
+//                   {r.title || 'N/A'}
+//                 </div>
+
+//                 {/* Rating */}
+//                 <div className="flex items-center">
+//                   <FiStar className="mr-1 text-yellow-500" />
+//                   <span>
+//                     {r.rating != null ? `${r.rating}/5` : 'N/A'}
+//                   </span>
+//                 </div>
+
+//                 {/* Date */}
+//                 <div className="flex items-center">
+//                   <FiCalendar className="mr-1 text-gray-500" />
+//                   <span>
+//                     {r.created_at
+//                       ? new Date(r.created_at).toLocaleDateString()
+//                       : 'N/A'}
+//                   </span>
+//                 </div>
+
+//                 {/* Comment (span both columns) */}
+//                 <div className="col-span-2 flex items-start">
+//                   <FiMessageSquare className="mt-1 mr-1 text-gray-500" />
+//                   <p className="flex-1">
+//                     {r.comment ? r.comment : 'N/A'}
+//                   </p>
+//                 </div>
+
+//                 {/* Questions (span both columns) */}
+//                 <div className="col-span-2">
+//                   <div className="flex items-center mb-1">
+//                     <FiHelpCircle className="mr-1 text-gray-500" />
+//                     <span className="font-medium text-gray-800">
+//                       Questions:
+//                     </span>
+//                   </div>
+//                   {r.questions && Object.keys(r.questions).length > 0 ? (
+//                     <ul className="list-disc list-inside text-gray-700">
+//                       {Object.entries(r.questions).map(([k, v]) => (
+//                         <li key={k}>
+//                           <span className="capitalize">{k.replace(/_/g, ' ')}:</span>{' '}
+//                           {v || 'N/A'}
+//                         </li>
+//                       ))}
+//                     </ul>
+//                   ) : (
+//                     <p className="text-gray-700">N/A</p>
+//                   )}
+//                 </div>
+//               </div>
+
+//               {/* Approve Button */}
+//               <LoaderButton
+//                 loading={approvingId === r.id}
+//                 onClick={() => handleApprove(r.id)}
+//                 className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap ${approvingId === r.id
+//                     ? 'bg-green-300 text-white'
+//                     : 'bg-green-500 hover:bg-green-600 text-white'
+//                   }`}
+//               >
+//                 Approve
+//               </LoaderButton>
+//             </div>
+//           ))}
+//         </div>
+//       )}
+
+//       {/* Pagination */}
+//       {totalPages > 1 && (
+//         <div className="flex justify-center mt-8">
+//           <Pagination
+//             currentPage={currentPage}
+//             totalPages={totalPages}
+//             onPageChange={setCurrentPage}
+//           />
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { FiEdit, FiTrash2 } from 'react-icons/fi'; // 👈 এখানে ইমপোর্ট
+import {
+  FiSearch,
+  FiStar,
+  FiMessageSquare,
+  FiHelpCircle,
+  FiCalendar,
+  FiTrash,
+  FiCheck,
+} from 'react-icons/fi';
+import Pagination from '@/components/Pagination';
+import LoaderButton from '@/components/LoaderButton';
 
-const STATUS_OPTIONS = [
-  { value: 0, label: 'Pending' },
-  { value: 1, label: 'Approved' },
-];
+const PAGE_SIZE = 20;
 
-const PendingReviewsPage = () => {
-  const token = useSelector((state) => state.auth.token);
+export default function PendingReviewsPage() {
+  const { token } = useSelector((state) => state.auth);
   const [reviews, setReviews] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedReview, setSelectedReview] = useState(null);
-  const [newStatus, setNewStatus] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [approvingId, setApprovingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   // Fetch pending reviews
   useEffect(() => {
     if (!token) return;
-    (async () => {
-      const res = await fetch(
-        'https://media.upfrica.com/api/admin/products/redmi-power-bank-18w-fast-power-charger/reviews/pending/',
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Token ${token}`,
-          },
-        }
-      );
-      if (!res.ok) {
-        console.error(await res.text());
-        return;
+    const fetchReviews = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `https://media.upfrica.com/api/products-reviews/pending/?page=${currentPage}`,
+          {
+            method: 'GET',
+            headers: { Authorization: `Token ${token}` },
+          }
+        );
+        if (!res.ok) throw new Error('Failed to load reviews');
+        const data = await res.json();
+        setReviews(data.results || []);
+        setTotalPages(Math.ceil((data.count || 0) / PAGE_SIZE));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-      setReviews(await res.json());
-    })();
-  }, [token]);
+    };
+    fetchReviews();
+  }, [token, currentPage]);
 
-  console.log("reviews",reviews);
-  
-
-  // Open edit modal
-  const openEditModal = (review) => {
-    setSelectedReview(review);
-    setNewStatus(review.status);
-    setIsModalOpen(true);
-  };
-
-  // Delete handler
-  // const handleDelete = async (id) => {
-  //   if (!confirm('আপনি কি সত্যিই ডিলিট করতে চান?')) return;
-  //   try {
-  //     const res = await fetch(
-  //       `https://media.upfrica.com/api/products/redmi-power-bank-18w-fast-power-charger/reviews/${id}/`,
-  //       {
-  //         method: 'DELETE',
-  //         headers: { Authorization: `Token ${token}` },
-  //       }
-  //     );
-  //     if (!res.ok) throw new Error(await res.text());
-  //     setReviews((prev) => prev.filter((r) => r.id !== id));
-  //   } catch (err) {
-  //     console.error('Failed to delete:', err);
-  //   }
-  // };
-
-  const handleDelete = async (id) => {
-  // ১) কনফার্ম ডায়ালগ
-  const shouldDelete = window.confirm('You are about to delete this review. Are you sure?');
-  if (!shouldDelete) return;
-
-  // ২) API কল
-  try {
-    const res = await fetch(
-      `https://media.upfrica.com/api/products/redmi-power-bank-18w-fast-power-charger/reviews/${id}/`,
-      {
-        method: 'DELETE',
-        headers: { Authorization: `Token ${token}` },
-      }
-    );
-    if (!res.ok) throw new Error(await res.text());
-    setReviews((prev) => prev.filter((r) => r.id !== id));
-  } catch (err) {
-    console.error('Failed to delete:', err);
-    alert('Something went wrong while deleting the review. Please try again.');
-  }
-};
-
-
-  // Save updated status
-  const saveStatus = async () => {
+  // Approve a review
+  const handleApprove = async (id) => {
+    if (!window.confirm('Approve this review?')) return;
+    setApprovingId(id);
     try {
-      const res = await fetch(
-        `https://media.upfrica.com/api/products/redmi-power-bank-18w-fast-power-charger/reviews/${selectedReview.id}/`,
+      await fetch(
+        `https://media.upfrica.com/api/reviews/${id}/approve/`,
         {
-          method: 'PATCH',
+          method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
             Authorization: `Token ${token}`,
+            'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ status: newStatus }),
+          body: JSON.stringify(id),
         }
       );
-      if (!res.ok) throw new Error(await res.text());
-      const updated = await res.json();
-      console.log("updated",updated);
-      
-      setReviews((prev) =>
-        prev.map((r) => (r.id === updated.id ? updated : r))
-      );
-      setIsModalOpen(false);
-      setSelectedReview(null);
+      setReviews((prev) => prev.filter((r) => r.id !== id));
     } catch (err) {
-      console.error('Failed to update status:', err);
+      console.error(err);
+      alert('Could not approve review.');
+    } finally {
+      setApprovingId(null);
     }
   };
 
-  return (
-    <div className="p-8">
-      <h1 className="text-2xl font-semibold mb-4">Pending Reviews</h1>
+  // Delete a review
+  const handleDelete = async (r) => {
+    if (!window.confirm('Delete this review?')) return;
+    setDeletingId(r.id);
+    try {
+      await fetch(
+        `https://media.upfrica.com/api/products/${r.product.slug}/reviews/${r.id}/`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
+      setReviews((prev) => prev.filter((rev) => rev.id !== r.id));
+    } catch (err) {
+      console.error(err);
+      alert('Could not delete review.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
-      {reviews.length === 0 ? (
-        <p className="text-gray-600">কোনো pending review পাওয়া যায়নি।</p>
+  // Filter by review or product title
+  const filtered = reviews.filter((r) => {
+    const rt = r.title?.toLowerCase() || '';
+    const pt = r.product.title.toLowerCase();
+    return (
+      rt.includes(searchTerm.toLowerCase()) ||
+      pt.includes(searchTerm.toLowerCase())
+    );
+  });
+
+  return (
+    <div className="w-full max-w-5xl mx-auto p-6">
+      <h1 className="text-2xl font-semibold mb-6">Pending Reviews</h1>
+
+      {/* Full-width Search */}
+      <div className="mb-6">
+        <div className="relative">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            placeholder="Search reviews or products..."
+            className="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 text-gray-900 placeholder-gray-500 focus:outline-none font-medium"
+          />
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="animate-pulse bg-gray-100 h-32 rounded-lg"
+            />
+          ))}
+        </div>
       ) : (
-        <table className="min-w-full bg-white border">
-          <thead>
-            <tr>
-              <th className="px-4 py-2 border">ID</th>
-              <th className="px-4 py-2 border">Title</th>
-              <th className="px-4 py-2 border">Status</th>
-              <th className="px-4 py-2 border">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reviews.map((rev) => (
-              <tr key={rev.id}>
-                <td className="px-4 py-2 border">{rev.id}</td>
-                <td className="px-4 py-2 border">{rev.title}</td>
-                <td className="px-4 py-2 border">{rev.status}</td>
-                <td className="px-4 py-2 border flex space-x-2">
-                  {/* Edit Icon Button */}
-                  <button
-                    onClick={() => openEditModal(rev)}
-                    className="p-1 hover:bg-blue-100 rounded"
-                    aria-label="Edit review"
-                  >
-                    <FiEdit size={20} className="text-blue-600" />
-                  </button>
-                  {/* Delete Icon Button */}
-                  <button
-                    onClick={() => handleDelete(rev.id)}
-                    className="p-1 hover:bg-red-100 rounded"
-                    aria-label="Delete review"
-                  >
-                    <FiTrash2 size={20} className="text-red-600" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="space-y-6">
+          
+
+          {filtered.map((r) => (
+            <div
+              key={r.id}
+              className="bg-white shadow rounded-lg p-4 space-y-4"
+            >
+              {/* First row: image + review title */}
+              <div className="flex items-center space-x-4">
+                <div className="w-20 h-20 flex-shrink-0 rounded overflow-hidden bg-gray-200">
+                  {r.product.product_images[0] && (
+                    <img
+                      src={r.product.product_images[0]}
+                      alt={r.product.title}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                <h2 className="text-base  text-gray-800 truncate">
+                 Title: {r.product.title || 'N/A'}
+                </h2>
+              </div>
+
+              {/* Second row: all other info */}
+              <div className="grid grid-cols-2 gap-4 text-sm text-gray-700">
+                <div>
+                  <span className="font-semibold text-gray-800">Review:</span>{' '}
+                  {r.title || 'N/A'}
+                </div>
+                <div className="flex items-center">
+                  <FiStar className="mr-1 text-yellow-500" />
+                  <span>{r.rating != null ? `${r.rating}/5` : 'N/A'}</span>
+                </div>
+                <div className="flex items-center">
+                  <FiCalendar className="mr-1 text-gray-500" />
+                  <span>
+                    {r.created_at
+                      ? new Date(r.created_at).toLocaleDateString()
+                      : 'N/A'}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-800">Comment:</span>{' '}
+                  {r.comment || 'N/A'}
+                </div>
+                <div className="col-span-2">
+                  <div className="flex items-center mb-1">
+                    <FiHelpCircle className="mr-1 text-gray-500" />
+                    <span className="font-medium text-gray-800">Questions:</span>
+                  </div>
+                  {r.questions && Object.keys(r.questions).length > 0 ? (
+                    <ul className="list-disc list-inside text-gray-700 ml-4">
+                      {Object.entries(r.questions).map(([k, v]) => (
+                        <li key={k}>
+                          <span className="capitalize">{k.replace(/_/g, ' ')}:</span>{' '}
+                          {v || 'N/A'}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-700">N/A</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end space-x-2">
+                <LoaderButton
+                  loading={approvingId === r.id}
+                  onClick={() => handleApprove(r.id)}
+                  className={`flex items-center px-4 py-2 rounded-full font-semibold ${approvingId === r.id
+                      ? 'bg-green-300 text-white'
+                      : 'bg-green-400 hover:bg-green-600 text-white'
+                    }`}
+                >
+                  <FiCheck className="mr-2" />
+                  Approve
+                </LoaderButton>
+                <LoaderButton
+                  loading={deletingId === r.id}
+                  onClick={() => handleDelete(r)}
+                  className={`flex items-center px-4 py-2 rounded-full font-semibold ${deletingId === r.id
+                      ? 'bg-red-100 text-white'
+                      : 'bg-red-400 hover:bg-red-600 text-white'
+                    }`}
+                >
+                  <FiTrash className="mr-2" />
+                  Delete
+                </LoaderButton>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
-      {/* Edit Modal (same as আগে) */}
-      {isModalOpen && selectedReview && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center">
-          <div className="bg-white p-6 rounded shadow-lg w-96">
-            <h2 className="text-xl font-semibold mb-4">
-              Edit Review #{selectedReview.id}
-            </h2>
-            <p className="mb-2">
-              <strong>Title:</strong> {selectedReview.title}
-            </p>
-            <label className="block mb-4">
-              <span className="font-medium">Status:</span>
-              <select
-                className="mt-1 block w-full border rounded px-2 py-1"
-                value={newStatus}
-                onChange={(e) => setNewStatus(Number(e.target.value))}
-              >
-                {STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.value} — {opt.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="flex justify-end space-x-2">
-              <button
-                className="px-4 py-2 border rounded"
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setSelectedReview(null);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-green-600 text-white rounded"
-                onClick={saveStatus}
-              >
-                Done
-              </button>
-            </div>
-          </div>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-8">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       )}
     </div>
   );
-};
-
-export default PendingReviewsPage;
-
-
-
-
+}

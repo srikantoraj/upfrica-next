@@ -32,22 +32,22 @@ export const menuItems = [
         label: "Overview",
         route: "/new-dashboard/overview"
       },
-      {
-        label: "Quick Actions",
-        route: "/new-dashboard/quick-actions",
-        children: [
-          {
-            label: "➕ Add New Product",
-            route: "/new-dashboard/quick-actions/add-product",
-            icon: FaPlus
-          },
-          {
-            label: "💬 Message Admin",
-            route: "/new-dashboard/quick-actions/message-admin",
-            icon: FaEnvelope
-          }
-        ]
-      }
+      // {
+      //   label: "Quick Actions",
+      //   route: "/new-dashboard/quick-actions",
+      //   children: [
+      //     {
+      //       label: "➕ Add New Product",
+      //       route: "/new-dashboard/quick-actions/add-product",
+      //       icon: FaPlus
+      //     },
+      //     {
+      //       label: "💬 Message Admin",
+      //       route: "/new-dashboard/quick-actions/message-admin",
+      //       icon: FaEnvelope
+      //     }
+      //   ]
+      // }
     ]
   },
   {

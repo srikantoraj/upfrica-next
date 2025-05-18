@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useSelector } from "react-redux";
 
 import CustomerReviewsSection from "./CustomerReviewsSection";
-import CreateReves from "./CreateReves";
+import CreateReview from "./CreateReview";
 
 export default function DescriptionAndReviews({
     details,
@@ -254,7 +254,7 @@ export default function DescriptionAndReviews({
             </section>
 
             {/* CREATE REVIEW */}
-            <CreateReves />
+            <CreateReview slug={product?.slug} />
 
             {/* DISCLAIMER */}
             <section className="mt-12 bg-gray-100 p-4 rounded-md text-sm text-gray-700 space-y-2">
