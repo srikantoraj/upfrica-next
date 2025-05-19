@@ -97,24 +97,32 @@ export const menuItems = [
     ]
   },
   {
-    label: "Promotions",
-    route: "/promotions",
+    label: "Blogs",
+    route: "/new-dashboard",
     icon: FaTag,
     children: [
-      { label: "My Coupons", route: "/promotions/coupons" },
-      { label: "Flash Sales", route: "/promotions/flash-sales" },
-      { label: "Banner Ads", route: "/promotions/banner-ads" }
+      { label: "All Blogs", route: "/new-dashboard/help-blogs" },
+      { label: "Draft Blogs", route: "/new-dashboard/help-blogs/draft-blogs" },
+      { label: "Crate A Blog", route: "/new-dashboard/help-blogs/create-help-blog" },
+    
     ]
   },
   {
-    label: "Reports",
-    route: "/reports",
+    label: "Jobs & Careers",
+    route: "/new-dashboard",
+    icon: FaLifeRing,
+    children: [
+      { label: "All Jobs", route: "/new-dashboard/jobs" },
+      { label: "Create a Job", route: "/new-dashboard/jobs/create-job" }
+  
+    ]
+  },
+  {
+    label: "User Management",
+    route: "/new-dashboard",
     icon: FaChartBar,
     children: [
-      { label: "Sales by Product", route: "/reports/sales-by-product" },
-      { label: "Traffic & Conversion", route: "/reports/traffic-conversion" },
-      { label: "Top Customers", route: "/reports/top-customers" },
-      { label: "Payout History", route: "/reports/payout-history" }
+      { label: "All Users", route: "/new-dashboard/all-users" }
     ]
   },
   {
@@ -127,16 +135,7 @@ export const menuItems = [
       { label: "Transaction Logs", route: "/payments/logs" }
     ]
   },
-  {
-    label: "Help & Support",
-    route: "/support",
-    icon: FaLifeRing,
-    children: [
-      { label: "Seller FAQ", route: "/support/faq" },
-      { label: "Submit a Ticket", route: "/support/ticket" },
-      { label: "Live Chat with Admin", route: "/support/live-chat" }
-    ]
-  },
+ 
   // Sticky profile/logout at bottom
   {
     label: "My Profile",

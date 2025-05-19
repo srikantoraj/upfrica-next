@@ -43,7 +43,7 @@ export default function Header() {
           <div className="flex items-center justify-between xl:hidden">
             <Link href="/">
               <img
-                className="h-auto w-[80px] md:w-[100px] ml-4"
+                className="h-auto w-[100px]  ml-4"
                 src="https://d26ukeum83vx3b.cloudfront.net/assets/upfrica-com-logo-dark_170x-94d438d62a4c6b2c2c70fe1084c008f4584357ed2847dac5fc38818a0de6459d.webp"
                 alt="Upfrica Logo"
               />
@@ -109,7 +109,7 @@ export default function Header() {
                 alt="Upfrica Logo"
               />
             </Link>
-            <div className="w-full"><SearchBox /></div>
+            <div className="w-auto"><SearchBox /></div>
           </div>
 
           <div className="flex items-center justify-between space-x-3">
