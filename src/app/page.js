@@ -15,12 +15,12 @@ import NewArrivals from "@/components/common/New arrivals/NewArrivals";
 import WomenFasion from "@/components/WomenFasion";
 import MenFashion from "@/components/men fashion/MenFashion";
 import RecentlyViewedList from "@/components/home/ProductList/RecentlyViewedList";
-// import LocaleRedirect from "@/components/LocaleRedirect/LocaleRedirect";
+import LocaleRedirect from "@/components/LocaleRedirect/LocaleRedirect";
 
 export default function Home() {
   return (
     <div className="bg-gray-100">
-      {/* <LocaleRedirect /> */}
+      <LocaleRedirect />
       <Header />
       <EarlyDeals />
       <ProductList title={"Selected by Upfrica"} />
