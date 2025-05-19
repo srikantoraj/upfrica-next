@@ -130,9 +130,8 @@ export const menuItems = [
     route: "/payments",
     icon: FaWallet,
     children: [
-      { label: "Payout Settings", route: "/payments/settings" },
-      { label: "Upcoming Payouts", route: "/payments/upcoming" },
-      { label: "Transaction Logs", route: "/payments/logs" }
+      { label: "Transaction Settings", route: "/new-dashboard/payments" },
+ 
     ]
   },
  
@@ -140,7 +139,16 @@ export const menuItems = [
   {
     label: "My Profile",
     route: "/profile",
-    icon: FaUserCircle
+    icon: FaUserCircle,
+    children: [
+      { label: "Profile Settings", route: "/new-dashboard/profile-settings" },
+      { label: "Address Book", route: "/new-dashboard/profile-settings/address-book" },
+      // { label: "Payment Methods", route: "/new-dashboard/payment-methods" },
+      // { label: "My Reviews", route: "/new-dashboard/my-reviews" },
+      // { label: "My Wishlist", route: "/new-dashboard/wishlist" },
+      // { label: "My Tickets", route: "/new-dashboard/tickets" }
+
+    ]
   },
   {
     label: "Sign Out",
