@@ -205,9 +205,9 @@ export default function CustomerReviewsSection({ slug }) {
     );
   }
 
-  if (error) {
-    return <p className="text-center text-red-500 py-4">{error}</p>;
-  }
+  // if (error) {
+  //   return <p className="text-center text-red-500 py-4">{error}</p>;
+  // }
 
   if (review_count === 0) {
     return <p className="text-center text-gray-500 py-4">No reviews found.</p>;

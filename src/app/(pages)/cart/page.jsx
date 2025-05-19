@@ -245,7 +245,7 @@ const Cart = () => {
         </div>
 
         {/* --- Order Summary --- */}
-        <div className="lg:col-span-2 bg-gray-50 p-6 shadow rounded-lg flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-gray-50 p-6 shadow rounded-lg flex flex-col justify-between h-[400px] lg:h-[500px] sticky top-0">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 border-b pb-4">
               Order Summary
@@ -331,13 +331,13 @@ const Cart = () => {
             <button
               onClick={handleCheckout}
               disabled={basket.length === 0 || isLoading || !agreed}
-              className={`mt-4 w-full justify-center items-center py-3 text-lg font-semibold text-white bg-indigo-600 rounded ${basket.length === 0 || isLoading || !agreed
+              className={`mt-4 w-full justify-center items-center py-3 text-lg font-semibold btn-primary rounded ${basket.length === 0 || isLoading || !agreed
                   ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-indigo-700"
+                  : "btn-primary"
                 }`}
             >
               {isLoading ? (
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 justify-center py-3">
                   <div className="w-2 h-2 bg-white rounded-full animate-bounce" />
                   <div className="w-2 h-2 bg-white rounded-full animate-bounce delay-150" />
                   <div className="w-2 h-2 bg-white rounded-full animate-bounce delay-300" />

@@ -14,6 +14,9 @@ const LoadingDots = ({ color = "white" }) => (
 );
 
 const DirectBuyPopup = ({
+  selectedAddressId,
+  isAddressLoading,
+  addresses,
   product,
   isVisible,
   onClose,
@@ -25,9 +28,9 @@ const DirectBuyPopup = ({
   const router = useRouter();
   const { token } = useSelector((state) => state.auth) || {};
 
-  const [addresses, setAddresses] = useState([]);
-  const [isAddressLoading, setIsAddressLoading] = useState(true);
-  const [selectedAddressId, setSelectedAddressId] = useState("");
+  // const [addresses, setAddresses] = useState([]);
+  // const [isAddressLoading, setIsAddressLoading] = useState(true);
+  // const [selectedAddressId, setSelectedAddressId] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("paystack");
   const [acceptedPolicy, setAcceptedPolicy] = useState(true);
   const [isConfirmLoading, setIsConfirmLoading] = useState(false);
@@ -55,44 +58,50 @@ const DirectBuyPopup = ({
     }
   }, [isVisible, quantity, product]);
 
-  useEffect(() => {
-    if (!token) {
-      router.push(`/signin?redirect=${encodeURIComponent(router.asPath)}`);
-      return;
-    }
-    const fetchAddresses = async () => {
-      try {
-        const response = await fetch(
-          "https://media.upfrica.com/api/addresses/",
-          {
-            method: "GET",
-            headers: { Authorization: `Token ${token}` },
-          }
-        );
-        if (!response.ok) throw new Error("Error fetching addresses");
-        const data = await response.json();
-        const options = data.map((addr) => ({
-          id: addr.id,
-          value: `${addr.address_data.address_line_1}, ${addr.address_data.town}, ${addr.address_data.country}`,
-        }));
-        setAddresses(options);
-        if (options.length > 0) setSelectedAddressId(options[0].id);
-      } catch (err) {
-        console.error("Failed to fetch addresses:", err);
-        const dummy = [
-          {
-            id: "dummy1",
-            value: "123 Main Street, Dummy Town, Dummy Country",
-          },
-        ];
-        setAddresses(dummy);
-        setSelectedAddressId(dummy[0].id);
-      } finally {
-        setIsAddressLoading(false);
-      }
-    };
-    fetchAddresses();
-  }, [token, router]);
+  // useEffect(() => {
+  //   if (!token) {
+  //     router.push(`/signin?redirect=${encodeURIComponent(router.asPath)}`);
+  //     return;
+  //   }
+  //   const fetchAddresses = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         "https://media.upfrica.com/api/addresses/",
+  //         {
+  //           method: "GET",
+  //           headers: { Authorization: `Token ${token}` },
+  //         }
+  //       );
+  //       if (!response.ok) throw new Error("Error fetching addresses");
+  //       const data = await response.json();
+  //       console.log("data", data);
+
+  //       const options = data.map((addr) => ({
+  //         id: addr.id,
+  //         value: `${addr.address_data.street}, ${addr.address_data.city}, ${addr.address_data.country}`,
+  //       }));
+  //       setAddresses(options);
+  //       if (options.length > 0) setSelectedAddressId(options[0].id);
+  //     } catch (err) {
+  //       // console.error("Failed to fetch addresses:", err);
+  //       // const dummy = [
+  //       //   {
+  //       //     id: "dummy1",
+  //       //     value: "123 Main Street, Dummy Town, Dummy Country",
+  //       //   },
+  //       // ];
+  //       // setAddresses(dummy);
+  //       // setSelectedAddressId(dummy[0].id);
+  //       console.error("Failed to fetch addresses:", err);
+  //       // ডামি না দেখাতে চাইলে:
+  //       setAddresses([]);            // খালি অ্যারে
+  //       setSelectedAddressId(null);  // কোনো সিলেক্ট থাকবে না
+  //     } finally {
+  //       setIsAddressLoading(false);
+  //     }
+  //   };
+  //   fetchAddresses();
+  // }, [token, router]);
 
   const decrementQuantity = () =>
     setDirectBuyQuantity((prev) => (prev > 1 ? prev - 1 : 1));
