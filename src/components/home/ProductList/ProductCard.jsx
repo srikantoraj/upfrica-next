@@ -233,7 +233,7 @@ export default function ProductCard({ product }) {
             )}
           </div>
           <Link href={`/${country}/${category?.slug}/${slug}/`}>
-            <span className="p-1 border rounded-md bg-gray-100 hover:bg-gray-200 transition-colors">
+            <span className="p-1 ">
               <AiOutlineShoppingCart className="w-5 lg:w-6 h-5 lg:h-6 text-purple-500" />
             </span>
           </Link>

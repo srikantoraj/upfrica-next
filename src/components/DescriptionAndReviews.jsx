@@ -187,7 +187,7 @@ export default function DescriptionAndReviews({
                                     {followersCount === 1 ? "" : "s"}
                                 </li>
                                 <li className="text-green-600">
-                                    {products?? "—"} Items
+                                    {products ?? "—"} Items
                                 </li>
                             </ul>
                         </div>

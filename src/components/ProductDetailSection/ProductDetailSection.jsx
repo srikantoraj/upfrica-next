@@ -484,11 +484,11 @@
 
 //                             {/* ←— REVIEW SUMMARY */}
 //                             <div className="flex items-center text-sm text-yellow-400 gap-2">
-                                
+
 
 //                                 {review_count > 0 ? (
 //                                     <>
-                                        
+
 //                                         <span>{average_rating.toFixed(1)}</span>
 //                                         <span className="flex">{renderStars(average_rating)}</span>
 //                                         <button
@@ -715,6 +715,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter, usePathname } from "next/navigation";
+import * as Yup from "yup";
 import {
     FaMinus,
     FaPlus,
@@ -733,6 +734,7 @@ import DescriptionAndReviews from "../DescriptionAndReviews";
 import RecentlyViewed from "../RecentlyViewed";
 import ProductSlider from "./ProductSlider";
 import DirectBuyPopup from "../DirectBuyPopup";
+import { CountryDropdown } from "react-country-region-selector";
 
 import { convertPrice } from "@/app/utils/utils";
 import { addToBasket, updateQuantity, removeFromBasket } from "../../app/store/slices/cartSlice";
@@ -742,6 +744,8 @@ import {
     fetchReviewsSuccess,
     fetchReviewsFailure,
 } from "@/app/store/slices/reviewsSlice";
+import { AiOutlineClose } from "react-icons/ai";
+import { Formik, Form, Field, ErrorMessage } from "formik";
 
 const Breadcrumbs = ({ categoryTree, title }) => {
     const flattenCategoryChain = (node) => {
@@ -777,10 +781,45 @@ const Breadcrumbs = ({ categoryTree, title }) => {
     );
 };
 
+const addressSchema = Yup.object().shape({
+    full_name: Yup.string().required("Required"),
+    street: Yup.string().required("Required"),
+    city: Yup.string().required("Required"),
+    state: Yup.string().required("Required"),
+    zip_code: Yup.string().required("Required"),
+    country: Yup.string().required("Required"),
+});
+
 export default function ProductDetailSection({ product, relatedProducts }) {
+    console.log("detels", product);
     const dispatch = useDispatch();
     const router = useRouter();
     const currentPath = usePathname();
+
+    // Quantity & modals
+    // const [loading, setLoading] = useState(false);
+    const [quantity, setQuantity] = useState(1);
+    // const [isModalVisible, setIsModalVisible] = useState(false);
+    // Direct Buy Popup visibility
+    const [isDirectBuyPopupVisible, setIsDirectBuyPopupVisible] = useState(false);
+
+    // “Add New Address” Modal visibility
+    const [showNewModal, setShowNewModal] = useState(false);
+
+    // Loading flags
+    const [loading, setLoading] = useState(false);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+
+    // Wishlist state
+    const [isWishlisted, setIsWishlisted] = useState(false);
+
+    const { id, title, description, price_cents, sale_price_cents, price_currency, sale_end_date,
+        product_video, product_images, condition, category, shop, user, variants } = product || {};
+
+    // Addresses
+    const [addresses, setAddresses] = useState([]);
+    const [selectedAddressId, setSelectedAddressId] = useState(null);
+    const [isAddressLoading, setIsAddressLoading] = useState(true);
 
     // Auth, basket, currency
     const { token, user: currentUser } = useSelector((s) => s.auth);
@@ -839,17 +878,7 @@ export default function ProductDetailSection({ product, relatedProducts }) {
         );
     }, []);
 
-    // Quantity & modals
-    const [loading, setLoading] = useState(false);
-    const [quantity, setQuantity] = useState(1);
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [isDirectBuyPopupVisible, setIsDirectBuyPopupVisible] = useState(false);
 
-    // Wishlist state
-    const [isWishlisted, setIsWishlisted] = useState(false);
-
-    const { id, title, description, price_cents, sale_price_cents, price_currency, sale_end_date,
-        product_video, product_images, condition, category, shop, user, variants } = product || {};
 
     // Initial fetch of wishlist status
     useEffect(() => {
@@ -996,13 +1025,31 @@ export default function ProductDetailSection({ product, relatedProducts }) {
         : product_images;
 
     // Handlers
+    // const handleDirectBuyNow = () => {
+    //     if (!token) {
+    //         router.push(`/signin?next=${encodeURIComponent(currentPath)}`);
+    //         return;
+    //     }
+    //     setIsDirectBuyPopupVisible(true);
+    // };
+
+    // ===================================================================
+    //                        HANDLE DIRECT BUY NOW
+    // ===================================================================
     const handleDirectBuyNow = () => {
         if (!token) {
             router.push(`/signin?next=${encodeURIComponent(currentPath)}`);
             return;
         }
-        setIsDirectBuyPopupVisible(true);
+        // যদি কোনো address না থাকে, আগে add-new-address modal দেখাও
+        if (!isAddressLoading && addresses.length === 0) {
+            setShowNewModal(true);
+        } else {
+            // নাহলে সরাসরি DirectBuyPopup খুলে দাও
+            setIsDirectBuyPopupVisible(true);
+        }
     };
+
 
     const handleAddToBasket = () => {
         dispatch(
@@ -1022,10 +1069,93 @@ export default function ProductDetailSection({ product, relatedProducts }) {
         );
         setIsModalVisible(true);
     };
+
+
     const handleCloseModal = () => setIsModalVisible(false);
     const handleQuantityChange = (pid, q) =>
         dispatch(updateQuantity({ id: pid, quantity: q }));
     const handleRemoveProduct = (pid) => dispatch(removeFromBasket(pid));
+
+    // ===================================================================
+    //                         EFFECT: FETCH ADDRESSES
+    // ===================================================================
+    useEffect(() => {
+        if (!token) {
+            router.push(`/signin?redirect=${encodeURIComponent(currentPath)}`);
+            return;
+        }
+        const fetchAddresses = async () => {
+            try {
+                const res = await fetch("https://media.upfrica.com/api/addresses/", {
+                    method: "GET",
+                    headers: { Authorization: `Token ${token}` },
+                });
+                if (!res.ok) throw new Error("Error fetching addresses");
+                const data = await res.json();
+                const opts = data.map((a) => ({
+                    id: a.id,
+                    value: `${a.address_data.street}, ${a.address_data.city}, ${a.address_data.country}`,
+                }));
+                setAddresses(opts);
+                setSelectedAddressId(opts[0]?.id ?? null);
+            } catch (err) {
+                console.error("Failed to fetch addresses:", err);
+                setAddresses([]);
+                setSelectedAddressId(null);
+            } finally {
+                setIsAddressLoading(false);
+            }
+        };
+        fetchAddresses();
+    }, [token, router, currentPath]);
+
+
+
+    // ===================================================================
+    //                   FORM: ADD NEW ADDRESS (Formik)
+    // ===================================================================
+    const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
+        try {
+            const res = await fetch("https://media.upfrica.com/api/addresses/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Token ${token}`,
+                },
+                body: JSON.stringify({
+                    owner_id: currentUser.id,
+                    owner_type: "USER",
+                    default: false,
+                    full_name: vals.full_name,
+                    address_data: {
+                        street: vals.street,
+                        city: vals.city,
+                        state: vals.state,
+                        zip_code: vals.zip_code,
+                        country: vals.country,
+                    },
+                }),
+            });
+            const json = await res.json();
+            // লিস্টে নতুন address যোগ করো
+            setAddresses((prev) => [...prev, { id: json.id, value: `${json.address_data.street}, ${json.address_data.city}, ${json.address_data.country}` }]);
+            setSelectedAddressId(json.id);
+
+            resetForm();
+            setShowNewModal(false);
+
+            // প্রফেশনাল টাচ: এড্রেস তৈরি হ‌য়ে গেলে সরাসরি DirectBuyPopup দেখাও
+            setIsDirectBuyPopupVisible(true);
+
+        } catch (e) {
+            console.error("Error creating address:", e);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+
+
 
     return (
         <section className="pt-6 md:pt-8 lg:pt-10">
@@ -1437,9 +1567,103 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                 </div>
             </div>
 
-            {/* Direct Buy Popup */}
-            {isDirectBuyPopupVisible && (
+            {/* ================= Add New Address Modal ================= */}
+            {showNewModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white w-full max-w-md p-6 rounded-lg relative">
+                        <button
+                            onClick={() => setShowNewModal(false)}
+                            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                        >
+                            <AiOutlineClose size={24} />
+                        </button>
+                        <h3 className="text-xl font-semibold mb-4">Add New Address</h3>
+
+                        <Formik
+                            initialValues={{
+                                full_name: "",
+                                street: "",
+                                city: "",
+                                state: "",
+                                zip_code: "",
+                                country: "",
+                            }}
+                            validationSchema={addressSchema}
+                            onSubmit={handleNewAddressSubmit}
+                        >
+                            {({ isSubmitting, setFieldValue, values }) => (
+                                <Form className="space-y-6">
+                                    {[
+                                        { name: "full_name", label: "Full Name" },
+                                        { name: "street", label: "Street" },
+                                        { name: "city", label: "City" },
+                                        { name: "state", label: "State" },
+                                        { name: "zip_code", label: "Zip Code" },
+                                    ].map((f) => (
+                                        <div key={f.name}>
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                {f.label}
+                                            </label>
+                                            <Field
+                                                name={f.name}
+                                                className="mt-1 block w-full border-b border-gray-300 focus:border-indigo-500 focus:outline-none py-3"
+                                            />
+                                            <ErrorMessage
+                                                name={f.name}
+                                                component="p"
+                                                className="text-red-600 text-sm mt-1"
+                                            />
+                                        </div>
+                                    ))}
+
+                                    {/* Country Dropdown */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Country
+                                        </label>
+                                        <CountryDropdown
+                                            value={values.country}
+                                            onChange={(val) => setFieldValue("country", val)}
+                                            defaultOptionLabel="Select Country"
+                                            className="mt-1 block w-full border-b border-gray-300 focus:border-indigo-500 focus:outline-none py-3"
+                                        />
+                                        <ErrorMessage
+                                            name="country"
+                                            component="p"
+                                            className="text-red-600 text-sm mt-1"
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="w-full py-3  rounded-lg font-semibold btn-primary transition"
+                                    >
+                                        {/* {isSubmitting ? "Saving…" : "Save Address"} */}
+                                        {isSubmitting ? (
+                                            <div className="flex space-x-2 justify-center py-3">
+                                                <div className="w-2 h-2 bg-white rounded-full animate-bounce" />
+                                                <div className="w-2 h-2 bg-white rounded-full animate-bounce delay-150" />
+                                                <div className="w-2 h-2 bg-white rounded-full animate-bounce delay-300" />
+                                            </div>
+                                        ) : (
+                                            "Save Address"
+                                        )}
+                                    </button>
+                                </Form>
+                            )}
+                        </Formik>
+                    </div>
+                </div>
+            )}
+
+
+            {/* ================ Direct Buy Popup ================= */}
+            {isDirectBuyPopupVisible && addresses.length > 0 && (
                 <DirectBuyPopup
+                    selectedAddressId={selectedAddressId}
+                    isAddressLoading={isAddressLoading}
+                    addresses={addresses}
                     relatedProducts={relatedProducts}
                     quantity={quantity}
                     product={product}
