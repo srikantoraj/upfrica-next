@@ -320,6 +320,8 @@ const DirectBuyPopup = ({
             )}
           </div> */}
 
+          {/* hide shipping address  */}
+
           {!isAddressLoading && addresses.length > 0 && <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Shipping Address

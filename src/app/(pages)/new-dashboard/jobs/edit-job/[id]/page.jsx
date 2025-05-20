@@ -17,7 +17,7 @@ const validate = (values) => {
     return errors;
 };
 
-export default function EditJobPage({params}) {
+export default function EditJobPage({ params }) {
     const router = useRouter();
     const { id } = params;
     const { token } = useSelector((state) => state.auth);
@@ -48,8 +48,16 @@ export default function EditJobPage({params}) {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                Loading…
+            <div className="min-h-screen flex flex-col space-y-6 p-8 max-w-4xl mx-auto animate-pulse">
+                <div className="h-8 bg-gray-300 rounded w-3/4 mx-auto" />
+                <div className="h-6 bg-gray-300 rounded w-full" />
+                <div className="h-10 bg-gray-300 rounded w-full" />
+                <div className="h-10 bg-gray-300 rounded w-full" />
+                <div className="h-10 bg-gray-300 rounded w-full" />
+                <div className="h-40 bg-gray-300 rounded w-full" />
+                <div className="h-40 bg-gray-300 rounded w-full" />
+                <div className="h-24 bg-gray-300 rounded w-full" />
+                <div className="h-10 bg-gray-300 rounded w-1/3" />
             </div>
         );
     }
@@ -62,9 +70,20 @@ export default function EditJobPage({params}) {
         );
     }
 
+
+    const LoadingDots = ({ color = "white" }) => (
+        <div className="flex space-x-2 justify-center py-3">
+            <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce`} />
+            <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-150`} />
+            <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-300`} />
+            <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-300`} />
+            <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-300`} />
+        </div>
+    );
+
     return (
         <div className="min-h-screen bg-gray-50 py-16 px-4">
-            <div className="max-w-4xl mx-auto bg-white shadow-md rounded-md p-8">
+            <div className="max-w-4xl mx-auto bg-white shadow-md rounded-md p-8 mb-6">
                 <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
                     Edit Job Post
                 </h1>
@@ -373,7 +392,7 @@ export default function EditJobPage({params}) {
                                 disabled={isSubmitting}
                                 className="w-full py-3 bg-violet-700 text-white font-semibold rounded-md hover:bg-violet-800 transition"
                             >
-                                {isSubmitting ? 'Updating…' : 'Update Job'}
+                                {isSubmitting ? <LoadingDots color="white" /> : 'Update Job'}
                             </button>
                         </form>
                     )}

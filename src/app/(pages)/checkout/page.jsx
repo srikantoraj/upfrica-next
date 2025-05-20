@@ -565,7 +565,7 @@ const Checkout = () => {
   const total = subtotal + shippingCost;
 
   const LoadingDots = ({ color = "white" }) => (
-    <div className="flex space-x-2 justify-center">
+    <div className="flex space-x-2 justify-center py-3">
       <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce`} />
       <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-150`} />
       <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-300`} />
@@ -691,7 +691,7 @@ const Checkout = () => {
             <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
 
             {/* Scrollable list with bottom padding so items never hide behind fixed footer */}
-            <div className="divide-y overflow-auto flex-grow pb-20 xl:pb-0">
+            <div className="divide-y overflow-auto flex-grow pb-5 xl:pb-0">
               {basket.map((item) => (
                 <div
                   key={item.id}
@@ -717,42 +717,58 @@ const Checkout = () => {
               ))}
             </div>
 
-            {/* Fixed footer on mobile/md/lg; normal flow on xl */}
+            
+            {/* 3. Summary only on mobile/md/lg (still scrolls) */}
+            <div className="block xl:hidden px-4 pb-20">
+              <div className="flex justify-between text-gray-700">
+                <span>Subtotal</span>
+                <span>₵{subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-gray-700 mt-2">
+                <span>Shipping</span>
+                <span>₵{shippingCost.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-semibold text-lg mt-2">
+                <span>Total</span>
+                <span>₵{total.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* 4a. Fixed Place Order button on mobile/md/lg */}
             <div
               className="
-                fixed bottom-0 left-0 right-0
-                bg-white p-4 border-t border-gray-200 shadow-inner
-                xl:relative xl:bottom-auto xl:left-auto xl:right-auto
-                xl:bg-transparent xl:p-0 xl:border-none xl:shadow-none
-              "
+                  fixed bottom-0 left-0 right-0
+                  bg-white p-4 border-t border-gray-200 shadow-inner
+                  xl:hidden 
+                "
             >
-              {/* 3. Summary only on mobile/md/lg */}
-              <div className="block xl:hidden pt-4">
-                <div className="flex justify-between text-gray-700">
-                  <span>Subtotal</span>
-                  <span>₵{subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-gray-700 mt-2">
-                  <span>Shipping</span>
-                  <span>₵{shippingCost.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between font-semibold text-lg mt-2">
-                  <span>Total</span>
-                  <span>₵{total.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {/* 4. Place Order Button */}
               <button
                 onClick={placeOrder}
                 disabled={!selectedAddress || !paymentMethod || isLoading}
                 className={`
-        mt-6 w-full py-3 text-white font-semibold rounded-lg
-        ${!selectedAddress || !paymentMethod || isLoading
+                    w-full py-3 text-white font-semibold rounded-lg
+                    ${!selectedAddress || !paymentMethod || isLoading
                     ? "bg-indigo-300 cursor-not-allowed"
                     : "btn-primary"
                   }
-      `}
+    `}
+              >
+                {isLoading ? <LoadingDots color="white" /> : "Place Order"}
+              </button>
+            </div>
+
+            {/* 4b. Normal flow button on XL and up */}
+            <div className="hidden xl:block mt-6">
+              <button
+                onClick={placeOrder}
+                disabled={!selectedAddress || !paymentMethod || isLoading}
+                className={`
+      w-full py-3 text-white font-semibold rounded-lg
+      ${!selectedAddress || !paymentMethod || isLoading
+                    ? "bg-indigo-300 cursor-not-allowed"
+                    : "btn-primary"
+                  }
+    `}
               >
                 {isLoading ? <LoadingDots color="white" /> : "Place Order"}
               </button>

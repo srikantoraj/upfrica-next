@@ -269,6 +269,70 @@ export default function OrdersPage() {
     }
   };
 
+
+  // ── Skeleton card for loading state
+  // const SkeletonCard = () => (
+  //   <div className="border rounded-lg bg-white p-4 animate-pulse flex space-x-4">
+  //     <div className="w-16 h-16 bg-gray-300 rounded-md" />
+  //     <div className="flex-1 space-y-2 py-1">
+  //       <div className="h-4 bg-gray-300 rounded w-1/3" />
+  //       <div className="h-3 bg-gray-300 rounded w-2/3" />
+  //       <div className="h-3 bg-gray-300 rounded w-1/2" />
+  //     </div>
+  //   </div>
+  // );
+
+
+    // ── Skeleton mimicking OrderCard
+  const SkeletonCard = () => (
+    <div className="md:w-full bg-white rounded-xl shadow-upfrica mb-6 p-4 animate-pulse">
+      {/* — Header skeleton — */}
+      <div className="flex flex-col md:flex-row justify-between bg-gray-100 rounded-lg p-4 gap-4">
+        <div className="flex-1 min-w-0 space-y-2">
+          <div className="h-4 bg-gray-300 rounded w-1/4" />
+          <div className="flex flex-wrap gap-4">
+            <div className="space-y-1">
+              <div className="h-3 bg-gray-300 rounded w-12" />
+              <div className="h-4 bg-gray-300 rounded w-16" />
+            </div>
+            <div className="space-y-1">
+              <div className="h-3 bg-gray-300 rounded w-12" />
+              <div className="h-4 bg-gray-300 rounded w-16" />
+            </div>
+            <div className="space-y-1">
+              <div className="h-3 bg-gray-300 rounded w-12" />
+              <div className="h-4 bg-gray-300 rounded w-16" />
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <div className="h-8 bg-gray-300 rounded w-24" />
+        </div>
+      </div>
+
+      {/* — Items list skeleton — */}
+      <div className="mt-4 space-y-4">
+        {[...Array(2)].map((_, idx) => (
+          <div key={idx} className="bg-gray-50 rounded-lg p-3 animate-pulse flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-300 rounded-md" />
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="h-4 bg-gray-300 rounded w-3/4" />
+              <div className="h-3 bg-gray-300 rounded w-1/3" />
+              <div className="h-3 bg-gray-300 rounded w-1/2" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* — Delivery info skeleton — */}
+      <div className="mt-4 space-y-2">
+        <div className="h-4 bg-gray-300 rounded w-1/3" />
+        <div className="h-3 bg-gray-300 rounded w-2/3" />
+        <div className="h-3 bg-gray-300 rounded w-1/2" />
+      </div>
+    </div>
+  );
+
   return (
     <div className="bg-gray-100 min-h-screen text-black font-sans px-4 sm:px-6 lg:px-8 py-6">
       {/* ── Search Bar ── */}
@@ -296,9 +360,13 @@ export default function OrdersPage() {
         My Orders
       </h1>
 
-      {(loading || searchLoading) ? (
-        <div className="text-center text-gray-600 text-sm sm:text-base py-10">
-          {searchLoading ? "Searching orders…" : "Loading your orders…"}
+      {/* product card  */}
+      {/* ── Loading / Error / Empty / Data States ── */}
+      {loading || searchLoading ? (
+        <div className="space-y-6">
+          {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
         </div>
       ) : error ? (
         <p className="text-red-600 text-center text-sm sm:text-base py-10">
@@ -334,6 +402,49 @@ export default function OrdersPage() {
           )}
         </>
       )}
+
     </div>
   );
 }
+
+
+// loading cart
+
+//  {(loading || searchLoading) ? (
+//         <div className="text-center text-gray-600 text-sm sm:text-base py-10">
+//           {searchLoading ? "Searching orders…" : "Loading your orders…"}
+//         </div>
+//       ) : error ? (
+//         <p className="text-red-600 text-center text-sm sm:text-base py-10">
+//           Error: {error}
+//         </p>
+//       ) : orders.length === 0 ? (
+//         <p className="text-center text-gray-500 text-sm sm:text-base py-10">
+//           {searchQuery
+//             ? "No orders matched your search."
+//             : "You have no orders yet."}
+//         </p>
+//       ) : (
+//         <>
+//           <div className="space-y-6">
+//             {orders.map((order) => (
+//               <OrderCard
+//                 key={order.id}
+//                 order={order}
+//                 items={order.order_items}
+//               />
+//             ))}
+//           </div>
+
+//           {/* ── Pagination ── */}
+//           {totalPages > 1 && (
+//             <div className="mt-6 flex justify-center">
+//               <Pagination
+//                 currentPage={pageParam}
+//                 totalPages={totalPages}
+//                 onPageChange={goToPage}
+//               />
+//             </div>
+//           )}
+//         </>
+//       )}

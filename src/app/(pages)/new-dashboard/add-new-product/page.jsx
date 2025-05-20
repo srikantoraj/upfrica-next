@@ -426,7 +426,7 @@ const AddNewProducts = () => {
         <ApprovalNotesSelect formik={formik} />
 
         {/* Form Actions */}
-        <div className="flex justify-between text-xl font-bold p-4">
+        <div className="flex justify-between text-xl font-bold p-4 ">
           {!formik.isSubmitting ? (
             <button
               type="submit"
@@ -437,7 +437,7 @@ const AddNewProducts = () => {
           ) : (
             <button
               type="submit"
-              className="px-20 py-2 bg-[#A435F0] text-white rounded-md font-bold flex justify-center items-center"
+              className=" py-2 bg-[#A435F0] text-white rounded-md font-bold flex justify-center items-center min-w-[215px]"
               disabled
             >
               <div className="flex space-x-2 py-2">

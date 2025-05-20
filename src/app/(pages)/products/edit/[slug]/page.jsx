@@ -7,6 +7,7 @@ import { FaMinus, FaPlus, FaTimes, FaArrowLeft, FaEye } from 'react-icons/fa';
 import { IoMdNotifications } from 'react-icons/io';
 import { useRouter } from 'next/navigation';
 
+
 import LoaderButton from '@/components/LoaderButton';
 import Title from '@/components/inpute/Title';
 import Description from '@/components/inpute/Description';
@@ -79,6 +80,15 @@ function NotificationModal({ open, onClose, title, message, slug }) {
         </div>
     );
 }
+
+
+const LoadingDots = ({ color = "white" }) => (
+    <div className="flex space-x-2 justify-center py-2">
+      <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce`} />
+      <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-150`} />
+      <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-300`} />
+    </div>
+  );
 
 export default function EditProductPage({ params }) {
     const { slug } = params;
@@ -399,9 +409,9 @@ export default function EditProductPage({ params }) {
                         <button
                             type="submit"
                             disabled={formik.isSubmitting}
-                            className="bg-purple-500 text-white px-6 py-2 rounded-md"
+                            className="bg-purple-500 text-white px-6 py-2 min-w-[152px] rounded-md"
                         >
-                            {formik.isSubmitting ? 'Saving…' : 'Save Changes'}
+                            {formik.isSubmitting ? <LoadingDots color="white" /> : 'Save Changes'}
                         </button>
 
 

@@ -35,6 +35,16 @@ export default function CreateJobPage() {
     const descriptionEditorRef = useRef(null);
     const roleEditorRef = useRef(null);
 
+    const LoadingDots = ({ color = "white" }) => (
+        <div className="flex space-x-2 justify-center py-3">
+            <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce`} />
+            <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-150`} />
+            <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-300`} />
+            <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-300`} />
+            <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-300`} />
+        </div>
+    )
+
     return (
         <div className="min-h-screen bg-gray-50 py-16 px-4">
             <div className="max-w-4xl mx-auto bg-white shadow-md rounded-md p-8">
@@ -323,7 +333,7 @@ export default function CreateJobPage() {
                                 disabled={isSubmitting}
                                 className="w-full py-3 bg-violet-700 text-white font-semibold rounded-md hover:bg-violet-800 transition"
                             >
-                                {isSubmitting ? 'Creating…' : 'Create Job'}
+                                {isSubmitting ? <LoadingDots color="white" /> : 'Create Job'}
                             </button>
                         </form>
                     )}
