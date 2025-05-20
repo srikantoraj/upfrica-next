@@ -1,617 +1,721 @@
+// 'use client';
+// import React, { useState, useEffect } from 'react';
+// import { useSelector } from 'react-redux';
+// import { FaPlus, FaEdit, FaTrashAlt } from 'react-icons/fa';
+// import LoaderButton from '@/components/LoaderButton';
 
+// export default function ProductVariantsPage({ params }) {
+//     const { id: productId } = params;
+//     const { token } = useSelector((state) => state.auth);
 
+//     const [variants, setVariants] = useState([]);
+//     const [loading, setLoading] = useState(false);
+//     const [error, setError] = useState('');
 
+//     const [showModal, setShowModal] = useState(false);
+//     const [isEditing, setIsEditing] = useState(false);
+//     const [formData, setFormData] = useState({
+//         id: null,
+//         label: '',
+//         active: true,
+//         options: [{ id: null, value: '', additionalPrice: '', active: true }],
+//     });
+//     const [saving, setSaving] = useState(false);
 
-// "use client";
-// import React, { useState } from "react";
-// import { FaTrashAlt } from "react-icons/fa";
+//     // Fetch all variants on mount
+//     useEffect(() => {
+//         if (!token) return;
+//         setLoading(true);
+//         fetch(`https://media.upfrica.com/api/products/${productId}/variants/`, {
+//             headers: { Authorization: `Token ${token}` },
+//         })
+//             .then((res) => {
+//                 if (!res.ok) throw new Error(`Error ${res.status}`);
+//                 return res.json();
+//             })
+//             .then((data) => {
+//                 setVariants(data);
+//                 setError('');
+//             })
+//             .catch((err) => setError(err.message))
+//             .finally(() => setLoading(false));
+//     }, [productId, token]);
 
-// const ProductVariantForm = ({ params }) => {
-//     const { id } = params;
-//     console.log("Product ID:", id);
-//     const [variants, setVariants] = useState([
-//         {
-//             label: "Package",
+//     // Open empty form for new variant
+//     const handleAdd = () => {
+//         setFormData({
+//             id: null,
+//             label: '',
 //             active: true,
-//             useImageVariant: false,
-//             options: [
-//                 {
-//                     value: "With Battery",
-//                     additionalPrice: "0.00",
-//                     active: true,
-//                     images: [],
-//                 },
-//                 {
-//                     value: "With Battery & Solar Panels",
-//                     additionalPrice: "599.00",
-//                     active: true,
-//                     images: [],
-//                 },
-//             ],
-//         },
-//     ]);
-
-//     const handleVariantChange = (index, updatedVariant) => {
-//         const newVariants = [...variants];
-//         newVariants[index] = updatedVariant;
-//         setVariants(newVariants);
-//     };
-
-//     const handleRemoveVariant = (index) => {
-//         const newVariants = [...variants];
-//         newVariants.splice(index, 1);
-//         setVariants(newVariants);
-//     };
-
-//     const addVariant = () => {
-//         setVariants([
-//             ...variants,
-//             {
-//                 label: "",
-//                 active: true,
-//                 useImageVariant: false,
-//                 options: [],
-//             },
-//         ]);
-//     };
-
-//     const addOption = (variantIndex) => {
-//         const newVariants = [...variants];
-//         newVariants[variantIndex].options.push({
-//             value: "",
-//             additionalPrice: "0.00",
-//             active: true,
-//             images: [],
+//             options: [{ id: null, value: '', additionalPrice: '', active: true }],
 //         });
-//         setVariants(newVariants);
+//         setIsEditing(false);
+//         setShowModal(true);
 //     };
 
-//     const handleOptionChange = (variantIndex, optionIndex, updatedOption) => {
-//         const newVariants = [...variants];
-//         newVariants[variantIndex].options[optionIndex] = updatedOption;
-//         setVariants(newVariants);
+//     // Open form populated for editing
+//     const handleEdit = (v) => {
+//         setFormData({
+//             id: v.id,
+//             label: v.label,
+//             active: v.active,
+//             options: (v.variant ?? []).map((opt) => ({
+//                 id: opt.id,
+//                 value: opt.value,
+//                 additionalPrice: (opt.additional_price_cents / 100).toFixed(2),
+//                 active: opt.active,
+//             })),
+//         });
+//         setIsEditing(true);
+//         setShowModal(true);
 //     };
 
-//     const handleRemoveOption = (variantIndex, optionIndex) => {
-//         const newVariants = [...variants];
-//         newVariants[variantIndex].options.splice(optionIndex, 1);
-//         setVariants(newVariants);
+//     // Delete variant group
+//     const handleDelete = async (variantId) => {
+//         if (!confirm('Are you sure you want to delete this variant?')) return;
+//         try {
+//             const res = await fetch(
+//                 `https://media.upfrica.com/api/products/${productId}/variants/${variantId}/`,
+//                 {
+//                     method: 'DELETE',
+//                     headers: { Authorization: `Token ${token}` },
+//                 }
+//             );
+//             if (!res.ok) throw new Error(`Error ${res.status}`);
+//             setVariants((prev) => prev.filter((v) => v.id !== variantId));
+//         } catch (err) {
+//             alert(`Could not delete variant: ${err.message}`);
+//         }
 //     };
 
-//     const handleSubmit = () => {
-//         console.log("Submitted Variants:", variants);
+//     // Form field handlers
+//     const updateField = (field, val) =>
+//         setFormData((fd) => ({ ...fd, [field]: val }));
+//     const updateOption = (idx, field, val) =>
+//         setFormData((fd) => {
+//             const opts = [...fd.options];
+//             opts[idx] = { ...opts[idx], [field]: val };
+//             return { ...fd, options: opts };
+//         });
+//     const addOption = () =>
+//         setFormData((fd) => ({
+//             ...fd,
+//             options: [
+//                 ...fd.options,
+//                 { id: null, value: '', additionalPrice: '', active: true },
+//             ],
+//         }));
+//     const removeOption = (idx) =>
+//         setFormData((fd) => {
+//             const opts = [...fd.options];
+//             opts.splice(idx, 1);
+//             return { ...fd, options: opts };
+//         });
+
+//     // Create or update variant
+//     const handleSubmit = async (e) => {
+//         e.preventDefault();
+//         setSaving(true);
+//         try {
+//             const payload = {
+//                 label: formData.label,
+//                 active: formData.active,
+//                 default_value: formData.options[0]?.value || '',
+//                 variant: formData.options.map((opt) => ({
+//                     value: opt.value,
+//                     additional_price_cents: Math.round(parseFloat(opt.additionalPrice) * 100),
+//                     additional_price_currency: 'USD',
+//                     active: opt.active,
+//                 })),
+//             };
+
+//             const urlBase = `https://media.upfrica.com/api/products/${productId}/variants/`;
+//             const url = isEditing ? `${urlBase}${formData.id}/` : urlBase;
+//             const method = isEditing ? 'PATCH' : 'POST';
+
+//             const res = await fetch(url, {
+//                 method,
+//                 headers: {
+//                     'Content-Type': 'application/json',
+//                     Authorization: `Token ${token}`,
+//                 },
+//                 body: JSON.stringify(payload),
+//             });
+//             if (!res.ok) {
+//                 const txt = await res.text();
+//                 throw new Error(txt || `Error ${res.status}`);
+//             }
+
+//             // Replace local variants list with full array returned by server
+//             const data = await res.json();
+//             setVariants(Array.isArray(data) ? data : []);
+
+//             setShowModal(false);
+//         } catch (err) {
+//             alert(`Save failed: ${err.message}`);
+//         } finally {
+//             setSaving(false);
+//         }
 //     };
 
 //     return (
-//         <div className="container mx-auto px-4 pb-24 relative">
-//             {/* Product Info */}
-//             <div className="my-8">
-//                 <div>
-//                     <strong className="text-lg text-gray-800 block">
-//                         Sliding Gate Opener Electric/Battery and Solar | Sliding Gate Opener Kit 12v DC 1200kg Heavy Duty Security Gate Operator set
-//                     </strong>
-//                 </div>
-//                 <div className="mt-2 flex flex-wrap items-center gap-3">
-//                     <span className="text-base font-semibold text-gray-700">Current price:</span>
-//                     <span className="font-bold text-green-700 text-lg">$7,900.00</span>
-//                     <span className="line-through text-gray-500">$8,600.00</span>
-//                     <span className="text-sm font-semibold text-red-500">8% off</span>
-//                 </div>
+//         <div className="container mx-auto p-6">
+//             <header className="flex items-center justify-between mb-6">
+//                 <h1 className="text-2xl font-semibold">Product #{productId} Variants</h1>
+//                 <button
+//                     onClick={handleAdd}
+//                     className="inline-flex items-center px-4 py-2 bg-violet-700 hover:bg-violet-800 text-white rounded-full shadow"
+//                 >
+//                     <FaPlus className="mr-2" /> Add Variant
+//                 </button>
+//             </header>
+
+//             {error && <p className="mb-4 text-red-600">Error: {error}</p>}
+
+//             <div className="overflow-x-auto bg-white shadow rounded-lg">
+//                 <table className="w-full text-left">
+//                     <thead className="bg-gray-100">
+//                         <tr>
+//                             <th className="px-4 py-2">Label</th>
+//                             <th className="px-4 py-2">Options</th>
+//                             <th className="px-4 py-2">Active</th>
+//                             <th className="px-4 py-2">Actions</th>
+//                         </tr>
+//                     </thead>
+//                     <tbody>
+//                         {loading
+//                             ? Array.from({ length: 5 }).map((_, i) => (
+//                                 <tr key={i} className="animate-pulse">
+//                                     <td className="px-4 py-3">
+//                                         <div className="h-4 bg-gray-200 rounded w-3/4" />
+//                                     </td>
+//                                     <td className="px-4 py-3">
+//                                         <div className="h-4 bg-gray-200 rounded w-5/6" />
+//                                     </td>
+//                                     <td className="px-4 py-3">
+//                                         <div className="h-4 bg-gray-200 rounded w-1/2" />
+//                                     </td>
+//                                     <td className="px-4 py-3">
+//                                         <div className="h-4 bg-gray-200 rounded w-1/3" />
+//                                     </td>
+//                                 </tr>
+//                             ))
+//                             : variants.map((v) => (
+//                                 <tr key={v.id} className="border-t">
+//                                     <td className="px-4 py-3">{v.label}</td>
+//                                     <td className="px-4 py-3">
+//                                         {((v.variant ?? []).map((o) => o.value).join(', ')) || '—'}
+//                                     </td>
+//                                     <td className="px-4 py-3">{v.active ? 'Yes' : 'No'}</td>
+//                                     <td className="px-4 py-3 space-x-3">
+//                                         <button
+//                                             onClick={() => handleEdit(v)}
+//                                             className="inline-flex items-center px-3 py-1 bg-violet-700 hover:bg-violet-800 text-white rounded-full"
+//                                         >
+//                                             <FaEdit />
+//                                         </button>
+//                                         <button
+//                                             onClick={() => handleDelete(v.id)}
+//                                             className="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-full"
+//                                         >
+//                                             <FaTrashAlt />
+//                                         </button>
+//                                     </td>
+//                                 </tr>
+//                             ))}
+//                     </tbody>
+//                 </table>
 //             </div>
 
-//             <hr className="my-6" />
+//             {/* Modal */}
+//             {showModal && (
+//                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+//                     <form
+//                         onSubmit={handleSubmit}
+//                         className="relative bg-white rounded-lg shadow-lg w-full max-w-2xl p-8 space-y-6"
+//                     >
+//                         {/* Close button */}
+//                         <button
+//                             type="button"
+//                             onClick={() => setShowModal(false)}
+//                             className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+//                         >
+//                             &times;
+//                         </button>
 
-//             <h3 className="text-xl font-bold text-gray-800 mb-4">Product Variants</h3>
+//                         <h2 className="text-2xl font-semibold">
+//                             {isEditing ? 'Edit Variant' : 'New Variant'}
+//                         </h2>
 
-//             {variants.map((variant, i) => (
-//                 <div key={i} className="border border-gray-300 rounded-lg mb-8 shadow-sm bg-white">
-//                     <div className="bg-gray-100 px-4 py-3 flex flex-wrap md:flex-nowrap md:items-center gap-4">
-//                         <div className="flex-1">
-//                             <label className="text-sm font-medium text-gray-700 block mb-1">
-//                                 Attribute Name (e.g. Colour, Size)
-//                             </label>
+//                         {/* Label */}
+//                         <label className="block">
+//                             <span className="text-sm font-medium">Label</span>
 //                             <input
 //                                 type="text"
-//                                 value={variant.label}
-//                                 onChange={(e) =>
-//                                     handleVariantChange(i, {
-//                                         ...variant,
-//                                         label: e.target.value,
-//                                     })
-//                                 }
-//                                 className="w-full border rounded px-3 py-2 text-sm"
-//                                 placeholder="e.g. Color"
+//                                 placeholder="Color, Size, etc."
+//                                 value={formData.label}
+//                                 onChange={(e) => updateField('label', e.target.value)}
+//                                 className="mt-1 block w-full border-gray-300 rounded-full px-4 py-2"
+//                                 required
 //                             />
-//                         </div>
-//                         <div className="flex items-center gap-2">
+//                         </label>
+
+//                         {/* Active */}
+//                         <label className="flex items-center space-x-2">
 //                             <input
 //                                 type="checkbox"
-//                                 checked={variant.active}
-//                                 onChange={(e) =>
-//                                     handleVariantChange(i, {
-//                                         ...variant,
-//                                         active: e.target.checked,
-//                                     })
-//                                 }
+//                                 className="h-4 w-4 text-violet-600 border-gray-300 rounded"
+//                                 checked={formData.active}
+//                                 onChange={(e) => updateField('active', e.target.checked)}
 //                             />
 //                             <span className="text-sm">Active</span>
-//                         </div>
-//                         <div className="flex items-center gap-2">
-//                             <input
-//                                 type="checkbox"
-//                                 checked={variant.useImageVariant}
-//                                 onChange={(e) =>
-//                                     handleVariantChange(i, {
-//                                         ...variant,
-//                                         useImageVariant: e.target.checked,
-//                                     })
-//                                 }
-//                             />
-//                             <span className="text-sm">Use image variant</span>
-//                         </div>
-//                         <button
-//                             onClick={() => handleRemoveVariant(i)}
-//                             className="text-red-600 hover:text-red-800 ml-auto text-sm flex items-center gap-1"
-//                         >
-//                             <FaTrashAlt /> Delete
-//                         </button>
-//                     </div>
+//                         </label>
 
-//                     {/* Variant Options */}
-//                     <div className="p-4">
-//                         {variant.options.map((opt, j) => (
-//                             <div
-//                                 key={j}
-//                                 className="mb-4 border border-gray-200 rounded-md p-4 bg-gray-50"
-//                             >
-//                                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-3">
-//                                     <div className="md:col-span-3">
-//                                         <label className="block text-sm font-medium text-gray-700 mb-1">
-//                                             Option Value
-//                                         </label>
+//                         {/* Options */}
+//                         <div>
+//                             <p className="text-sm font-medium mb-2">Options</p>
+//                             {formData.options.map((opt, i) => (
+//                                 <div
+//                                     key={i}
+//                                     className={`mb-4 border border-gray-200 rounded-full p-4 ${opt.active ? 'bg-gray-100' : 'bg-white'
+//                                         }`}
+//                                 >
+//                                     <div className="flex gap-2 items-center">
 //                                         <input
 //                                             type="text"
+//                                             placeholder="Red, Blue, etc."
 //                                             value={opt.value}
-//                                             onChange={(e) =>
-//                                                 handleOptionChange(i, j, {
-//                                                     ...opt,
-//                                                     value: e.target.value,
-//                                                 })
-//                                             }
-//                                             className="w-full border rounded px-3 py-2 text-sm"
-//                                             placeholder="e.g. Red"
+//                                             onChange={(e) => updateOption(i, 'value', e.target.value)}
+//                                             className="flex-1 border rounded-full px-4 py-2 text-sm"
+//                                             required
 //                                         />
-//                                     </div>
-//                                     <div className="md:col-span-3">
-//                                         <label className="block text-sm font-medium text-gray-700 mb-1">
-//                                             Additional Price (cents)
-//                                         </label>
 //                                         <input
-//                                             type="text"
+//                                             type="number"
+//                                             step="1"
+//                                             placeholder="Price"
 //                                             value={opt.additionalPrice}
 //                                             onChange={(e) =>
-//                                                 handleOptionChange(i, j, {
-//                                                     ...opt,
-//                                                     additionalPrice: e.target.value,
-//                                                 })
+//                                                 updateOption(i, 'additionalPrice', e.target.value)
 //                                             }
-//                                             className="w-full border rounded px-3 py-2 text-sm"
+//                                             className="w-24 border rounded-full px-4 py-2 text-sm"
+//                                             required
 //                                         />
-//                                     </div>
-//                                     <div className="md:col-span-2 flex items-center gap-2">
-//                                         <input
-//                                             type="checkbox"
-//                                             checked={opt.active}
-//                                             onChange={(e) =>
-//                                                 handleOptionChange(i, j, {
-//                                                     ...opt,
-//                                                     active: e.target.checked,
-//                                                 })
-//                                             }
-//                                         />
-//                                         <span className="text-sm">Active</span>
-//                                     </div>
-//                                     <div className="md:col-span-2 flex items-center">
+//                                         <label className="flex items-center space-x-1">
+//                                             <input
+//                                                 type="checkbox"
+//                                                 className="h-4 w-4 text-violet-600 border-gray-300 rounded"
+//                                                 checked={opt.active}
+//                                                 onChange={(e) =>
+//                                                     updateOption(i, 'active', e.target.checked)
+//                                                 }
+//                                             />
+//                                             <span className="text-sm">Active</span>
+//                                         </label>
 //                                         <button
-//                                             onClick={() => handleRemoveOption(i, j)}
-//                                             className="text-red-600 hover:underline text-sm flex items-center gap-1"
+//                                             type="button"
+//                                             onClick={() => removeOption(i)}
+//                                             className="text-red-600 hover:underline text-sm"
 //                                         >
-//                                             <FaTrashAlt /> Remove Option
+//                                             Remove
 //                                         </button>
 //                                     </div>
 //                                 </div>
-//                                 <div>
-//                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-//                                         Upload Images
-//                                     </label>
-//                                     <input
-//                                         type="file"
-//                                         multiple
-//                                         onChange={(e) =>
-//                                             handleOptionChange(i, j, {
-//                                                 ...opt,
-//                                                 images: Array.from(e.target.files),
-//                                             })
-//                                         }
-//                                         className="w-full text-sm text-gray-600"
-//                                     />
-//                                 </div>
-//                             </div>
-//                         ))}
+//                             ))}
+//                             <button
+//                                 type="button"
+//                                 onClick={addOption}
+//                                 className="text-violet-700 hover:underline text-sm"
+//                             >
+//                                 + Add Option
+//                             </button>
+//                         </div>
 
-//                         <button
-//                             type="button"
-//                             onClick={() => addOption(i)}
-//                             className="text-blue-600 text-sm hover:underline mt-2"
-//                         >
-//                             + Add Option
-//                         </button>
-//                     </div>
+//                         {/* Actions */}
+//                         <div className="flex justify-end space-x-3 mt-4">
+//                             <button
+//                                 type="button"
+//                                 onClick={() => setShowModal(false)}
+//                                 className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full"
+//                                 disabled={saving}
+//                             >
+//                                 Cancel
+//                             </button>
+//                             <LoaderButton
+//                                 type="submit"
+//                                 loading={saving}
+//                                 className="px-6 py-2 bg-violet-700 hover:bg-violet-800 text-white rounded-full"
+//                             >
+//                                 {isEditing ? 'Save Changes' : 'Create Variant'}
+//                             </LoaderButton>
+//                         </div>
+//                     </form>
 //                 </div>
-//             ))}
-
-//             {/* Add Variant Button */}
-//             <button
-//                 onClick={addVariant}
-//                 className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-//             >
-//                 + Add Variant
-//             </button>
-
-//             {/* Sticky Footer with Submit / Back */}
-//             <div className="fixed bottom-0 left-0 right-0 bg-white shadow-md py-3 border-t flex justify-center gap-4 z-50">
-//                 <button
-//                     name="button"
-//                     type="submit"
-//                     onClick={handleSubmit}
-//                     className="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded"
-//                 >
-//                     Submit
-//                 </button>
-//                 <button
-//                     type="button"
-//                     onClick={() => window.history.back()}
-//                     className="btn btn-sm bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded"
-//                 >
-//                     Back
-//                 </button>
-//             </div>
+//             )}
 //         </div>
 //     );
-// };
+// }
+'use client';
 
-// export default ProductVariantForm;
+import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { FaPlus, FaEdit, FaTrashAlt, FaArrowLeft } from 'react-icons/fa';
+import LoaderButton from '@/components/LoaderButton';
 
-"use client";
+export default function ProductVariantsPage({ params }) {
+    const { id: productId } = params;
+    const { token } = useSelector((state) => state.auth);
 
-import React, { useState } from "react";
-import { FaTrashAlt } from "react-icons/fa";
-
-const ProductVariantForm = ({ params }) => {
-    const { id } = params; // product ID from the route
-    const [variants, setVariants] = useState([
-        {
-            label: "",
-            active: true,
-            useImageVariant: false,
-            options: [
-                {
-                    value: "",
-                    additionalPrice: "",
-                    active: true,
-                    images: [],
-                },
-                
-            ],
-        },
-    ]);
+    const [variants, setVariants] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleVariantChange = (idx, updated) => {
-        const copy = [...variants];
-        copy[idx] = updated;
-        setVariants(copy);
-    };
+    const [showModal, setShowModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState({
+        id: null,
+        label: '',
+        active: true,
+        options: [{ id: null, value: '', additionalPrice: '', active: true }],
+    });
+    const [saving, setSaving] = useState(false);
 
-    const handleRemoveVariant = (idx) => {
-        const copy = [...variants];
-        copy.splice(idx, 1);
-        setVariants(copy);
-    };
-
-    const addVariant = () => {
-        setVariants([
-            ...variants,
-            { label: "", active: true, useImageVariant: false, options: [] },
-        ]);
-    };
-
-    const addOption = (vIdx) => {
-        const copy = [...variants];
-        copy[vIdx].options.push({
-            value: "",
-            additionalPrice: "0.00",
-            active: true,
-            images: [],
-        });
-        setVariants(copy);
-    };
-
-    const handleOptionChange = (vIdx, oIdx, updated) => {
-        const copy = [...variants];
-        copy[vIdx].options[oIdx] = updated;
-        setVariants(copy);
-    };
-
-    const handleRemoveOption = (vIdx, oIdx) => {
-        const copy = [...variants];
-        copy[vIdx].options.splice(oIdx, 1);
-        setVariants(copy);
-    };
-
-    const handleSubmit = async () => {
+    // Fetch all variants on mount
+    useEffect(() => {
+        if (!token) return;
         setLoading(true);
+        fetch(`https://media.upfrica.com/api/products/${productId}/variants/`, {
+            headers: { Authorization: `Token ${token}` },
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error(`Error ${res.status}`);
+                return res.json();
+            })
+            .then((data) => {
+                setVariants(data);
+                setError('');
+            })
+            .catch((err) => setError(err.message))
+            .finally(() => setLoading(false));
+    }, [productId, token]);
+
+    // Open empty form for new variant
+    const handleAdd = () => {
+        setFormData({
+            id: null,
+            label: '',
+            active: true,
+            options: [{ id: null, value: '', additionalPrice: '', active: true }],
+        });
+        setIsEditing(false);
+        setShowModal(true);
+    };
+
+    // Open form populated for editing
+    const handleEdit = (v) => {
+        setFormData({
+            id: v.id,
+            label: v.label,
+            active: v.active,
+            options: (v.variant ?? []).map((opt) => ({
+                id: opt.id,
+                value: opt.value,
+                additionalPrice: (opt.additional_price_cents / 100).toFixed(2),
+                active: opt.active,
+            })),
+        });
+        setIsEditing(true);
+        setShowModal(true);
+    };
+
+    // Delete variant group
+    const handleDelete = async (variantId) => {
+        if (!confirm('Are you sure you want to delete this variant?')) return;
         try {
-            // We'll collect all variants returned by the server
-            let allReturned = [];
-
-            for (let i = 0; i < variants.length; i++) {
-                const v = variants[i];
-                // build the exact payload keys your API expects
-                const payload = {
-                    label: v.label,
-                    use_image_variant: v.useImageVariant,
-                    active: v.active,
-                    ordering: i,                                  // or any ordering you like
-                    default_value: v.options[0]?.value || "",    // pick first option as default
-                    variant: v.options.map((opt) => ({
-                        value: opt.value,
-                        additional_price_cents: Math.round(
-                            parseFloat(opt.additionalPrice || "0") 
-                        ),
-                        additional_price_currency: "GHS",
-                        active: opt.active,
-                    })),
-                };
-
-                console.log("Payload for variant", i, ":", payload);
-                
-              
-
-
-                const resp = await fetch(
-                    `https://media.upfrica.com/api/products/${id}/variants/`,
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify(payload),
-                    }
-                );
-
-                if (!resp.ok) {
-                    alert("Failed to save variants—check console for details.");
-                    const text = await resp.text();
-                    throw new Error(`Error ${resp.status}: ${text}`);
+            const res = await fetch(
+                `https://media.upfrica.com/api/products/${productId}/variants/${variantId}/`,
+                {
+                    method: 'DELETE',
+                    headers: { Authorization: `Token ${token}` },
                 }
-                if (resp.status === 201) {
-                    alert("Variant created successfully");
-                }
-
-                const data = await resp.json();
-                // our endpoint returns the *full* list of variants each time
-                allReturned = data;
-            }
-
-            // replace local state with server's truth
-            // setVariants(
-            //     allReturned.map((sv) => ({
-            //         label: sv.label,
-            //         active: sv.active,
-            //         useImageVariant: sv.use_image_variant,
-            //         options: sv.variant_values.map((vv) => ({
-            //             value: vv.value,
-            //             additionalPrice: (vv.additional_price_cents / 100).toFixed(2),
-            //             active: vv.active,
-            //             images: [], // you could pull in URLs here if your API returns them
-            //         })),
-            //     }))
-            // );
+            );
+            if (!res.ok) throw new Error(`Error ${res.status}`);
+            setVariants((prev) => prev.filter((v) => v.id !== variantId));
         } catch (err) {
-            console.error(err);
-            alert("Failed to save variants—check console for details.");
+            alert(`Could not delete variant: ${err.message}`);
+        }
+    };
+
+    // Form field handlers
+    const updateField = (field, val) =>
+        setFormData((fd) => ({ ...fd, [field]: val }));
+    const updateOption = (idx, field, val) =>
+        setFormData((fd) => {
+            const opts = [...fd.options];
+            opts[idx] = { ...opts[idx], [field]: val };
+            return { ...fd, options: opts };
+        });
+    const addOption = () =>
+        setFormData((fd) => ({
+            ...fd,
+            options: [
+                ...fd.options,
+                { id: null, value: '', additionalPrice: '', active: true },
+            ],
+        }));
+    const removeOption = (idx) =>
+        setFormData((fd) => {
+            const opts = [...fd.options];
+            opts.splice(idx, 1);
+            return { ...fd, options: opts };
+        });
+
+    // Create or update variant
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            const payload = {
+                label: formData.label,
+                active: formData.active,
+                default_value: formData.options[0]?.value || '',
+                variant: formData.options.map((opt) => ({
+                    value: opt.value,
+                    additional_price_cents: Math.round(parseFloat(opt.additionalPrice) * 100),
+                    additional_price_currency: 'USD',
+                    active: opt.active,
+                })),
+            };
+
+            const urlBase = `https://media.upfrica.com/api/products/${productId}/variants/`;
+            const url = isEditing ? `${urlBase}${formData.id}/` : urlBase;
+            const method = isEditing ? 'PATCH' : 'POST';
+
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Token ${token}`,
+                },
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) {
+                const txt = await res.text();
+                throw new Error(txt || `Error ${res.status}`);
+            }
+            // Replace local variants list with full array returned by server
+            const data = await res.json();
+            setVariants(Array.isArray(data) ? data : []);
+            setShowModal(false);
+        } catch (err) {
+            alert(`Save failed: ${err.message}`);
         } finally {
-            setLoading(false);
+            setSaving(false);
         }
     };
 
     return (
-        <div className="container mx-auto px-4 pb-24 relative">
-            {/* Product Info (you can make this dynamic) */}
-            <div className="my-8">
-                <strong className="text-lg text-gray-800 block">
-                    Product #{id} Variants
-                </strong>
+        <div className="container mx-auto p-6">
+            <header className="flex items-center justify-between mb-6">
+                <div className="inline-flex items-center space-x-4">
+                    <button
+                        onClick={() => window.history.back()}
+                        className="inline-flex items-center px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full"
+                    >
+                        <FaArrowLeft className="mr-1" /> Go Back
+                    </button>
+                    <h1 className="text-2xl font-semibold">
+                        Product #{productId} Variants
+                    </h1>
+                </div>
+                <button
+                    onClick={handleAdd}
+                    className="inline-flex items-center px-4 py-2 bg-violet-700 hover:bg-violet-800 text-white rounded-full shadow"
+                >
+                    <FaPlus className="mr-2" /> Add Variant
+                </button>
+            </header>
+
+            {error && <p className="mb-4 text-red-600">Error: {error}</p>}
+
+            <div className="overflow-x-auto bg-white shadow rounded-lg">
+                <table className="w-full text-left">
+                    <thead className="bg-gray-100">
+                        <tr>
+                            <th className="px-4 py-2">Label</th>
+                            <th className="px-4 py-2">Options</th>
+                            <th className="px-4 py-2">Active</th>
+                            <th className="px-4 py-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading
+                            ? Array.from({ length: 5 }).map((_, i) => (
+                                <tr key={i} className="animate-pulse">
+                                    <td className="px-4 py-3">
+                                        <div className="h-4 bg-gray-200 rounded w-3/4" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="h-4 bg-gray-200 rounded w-5/6" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="h-4 bg-gray-200 rounded w-1/2" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="h-4 bg-gray-200 rounded w-1/3" />
+                                    </td>
+                                </tr>
+                            ))
+                            : variants.map((v) => (
+                                <tr key={v.id} className="border-t">
+                                    <td className="px-4 py-3">{v.label}</td>
+                                    <td className="px-4 py-3">
+                                        {((v.variant ?? []).map((o) => o.value).join(', ')) || '—'}
+                                    </td>
+                                    <td className="px-4 py-3">{v.active ? 'Yes' : 'No'}</td>
+                                    <td className="px-4 py-3 space-x-3">
+                                        <button
+                                            onClick={() => handleEdit(v)}
+                                            className="inline-flex items-center px-3 py-1 bg-violet-700 hover:bg-violet-800 text-white rounded-full"
+                                        >
+                                            <FaEdit />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(v.id)}
+                                            className="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-full"
+                                        >
+                                            <FaTrashAlt />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                    </tbody>
+                </table>
             </div>
 
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Variants</h3>
+            {/* Modal */}
+            {showModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+                    <form
+                        onSubmit={handleSubmit}
+                        className="relative bg-white rounded-lg shadow-lg w-full max-w-2xl p-8 space-y-6"
+                    >
+                        {/* Close button */}
+                        <button
+                            type="button"
+                            onClick={() => setShowModal(false)}
+                            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+                        >
+                            &times;
+                        </button>
 
-            {variants.map((variant, i) => (
-                <div
-                    key={i}
-                    className="border border-gray-300 rounded-lg mb-8 shadow-sm bg-white"
-                >
-                    <div className="bg-gray-100 px-4 py-3 flex flex-wrap md:flex-nowrap md:items-center gap-4">
-                        <div className="flex-1">
-                            <label className="text-sm font-medium text-gray-700 block mb-1">
-                                Attribute Name
-                            </label>
+                        <h2 className="text-2xl font-semibold">
+                            {isEditing ? 'Edit Variant' : 'New Variant'}
+                        </h2>
+
+                        {/* Label */}
+                        <label className="block">
+                            <span className="text-sm font-medium">Label</span>
                             <input
                                 type="text"
-                                value={variant.label}
-                                onChange={(e) =>
-                                    handleVariantChange(i, {
-                                        ...variant,
-                                        label: e.target.value,
-                                    })
-                                }
-                                className="w-full border rounded px-3 py-2 text-sm"
-                                placeholder="e.g. Color"
+                                placeholder="Color, Size, etc."
+                                value={formData.label}
+                                onChange={(e) => updateField('label', e.target.value)}
+                                className="mt-1 block w-full border-gray-300 rounded-full px-4 py-2"
+                                required
                             />
-                        </div>
-                        <div className="flex items-center gap-2">
+                        </label>
+
+                        {/* Active */}
+                        <label className="flex items-center space-x-2">
                             <input
                                 type="checkbox"
-                                checked={variant.active}
-                                onChange={(e) =>
-                                    handleVariantChange(i, {
-                                        ...variant,
-                                        active: e.target.checked,
-                                    })
-                                }
+                                className="h-4 w-4 text-violet-600 border-gray-300 rounded"
+                                checked={formData.active}
+                                onChange={(e) => updateField('active', e.target.checked)}
                             />
                             <span className="text-sm">Active</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={variant.useImageVariant}
-                                onChange={(e) =>
-                                    handleVariantChange(i, {
-                                        ...variant,
-                                        useImageVariant: e.target.checked,
-                                    })
-                                }
-                            />
-                            <span className="text-sm">Use image variant</span>
-                        </div>
-                        <button
-                            onClick={() => handleRemoveVariant(i)}
-                            className="text-red-600 hover:text-red-800 ml-auto text-sm flex items-center gap-1"
-                        >
-                            <FaTrashAlt /> Delete
-                        </button>
-                    </div>
+                        </label>
 
-                    <div className="p-4">
-                        {variant.options.map((opt, j) => (
-                            <div
-                                key={j}
-                                className="mb-4 border border-gray-200 rounded-md p-4 bg-gray-50"
-                            >
-                                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-3">
-                                    <div className="md:col-span-4">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Option Value
-                                        </label>
+                        {/* Options */}
+                        <div>
+                            <p className="text-sm font-medium mb-2">Options</p>
+                            {formData.options.map((opt, i) => (
+                                <div
+                                    key={i}
+                                    className={`mb-4 border border-gray-200 rounded-full p-4 ${opt.active ? 'bg-gray-100' : 'bg-white'
+                                        }`}
+                                >
+                                    <div className="flex gap-2 items-center">
                                         <input
                                             type="text"
+                                            placeholder="Red, Blue, etc."
                                             value={opt.value}
-                                            onChange={(e) =>
-                                                handleOptionChange(i, j, {
-                                                    ...opt,
-                                                    value: e.target.value,
-                                                })
-                                            }
-                                            className="w-full border rounded px-3 py-2 text-sm"
+                                            onChange={(e) => updateOption(i, 'value', e.target.value)}
+                                            className="flex-1 border rounded-full px-4 py-2 text-sm"
+                                            required
                                         />
-                                    </div>
-                                    <div className="md:col-span-4">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Additional Price (cents)
-                                        </label>
                                         <input
-                                            type="text"
+                                            type="number"
+                                            step="1"
+                                            placeholder="Price"
                                             value={opt.additionalPrice}
                                             onChange={(e) =>
-                                                handleOptionChange(i, j, {
-                                                    ...opt,
-                                                    additionalPrice: e.target.value,
-                                                })
+                                                updateOption(i, 'additionalPrice', e.target.value)
                                             }
-                                            className="w-full border rounded px-3 py-2 text-sm"
+                                            className="w-24 border rounded-full px-4 py-2 text-sm"
+                                            required
                                         />
-                                    </div>
-                                    <div className="md:col-span-2 flex items-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            checked={opt.active}
-                                            onChange={(e) =>
-                                                handleOptionChange(i, j, {
-                                                    ...opt,
-                                                    active: e.target.checked,
-                                                })
-                                            }
-                                        />
-                                        <span className="text-sm">Active</span>
-                                    </div>
-                                    <div className="md:col-span-2 flex items-center">
+                                        <label className="flex items-center space-x-1">
+                                            <input
+                                                type="checkbox"
+                                                className="h-4 w-4 text-violet-600 border-gray-300 rounded"
+                                                checked={opt.active}
+                                                onChange={(e) =>
+                                                    updateOption(i, 'active', e.target.checked)
+                                                }
+                                            />
+                                            <span className="text-sm">Active</span>
+                                        </label>
                                         <button
-                                            onClick={() => handleRemoveOption(i, j)}
-                                            className="text-red-600 hover:underline text-sm flex items-center gap-1"
+                                            type="button"
+                                            onClick={() => removeOption(i)}
+                                            className="text-red-600 hover:underline text-sm"
                                         >
-                                            <FaTrashAlt /> Remove
+                                            Remove
                                         </button>
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Upload Images
-                                    </label>
-                                    <input
-                                        type="file"
-                                        multiple
-                                        onChange={(e) =>
-                                            handleOptionChange(i, j, {
-                                                ...opt,
-                                                images: Array.from(e.target.files),
-                                            })
-                                        }
-                                        className="w-full text-sm text-gray-600"
-                                    />
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                            <button
+                                type="button"
+                                onClick={addOption}
+                                className="text-violet-700 hover:underline text-sm"
+                            >
+                                + Add Option
+                            </button>
+                        </div>
 
-                        <button
-                            type="button"
-                            onClick={() => addOption(i)}
-                            className="text-blue-600 text-sm hover:underline mt-2"
-                        >
-                            + Add Option
-                        </button>
-                    </div>
+                        {/* Actions */}
+                        <div className="flex justify-end space-x-3 mt-4">
+                            <button
+                                type="button"
+                                onClick={() => setShowModal(false)}
+                                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full"
+                                disabled={saving}
+                            >
+                                Cancel
+                            </button>
+                            <LoaderButton
+                                type="submit"
+                                loading={saving}
+                                className="px-6 py-2 bg-violet-700 hover:bg-violet-800 text-white rounded-full"
+                            >
+                                {isEditing ? 'Save Changes' : 'Create Variant'}
+                            </LoaderButton>
+                        </div>
+                    </form>
                 </div>
-            ))}
-
-            <button
-                onClick={addVariant}
-                className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-            >
-                + Add Variant
-            </button>
-
-            {/* Sticky Footer */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white shadow-md py-3 border-t flex justify-center gap-4 z-50">
-                <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={loading}
-                    className="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded"
-                >
-                    {loading ? "Saving…" : "Submit"}
-                </button>
-                <button
-                    type="button"
-                    onClick={() => window.history.back()}
-                    className="btn btn-sm bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded"
-                >
-                    Back
-                </button>
-            </div>
+            )}
         </div>
     );
-};
-
-export default ProductVariantForm;
+}
