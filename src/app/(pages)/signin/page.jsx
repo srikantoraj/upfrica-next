@@ -38,10 +38,7 @@ const LoginPage = () => {
               />
             </div>
 
-            {/* Heading */}
-            <h2 className="text-xl md:text-2xl lg:text-3xl font-bold">
-              Log in to your account
-            </h2>
+         
 
             {/* Sign-up text */}
             <p className="text-base">

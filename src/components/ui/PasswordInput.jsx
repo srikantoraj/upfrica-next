@@ -13,8 +13,8 @@ const PasswordInput = ({
 
   return (
     <div className="relative w-full space-y-2">
-      <label htmlFor={id} className="block text-left text-xl font-medium text-[#85878A]">
-        Enter password
+      <label htmlFor="password" className="block text-sm font-medium text-gray-700 text-left">
+       Password
       </label>
       <div className="relative">
         <input
