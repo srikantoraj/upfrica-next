@@ -1,3 +1,5 @@
+
+
 // import Header from "@/components/common/header/Header";
 // import ProductList from "@/components/home/ProductList/ProductList";
 // import FAQ from "@/components/home/Faq/Faq";
@@ -17,25 +19,56 @@
 // import RecentlyViewedList from "@/components/home/ProductList/RecentlyViewedList";
 // import RegionSetter from "./RegionSetter";
 
-// export default function CountrySpecificHome({params}) {
-//   const { region } = params;
+// /**
+//  * Dynamically generates the page’s metadata (title & description)
+//  * based on the country code in the URL (bd, gb, gh, etc.)
+//  */
+// export async function generateMetadata({ params: { region } }) {
+//   // map region codes to display names
+//   const regionNames = {
+//     bd: "Bangladesh",
+//     gb: "United Kingdom",
+//     gh: "Ghana",
+//     // add more as needed
+//   };
+//   const countryName = regionNames[region] || "Global";
+
+//   return {
+//     title: `Upfrica — ${countryName}`,
+//     description: `Explore our curated selection of products in ${countryName}.`,
+//   };
+// }
+
+// export default function CountrySpecificHome({ params: { region } }) {
 //   console.log("Region:", region);
+
 //   return (
 //     <div className="bg-gray-100">
 //       <RegionSetter region={region} />
+
 //       <Header />
+//       <Cover />
+
 //       <EarlyDeals />
-//       <ProductList title={"Selected by Upfrica"} />
+//       <ProductList title={`Selected by Upfrica — ${region.toUpperCase()}`} />
+
 //       <Selling />
 //       <RecentlyViewedList title="Recently Viewed Products" />
+
 //       <WomenFasion title="Trending in Women’s Fashion" />
 //       <SellectedItem />
+
 //       <MenFashion title="Trending in Men’s Fashion" />
 //       <Selling color="green" />
+
 //       <NewArrivals title="New arrivals" />
 //       <Categories />
+
+//       <AboutSection />
+
 //       <FAQ />
 //       <Footer />
+
 //       <User />
 //     </div>
 //   );
@@ -43,7 +76,7 @@
 
 
 
-// app/[region]/page.js
+// app/[region]/page.jsx
 
 import Header from "@/components/common/header/Header";
 import ProductList from "@/components/home/ProductList/ProductList";
@@ -52,7 +85,7 @@ import Footer from "@/components/common/footer/Footer";
 import Categories from "@/components/home/Categories/Categories";
 import AboutSection from "@/components/home/About/About";
 import Link from "next/link";
-import User from "@/components/User";
+import User from "./UserProfile";
 import Cover from "@/components/common/header/Cover";
 import EarlyDeals from "@/components/EarlyDeals";
 import Selling from "@/components/Selling";
@@ -69,7 +102,6 @@ import RegionSetter from "./RegionSetter";
  * based on the country code in the URL (bd, gb, gh, etc.)
  */
 export async function generateMetadata({ params: { region } }) {
-  // map region codes to display names
   const regionNames = {
     bd: "Bangladesh",
     gb: "United Kingdom",
@@ -114,6 +146,8 @@ export default function CountrySpecificHome({ params: { region } }) {
       <FAQ />
       <Footer />
 
+      {/* This client component will pick up the token, fetch profile, and
+          dispatch into Redux for you */}
       <User />
     </div>
   );

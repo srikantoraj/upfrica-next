@@ -1,10 +1,16 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 const countries = [
-    { name: 'Ghana', code: 'GHS', symbol: '₵', region:'gh' },
-    { name: 'United Kingdom', code: 'GBP', symbol: '£', region:'uk' },
-    { name: 'Bangladesh', code: 'BDT', symbol: '৳', region:'bd' },
-]
+    { name: 'Ghana', code: 'GHS', symbol: '₵', region: 'gh' },
+    { name: 'United States', code: 'USD', symbol: '$', region: 'us' },
+    { name: 'United Kingdom', code: 'GBP', symbol: '£', region: 'uk' },
+    { name: 'Nigeria', code: 'NGN', symbol: '₦', region: 'ng' },
+    { name: 'Kenya', code: 'KES', symbol: 'KSh', region: 'ke' },
+    { name: 'South Africa', code: 'ZAR', symbol: 'R', region: 'za' },
+    { name: 'Eurozone', code: 'EUR', symbol: '€', region: 'eu' },
+    { name: 'China', code: 'CNY', symbol: '¥', region: 'cn' },
+    { name: 'Bangladesh', code: 'BDT', symbol: '৳', region: 'bd' },
+  ];
 
 const initialState = {
     list: countries,
