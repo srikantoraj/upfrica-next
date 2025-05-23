@@ -1230,10 +1230,7 @@ export default function ProductDetailSection({ product, relatedProducts }) {
 
     // Fetch addresses
     useEffect(() => {
-        if (!token) {
-            router.push(`/signin?redirect=${encodeURIComponent(currentPath)}`);
-            return;
-        }
+       
         (async () => {
             try {
                 const res = await fetch("https://media.upfrica.com/api/addresses/", {
