@@ -101,9 +101,10 @@ export const menuItems = [
     route: "/new-dashboard",
     icon: FaTag,
     children: [
+      { label: "Blog Categories", route: "/new-dashboard/blog-categories" },
       { label: "All Blogs", route: "/new-dashboard/help-blogs" },
       { label: "Draft Blogs", route: "/new-dashboard/help-blogs/draft-blogs" },
-      { label: "Crate A Blog", route: "/new-dashboard/help-blogs/create-help-blog" },
+      { label: "Create A Blog", route: "/new-dashboard/help-blogs/create-help-blog" },
     
     ]
   },

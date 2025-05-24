@@ -96,10 +96,10 @@ const UpdateHelpBlogPage = ({ params }) => {
                     validate={validate}
                     onSubmit={(values, { setSubmitting }) => {
                         const myHeaders = new Headers();
-                        myHeaders.append("Authorization", `Token aSJ36UapeFH5YARFamDTYhnJ`);
+                        myHeaders.append("Authorization", `Token ${token}`);
                         myHeaders.append("Content-Type", "application/json");
 
-                        fetch(`https://media.upfrica.com/api/helpblogs/${slug}/update/`, {
+                        fetch(`https://media.upfrica.com/api/helpblogs/${blogData?.id}/`, {
                             method: "PUT", // Use PATCH if your API requires it.
                             headers: myHeaders,
                             body: JSON.stringify(values),

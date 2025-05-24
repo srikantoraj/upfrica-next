@@ -5,6 +5,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { FaSearch, FaEdit, FaTrash } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
+import { useSelector } from 'react-redux'
 
 // Skeleton for loading state
 const CardSkeleton = () => (
@@ -50,6 +51,7 @@ const Loader = () => (
 )
 
 export default function HelpBlogs() {
+    const token = useSelector((state) => state.auth.token)
     const [posts, setPosts] = useState(null)
     const [loading, setLoading] = useState(true)
 
@@ -120,7 +122,7 @@ export default function HelpBlogs() {
                     headers: {
                         'Content-Type': 'application/json',
                         // add Authorization header if needed:
-                        // 'Authorization': `Token ${yourToken}`
+                        'Authorization': `Token ${token}`
                     },
                 }
             )
