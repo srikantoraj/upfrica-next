@@ -58,50 +58,7 @@ const DirectBuyPopup = ({
     }
   }, [isVisible, quantity, product]);
 
-  // useEffect(() => {
-  //   if (!token) {
-  //     router.push(`/signin?redirect=${encodeURIComponent(router.asPath)}`);
-  //     return;
-  //   }
-  //   const fetchAddresses = async () => {
-  //     try {
-  //       const response = await fetch(
-  //         "https://media.upfrica.com/api/addresses/",
-  //         {
-  //           method: "GET",
-  //           headers: { Authorization: `Token ${token}` },
-  //         }
-  //       );
-  //       if (!response.ok) throw new Error("Error fetching addresses");
-  //       const data = await response.json();
-  //       console.log("data", data);
 
-  //       const options = data.map((addr) => ({
-  //         id: addr.id,
-  //         value: `${addr.address_data.street}, ${addr.address_data.city}, ${addr.address_data.country}`,
-  //       }));
-  //       setAddresses(options);
-  //       if (options.length > 0) setSelectedAddressId(options[0].id);
-  //     } catch (err) {
-  //       // console.error("Failed to fetch addresses:", err);
-  //       // const dummy = [
-  //       //   {
-  //       //     id: "dummy1",
-  //       //     value: "123 Main Street, Dummy Town, Dummy Country",
-  //       //   },
-  //       // ];
-  //       // setAddresses(dummy);
-  //       // setSelectedAddressId(dummy[0].id);
-  //       console.error("Failed to fetch addresses:", err);
-  //       // ডামি না দেখাতে চাইলে:
-  //       setAddresses([]);            // খালি অ্যারে
-  //       setSelectedAddressId(null);  // কোনো সিলেক্ট থাকবে না
-  //     } finally {
-  //       setIsAddressLoading(false);
-  //     }
-  //   };
-  //   fetchAddresses();
-  // }, [token, router]);
 
   const decrementQuantity = () =>
     setDirectBuyQuantity((prev) => (prev > 1 ? prev - 1 : 1));
