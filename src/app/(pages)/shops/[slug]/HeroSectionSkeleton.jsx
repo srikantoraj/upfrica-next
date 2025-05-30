@@ -5,7 +5,7 @@ import React from 'react';
 
 export default function HeroSectionSkeleton() {
     return (
-        <div className="relative animate-pulse ">
+        <div className="relative animate-pulse w-[500px] ">
             {/* banner placeholder */}
             <div className="h-[300px]  bg-gray-200" />
 

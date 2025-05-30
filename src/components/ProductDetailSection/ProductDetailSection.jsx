@@ -199,7 +199,8 @@ export default function ProductDetailSection({ product, relatedProducts }) {
             method: "DELETE",
             headers: { Authorization: `Token ${token}` },
         });
-        router.push("/");
+        // router.push("/");
+        router.back();
     };
     const handlePublish = async () => {
         await fetch(`https://media.upfrica.com/api/products/${id}/publish/`, {
@@ -621,10 +622,19 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                 <div className="text-sm text-gray-500">
                                     <Link href={`/shops/${shop.slug}`}>
                                         <b>{product?.secondary_data?.sold_count || 'No'} sold</b> — Visit{" "}
-                                        <b className="text-[#8710D8]">{shop.name}</b> — Accra, GH
+                                        <b className="text-[#8710D8]">{shop.name}</b> — {user?.town}, {user?.country}
                                     </Link>
                                 </div>
                             )}
+                            {!shop && (
+                                <div className="text-sm text-gray-500">
+                                    <div>
+                                        <b>{product?.secondary_data?.sold_count || 'No'} sold</b> —  {" "}
+                                        <b className="text-[#8710D8]">{user?.username}</b> — {user?.town}, {user?.country}
+                                    </div>
+                                </div>
+                            )}
+                            
 
                             {/* Review Summary */}
                             <div className="flex items-center text-sm text-yellow-400 gap-2">
