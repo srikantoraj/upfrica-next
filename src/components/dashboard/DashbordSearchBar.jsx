@@ -169,7 +169,6 @@ const DashbordSearchBar = () => {
         <ul className="space-y-5">
           {menuItems.map((item, index) => {
             const isOpen = openMenu === index;
-
             return (
               <li key={index}>
                 {/* Parent item */}

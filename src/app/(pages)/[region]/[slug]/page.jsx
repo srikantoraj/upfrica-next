@@ -30,7 +30,6 @@ async function getProductData(slug) {
     const res = await fetch(`https://media.upfrica.com/api/products/${slug}/`, {
         cache: 'no-store',
     });
-
     if (!res.ok) {
         throw new Error(`Failed to fetch product data (${res.status})`);
     }
