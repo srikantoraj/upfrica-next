@@ -14,8 +14,8 @@ export async function generateMetadata({ params: { slug } }) {
     const product = await getProductData(slug);
 
     return {
-        title: `${product.title} – ${product.user.country}`,
-        description: product.description.body,
+        title: `${product?.title} – ${product?.user?.country}`,
+        description: product?.description?.body,
     };
 }
 
