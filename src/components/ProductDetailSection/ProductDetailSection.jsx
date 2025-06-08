@@ -399,7 +399,7 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                     {/* LEFT COLUMN */}
                     <div className="order-1 xl:col-span-7">
                         <Breadcrumbs categoryTree={category?.category_tree} title={title} />
-                        <section className="mt-2">
+                        <section className="mt-2 bg-upfricaGray1 rounded-xl">
                             <ProductSlider mediaItems={mediaItems} />
                         </section>
 
