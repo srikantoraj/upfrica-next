@@ -79,7 +79,7 @@ const ProductSlider = ({ mediaItems = [], inBaskets = 0 }) => {
 
   return (
     <div className="relative">
-      {/* Top bar (all devices) */}
+      {/* Top Overlay */}
       <div className="absolute top-2 left-0 right-0 flex justify-between items-center px-3 z-10">
         <button
           onClick={() => window.history.back()}
@@ -102,108 +102,111 @@ const ProductSlider = ({ mediaItems = [], inBaskets = 0 }) => {
         </span>
       </div>
 
-      {/* Main display */}
-      <div
-        ref={containerRef}
-        className="relative mt-[2px] border rounded-md mx-auto overflow-hidden cursor-zoom-in w-full md:w-[588px] bg-gray-100"
-        onMouseMove={onMouseMove}
-        onMouseLeave={onMouseLeave}
-        onClick={openModal}
-      >
-        {current.type === "video" ? (
-          <video controls src={current.src} className="w-full h-full object-contain rounded-md" />
-        ) : (
-          <>
-            <Image
-              src={current.src}
-              alt={`Slide ${selectedIndex + 1}`}
-              width={588}
-              height={588}
-              className="object-contain rounded-md w-full h-auto"
-              priority
-            />
-            {zoomPos && (
+      {/* Main layout: vertical thumbnails + image */}
+      <div className="mt-[2px] flex md:flex-row flex-col items-center md:items-start gap-2 justify-center">
+        {/* Left Vertical Thumbnails on Desktop */}
+        <div className="hidden md:flex flex-col gap-2 max-h-[588px] overflow-y-auto pr-1">
+          {items.map((item, idx) => {
+            const isActive = idx === selectedIndex;
+            const border = isActive ? "border-2 border-green-500" : "border border-gray-300";
+            return (
               <div
-                className="absolute pointer-events-none border-2 border-white rounded-full"
-                style={{
-                  width: 120,
-                  height: 120,
-                  left: `calc(${zoomPos.x}% - 60px)`,
-                  top: `calc(${zoomPos.y}% - 60px)`,
-                  backgroundImage: `url(${current.src})`,
-                  backgroundSize: "900% 900%",
-                  backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
-                  boxShadow: "0 0 10px rgba(255,255,255,0.5)",
-                  transform: "scale(1.1)",
-                }}
-              />
-            )}
-          </>
-        )}
+                key={idx}
+                onClick={() => setSelectedIndex(idx)}
+                className={`relative w-[50px] h-[50px] rounded-md overflow-hidden cursor-pointer ${border}`}
+              >
+                {item.type === "video" ? (
+                  <>
+                    {item.thumbnail ? (
+                      <Image
+                        src={item.thumbnail}
+                        alt="Video thumbnail"
+                        width={50}
+                        height={50}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <video
+                        src={item.src}
+                        muted
+                        preload="metadata"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <FaPlay className="text-white text-xl opacity-75" />
+                    </div>
+                  </>
+                ) : (
+                  <Image
+                    src={item.src}
+                    alt={`Thumb ${idx + 1}`}
+                    width={50}
+                    height={50}
+                    className="object-cover w-full h-full"
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
 
-        {/* Mobile dots */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 md:hidden z-20">
-          {items.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedIndex(idx);
-              }}
-              className={`w-2 h-2 rounded-full ${idx === selectedIndex ? "bg-black" : "bg-gray-300"}`}
-            />
-          ))}
+        {/* Main Image */}
+        <div
+          ref={containerRef}
+          className="relative border rounded-md overflow-hidden cursor-zoom-in w-full md:w-[588px] bg-gray-100"
+          onMouseMove={onMouseMove}
+          onMouseLeave={onMouseLeave}
+          onClick={openModal}
+        >
+          {current.type === "video" ? (
+            <video controls src={current.src} className="w-full h-full object-contain rounded-md" />
+          ) : (
+            <>
+              <Image
+                src={current.src}
+                alt={`Slide ${selectedIndex + 1}`}
+                width={588}
+                height={588}
+                className="object-contain rounded-md w-full h-auto"
+                priority
+              />
+              {zoomPos && (
+                <div
+                  className="absolute pointer-events-none border-2 border-white rounded-full"
+                  style={{
+                    width: 120,
+                    height: 120,
+                    left: `calc(${zoomPos.x}% - 60px)`,
+                    top: `calc(${zoomPos.y}% - 60px)`,
+                    backgroundImage: `url(${current.src})`,
+                    backgroundSize: "900% 900%",
+                    backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
+                    boxShadow: "0 0 10px rgba(255,255,255,0.5)",
+                    transform: "scale(1.1)",
+                  }}
+                />
+              )}
+            </>
+          )}
+
+          {/* Mobile Dots */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 md:hidden z-20">
+            {items.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedIndex(idx);
+                }}
+                className={`w-2 h-2 rounded-full ${idx === selectedIndex ? "bg-black" : "bg-gray-300"}`}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Thumbnails for desktop */}
-      <div className="hidden md:flex justify-center gap-1 mt-2">
-        {items.map((item, idx) => {
-          const isActive = idx === selectedIndex;
-          const border = isActive ? "border-2 border-green-500" : "border border-gray-300";
-          return (
-            <div
-              key={idx}
-              onClick={() => setSelectedIndex(idx)}
-              className={`relative w-[50px] h-[50px] rounded-md overflow-hidden cursor-pointer ${border}`}
-            >
-              {item.type === "video" ? (
-                <>
-                  {item.thumbnail ? (
-                    <Image
-                      src={item.thumbnail}
-                      alt="Video thumbnail"
-                      width={50}
-                      height={50}
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <video
-                      src={item.src}
-                      muted
-                      preload="metadata"
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <FaPlay className="text-white text-xl opacity-75" />
-                  </div>
-                </>
-              ) : (
-                <Image
-                  src={item.src}
-                  alt={`Thumb ${idx + 1}`}
-                  width={50}
-                  height={50}
-                  className="object-cover w-full h-full"
-                />
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Lightbox */}
+      {/* Modal Lightbox */}
       <Modal
         isOpen={isModalOpen}
         onRequestClose={closeModal}
@@ -213,25 +216,11 @@ const ProductSlider = ({ mediaItems = [], inBaskets = 0 }) => {
         ariaHideApp={false}
       >
         <div className="relative flex items-center justify-center w-full h-full">
-          <button
-            className="absolute top-4 right-4 text-white text-3xl bg-black bg-opacity-50 p-2 rounded-full"
-            onClick={closeModal}
-          >
-            ✖
-          </button>
-          <button
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-3xl bg-black bg-opacity-50 p-3 rounded-full"
-            onClick={prev}
-          >
-            ◀
-          </button>
+          <button className="absolute top-4 right-4 text-white text-3xl bg-black bg-opacity-50 p-2 rounded-full" onClick={closeModal}>✖</button>
+          <button className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-3xl bg-black bg-opacity-50 p-3 rounded-full" onClick={prev}>◀</button>
           <div className="flex-grow flex items-center justify-center">
             {current.type === "video" ? (
-              <video
-                controls
-                src={current.src}
-                className="max-w-[90vw] max-h-[90vh] object-contain rounded-md"
-              />
+              <video controls src={current.src} className="max-w-[90vw] max-h-[90vh] object-contain rounded-md" />
             ) : (
               <Image
                 src={current.src}
@@ -244,12 +233,7 @@ const ProductSlider = ({ mediaItems = [], inBaskets = 0 }) => {
               />
             )}
           </div>
-          <button
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-3xl bg-black bg-opacity-50 p-3 rounded-full"
-            onClick={next}
-          >
-            ▶
-          </button>
+          <button className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-3xl bg-black bg-opacity-50 p-3 rounded-full" onClick={next}>▶</button>
         </div>
       </Modal>
     </div>
