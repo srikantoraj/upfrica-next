@@ -106,7 +106,10 @@ export default function ProductDetailSection({ product }) {
     const [isDirectBuyPopupVisible, setIsDirectBuyPopupVisible] = useState(false);
 
     // Calculate the converted price using your utility
-    const convertedPrice = convertPrice(price_cents / 100, price_currency, "GHS", exchangeRates);
+const convertedPrice =
+  exchangeRates && exchangeRates[price_currency]
+    ? convertPrice(price_cents / 100, price_currency, "GHS", exchangeRates)
+    : price_cents / 100;
 
     // Countdown: time remaining until sale_end_date
     const [timeRemaining, setTimeRemaining] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -371,9 +374,11 @@ export default function ProductDetailSection({ product }) {
                                 <span className="text-3xl font-bold text-green-700 tracking-tight">
                                     {price_currency} {(convertedPrice || price_cents / 100)?.toFixed(2)}
                                 </span>
-                                <span className="ml-4 text-sm text-red-700 font-medium">
-                                    Sales ends in {timeRemaining.days} days {timeRemaining.hours}:{timeRemaining.minutes}:{timeRemaining.seconds}
-                                </span>
+{typeof window !== 'undefined' && (
+  <span className="ml-4 text-sm text-red-700 font-medium">
+    Sales ends in {timeRemaining.days} days {timeRemaining.hours}:{timeRemaining.minutes}:{timeRemaining.seconds}
+  </span>
+)}
                             </div>
                             <div className="flex items-center gap-4 mb-6">
                 <span className="text-sm font-medium text-gray-800">In stock</span>

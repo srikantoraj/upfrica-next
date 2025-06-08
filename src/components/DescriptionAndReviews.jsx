@@ -104,29 +104,6 @@ export default function DescriptionAndReviews({ details, user }) {
                     Verified Customer Review
                 </h3>
 
-                <div className="bg-gray-100 p-4 rounded-md mb-6">
-                    <div className="flex flex-col md:flex-row items-center gap-4">
-                        <div className="md:w-1/3 text-center">
-                            <h3 className="text-2xl font-bold mb-1">5.0</h3>
-                            <p className="text-sm text-gray-600">Based on 3 Customer Reviews</p>
-                            <div className="mt-1 text-yellow-400 text-lg">★★★★★</div>
-                        </div>
-                        <div className="md:w-2/3 flex flex-col space-y-2">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2/3 bg-yellow-100 h-2 rounded">
-                                    <div className="bg-yellow-400 h-2 rounded" style={{ width: '95%' }}></div>
-                                </div>
-                                <span className="text-sm text-gray-700">85%</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-2/3 bg-yellow-100 h-2 rounded">
-                                    <div className="bg-yellow-400 h-2 rounded" style={{ width: '75%' }}></div>
-                                </div>
-                                <span className="text-sm text-gray-700">75%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <CustomerReviewsSection />
             </section>
