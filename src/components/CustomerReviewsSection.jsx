@@ -186,7 +186,8 @@ export default function CustomerReviewsSection({ slug }) {
   useEffect(() => {
     if (!slug) return;
     dispatch(fetchReviewsStart());
-    fetch(`https://media.upfrica.com/api/products/${slug}/reviews/`)
+    //fetch(`https://media.upfrica.com/api/products/${slug}/reviews/`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/${slug}/reviews/`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch reviews");
         return res.json();

@@ -27,7 +27,8 @@ async function getProductData(slug) {
         throw new Error('No product slug provided');
     }
 
-    const res = await fetch(`https://media.upfrica.com/api/products/${slug}/`, {
+    //const res = await fetch(`https://media.upfrica.com/api/products/${slug}/`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/${slug}/`, {
         cache: 'no-store',
     });
     if (!res.ok) {
@@ -42,7 +43,8 @@ async function getProductData(slug) {
  */
 async function getRelatedProducts(slug) {
     try {
-        const res = await fetch(`https://media.upfrica.com/api/products/${slug}/related/`, {
+        //const res = await fetch(`https://media.upfrica.com/api/products/${slug}/related/`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/${slug}/`, {
             cache: 'no-store',
         });
 
@@ -70,7 +72,7 @@ export default async function ProductPage({ params: { slug } }) {
         <>
             <Header />
 
-            <main className="container mx-auto py-8">
+            <main className="w-full max-w-[1380px] mx-auto py-8 px-4 sm:px-5 lg:px-8 xl:px-[4rem] 2xl:px-[5rem]">
                 <ProductDetailSection
                     product={product}
                     relatedProducts={relatedProducts}
