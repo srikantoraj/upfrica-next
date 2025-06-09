@@ -118,7 +118,8 @@ const Price = dynamic(() => import('./Price'), { ssr: false })
 
 export default async function EarlyDeals() {
     const res = await fetch(
-        'https://media.upfrica.com/api/product-list/2025/',
+        //'https://media.upfrica.com/api/product-list/2025/',
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/product-list/2025/`,
         { next: { revalidate: 120 } }
     )
 

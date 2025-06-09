@@ -42,6 +42,11 @@ import {
 import { AiOutlineClose } from "react-icons/ai";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 
+import { BASE_API_URL } from '@/app/constants';
+
+
+
+
 const Breadcrumbs = ({ categoryTree, title }) => {
     const flattenCategoryChain = (node) => {
         const chain = [];
@@ -156,46 +161,42 @@ export default function ProductDetailSection({ product, relatedProducts }) {
     }, [dispatch, id]);
 
     // Check wishlist status
-    useEffect(() => {
-        if (!token || !id) return;
-        fetch(`https://media.upfrica.com/api/wishlist/${id}/`, {
-            method: "GET",
-            headers: { Authorization: `Token ${token}` },
-        })
-            .then((res) => setIsWishlisted(res.ok))
-            .catch(console.error);
-    }, [token, id]);
-
-    const handleToggleWishlist = async () => {
-        if (!token) {
-            router.push(`/signin?next=${encodeURIComponent(currentPath)}`);
-            return;
+const handleToggleWishlist = async () => {
+    if (!token) {
+        router.push(`/signin?next=${encodeURIComponent(currentPath)}`);
+        return;
+    }
+    setLoading(true);
+    const url = `${BASE_API_URL}/api/wishlist/${id}/`;
+    try {
+        if (isWishlisted) {
+            await fetch(url, {
+                method: "DELETE",
+                headers: { Authorization: `Token ${token}` },
+            });
+            setIsWishlisted(false);
+        } else {
+            await fetch(`${BASE_API_URL}/api/wishlist/`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Token ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ product_id: id, note: "" }),
+            });
+            setIsWishlisted(true);
         }
-        setLoading(true);
-        const url = `https://media.upfrica.com/api/wishlist/${id}/`;
-        try {
-            if (isWishlisted) {
-                await fetch(url, { method: "DELETE", headers: { Authorization: `Token ${token}` } });
-                setIsWishlisted(false);
-            } else {
-                await fetch("https://media.upfrica.com/api/wishlist/", {
-                    method: "POST",
-                    headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ product_id: id, note: "" }),
-                });
-                setIsWishlisted(true);
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    };
+    } catch (e) {
+        console.error(e);
+    } finally {
+        setLoading(false);
+    }
+};
 
     // Admin actions: delete, publish, unpublish
     const handleDelete = async () => {
         if (!confirm("Are you sure you want to delete this product?")) return;
-        await fetch(`https://media.upfrica.com/api/products/${id}/`, {
+        await fetch(`${BASE_API_URL}/api/products/${id}/`, {
             method: "DELETE",
             headers: { Authorization: `Token ${token}` },
         });
@@ -203,14 +204,14 @@ export default function ProductDetailSection({ product, relatedProducts }) {
         router.back();
     };
     const handlePublish = async () => {
-        await fetch(`https://media.upfrica.com/api/products/${id}/publish/`, {
+        await fetch(`${BASE_API_URL}/api/products/${id}/publish/`, {
             method: "POST",
             headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
         });
         router.replace(router.asPath);
     };
     const handleUnpublish = async () => {
-        await fetch(`https://media.upfrica.com/api/products/${id}/unpublish/`, {
+        await fetch(`${BASE_API_URL}/api/products/${id}/unpublish/`, {
             method: "POST",
             headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
         });
@@ -278,7 +279,7 @@ export default function ProductDetailSection({ product, relatedProducts }) {
        
         (async () => {
             try {
-                const res = await fetch("https://media.upfrica.com/api/addresses/", {
+                const res = await fetch(`${BASE_API_URL}/api/addresses/`, {
                     headers: { Authorization: `Token ${token}` },
                 });
                 if (!res.ok) throw new Error();
@@ -299,40 +300,46 @@ export default function ProductDetailSection({ product, relatedProducts }) {
     }, [token, router, currentPath]);
 
     // New address form submit
-    const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
-        try {
-            const res = await fetch("https://media.upfrica.com/api/addresses/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Token ${token}` },
-                body: JSON.stringify({
-                    owner_id: currentUser.id,
-                    owner_type: "USER",
-                    default: false,
-                    full_name: vals.full_name,
-                    address_data: {
-                        street: vals.street,
-                        city: vals.city,
-                        state: vals.state,
-                        zip_code: vals.zip_code,
-                        country: vals.country,
-                    },
-                }),
-            });
-            const json = await res.json();
-            setAddresses((prev) => [
-                ...prev,
-                { id: json.id, value: `${json.address_data.street}, ${json.address_data.city}, ${json.address_data.country}` },
-            ]);
-            setSelectedAddressId(json.id);
-            resetForm();
-            setShowNewModal(false);
-            setIsDirectBuyPopupVisible(true);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setSubmitting(false);
-        }
-    };
+const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
+    try {
+        const res = await fetch(`${BASE_API_URL}/api/addresses/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Token ${token}`,
+            },
+            body: JSON.stringify({
+                owner_id: currentUser.id,
+                owner_type: "USER",
+                default: false,
+                full_name: vals.full_name,
+                address_data: {
+                    street: vals.street,
+                    city: vals.city,
+                    state: vals.state,
+                    zip_code: vals.zip_code,
+                    country: vals.country,
+                },
+            }),
+        });
+        const json = await res.json();
+        setAddresses((prev) => [
+            ...prev,
+            {
+                id: json.id,
+                value: `${json.address_data.street}, ${json.address_data.city}, ${json.address_data.country}`,
+            },
+        ]);
+        setSelectedAddressId(json.id);
+        resetForm();
+        setShowNewModal(false);
+        setIsDirectBuyPopupVisible(true);
+    } catch (e) {
+        console.error(e);
+    } finally {
+        setSubmitting(false);
+    }
+};
 
     // Handlers
     const handleDirectBuyNow = () => {
@@ -399,7 +406,7 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                     {/* LEFT COLUMN */}
                     <div className="order-1 xl:col-span-7">
                         <Breadcrumbs categoryTree={category?.category_tree} title={title} />
-                        <section className="mt-2 bg-upfricaGray1 rounded-xl">
+                        <section className="mt-2 rounded-xl">
                             <ProductSlider mediaItems={mediaItems} />
                         </section>
 
@@ -580,7 +587,7 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                     </div>
 
                     {/* RIGHT SIDEBAR */}
-                    <aside className="order-2 hidden xl:block xl:col-span-5">
+                    <aside className="order-2 hidden xl:block xl:col-span-5 pl-8">
                         <div className="sticky top-0 p-5 px-0 space-y-4">
 
                             {/* Admin / Owner Controls */}

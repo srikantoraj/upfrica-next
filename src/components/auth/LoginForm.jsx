@@ -1,7 +1,6 @@
-
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useFormik } from 'formik'
 import PasswordInput from '@/components/ui/PasswordInput'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -16,6 +15,11 @@ export default function LoginPage() {
   const searchParams = useSearchParams()
   const dispatch = useDispatch()
 
+  // ✅ Log the API base URL to verify it's loading
+  useEffect(() => {
+    console.log('✅ NEXT_PUBLIC_API_BASE_URL:', process.env.NEXT_PUBLIC_API_BASE_URL)
+  }, [])
+
   const formik = useFormik({
     initialValues: {
       email: 'upfricasite@gmail.com',
@@ -23,12 +27,17 @@ export default function LoginPage() {
     },
     onSubmit: async (values, { setSubmitting, setErrors }) => {
       try {
-        const response = await fetch('https://media.upfrica.com/api/login/', {
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+        console.log('📡 Fetching from:', `${apiUrl}/api/login`) // Debug log
+
+const response = await fetch(`${apiUrl}/api/login/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(values),
         })
+
         const data = await response.json()
+
         if (response.ok) {
           dispatch(setUser(data))
           const nextPath = searchParams.get('next') || '/'
@@ -37,6 +46,7 @@ export default function LoginPage() {
           setErrors({ email: data.message || 'Login failed' })
         }
       } catch (error) {
+        console.error('Login error:', error)
         setErrors({ email: 'An unexpected error occurred. Please try again.' })
       } finally {
         setSubmitting(false)

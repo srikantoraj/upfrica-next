@@ -75,7 +75,9 @@ const DirectBuyPopup = ({
     setIsConfirmLoading(true);
     try {
       const response = await fetch(
-        "https://media.upfrica.com/api/cart/direct-buy/",
+        //"https://media.upfrica.com/api/cart/direct-buy/",
+        "http://127.0.0.1:8000/api/cart/direct-buy/",
+        
         {
           method: "POST",
           headers: {
