@@ -248,6 +248,7 @@ import { FiSearch } from 'react-icons/fi';
 import { MdRemoveRedEye, MdDelete, MdCheckCircle, MdOutlineRemoveRedEye } from 'react-icons/md';
 import { FaEdit } from "react-icons/fa";
 import Pagination from '@/components/Pagination';
+import { BASE_API_URL } from '@/app/constants';
 
 const PAGE_SIZE = 20;
 
@@ -278,8 +279,8 @@ export default function RecentOrdersPage() {
                 }
 
                 const url = isSearch
-                    ? `https://media.upfrica.com/api/seller/orders/search/?${params.toString()}`
-                    : `https://media.upfrica.com/api/seller/order-items/?${params.toString()}`;
+                    ? `${BASE_API_URL}/api/seller/orders/search/?${params.toString()}`
+                    : `${BASE_API_URL}/api/seller/order-items/?${params.toString()}`;
 
                 const res = await fetch(url, {
                     method: 'GET',
@@ -309,7 +310,7 @@ export default function RecentOrdersPage() {
         setDeletingId(id);
         try {
             const res = await fetch(
-                `https://media.upfrica.com/api/seller/order-items/${id}/`,
+                `${BASE_API_URL}/api/seller/order-items/${id}/`,
                 { method: 'DELETE', headers: { Authorization: `Token ${token}` } }
             );
             if (!res.ok) throw new Error('Delete failed');

@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import { BASE_API_URL } from '@/app/constants';
 import { FiSearch } from 'react-icons/fi';
 import { MdRemoveRedEye, MdDelete, MdCheckCircle, MdOutlineRemoveRedEye } from 'react-icons/md';
 import { FaEdit } from "react-icons/fa";
@@ -39,8 +40,8 @@ export default function RecentOrdersPage() {
         }
 
         const url = isSearch
-          ? `https://media.upfrica.com/api/seller/orders/search/?${params.toString()}`
-          : `https://media.upfrica.com/api/seller/order-items/?${params.toString()}`;
+          ? `${BASE_API_URL}/api/seller/orders/search/?${params.toString()}`
+          : `${BASE_API_URL}/api/seller/order-items/?${params.toString()}`;
 
         const res = await fetch(url, {
           method: 'GET',
@@ -70,7 +71,7 @@ export default function RecentOrdersPage() {
     setDeletingId(id);
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/seller/order-items/${id}/`,
+        `${BASE_API_URL}/api/seller/order-items/${id}/`,
         { method: 'DELETE', headers: { Authorization: `Token ${token}` } }
       );
       if (!res.ok) throw new Error('Delete failed');

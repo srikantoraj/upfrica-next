@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { FaMinus, FaPencilAlt, FaPlus, FaArrowLeft, FaListAlt } from "react-icons/fa";
 import { IoMdNotifications } from "react-icons/io";
+import { BASE_API_URL } from '@/app/constants';
 import { AiOutlineCheckCircle, AiOutlineCloseCircle } from 'react-icons/ai';
 import { useFormik } from "formik";
 import Title from "@/components/inpute/Title";
@@ -168,7 +169,7 @@ const AddNewProducts = () => {
       headers.append("Authorization", `Token ${token}`);
       try {
         const response = await fetch(
-          "https://media.upfrica.com/api/product/create/",
+          `${BASE_API_URL}/api/product/create/`,
           { method: "POST", headers, body: formData }
         );
         const result = await response.json();

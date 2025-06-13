@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import SalesCardGroup from "@/components/overview/SalesCardGroup";
 import SellerOrdersData from "@/components/overview/SellerOrdersData";
 import RecentOrders from "@/components/overview/RecentOrders";
+import { BASE_API_URL } from '@/app/constants';
 
 const DashboardPage = () => {
 
@@ -16,7 +17,7 @@ const DashboardPage = () => {
         const fetchStats = async () => {
             try {
                 const res = await fetch(
-                    "https://media.upfrica.com/api/seller/dashboard-summary/",
+                    `${BASE_API_URL}/api/seller/dashboard-summary/`,
                     {
                         method: "GET",
                         headers: {

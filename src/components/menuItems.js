@@ -19,136 +19,150 @@ import {
   FaTicketAlt,
   FaComments,
   FaUserCircle,
-  FaSignOutAlt
+  FaSignOutAlt,
+  FaCogs,
+  FaChartLine,
+  FaMoneyBillWave
 } from "react-icons/fa";
 
 export const menuItems = [
+  // Direct click menus
   {
     label: "Dashboard",
-    route: "/new-dashboard",
-    icon: FaTachometerAlt,
+    route: "/dashboard",
+    icon: FaTachometerAlt
+  },
+  {
+    label: "Analytics",
+    route: "/analytics",
+    icon: FaChartLine
+  },
+  {
+    label: "Plan & Add-ons",
+    route: "/plan",
+    icon: FaTag
+  },
+  {
+    label: "Payouts & Finances",
+    route: "/finance",
+    icon: FaWallet
+  },
+
+  // Collapsible sections for Sellers
+  {
+    label: "Products",
+    route: "/products",
+    icon: FaBoxOpen,
+    role: "seller",
     children: [
-      {
-        label: "Overview",
-        route: "/new-dashboard/overview"
-      },
-      // {
-      //   label: "Quick Actions",
-      //   route: "/new-dashboard/quick-actions",
-      //   children: [
-      //     {
-      //       label: "➕ Add New Product",
-      //       route: "/new-dashboard/quick-actions/add-product",
-      //       icon: FaPlus
-      //     },
-      //     {
-      //       label: "💬 Message Admin",
-      //       route: "/new-dashboard/quick-actions/message-admin",
-      //       icon: FaEnvelope
-      //     }
-      //   ]
-      // }
+      { label: "View All Products", route: "/products" },
+      { label: "Add Product", route: "/products/add" },
+      { label: "Product Reviews", route: "/products/reviews" },
+      { label: "Drafts / Archived", route: "/products/drafts" }
     ]
   },
   {
     label: "Orders",
     route: "/orders",
     icon: FaClipboardList,
+    role: "seller",
     children: [
-      { label: "All Orders", route: "/new-dashboard/all-orders" },
-      { label: "Pending Orders", route: "/new-dashboard/pending-orders" },
-      { label: "Shipped Orders", route: "/new-dashboard/shipped-orders" },
-      { label: "Cancelled / Refunded", route: "/new-dashboard/cancelled-orders" },
+      { label: "All Orders", route: "/orders/all" },
+      { label: "Unfulfilled", route: "/orders/unfulfilled" },
+      { label: "Returns & Cancellations", route: "/orders/returns" },
+      { label: "Order Settings", route: "/orders/settings" }
     ]
   },
   {
-    label: "Products",
-    route: "/all-products",
-    icon: FaBoxOpen,
+    label: "Marketing Tools",
+    route: "/marketing",
+    icon: FaBullhorn,
+    role: "seller",
     children: [
-      { label: "All Products", route: "/new-dashboard/all-products" },
-      { label: "Add New Product", route: "/new-dashboard/add-new-product" },
-      { label: "Drafts", route: "/new-dashboard/draft" },
-      { label: "Out-of-Stock", route: "/new-dashboard/out-of-stock" },
-      // { label: "Bulk Import / Export", route: "/products/import-export" }
+      { label: "Discounts", route: "/marketing/discounts" },
+      { label: "Promotions", route: "/marketing/promotions" },
+      { label: "Email Campaigns", route: "/marketing/email" },
+      { label: "SEO Booster", route: "/marketing/seo" },
+      { label: "Ad Boosts", route: "/marketing/boosts" }
     ]
   },
   {
-    label: "My Purchases",
-    route: "/new-dashboard/my-orders",
-    icon: FaClipboardList,
+    label: "Store Settings",
+    route: "/settings",
+    icon: FaCogs,
+    role: "seller",
     children: [
-      { label: "All Purchases", route: "/new-dashboard/my-orders" },
-      { label: "Processing", route: "/new-dashboard/my-orders/processing" },
-      { label: "Unpaid", route: "/new-dashboard/my-orders/unpaid" },
-      { label: "Returns & Cancelled", route: "/new-dashboard/my-orders/return-cancelled" },
+      { label: "Store Details", route: "/settings/details" },
+      { label: "Shipping Methods", route: "/settings/shipping" },
+      { label: "Payment Settings", route: "/settings/payments" },
+      { label: "Tax Settings", route: "/settings/taxes" },
+      { label: "Store Policies", route: "/settings/policies" }
+    ]
+  },
 
+  // Messages shared by all roles
+  {
+    label: "Messages",
+    route: "/messages",
+    icon: FaEnvelope,
+    children: [
+      { label: "Inbox", route: "/messages/inbox" },
+      { label: "Buyer Questions", route: "/messages/questions" },
+      { label: "System Alerts", route: "/messages/alerts" }
     ]
   },
+
+  // Buyer role-specific entries (if needed)
   {
-    label: "Admin Approvals",
-    route: "/new-dashboard/lavel",
+    label: "My Orders",
+    route: "/my-orders",
     icon: FaClipboardList,
+    role: "buyer",
     children: [
-      { label: "Draft Products", route: "/new-dashboard/draft-products" },
-      { label: "Pending Reviews", route: "/new-dashboard/pending-reviews" },
-    
-     
+      { label: "All Purchases", route: "/my-orders" },
+      { label: "Processing", route: "/my-orders/processing" },
+      { label: "Unpaid", route: "/my-orders/unpaid" },
+      { label: "Returns & Cancelled", route: "/my-orders/returns" }
     ]
   },
+
+  // Sourcing Agent role-specific entries
   {
-    label: "Blogs",
-    route: "/new-dashboard",
-    icon: FaTag,
+    label: "Sourcing Tasks",
+    route: "/sourcing",
+    icon: FaShippingFast,
+    role: "agent",
     children: [
-      { label: "Blog Categories", route: "/new-dashboard/blog-categories" },
-      { label: "All Blogs", route: "/new-dashboard/help-blogs" },
-      { label: "Draft Blogs", route: "/new-dashboard/help-blogs/draft-blogs" },
-      { label: "Create A Blog", route: "/new-dashboard/help-blogs/create-help-blog" },
-    
+      { label: "Assigned Requests", route: "/sourcing/tasks" },
+      { label: "Sourced Products", route: "/sourcing/products" }
     ]
   },
+
+ // All Settings
   {
-    label: "Jobs & Careers",
-    route: "/new-dashboard",
-    icon: FaLifeRing,
-    children: [
-      { label: "All Jobs", route: "/new-dashboard/jobs" },
-      { label: "Create a Job", route: "/new-dashboard/jobs/create-job" }
-  
-    ]
-  },
-  {
-    label: "User Management",
-    route: "/new-dashboard",
-    icon: FaChartBar,
-    children: [
-      { label: "All Users", route: "/new-dashboard/all-users" }
-    ]
-  },
-  {
-    label: "Payments",
-    route: "/payments",
-    icon: FaWallet,
-    children: [
-      { label: "Transaction Settings", route: "/new-dashboard/payments" },
- 
-    ]
-  },
- 
-  // Sticky profile/logout at bottom
+  label: "Settings",
+  route: "/settings",
+  icon: FaCogs,
+  children: [
+    { label: "Account Type", route: "/settings/account-type" },
+    { label: "Payout Info", route: "/settings/payouts" },
+    { label: "Security", route: "/settings/security" },
+    { label: "Notifications", route: "/settings/notifications" },
+    { label: "Preferences", route: "/settings/preferences" },
+    // optionally add billing, user management etc.
+  ]
+},
+
+
+
+  // Shared profile/logout
   {
     label: "My Profile",
     route: "/profile",
     icon: FaUserCircle,
     children: [
-      { label: "Profile Settings", route: "/new-dashboard/profile-settings" },
-      { label: "Address Book", route: "/new-dashboard/profile-settings/address-book" },
-      // { label: "Payment Methods", route: "/new-dashboard/payment-methods" },
-      // { label: "My Reviews", route: "/new-dashboard/my-reviews" },
-      // { label: "My Wishlist", route: "/new-dashboard/wishlist" },
-      // { label: "My Tickets", route: "/new-dashboard/tickets" }
-
+      { label: "Profile Settings", route: "/profile/settings" },
+      { label: "Address Book", route: "/profile/addresses" }
     ]
   },
   {

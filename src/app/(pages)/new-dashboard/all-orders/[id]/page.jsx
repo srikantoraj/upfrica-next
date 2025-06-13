@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useSelector } from 'react-redux';
+import { BASE_API_URL } from '@/app/constants';
 import DeliveryTracker from "../components/DeliveryTracker";
 import {
   AiOutlineHome,
@@ -37,7 +38,7 @@ export default function OrderDetailsPage() {
       setLoading(true);
       try {
         const res = await fetch(
-          `https://media.upfrica.com/api/seller/order-items/${id}/`,
+          `${BASE_API_URL}/api/seller/order-items/${id}/`,
           { headers: { Authorization: `Token ${token}` } }
         );
         if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
@@ -91,7 +92,7 @@ export default function OrderDetailsPage() {
     };
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/seller/order-items/${id}/`,
+        `${BASE_API_URL}/api/seller/order-items/${id}/`,
         {
           method: 'PATCH',
           headers: {
