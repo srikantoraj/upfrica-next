@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useSelector } from 'react-redux';
+import { BASE_API_URL } from '@/app/constants';
 import DeliveryTracker from "../components/DeliveryTracker";
 import { AiOutlineHome, AiOutlineUser, AiOutlinePhone } from 'react-icons/ai';
 
@@ -32,8 +33,7 @@ export default function OrderDetailsPage() {
     if (!token || !id) return;
     (async () => {
       try {
-        setLoading(true);
-        const res = await fetch(`https://media.upfrica.com/api/buyer/orders/${id}/`, {
+        const res = await fetch(`${BASE_API_URL}/api/buyer/orders/${id}/`, {
           headers: {
             Authorization: `Token ${token}`,
           },

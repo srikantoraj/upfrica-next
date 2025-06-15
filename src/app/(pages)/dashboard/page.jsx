@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { BASE_API_URL } from '@/app/constants';
 import { FiSearch } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import Pagination from '@/components/Pagination';
@@ -47,7 +48,7 @@ export default function DashboardPage() {
             setLoading(true);
             try {
               
-                const url = `https://media.upfrica.com/api/seller/order-items/?page=${currentPage}`;
+                const url = `${BASE_API_URL}/api/seller/order-items/?page=${currentPage}`;
                 const res = await fetch(url, {
                     method: 'GET',
                     headers: {
@@ -79,7 +80,7 @@ export default function DashboardPage() {
         setDeletingId(id);
         try {
             const res = await fetch(
-                `https://media.upfrica.com/api/seller/order-items/${id}/`,
+                `${BASE_API_URL}/api/seller/order-items/${id}/`,
                 {
                     method: 'DELETE',
                     headers: { Authorization: `Token ${token}` }

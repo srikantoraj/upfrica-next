@@ -85,7 +85,8 @@ import { IoIosArrowRoundForward } from 'react-icons/io';
 
 const SellectedItem = async () => {
   try {
-    const res = await fetch("https://media.upfrica.com/api/product-list/trending-machines/", {
+    //const res = await fetch("https://media.upfrica.com/api/product-list/trending-machines/", {
+    const res = await fetch("http://127.0.0.1:8000/api/product-list/trending-machines/", {    
       next: { revalidate: 120 }, // Revalidate every 2 minutes
     });
 

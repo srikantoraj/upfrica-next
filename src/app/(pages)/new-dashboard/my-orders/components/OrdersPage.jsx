@@ -167,6 +167,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
+import { BASE_API_URL } from '@/app/constants';
 import OrderCard from "./OrderCard";
 import Pagination from "@/components/Pagination";
 import { AiOutlineSearch, AiOutlineClose } from "react-icons/ai";
@@ -197,7 +198,7 @@ export default function OrdersPage() {
     setLoading(true);
     setError(null);
 
-    fetch(`https://media.upfrica.com/api/buyer/orders/?page=${pageParam}`, {
+    fetch(`${BASE_API_URL}/api/buyer/orders/?page=${pageParam}`, {
       headers: {
         Authorization: `Token ${token}`,
         "Content-Type": "application/json",
@@ -234,7 +235,7 @@ export default function OrdersPage() {
 
     debounceRef.current = setTimeout(() => {
       fetch(
-        `https://media.upfrica.com/api/buyer/orders/search/?q=${encodeURIComponent(
+        `${BASE_API_URL}/api/buyer/orders/search/?q=${encodeURIComponent(
           searchQuery
         )}&page=${pageParam}`,
         {

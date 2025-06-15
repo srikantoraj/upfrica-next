@@ -42,6 +42,11 @@ import {
 import { AiOutlineClose } from "react-icons/ai";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 
+import { BASE_API_URL } from '@/app/constants';
+
+
+
+
 const Breadcrumbs = ({ categoryTree, title }) => {
     const flattenCategoryChain = (node) => {
         const chain = [];
@@ -156,46 +161,42 @@ export default function ProductDetailSection({ product, relatedProducts }) {
     }, [dispatch, id]);
 
     // Check wishlist status
-    useEffect(() => {
-        if (!token || !id) return;
-        fetch(`https://media.upfrica.com/api/wishlist/${id}/`, {
-            method: "GET",
-            headers: { Authorization: `Token ${token}` },
-        })
-            .then((res) => setIsWishlisted(res.ok))
-            .catch(console.error);
-    }, [token, id]);
-
-    const handleToggleWishlist = async () => {
-        if (!token) {
-            router.push(`/signin?next=${encodeURIComponent(currentPath)}`);
-            return;
+const handleToggleWishlist = async () => {
+    if (!token) {
+        router.push(`/signin?next=${encodeURIComponent(currentPath)}`);
+        return;
+    }
+    setLoading(true);
+    const url = `${BASE_API_URL}/api/wishlist/${id}/`;
+    try {
+        if (isWishlisted) {
+            await fetch(url, {
+                method: "DELETE",
+                headers: { Authorization: `Token ${token}` },
+            });
+            setIsWishlisted(false);
+        } else {
+            await fetch(`${BASE_API_URL}/api/wishlist/`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Token ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ product_id: id, note: "" }),
+            });
+            setIsWishlisted(true);
         }
-        setLoading(true);
-        const url = `https://media.upfrica.com/api/wishlist/${id}/`;
-        try {
-            if (isWishlisted) {
-                await fetch(url, { method: "DELETE", headers: { Authorization: `Token ${token}` } });
-                setIsWishlisted(false);
-            } else {
-                await fetch("https://media.upfrica.com/api/wishlist/", {
-                    method: "POST",
-                    headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ product_id: id, note: "" }),
-                });
-                setIsWishlisted(true);
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    };
+    } catch (e) {
+        console.error(e);
+    } finally {
+        setLoading(false);
+    }
+};
 
     // Admin actions: delete, publish, unpublish
     const handleDelete = async () => {
         if (!confirm("Are you sure you want to delete this product?")) return;
-        await fetch(`https://media.upfrica.com/api/products/${id}/`, {
+        await fetch(`${BASE_API_URL}/api/products/${id}/`, {
             method: "DELETE",
             headers: { Authorization: `Token ${token}` },
         });
@@ -203,14 +204,14 @@ export default function ProductDetailSection({ product, relatedProducts }) {
         router.back();
     };
     const handlePublish = async () => {
-        await fetch(`https://media.upfrica.com/api/products/${id}/publish/`, {
+        await fetch(`${BASE_API_URL}/api/products/${id}/publish/`, {
             method: "POST",
             headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
         });
         router.replace(router.asPath);
     };
     const handleUnpublish = async () => {
-        await fetch(`https://media.upfrica.com/api/products/${id}/unpublish/`, {
+        await fetch(`${BASE_API_URL}/api/products/${id}/unpublish/`, {
             method: "POST",
             headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
         });
@@ -278,7 +279,7 @@ export default function ProductDetailSection({ product, relatedProducts }) {
        
         (async () => {
             try {
-                const res = await fetch("https://media.upfrica.com/api/addresses/", {
+                const res = await fetch(`${BASE_API_URL}/api/addresses/`, {
                     headers: { Authorization: `Token ${token}` },
                 });
                 if (!res.ok) throw new Error();
@@ -299,40 +300,46 @@ export default function ProductDetailSection({ product, relatedProducts }) {
     }, [token, router, currentPath]);
 
     // New address form submit
-    const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
-        try {
-            const res = await fetch("https://media.upfrica.com/api/addresses/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Token ${token}` },
-                body: JSON.stringify({
-                    owner_id: currentUser.id,
-                    owner_type: "USER",
-                    default: false,
-                    full_name: vals.full_name,
-                    address_data: {
-                        street: vals.street,
-                        city: vals.city,
-                        state: vals.state,
-                        zip_code: vals.zip_code,
-                        country: vals.country,
-                    },
-                }),
-            });
-            const json = await res.json();
-            setAddresses((prev) => [
-                ...prev,
-                { id: json.id, value: `${json.address_data.street}, ${json.address_data.city}, ${json.address_data.country}` },
-            ]);
-            setSelectedAddressId(json.id);
-            resetForm();
-            setShowNewModal(false);
-            setIsDirectBuyPopupVisible(true);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setSubmitting(false);
-        }
-    };
+const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
+    try {
+        const res = await fetch(`${BASE_API_URL}/api/addresses/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Token ${token}`,
+            },
+            body: JSON.stringify({
+                owner_id: currentUser.id,
+                owner_type: "USER",
+                default: false,
+                full_name: vals.full_name,
+                address_data: {
+                    street: vals.street,
+                    city: vals.city,
+                    state: vals.state,
+                    zip_code: vals.zip_code,
+                    country: vals.country,
+                },
+            }),
+        });
+        const json = await res.json();
+        setAddresses((prev) => [
+            ...prev,
+            {
+                id: json.id,
+                value: `${json.address_data.street}, ${json.address_data.city}, ${json.address_data.country}`,
+            },
+        ]);
+        setSelectedAddressId(json.id);
+        resetForm();
+        setShowNewModal(false);
+        setIsDirectBuyPopupVisible(true);
+    } catch (e) {
+        console.error(e);
+    } finally {
+        setSubmitting(false);
+    }
+};
 
     // Handlers
     const handleDirectBuyNow = () => {
@@ -399,7 +406,7 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                     {/* LEFT COLUMN */}
                     <div className="order-1 xl:col-span-7">
                         <Breadcrumbs categoryTree={category?.category_tree} title={title} />
-                        <section className="mt-2 bg-upfricaGray1 rounded-xl">
+                        <section className="mt-2 rounded-xl">
                             <ProductSlider mediaItems={mediaItems} />
                         </section>
 
@@ -444,36 +451,74 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                     </div>
                                 )}
 
-                                {/* Price & Sale */}
-                                <div>
-                                    {saleActive ? (
-                                        <div className="flex items-baseline space-x-2">
-                                            <span className="text-2xl font-bold text-green-700">{symbol}{activePrice}</span>
-                                            <del className="text-gray-400">{symbol}{originalPrice}</del>
-                                        </div>
-                                    ) : (
-                                        <span className="text-2xl font-bold text-green-700">{symbol}{activePrice}</span>
-                                    )}
-                                    {saleActive && (
-                                        <p className="text-sm text-red-700 font-medium mt-1">
-                                            Sale ends in{" "}
-                                            {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ""}
-                                            {String(timeRemaining.hours).padStart(2, "0")}:
-                                            {String(timeRemaining.minutes).padStart(2, "0")}:
-                                            {String(timeRemaining.seconds).padStart(2, "0")}
-                                        </p>
-                                    )}
-                                </div>
+<div className="rounded-xl p-4 py-3 shadow-lg border border-violet-100 bg-gradient-to-br from-white via-[#fdf7ff] to-[#f2e8ff]">
+  {/* Variants */}
+  {variants?.map((variant) =>
+    variant.values?.length ? (
+      <div key={variant.id}>
+        <p className="text-sm font-medium text-gray-700 mb-1">{variant.label}</p>
+        <div className="flex flex-wrap gap-2">
+          {variant.values.map((val) => (
+            <button
+              key={val.id}
+              onClick={() =>
+                setSelectedVariants((prev) => ({ ...prev, [variant.id]: val }))
+              }
+              className={`px-4 ${val.additional_price_cents === 0 && "py-2"} border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
+                ? "border-black font-semibold"
+                : "border-gray-300 text-gray-700"
+              }`}
+            >
+              {val.value}
+              {val.additional_price_cents > 0 && (
+                <div className="text-gray-900 text-[10px]">
+                  +{symbol}{convertPrice(
+                    val.additional_price_cents / 100,
+                    price_currency,
+                    currencyCode,
+                    exchangeRates
+                  ).toFixed(2)}
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    ) : null
+  )}
 
-                                {/* Postage / Delivery */}
-                                <div className="flex items-center gap-2 mb-6 text-sm text-gray-600">
-                                    <FaTruck className="text-lg" />
-                                    {postage_fee_cents > 0 ? (
-                                        <span>Postage fee: {symbol}{(postage_fee_cents / 100).toFixed(2)}</span>
-                                    ) : (
-                                        <span className="text-green-600 font-semibold">Free delivery</span>
-                                    )}
-                                </div>
+  {/* Price & Sale */}
+  <div>
+    {saleActive ? (
+      <div className="flex items-baseline space-x-2">
+        <span className="text-2xl font-bold text-green-700">{symbol}{activePrice}</span>
+        <del className="text-gray-400">{symbol}{originalPrice}</del>
+      </div>
+    ) : (
+      <span className="text-2xl font-bold text-green-700">{symbol}{activePrice}</span>
+    )}
+    {saleActive && (
+      <p className="text-sm text-red-700 font-medium mt-1">
+        Sale ends in{" "}
+        {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ""}
+        {String(timeRemaining.hours).padStart(2, "0")}:
+        {String(timeRemaining.minutes).padStart(2, "0")}:
+        {String(timeRemaining.seconds).padStart(2, "0")}
+      </p>
+    )}
+  </div>
+
+  {/* Postage / Delivery */}
+  <div className="text-sm text-gray-600 flex items-center gap-2">
+    <FaTruck className="text-base" />
+    {postage_fee_cents > 0 ? (
+      <span>Postage fee: {symbol}{(postage_fee_cents / 100).toFixed(2)}</span>
+    ) : (
+      <span className="text-green-600 font-semibold">Free delivery</span>
+    )}
+  </div>
+</div>
+
 
                                 <MultiBuySection
                                     product={product}
@@ -481,46 +526,19 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                     selectedTier={selectedMultiBuyTier}
                                 />
 
-                                {/* Variants */}
-                                <div className="space-y-4 my-4">
-                                    {variants?.map((variant) =>
-                                        variant.values?.length ? (
-                                            <div key={variant.id}>
-                                                <p className="text-sm font-medium text-gray-700 mb-1">{variant.label}</p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {variant.values.map((val) => (
-                                                        <button
-                                                            key={val.id}
-                                                            onClick={() =>
-                                                                setSelectedVariants((prev) => ({ ...prev, [variant.id]: val }))
-                                                            }
-                                                            className={`px-4 ${val.additional_price_cents === 0 && "py-2"} border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
-                                                                    ? "border-black font-semibold"
-                                                                    : "border-gray-300 text-gray-700"
-                                                                }`}
-                                                        >
-                                                            {val.value}
-                                                            {val.additional_price_cents > 0 && (
-                                                                <div className="text-gray-900 text-[10px]">
-                                                                    +{symbol}{convertPrice(
-                                                                        val.additional_price_cents / 100,
-                                                                        price_currency,
-                                                                        currencyCode,
-                                                                        exchangeRates
-                                                                    ).toFixed(2)}
-                                                                </div>
-                                                            )}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ) : null
-                                    )}
-                                </div>
+
 
                                 {/* Actions */}
                                 <div className="grid gap-2">
-                                    <button className="btn-base btn-primary" onClick={handleDirectBuyNow}>Buy Now</button>
+{/* Sticky Buy Now for mobile */}
+<div className="fixed bottom-0 left-0 right-0 z-50 sm:hidden px-4 py-3 bg-white border-t border-gray-200">
+  <button
+    onClick={handleDirectBuyNow}
+    className="btn-base w-full btn-primary font-semibold py-3 rounded-full shadow-lg transition duration-200"
+  >
+    Buy Now
+  </button>
+</div>
                                     <button className="btn-base btn-outline" onClick={handleAddToBasket}>Add to Basket</button>
                                     <button className="btn-base btn-outline">Buy Now Pay Later (BNPL)</button>
                                     <button
@@ -569,7 +587,7 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                     </div>
 
                     {/* RIGHT SIDEBAR */}
-                    <aside className="order-2 hidden xl:block xl:col-span-5">
+                    <aside className="order-2 hidden xl:block xl:col-span-5 pl-8">
                         <div className="sticky top-0 p-5 px-0 space-y-4">
 
                             {/* Admin / Owner Controls */}
@@ -648,89 +666,74 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                 <span className="text-green-600">✅ Verified Seller</span>
                             </div>
 
-                            {/* Variants */}
-                            <div className="space-y-4 my-4">
-                                {(currentUser?.username === user?.username || currentUser?.admin) && (
-                                    <Link href={`/products/edit/variants/${product?.id}`} className="flex items-center gap-2">
-                                        <FaEdit className="h-4 w-4 text-violet-700" />
-                                        <span className="text-violet-700 hover:underline">Edit Variants</span>
-                                    </Link>
-                                )}
-                                {variants?.length > 0 && (
-                                    <>
-                                        <hr className="my-3 border-gray-200" />
-                                        {variants.map((variant) => (
-                                            <div key={variant.id}>
-                                                <div className="flex items-center justify-between">
-                                                    <p className="text-sm font-medium text-gray-700 mb-1">{variant.label}</p>
-                                                    <span className="text-sm text-gray-400">
-                                                        SKU-{Object.values(selectedVariants).map((o) => o.value).join("-").toUpperCase()}
-                                                    </span>
-                                                </div>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {variant.values.map((val) => {
-                                                        const isSel = selectedVariants[variant.id]?.id === val.id;
-                                                        return (
-                                                            <button
-                                                                key={val.id}
-                                                                onClick={() =>
-                                                                    setSelectedVariants((prev) => ({ ...prev, [variant.id]: val }))
-                                                                }
-                                                                className={`px-4 ${val.additional_price_cents == 0 && "py-2"} border rounded-full text-sm ${isSel ? "border-black font-semibold" : "border-gray-300 text-gray-700"
-                                                                    }`}
-                                                            >
-                                                                {val.value}
-                                                                {val.additional_price_cents > 0 && (
-                                                                    <div className="text-gray-900 text-[10px]">
-                                                                        (+{symbol}{convertPrice(
-                                                                            val.additional_price_cents / 100,
-                                                                            price_currency,
-                                                                            currencyCode,
-                                                                            exchangeRates
-                                                                        ).toFixed(2)})
-                                                                    </div>
-                                                                )}
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </>
-                                )}
-                            </div>
-                            <hr className="my-3 border-gray-200" />
+<div className="rounded-xl p-4 py-3 shadow-lg border border-violet-100 bg-gradient-to-br from-white via-[#fdf7ff] to-[#f2e8ff]">
+  {/* Variants */}
+  {variants?.map((variant) =>
+    variant.values?.length ? (
+      <div key={variant.id}>
+        <p className="text-sm font-medium text-gray-700 mb-1">{variant.label}</p>
+        <div className="flex flex-wrap gap-2">
+          {variant.values.map((val) => (
+            <button
+              key={val.id}
+              onClick={() =>
+                setSelectedVariants((prev) => ({ ...prev, [variant.id]: val }))
+              }
+              className={`px-4 ${val.additional_price_cents === 0 && "py-2"} border rounded-full text-sm ${selectedVariants[variant.id]?.id === val.id
+                ? "border-black font-semibold"
+                : "border-gray-300 text-gray-700"
+              }`}
+            >
+              {val.value}
+              {val.additional_price_cents > 0 && (
+                <div className="text-gray-900 text-[10px]">
+                  +{symbol}{convertPrice(
+                    val.additional_price_cents / 100,
+                    price_currency,
+                    currencyCode,
+                    exchangeRates
+                  ).toFixed(2)}
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    ) : null
+  )}
 
-                            {/* Price & countdown */}
-                            <div>
-                                {saleActive ? (
-                                    <div className="flex items-baseline space-x-2">
-                                        <span className="text-3xl font-bold text-green-700">{symbol}{activePrice}</span>
-                                        <del className="text-gray-400 text-sm">{symbol}{originalPrice}</del>
-                                    </div>
-                                ) : (
-                                    <span className="text-3xl font-bold text-green-700">{symbol}{activePrice}</span>
-                                )}
-                            </div>
-                            {saleActive && (
-                                <div className="text-sm text-red-700 font-medium mt-1">
-                                    Sale ends in{" "}
-                                    {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ""}
-                                    {String(timeRemaining.hours).padStart(2, "0")}:
-                                    {String(timeRemaining.minutes).padStart(2, "0")}:
-                                    {String(timeRemaining.seconds).padStart(2, "0")}
-                                </div>
-                            )}
+  {/* Price & Sale */}
+  <div>
+    {saleActive ? (
+      <div className="flex items-baseline space-x-2">
+        <span className="text-2xl font-bold text-green-700">{symbol}{activePrice}</span>
+        <del className="text-gray-400">{symbol}{originalPrice}</del>
+      </div>
+    ) : (
+      <span className="text-2xl font-bold text-green-700">{symbol}{activePrice}</span>
+    )}
+    {saleActive && (
+      <p className="text-sm text-red-700 font-medium mt-1">
+        Sale ends in{" "}
+        {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ""}
+        {String(timeRemaining.hours).padStart(2, "0")}:
+        {String(timeRemaining.minutes).padStart(2, "0")}:
+        {String(timeRemaining.seconds).padStart(2, "0")}
+      </p>
+    )}
+  </div>
 
-                            {/* Postage / Delivery */}
-                            <div className="flex items-center gap-2 mt-4 mb-6 text-sm text-gray-600">
-                                <FaTruck className="text-lg" />
-                                {postage_fee_cents > 0 ? (
-                                    <span>Postage fee: {symbol}{(postage_fee_cents / 100).toFixed(2)}</span>
-                                ) : (
-                                    <span className="text-green-600 font-semibold">Free delivery</span>
-                                )}
-                            </div>
+  {/* Postage / Delivery */}
+  <div className="flex items-center gap-2 text-sm text-gray-600">
+    <FaTruck className="text-lg" />
+    {postage_fee_cents > 0 ? (
+      <span>Postage fee: {symbol}{(postage_fee_cents / 100).toFixed(2)}</span>
+    ) : (
+      <span className="text-green-600 font-semibold">Free delivery</span>
+    )}
+  </div>
+</div>
+
 
                             {/* Quantity */}
                             <div className="flex items-center gap-4 mb-6">
@@ -760,38 +763,54 @@ export default function ProductDetailSection({ product, relatedProducts }) {
                                 selectedTier={selectedMultiBuyTier}
                             />
 
+
+
                             {/* CTA Buttons */}
-                            <div className="mt-4 space-y-2">
-                                <button className="btn-base btn-primary w-full" onClick={handleDirectBuyNow}>
-                                    Buy Now
-                                </button>
-                                <button className="btn-base btn-outline w-full" onClick={handleAddToBasket}>
-                                    Add to Basket
-                                </button>
-                                <button
-                                    className="btn-base btn-outline w-full flex items-center justify-center gap-2"
-                                    onClick={handleToggleWishlist}
-                                    disabled={loading}
-                                >
-                                    {loading ? (
-                                        <div className="flex space-x-2 justify-center items-center h-6">
-                                            <div className="h-2 w-2 bg-current rounded-full animate-bounce" />
-                                            <div className="h-2 w-2 bg-current rounded-full animate-bounce delay-150" />
-                                            <div className="h-2 w-2 bg-current rounded-full animate-bounce delay-300" />
-                                        </div>
-                                    ) : isWishlisted ? (
-                                        <>
-                                            <FaHeart className="w-6 h-6 text-violet-700 hover:text-violet-500 transition-colors" />
-                                            <span>Remove from Watchlist</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FaRegHeart />
-                                            <span>Add to Watchlist</span>
-                                        </>
-                                    )}
-                                </button>
-                            </div>
+<div className="mt-4 space-y-2">
+  {/* Buy Now – visually emphasized */}
+  <button
+    className="btn-base w-full btn-primary font-semibold py-3 rounded-lg shadow-md transition-all duration-200"
+    onClick={handleDirectBuyNow}
+  >
+    Buy Now
+  </button>
+
+  {/* Basket and Wishlist grouped slightly tighter */}
+  <div className="space-y-1">
+    <button
+      className="btn-base w-full border border-yellow-400 text-gray-800 hover:bg-yellow-50 font-medium py-2.5 rounded-lg"
+      onClick={handleAddToBasket}
+    >
+      Add to Basket
+    </button>
+
+    <button
+      className="btn-base w-full border border-yellow-400 text-gray-800 hover:bg-yellow-50 flex items-center justify-center gap-2 py-2.5 rounded-lg"
+      onClick={handleToggleWishlist}
+      disabled={loading}
+    >
+      {loading ? (
+        <div className="flex space-x-2 justify-center items-center h-6">
+          <div className="h-2 w-2 bg-current rounded-full animate-bounce" />
+          <div className="h-2 w-2 bg-current rounded-full animate-bounce delay-150" />
+          <div className="h-2 w-2 bg-current rounded-full animate-bounce delay-300" />
+        </div>
+      ) : isWishlisted ? (
+        <>
+          <FaHeart className="w-5 h-5 text-violet-700" />
+          <span>Remove from Watchlist</span>
+        </>
+      ) : (
+        <>
+          <FaRegHeart />
+          <span>Add to Watchlist</span>
+        </>
+      )}
+    </button>
+  </div>
+</div>
+
+
 
                             <PaymentDeliveryReturns
                                 secondaryData={product?.secondary_data}

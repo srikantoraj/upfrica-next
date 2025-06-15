@@ -18,7 +18,7 @@ const Dashboard = () => {
 
             className={clsx(
                 // fixed to viewport, full-screen height, allow vertical scroll
-                "fixed top-0 left-0 z-50 h-screen overflow-y-auto bg-white shadow-md transition-all duration-500 ease-in-out",
+                "fixed top-0 left-0 z-50 h-screen overflow-y-auto bg-upfricaGray1 shadow-md transition-all duration-500 ease-in-out",
                 // ensure always visible & positioned correctly on xl+
                 "xl:relative xl:z-auto xl:opacity-100 xl:translate-x-0",
                 // width & opacity based on toggle state

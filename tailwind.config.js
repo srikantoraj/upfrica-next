@@ -13,6 +13,7 @@ module.exports = {
         foreground: "var(--foreground)",
         purpleBrand: "#A435F0", // ✅ already added
         upfricaGray1: "#f3f4f6", // ✅ custom color added here
+        upfricaGray2: '#F1F3F4',
       },
       boxShadow: {
         'upfrica': '0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)',

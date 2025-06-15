@@ -115,7 +115,8 @@ const Price = dynamic(() => import('./Price'), { ssr: false })
 
 export default async function WomenFashion({ title }) {
     const res = await fetch(
-        'https://media.upfrica.com/api/product-list/women/',
+        //'https://media.upfrica.com/api/product-list/women/',
+        'http://127.0.0.1:8000/api/product-list/women/',
         { next: { revalidate: 120 } }
     )
 

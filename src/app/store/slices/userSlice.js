@@ -1,45 +1,62 @@
+// src/app/store/slices/userSlice.js
 
-
-// userSlice.js
 import { createSlice } from '@reduxjs/toolkit';
-
-// Retrieve initial data from localStorage (only if window is defined)
-const initialUser =
-    typeof window !== 'undefined'
-        ? JSON.parse(localStorage.getItem('user') || 'null')
-        : null;
-const initialToken =
-    typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+import {
+  getFromStorage,
+  saveToStorage,
+  removeFromStorage,
+} from '@/app/utils/storage';
 
 const initialState = {
-    user: initialUser,
-    token: initialToken,
+  user: getFromStorage('user', null),
+  token: getFromStorage('token', null),
+  items: getFromStorage('basket', []),
 };
 
 const userSlice = createSlice({
-    name: 'auth',
-    initialState,
-    reducers: {
-        setUser(state, action) {
-            state.user = action.payload.user;
-            state.token = action.payload.token;
-            // Persist data to localStorage (client-side only)
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('user', JSON.stringify(action.payload.user));
-                localStorage.setItem('token', action.payload.token);
-            }
-        },
-        clearUser(state) {
-            state.user = null;
-            state.token = null;
-            // Remove data from localStorage (client-side only)
-            if (typeof window !== 'undefined') {
-                localStorage.removeItem('user');
-                localStorage.removeItem('token');
-            }
-        },
+  name: 'auth',
+  initialState,
+  reducers: {
+    setUser(state, action) {
+      const { user, token } = action.payload;
+      state.user = user;
+      state.token = token;
+      saveToStorage('user', user);
+      saveToStorage('token', token);
     },
+    clearUser(state) {
+      state.user = null;
+      state.token = null;
+      removeFromStorage('user');
+      removeFromStorage('token');
+    },
+
+    // Basket logic
+    addToBasket(state, action) {
+      const item = action.payload;
+      const exists = state.items.some((i) => i.id === item.id);
+      if (!exists) {
+        state.items.push(item);
+        saveToStorage('basket', state.items);
+      }
+    },
+    removeFromBasket(state, action) {
+      state.items = state.items.filter((item) => item.id !== action.payload);
+      saveToStorage('basket', state.items);
+    },
+    clearBasket(state) {
+      state.items = [];
+      removeFromStorage('basket');
+    },
+  },
 });
 
-export const { setUser, clearUser } = userSlice.actions;
+export const {
+  setUser,
+  clearUser,
+  addToBasket,
+  removeFromBasket,
+  clearBasket,
+} = userSlice.actions;
+
 export default userSlice.reducer;
