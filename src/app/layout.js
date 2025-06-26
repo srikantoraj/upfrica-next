@@ -1,3 +1,4 @@
+// src/app/layout.js
 import "./globals.css";
 import { Roboto } from "next/font/google";
 import Providers from "./providers";

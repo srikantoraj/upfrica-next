@@ -15,7 +15,7 @@ import {
   User
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import {
   LineChart as ReLineChart,
   Line,

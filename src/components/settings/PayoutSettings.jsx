@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import classNames from 'classnames';
-import useAuth from '@/components/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { BASE_API_URL } from '@/app/constants';
 
 export default function PayoutSettings() {

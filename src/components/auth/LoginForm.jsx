@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { FcGoogle } from 'react-icons/fc';
 import { FaFacebookF } from 'react-icons/fa';
 import { BASE_API_URL } from '@/app/constants';
-import useAuth from '@/components/useAuth'; // ✅ IMPORT useAuth
+import { useAuth } from '@/contexts/AuthContext'; // ✅ IMPORT useAuth
 
 export default function LoginPage() {
   const router = useRouter();

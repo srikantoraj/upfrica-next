@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  transition: background-color 0.3s, color 0.3s;
+}
 /* Base font styles */
 body {
   @apply text-base text-gray-800 leading-relaxed;
@@ -90,6 +93,11 @@ h3 {
   scrollbar-width: none;     /* Firefox */
 }
 
+::-webkit-scrollbar-thumb {
+  background-color: #A435F0;
+  border-radius: 4px;
+}
+
 .upfricaBlack {
   color: #0f1111 !important;
 }
@@ -106,7 +114,6 @@ h3 {
   --tw-shadow-colored: 0 1px 2px var(--tw-shadow-color), 0 1px 3px 1px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
-
 
 
 
