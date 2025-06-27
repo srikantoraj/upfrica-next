@@ -41,7 +41,7 @@ export default function DashboardContent() {
 
   return (
     <div className="max-w-7xl mx-auto text-gray-800 dark:text-white transition-colors duration-300">
-      <h1 className="text-2xl font-semibold mb-2 text-gray-800 dark:text-white">Welcome back, {user?.username}!</h1>
+      <h1 className="text-2xl font-semibold mb-2 text-gray-800 dark:text-white"> Welcome back, {user?.username || 'Seller'}!</h1>
 
       {/* Shop Info */}
       {!shopLoading && (

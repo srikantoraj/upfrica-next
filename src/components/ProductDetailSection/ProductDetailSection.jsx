@@ -397,6 +397,9 @@ const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
         setSelectedMultiBuyTier((prev) => (prev?.minQuantity === tier.minQuantity ? prev : tier));
     }, []);
 
+
+  const [showContactNumber, setShowContactNumber] = useState(false);  
+
     return (
         <section className="pt-6 md:pt-8 lg:pt-10">
             <RecentlyViewed product={product} />
@@ -451,7 +454,51 @@ const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
                                     </div>
                                 )}
 
-<div className="rounded-xl p-4 py-3 shadow-lg border border-violet-100 bg-gradient-to-br from-white via-[#fdf7ff] to-[#f2e8ff]">
+
+
+
+ {/* mobile view contact */}
+<div className="rounded-xl p-4 shadow border border-gray-200 bg-white dark:bg-gray-900">
+  <p className="text-gray-800 dark:text-gray-100 font-semibold mb-2 flex items-center gap-1">
+    📞 Contact Seller
+  </p>
+
+  {!showContactNumber ? (
+    <button
+      onClick={() => setShowContactNumber(true)}
+      className="w-full border border-violet-600 text-violet-700 font-medium py-2 px-4 rounded-full hover:bg-violet-600 hover:text-white transition flex items-center justify-center gap-2"
+    >
+      🔒 Show Phone Number
+    </button>
+  ) : (
+    <>
+      <p className="text-base font-medium text-gray-800 dark:text-white mb-1">
+        {product.shop.seller_contact_number}
+      </p>
+      <p className="text-xs text-gray-500 mb-2">Available Mon–Sat, 9am–6pm</p>
+      <div className="flex flex-wrap gap-2">
+        <a
+          href={`https://wa.me/${product.shop.seller_contact_number.replace(/\D/g, '')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700"
+        >
+          💬 WhatsApp
+        </a>
+        <a
+          href={`tel:${product.shop.seller_contact_number}`}
+          className="bg-violet-600 text-white px-4 py-2 rounded-full hover:bg-violet-700"
+        >
+          📞 Call Now
+        </a>
+      </div>
+    </>
+  )}
+</div>
+
+
+
+<div className="rounded-xl p-4 py-3  border border-violet-100 from-white via-[#fdf7ff] to-[#f2e8ff]">
   {/* Variants */}
   {variants?.map((variant) =>
     variant.values?.length ? (
@@ -488,25 +535,34 @@ const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
   )}
 
   {/* Price & Sale */}
-  <div>
-    {saleActive ? (
-      <div className="flex items-baseline space-x-2">
-        <span className="text-2xl font-bold text-green-700">{symbol}{activePrice}</span>
-        <del className="text-gray-400">{symbol}{originalPrice}</del>
-      </div>
-    ) : (
-      <span className="text-2xl font-bold text-green-700">{symbol}{activePrice}</span>
-    )}
-    {saleActive && (
-      <p className="text-sm text-red-700 font-medium mt-1">
-        Sale ends in{" "}
-        {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ""}
-        {String(timeRemaining.hours).padStart(2, "0")}:
-        {String(timeRemaining.minutes).padStart(2, "0")}:
-        {String(timeRemaining.seconds).padStart(2, "0")}
-      </p>
-    )}
-  </div>
+<div>
+  {saleActive ? (
+    <div className="flex items-baseline space-x-2">
+      <span className="text-2xl font-bold text-green-700">
+        {symbol}{activePrice}
+      </span>
+      {originalPrice && (
+        <del className="text-gray-400">
+          {symbol}{originalPrice}
+        </del>
+      )}
+    </div>
+  ) : (
+    <span className="text-2xl font-bold text-green-700">
+      {symbol}{activePrice}
+    </span>
+  )}
+
+  {saleActive && (
+    <p className="text-sm text-red-700 font-medium mt-1">
+      Sale ends in{" "}
+      {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ""}
+      {String(timeRemaining.hours).padStart(2, "0")}:
+      {String(timeRemaining.minutes).padStart(2, "0")}:
+      {String(timeRemaining.seconds).padStart(2, "0")}
+    </p>
+  )}
+</div>
 
   {/* Postage / Delivery */}
   <div className="text-sm text-gray-600 flex items-center gap-2">
@@ -534,9 +590,10 @@ const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
 <div className="fixed bottom-0 left-0 right-0 z-50 sm:hidden px-4 py-3 bg-white border-t border-gray-200">
   <button
     onClick={handleDirectBuyNow}
-    className="btn-base w-full btn-primary font-semibold py-3 rounded-full shadow-lg transition duration-200"
+    className="flex items-center justify-between w-full btn-primary font-semibold py-3 px-4 rounded-full shadow-lg transition duration-200"
   >
-    Buy Now
+    <span className="text-lg font-bold text-white">{symbol}{activePrice}</span>
+    <span className="text-base font-semibold text-white">Buy Now</span>
   </button>
 </div>
                                     <button className="btn-base btn-outline" onClick={handleAddToBasket}>Add to Basket</button>
@@ -666,7 +723,50 @@ const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
                                 <span className="text-green-600">✅ Verified Seller</span>
                             </div>
 
-<div className="rounded-xl p-4 py-3 shadow-lg border border-violet-100 bg-gradient-to-br from-white via-[#fdf7ff] to-[#f2e8ff]">
+
+ {/* Seller Phone */}
+{/* ✅ Seller Contact Phone Box */}
+<div className="rounded-xl p-4 shadow border border-gray-200 bg-white dark:bg-gray-900">
+  <p className="text-gray-800 dark:text-gray-100 font-semibold mb-2 flex items-center gap-1">
+    📞 Contact Seller
+  </p>
+
+  {!showContactNumber ? (
+    <button
+      onClick={() => setShowContactNumber(true)}
+      className="w-full border border-violet-600 text-violet-700 font-medium py-2 px-4 rounded-full hover:bg-violet-600 hover:text-white transition flex items-center justify-center gap-2"
+    >
+      🔒 Show Phone Number
+    </button>
+  ) : (
+    <>
+      <p className="text-base font-medium text-gray-800 dark:text-white mb-1">
+        {product.shop.seller_contact_number}
+      </p>
+      <p className="text-xs text-gray-500 mb-2">Available Mon–Sat, 9am–6pm</p>
+      <div className="flex flex-wrap gap-2">
+        <a
+          href={`https://wa.me/${product.shop.seller_contact_number.replace(/\D/g, '')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700"
+        >
+          💬 WhatsApp
+        </a>
+        <a
+          href={`tel:${product.shop.seller_contact_number}`}
+          className="bg-violet-600 text-white px-4 py-2 rounded-full hover:bg-violet-700"
+        >
+          📞 Call Now
+        </a>
+      </div>
+    </>
+  )}
+</div>
+
+
+
+<div className="rounded-xl p-4 py-3  border border-violet-100  from-white via-[#fdf7ff] to-[#f2e8ff]">
   {/* Variants */}
   {variants?.map((variant) =>
     variant.values?.length ? (
