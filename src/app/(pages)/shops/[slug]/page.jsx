@@ -1,9 +1,10 @@
 import ShopPageClient from './ShopPageClient';
+import { BASE_API_URL } from '@/app/constants';
 
 export async function generateMetadata({ params }) {
   const slug = params.slug;
 
-  const res = await fetch(`https://media.upfrica.com/api/shops/${slug}/products/`, {
+  const res = await fetch(`${BASE_API_URL}/api/shops/${slug}/products/`, {
     next: { revalidate: 60 },
   });
 

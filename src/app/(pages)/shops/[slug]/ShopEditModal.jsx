@@ -21,6 +21,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { BASE_API_URL } from '@/app/constants';
 
 export default function ShopEditModal({ isOpen, onClose, shop, setShop, onSave }) {
     const token = useSelector((state) => state.auth.token);
@@ -78,7 +79,7 @@ export default function ShopEditModal({ isOpen, onClose, shop, setShop, onSave }
             if (videoFile) formData.append('video_upload', videoFile);
 
             const resp = await fetch(
-                `https://media.upfrica.com/api/shops/${shop.slug}/update/`,
+                `${BASE_API_URL}/api/shops/${shop.slug}/update/`,
                 {
                     method: 'PATCH',
                     headers: {

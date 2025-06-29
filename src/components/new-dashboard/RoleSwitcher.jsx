@@ -1,4 +1,8 @@
+//src/components/new-dashboard/RoleSwitcher.jsx
 'use client';
+'use client';
+
+import React, { useEffect } from 'react';
 
 import { useRoleView } from '@/contexts/RoleViewContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,25 +30,31 @@ const roleConfig = {
 };
 
 export default function RoleSwitcher() {
-  const { roleView, setRoleView } = useRoleView();
-  const { user } = useAuth();
+const { roleView, setRoleView } = useRoleView();
+const { user } = useAuth();
 
-  const roles = Array.isArray(user?.account_type)
-    ? user.account_type
-    : user?.account_type
-    ? [user.account_type]
-    : [];
+const roles = Array.isArray(user?.account_type)
+  ? user.account_type
+  : user?.account_type
+  ? [user.account_type]
+  : [];
 
-  const hasSeller = roles.includes('seller_private') || roles.includes('seller_business');
-  const hasAgent = roles.includes('agent');
+const hasSeller = roles.includes('seller_private') || roles.includes('seller_business');
+const hasAgent = roles.includes('agent');
 
-  // Build normalized role list
-  const roleButtons = [];
-  if (roles.includes('buyer')) roleButtons.push('buyer');
-  if (hasSeller) roleButtons.push('seller');
-  if (hasAgent) roleButtons.push('agent');
+const roleButtons = [];
+if (roles.includes('buyer')) roleButtons.push('buyer');
+if (hasSeller) roleButtons.push('seller');
+if (hasAgent) roleButtons.push('agent');
 
-  if (roleButtons.length === 0) return null;
+// 🟢 Auto-set default if needed
+useEffect(() => {
+  if (!roleView && roleButtons.length > 0) {
+    setRoleView(roleButtons[0]);
+  }
+}, [roleView, roleButtons]);
+
+if (roleButtons.length === 0) return null;
 
   return (
     <div className="flex items-center justify-center w-full py-2">

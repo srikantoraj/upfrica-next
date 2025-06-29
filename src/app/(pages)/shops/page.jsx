@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { AiOutlineSearch, AiOutlineClose } from 'react-icons/ai'
 import { FaArrowRight } from 'react-icons/fa'
 import Image from 'next/image'
+import { BASE_API_URL } from '@/app/constants';
 
 // — Skeleton placeholder while loading search results
 function SearchResultSkeleton() {
@@ -68,7 +69,7 @@ export default function ShopGrid({ bgColor = '#E8EAED' }) {
     useEffect(() => {
         async function loadAll() {
             try {
-                const res = await fetch('https://media.upfrica.com/api/shops/')
+                const res = await fetch(`${BASE_API_URL}/api/shops/`)
                 const data = await res.json()
                 console.log(data);
                 
@@ -94,7 +95,7 @@ export default function ShopGrid({ bgColor = '#E8EAED' }) {
         debounceRef.current = setTimeout(async () => {
             try {
                 const res = await fetch(
-                    `https://media.upfrica.com/api/shops/search/?q=${encodeURIComponent(
+                    `${BASE_API_URL}/api/shops/search/?q=${encodeURIComponent(
                         searchQuery
                     )}`
                 )

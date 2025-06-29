@@ -28,7 +28,7 @@ import {
 import { useRoleView } from '@/contexts/RoleViewContext';
 
 const sellerItems = [
-  { label: 'Seller Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Seller Dashboard', href: '/new-dashboard', icon: LayoutDashboard },
   { label: 'My Products', href: '/products', icon: Package },
   { label: 'Sales Orders', href: '/orders/sales', icon: ShoppingCart },
   { label: 'Shipping Zones', href: '/shipping/zones', icon: Truck },
@@ -95,27 +95,27 @@ export default function SellerSidebar({ sidebarVisible, mobileOpen, toggleMobile
             <RoleSwitcher />
           </div>
 
-          <nav className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
-            {navItems.map(({ label, href, icon: Icon }) => {
-              const isActive = pathname === href;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={handleClose}
-                  className={clsx(
-                    'flex items-center gap-3 px-3 py-2 rounded-md transition-colors',
-                    isActive
-                      ? 'bg-purple-100 text-purple-800 font-semibold dark:bg-purple-900 dark:text-white'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                  )}
-                >
-                  <Icon className="w-5 h-5" />
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
+<nav className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
+  {navItems.map(({ label, href, icon: Icon }) => {
+    const isActive = pathname === href || pathname.startsWith(href + '/');
+    return (
+      <Link
+        key={href}
+        href={href}
+        onClick={handleClose}
+        className={clsx(
+          'flex items-center gap-3 px-3 py-2 rounded-md transition-colors',
+          isActive
+            ? 'bg-purple-100 text-purple-800 font-semibold dark:bg-purple-900 dark:text-white'
+            : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+        )}
+      >
+        <Icon className="w-5 h-5" />
+        {label}
+      </Link>
+    );
+  })}
+</nav>
         </div>
 
         {/* Sticky Footer */}

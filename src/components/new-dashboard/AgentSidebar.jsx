@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { label: 'Agent Dashboard', href: '/agent/dashboard', icon: LayoutDashboard },
+  { label: 'Agent Dashboard', href: '/new-dashboard', icon: LayoutDashboard },
   { label: 'My Orders', href: '/orders', icon: ShoppingBag },
   { label: 'Pickup Tasks', href: '/agent/pickups', icon: Truck },
   { label: 'Messages', href: '/agent/messages', icon: Mail },
