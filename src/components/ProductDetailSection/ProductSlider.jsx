@@ -5,7 +5,12 @@ import Image from "next/image";
 import Modal from "react-modal";
 import { FaPlay } from "react-icons/fa";
 
-const ProductSlider = ({ mediaItems = [], inBaskets = 0 }) => {
+const ProductSlider = ({
+  mediaItems = [],
+  inBaskets = 0,
+  autoplay = true,
+  autoplayDelay = 5000,
+}) => {
   const items = Array.isArray(mediaItems)
     ? mediaItems.map((item) =>
         typeof item === "string" ? { type: "image", src: item } : item
@@ -14,42 +19,44 @@ const ProductSlider = ({ mediaItems = [], inBaskets = 0 }) => {
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [zoomPos, setZoomPos] = useState(null);
-  const [bgGradient, setBgGradient] = useState("linear-gradient(to bottom, #1f1f1f, #000)");
   const [showBasketBadge, setShowBasketBadge] = useState(true);
   const containerRef = useRef(null);
+  const videoRef = useRef(null);
+  const autoplayRef = useRef(null);
 
   const current = items[selectedIndex];
 
+  // Swipe refs
+  const touchStartX = useRef(null);
+  const touchStartTime = useRef(null);
+  const touchEndX = useRef(null);
+
+  // ✅ AUTOPLAY EFFECT: stop if modal open or video playing
   useEffect(() => {
-    if (current?.type !== "image") return;
-    const img = new window.Image();
-    img.crossOrigin = "anonymous";
-    img.src = current.src;
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = 20;
-      canvas.height = 20;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, 20, 20);
-      const data = ctx.getImageData(0, 0, 20, 20).data;
-      let r = 0, g = 0, b = 0, count = 0;
-      for (let i = 0; i < data.length; i += 4) {
-        const [red, green, blue] = [data[i], data[i + 1], data[i + 2]];
-        const isBlack = red < 25 && green < 25 && blue < 25;
-        const isWhite = red > 240 && green > 240 && blue > 240;
-        if (isBlack || isWhite) continue;
-        r += red;
-        g += green;
-        b += blue;
-        count++;
-      }
-      if (count) {
-        const avg = `rgb(${Math.floor(r / count)}, ${Math.floor(g / count)}, ${Math.floor(b / count)})`;
-        setBgGradient(`linear-gradient(to bottom, ${avg}, #000)`);
-      }
-    };
-  }, [current]);
+    if (autoplay && !isModalOpen && !isVideoPlaying && items.length > 1) {
+      autoplayRef.current = setInterval(() => {
+        next();
+      }, autoplayDelay);
+    }
+    return () => clearInterval(autoplayRef.current);
+  }, [
+    selectedIndex,
+    isModalOpen,
+    isVideoPlaying,
+    autoplay,
+    autoplayDelay,
+    items.length,
+  ]);
+
+  // ✅ Reset video playing state when slide changes
+  useEffect(() => {
+    setIsVideoPlaying(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+  }, [selectedIndex]);
 
   useEffect(() => {
     if (inBaskets > 0) {
@@ -59,19 +66,48 @@ const ProductSlider = ({ mediaItems = [], inBaskets = 0 }) => {
     }
   }, [inBaskets]);
 
-  const onMouseMove = (e) => {
-    if (current?.type !== "image" || !containerRef.current) return;
-    const { left, top, width, height } = containerRef.current.getBoundingClientRect();
-    const x = Math.min(100, Math.max(0, ((e.clientX - left) / width) * 100));
-    const y = Math.min(100, Math.max(0, ((e.clientY - top) / height) * 100));
-    setZoomPos({ x, y });
+  const openModal = () => {
+    setIsModalOpen(true);
+    clearInterval(autoplayRef.current);
   };
-
-  const onMouseLeave = () => setZoomPos(null);
-  const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
   const next = () => setSelectedIndex((i) => (i + 1) % items.length);
   const prev = () => setSelectedIndex((i) => (i - 1 + items.length) % items.length);
+
+  // ✅ Swipe handlers
+  const onTouchStart = (e) => {
+    touchStartX.current = e.changedTouches[0].clientX;
+    touchStartTime.current = new Date().getTime();
+  };
+  const onTouchEnd = (e) => {
+    touchEndX.current = e.changedTouches[0].clientX;
+    const touchEndTime = new Date().getTime();
+    handleSwipe(touchEndTime - touchStartTime.current);
+  };
+  const handleSwipe = (duration) => {
+    const delta = touchStartX.current - touchEndX.current;
+    const velocity = Math.abs(delta) / duration;
+    if (delta > 50 || (delta > 20 && velocity > 0.3)) {
+      next();
+    } else if (delta < -50 || (delta < -20 && velocity > 0.3)) {
+      prev();
+    }
+  };
+
+  const onMouseMove = (e) => {
+    if (current?.type !== "image" || !containerRef.current) return;
+    const { left, top, width } = containerRef.current.getBoundingClientRect();
+    const x = Math.min(
+      100,
+      Math.max(0, ((e.clientX - left) / width) * 100)
+    );
+    const y = Math.min(
+      100,
+      Math.max(0, ((e.clientY - top) / width) * 100)
+    );
+    setZoomPos({ x, y });
+  };
+  const onMouseLeave = () => setZoomPos(null);
 
   if (items.length === 0) {
     return <p className="text-center text-gray-500">No images available</p>;
@@ -79,11 +115,13 @@ const ProductSlider = ({ mediaItems = [], inBaskets = 0 }) => {
 
   return (
     <div className="relative md:flex md:items-start">
-      {/* Vertical thumbnails for desktop */}
+      {/* Desktop thumbnails */}
       <div className="hidden md:flex flex-col gap-2 mr-3">
         {items.map((item, idx) => {
           const isActive = idx === selectedIndex;
-          const border = isActive ? "border-2 border-green-500" : "border border-gray-300";
+          const border = isActive
+            ? "border-2 border-green-500"
+            : "border border-gray-300";
           return (
             <div
               key={idx}
@@ -126,9 +164,8 @@ const ProductSlider = ({ mediaItems = [], inBaskets = 0 }) => {
         })}
       </div>
 
-      {/* Main display */}
-      <div className="relative w-full">
-        {/* Top overlay */}
+      {/* Main slider */}
+      <div className="relative w-full overflow-hidden">
         <div className="absolute top-2 left-0 right-0 flex justify-between items-center px-3 z-10">
           <button
             onClick={() => window.history.back()}
@@ -151,55 +188,64 @@ const ProductSlider = ({ mediaItems = [], inBaskets = 0 }) => {
 
         <div
           ref={containerRef}
-          className="relative border rounded-md overflow-hidden cursor-zoom-in bg-gray-100"
+          className="relative w-full h-auto flex transition-transform duration-300 ease-in-out"
+          style={{
+            width: `${items.length * 100}%`,
+            transform: `translateX(-${
+              selectedIndex * (100 / items.length)
+            }%)`,
+          }}
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
           onClick={openModal}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
-          {current.type === "video" ? (
-            <video controls src={current.src} className="w-full h-full object-contain rounded-md" />
-          ) : (
-            <>
-              <Image
-                src={current.src}
-                alt={`Slide ${selectedIndex + 1}`}
-                width={588}
-                height={588}
-                className="object-contain rounded-md w-full h-auto"
-                priority
-              />
-              {zoomPos && (
-                <div
-                  className="absolute pointer-events-none border-2 border-white rounded-full"
-                  style={{
-                    width: 120,
-                    height: 120,
-                    left: `calc(${zoomPos.x}% - 60px)`,
-                    top: `calc(${zoomPos.y}% - 60px)`,
-                    backgroundImage: `url(${current.src})`,
-                    backgroundSize: "900% 900%",
-                    backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
-                    boxShadow: "0 0 10px rgba(255,255,255,0.5)",
-                    transform: "scale(1.1)",
-                  }}
-                />
-              )}
-            </>
-          )}
-
-          {/* Mobile dots */}
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 md:hidden z-20">
-            {items.map((_, idx) => (
-              <button
+          {items.map((item, idx) =>
+            item.type === "video" ? (
+              <video
                 key={idx}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedIndex(idx);
-                }}
-                className={`w-2 h-2 rounded-full ${idx === selectedIndex ? "bg-black" : "bg-gray-300"}`}
+                ref={idx === selectedIndex ? videoRef : null}
+                controls
+                src={item.src}
+                onPlay={() => setIsVideoPlaying(true)}
+                onPause={() => setIsVideoPlaying(false)}
+                className="w-full h-auto object-cover flex-shrink-0"
+                style={{ width: `${100 / items.length}%` }}
               />
-            ))}
-          </div>
+            ) : (
+              <div
+                key={idx}
+                className="w-full flex-shrink-0 flex items-center justify-center"
+                style={{ width: `${100 / items.length}%` }}
+              >
+                <Image
+                  src={item.src}
+                  alt={`Slide ${idx + 1}`}
+                  width={800}
+                  height={800}
+                  className="object-cover w-full h-auto"
+                  priority={idx === selectedIndex}
+                />
+              </div>
+            )
+          )}
+        </div>
+
+        {/* Dots */}
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 md:hidden z-20">
+          {items.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedIndex(idx);
+              }}
+              className={`w-2 h-2 rounded-full ${
+                idx === selectedIndex ? "bg-black" : "bg-gray-300"
+              }`}
+            />
+          ))}
         </div>
       </div>
 

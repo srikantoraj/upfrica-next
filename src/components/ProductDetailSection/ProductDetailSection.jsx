@@ -415,17 +415,24 @@ const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
                     {/* LEFT COLUMN */}
                     <div className="order-1 xl:col-span-7">
                         <Breadcrumbs categoryTree={category?.category_tree} title={title} />
-                        <section className="mt-2 rounded-xl">
-                            <ProductSlider mediaItems={mediaItems} />
-                        </section>
+<div className="block md:hidden relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+  <ProductSlider mediaItems={mediaItems} />
+</div>
+
+<div className="hidden md:block">
+  <ProductSlider mediaItems={mediaItems} />
+</div>
 
                         {/* MOBILE CTA */}
                         <section className="block xl:hidden mt-5">
                             {/* Edit */}
+
+{(currentUser?.username === user?.username || currentUser?.admin) && (
                             <Link href={`/products/edit/${product?.slug}`} className="flex items-center gap-2 mb-2">
                                 <FaEdit className="h-4 w-4 text-violet-700" />
                                 <span className="text-violet-700 hover:underline">Edit</span>
                             </Link>
+)}
 
                             {/* Publish/Unpublish on mobile */}
                             {currentUser?.admin && (
@@ -593,10 +600,10 @@ const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
                                 {/* Actions */}
                                 <div className="grid gap-2">
 {/* Sticky Buy Now for mobile */}
-<div className="fixed bottom-0 left-0 right-0 z-50 sm:hidden px-4 py-3 bg-white border-t border-gray-200">
+<div className="fixed bottom-1 left-0 right-0 z-50 sm:hidden h-[42px] bg-white border-b border-gray-200">
   <button
     onClick={handleDirectBuyNow}
-    className="flex items-center justify-between w-full btn-primary font-semibold py-3 px-4 rounded-full shadow-lg transition duration-200"
+    className="flex items-center justify-between w-full btn-primary  font-semibold py-3 px-4  shadow-lg transition duration-200"
   >
     <span className="text-lg font-bold text-white">{symbol}{activePrice}</span>
     <span className="text-base font-semibold text-white">Buy Now</span>
