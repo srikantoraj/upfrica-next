@@ -1,7 +1,5 @@
-
 import React from "react";
 import Link from "next/link";
-
 
 const UserContent = () => {
   // Sample data array
@@ -34,7 +32,7 @@ const UserContent = () => {
       {/* Header section: Title + Search + New user button */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">Users</h2>
-        
+
         {/* Right side: Search & Button in a row for larger screens, column for small */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
           {/* Search box wrapper */}
@@ -72,9 +70,9 @@ const UserContent = () => {
           </button>
         </div>
       </div>
-      
+
       <hr className="mb-4" />
-      
+
       {/* Table section with horizontal scroll on small devices */}
       <div className="overflow-x-auto">
         <table className="min-w-full w-full text-sm sm:text-base bg-white">

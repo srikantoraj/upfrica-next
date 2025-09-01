@@ -12,11 +12,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
           {/* Branding & Contact Section */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-50">Upfrica - Global</h2>
+            <h2 className="text-2xl font-bold text-gray-50">
+              Upfrica - Global
+            </h2>
             <p className="text-sm text-gray-300">
-              Online Shopping in Ghana, Nigeria, UK for quality items at discounted prices.
-              Sell, deliver, process payments, and grow your business.
-              Buy &amp; sell African products, electronics, machines &amp; related products.
+              Online Shopping in Ghana, Nigeria, UK for quality items at
+              discounted prices. Sell, deliver, process payments, and grow your
+              business. Buy &amp; sell African products, electronics, machines
+              &amp; related products.
             </p>
             <div className="space-y-2">
               <p className="flex items-center gap-2 text-sm text-gray-300 hover:text-purple-500 cursor-pointer">
@@ -32,7 +35,9 @@ export default function Footer() {
           <div className="lg:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-10">
             {/* Page Section */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold tracking-wide text-gray-50">Page</h3>
+              <h3 className="text-xl font-bold tracking-wide text-gray-50">
+                Page
+              </h3>
               <ul className="space-y-2 text-sm">
                 <li className="hover:text-purple-500">
                   <Link href="/deals">Deals</Link>
@@ -54,13 +59,15 @@ export default function Footer() {
 
             {/* Links Section */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold tracking-wide text-gray-50">Links</h3>
+              <h3 className="text-xl font-bold tracking-wide text-gray-50">
+                Links
+              </h3>
               <ul className="space-y-2 text-sm">
                 <li className="hover:text-purple-500">
                   <Link href="/signup">Sign up</Link>
                 </li>
                 <li className="hover:text-purple-500">
-                  <Link href="/signin">Sign in</Link>
+                  <Link href="/login">Sign in</Link>
                 </li>
                 <li className="hover:text-purple-500">
                   <Link href="/privacy-policy">Privacy Policy</Link>
@@ -76,7 +83,9 @@ export default function Footer() {
 
             {/* Countries Section */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold tracking-wide text-gray-50">Countries</h3>
+              <h3 className="text-xl font-bold tracking-wide text-gray-50">
+                Countries
+              </h3>
               <ul className="space-y-2 text-sm">
                 <li className="hover:text-purple-500">
                   <Link href="/ghana">Ghana</Link>
@@ -95,7 +104,9 @@ export default function Footer() {
 
             {/* Quick Links Section */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold tracking-wide text-gray-50">Quick Links</h3>
+              <h3 className="text-xl font-bold tracking-wide text-gray-50">
+                Quick Links
+              </h3>
               <ul className="space-y-2 text-sm">
                 <li className="hover:text-purple-500">
                   <Link href="/sales" className="flex items-center">
@@ -125,7 +136,9 @@ export default function Footer() {
               </p>
             </div>
             <div>
-              <h3 className="text-xl font-bold mb-2 text-gray-50">Payment &amp; Security</h3>
+              <h3 className="text-xl font-bold mb-2 text-gray-50">
+                Payment &amp; Security
+              </h3>
               <div className="flex gap-4">
                 <Image
                   className="rounded"

@@ -1,70 +1,79 @@
-'use client';
+// src/components/auth/LoginForm.jsx
+"use client";
 
-import React, { useEffect } from 'react';
-import { useFormik } from 'formik';
-import PasswordInput from '@/components/ui/PasswordInput';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useDispatch } from 'react-redux';
-import { setUser } from '@/app/store/slices/userSlice';
-import Link from 'next/link';
-import { FcGoogle } from 'react-icons/fc';
-import { FaFacebookF } from 'react-icons/fa';
-import { BASE_API_URL } from '@/app/constants';
-import { useAuth } from '@/contexts/AuthContext'; // ✅ IMPORT useAuth
+import React, { useEffect } from "react";
+import { useFormik } from "formik";
+import PasswordInput from "@/components/ui/PasswordInput";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/app/store/slices/userSlice";
+import Link from "next/link";
+import { FcGoogle } from "react-icons/fc";
+import { FaFacebookF } from "react-icons/fa";
+import { BASE_API_URL } from "@/app/constants";
+import { useAuth } from "@/contexts/AuthContext"; // ✅ server-driven onboarding + storage
 
-export default function LoginPage() {
+export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useDispatch();
-  const { refreshUser } = useAuth(); // ✅ USE useAuth()
+  const { login } = useAuth(); // ✅ use AuthContext.login()
 
   useEffect(() => {
-    console.log('✅ BASE_API_URL:', BASE_API_URL);
+    // eslint-disable-next-line no-console
+    console.log("✅ BASE_API_URL:", BASE_API_URL);
   }, []);
 
   const formik = useFormik({
-    initialValues: {
-      email: '',
-      password: '',
-    },
+    initialValues: { email: "", password: "" },
     onSubmit: async (values, { setSubmitting, setErrors }) => {
       try {
+        // 🔐 Hit the new backend login endpoint
         const response = await fetch(`${BASE_API_URL}/api/login/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(values),
         });
 
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
 
-        if (!data?.user || !data?.token) {
-          console.warn('⚠️ Missing user or token in response:', data);
-          setErrors({ email: 'Invalid response from server.' });
+        if (!response.ok) {
+          setErrors({ email: data?.detail || data?.message || "Login failed" });
           return;
         }
 
-        if (response.ok) {
-          console.log('✅ Login successful:', data);
-
-          // ✅ Store token and user in localStorage
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-
-          // ✅ Update Redux state
-          dispatch(setUser({ user: data.user, token: data.token }));
-
-          // ✅ Rehydrate useAuth hook
-          await refreshUser(); // 🔁 Important for consistency
-
-          // ✅ Redirect
-          const nextPath = searchParams.get('next') || '/';
-          router.push(nextPath);
-        } else {
-          setErrors({ email: data.message || 'Login failed' });
+        if (!data?.user || !data?.token) {
+          setErrors({ email: "Invalid response from server." });
+          return;
         }
-      } catch (error) {
-        console.error('❌ Login error:', error);
-        setErrors({ email: 'An unexpected error occurred. Please try again.' });
+
+        // 🌟 Let AuthContext handle setting token, header, and hydrating /users/me
+        const ob = await login(data); // returns backend onboarding block
+
+        // (optional) Keep Redux in sync for existing components that rely on it
+        const cleanToken = String(data.token).replace(/^"|"$/g, "").trim();
+        try {
+          // AuthContext stored the fresh /users/me payload in localStorage
+          const storedUser = JSON.parse(localStorage.getItem("user") || "null") || data.user;
+          dispatch(setUser({ user: storedUser, token: cleanToken }));
+        } catch {
+          dispatch(setUser({ user: data.user, token: cleanToken }));
+        }
+
+        // 🎯 Redirect logic:
+        // - If onboarding incomplete, ALWAYS go to server target
+        // - Else, honor ?next=... if present
+        // - Else, fall back to your dashboard
+        const nextParam = searchParams.get("next");
+        const target =
+          (ob && ob.complete === false && ob.target) ? ob.target :
+          (nextParam || (ob?.first_time && ob?.target) || "/new-dashboard");
+
+        router.replace(target);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("❌ Login error:", err);
+        setErrors({ email: "An unexpected error occurred. Please try again." });
       } finally {
         setSubmitting(false);
       }
@@ -101,13 +110,18 @@ export default function LoginPage() {
             <div className="w-full border-t border-gray-200" />
           </div>
           <div className="relative flex justify-center">
-            <span className="px-2 bg-white text-gray-500 text-sm">or continue with</span>
+            <span className="px-2 bg-white text-gray-500 text-sm">
+              or continue with
+            </span>
           </div>
         </div>
 
         <form onSubmit={formik.handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 text-left">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 text-left"
+            >
               Email address
             </label>
             <input
@@ -133,7 +147,9 @@ export default function LoginPage() {
               placeholder="Enter your password"
             />
             {formik.errors.password && (
-              <p className="mt-1 text-sm text-red-600">{formik.errors.password}</p>
+              <p className="mt-1 text-sm text-red-600">
+                {formik.errors.password}
+              </p>
             )}
           </div>
 
@@ -146,7 +162,10 @@ export default function LoginPage() {
               />
               <span className="ml-2">Remember me</span>
             </label>
-            <Link href="/password/new" className="text-sm text-purple-600 hover:underline">
+            <Link
+              href="/password/new"
+              className="text-sm text-purple-600 hover:underline"
+            >
               Forgot password?
             </Link>
           </div>
@@ -179,14 +198,16 @@ export default function LoginPage() {
                   />
                 </svg>
               ) : (
-                'Log In'
+                "Log In"
               )}
             </button>
           </div>
         </form>
 
         <div className="mt-4 text-center">
-          <button className="text-sm text-gray-500 hover:underline">Need help?</button>
+          <button className="text-sm text-gray-500 hover:underline">
+            Need help?
+          </button>
         </div>
       </div>
     </div>

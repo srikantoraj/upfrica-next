@@ -1,36 +1,44 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { BASE_API_URL } from '@/app/constants';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { BASE_API_URL } from "@/app/constants";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 const accountTypes = [
   {
-    key: 'buyer',
-    title: 'Buyer',
-    emoji: '🛍️',
-    description: 'Browse and buy products, save items, and track orders easily.',
+    key: "buyer",
+    title: "Buyer",
+    emoji: "🛍️",
+    description:
+      "Browse and buy products, save items, and track orders easily.",
   },
   {
-    key: 'seller_private',
-    title: 'Seller (Private)',
-    emoji: '👩🏾',
-    description: 'Sell personal or small business items with flexible plans.',
+    key: "seller_private",
+    title: "Seller (Private)",
+    emoji: "👩🏾",
+    description: "Sell personal or small business items with flexible plans.",
   },
   {
-    key: 'seller_business',
-    title: 'Seller (Business)',
-    emoji: '🏢',
-    description: 'List bulk or professional inventory, access advanced tools.',
+    key: "seller_business",
+    title: "Seller (Business)",
+    emoji: "🏢",
+    description: "List bulk or professional inventory, access advanced tools.",
   },
   {
-    key: 'agent',
-    title: 'Sourcing Agent',
-    emoji: '🚚',
-    description: 'Help buyers collect or verify items and earn commissions.',
+    key: "agent",
+    title: "Sourcing Agent",
+    emoji: "🚚",
+    description: "Help buyers collect or verify items and earn commissions.",
+  },
+  {
+    key: "affiliate",
+    title: "Affiliate Marketer",
+    emoji: "💸",
+    description:
+      "Promote products and earn commission when someone buys through your link.",
   },
 ];
 
@@ -42,15 +50,16 @@ export default function OnboardingPage() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [sellerPlans, setSellerPlans] = useState([]);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  const isSeller = selectedRole === 'seller_private' || selectedRole === 'seller_business';
+  const isSeller =
+    selectedRole === "seller_private" || selectedRole === "seller_business";
 
   useEffect(() => {
     if (isSeller && token) {
       fetch(`${BASE_API_URL}/api/seller-plans/`, {
         headers: {
-          Authorization: `Token ${token?.replace(/^"|"$/g, '')}`,
+          Authorization: `Token ${token?.replace(/^"|"$/g, "")}`,
         },
       })
         .then((res) => res.json())
@@ -64,32 +73,32 @@ export default function OnboardingPage() {
           }
         })
         .catch((err) => {
-          console.error('❌ Failed to load seller plans', err);
-          setError('Failed to load seller plans.');
+          console.error("❌ Failed to load seller plans", err);
+          setError("Failed to load seller plans.");
         });
     }
   }, [selectedRole, token]);
 
   useEffect(() => {
-    if ((selectedRole === 'buyer' || selectedRole === 'agent') && token) {
+    if ((selectedRole === "buyer" || selectedRole === "agent") && token) {
       handleSubmit();
     }
   }, [selectedRole]);
 
   const handleSubmit = async () => {
-    setError('');
+    setError("");
     if (!selectedRole || (isSeller && !selectedPlan)) {
-      setError('Please select an account type and seller plan.');
+      setError("Please select an account type and seller plan.");
       return;
     }
 
     setSubmitting(true);
     try {
       const res = await fetch(`${BASE_API_URL}/api/users/me/`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Token ${token?.replace(/^"|"$/g, '')}`,
+          "Content-Type": "application/json",
+          Authorization: `Token ${token?.replace(/^"|"$/g, "")}`,
         },
         body: JSON.stringify({
           account_type: selectedRole,
@@ -99,12 +108,12 @@ export default function OnboardingPage() {
 
       if (res.ok) {
         await refreshUser();
-        router.push('/new-dashboard');
+        router.push("/new-dashboard");
       } else {
-        setError('Failed to update your account.');
+        setError("Failed to update your account.");
       }
     } catch (err) {
-      setError('An unexpected error occurred.');
+      setError("An unexpected error occurred.");
     } finally {
       setSubmitting(false);
     }
@@ -124,7 +133,9 @@ export default function OnboardingPage() {
           <div
             key={type.key}
             className={`relative cursor-pointer border rounded-2xl p-6 text-center transition ${
-              selectedRole === type.key ? 'border-purple-500 bg-purple-50' : 'hover:bg-gray-50'
+              selectedRole === type.key
+                ? "border-purple-500 bg-purple-50"
+                : "hover:bg-gray-50"
             }`}
             onClick={() => {
               setSelectedRole(type.key);
@@ -135,7 +146,9 @@ export default function OnboardingPage() {
             <h3 className="font-semibold text-lg">{type.title}</h3>
             <p className="text-sm text-gray-600">{type.description}</p>
             {selectedRole === type.key && (
-              <div className="absolute top-4 right-4 text-purple-500 text-xl">✔️</div>
+              <div className="absolute top-4 right-4 text-purple-500 text-xl">
+                ✔️
+              </div>
             )}
           </div>
         ))}
@@ -157,17 +170,25 @@ export default function OnboardingPage() {
                 <div
                   key={plan.id}
                   className={`relative border p-4 rounded-xl cursor-pointer transition ${
-                    selectedPlan?.id === plan.id ? 'border-purple-500 bg-purple-50' : 'hover:bg-gray-50'
+                    selectedPlan?.id === plan.id
+                      ? "border-purple-500 bg-purple-50"
+                      : "hover:bg-gray-50"
                   }`}
                   onClick={() => setSelectedPlan(plan)}
                 >
                   <h4 className="font-semibold">{plan.label}</h4>
-                  <p className="text-sm text-gray-600">{plan.description || 'Flexible plan for sellers.'}</p>
+                  <p className="text-sm text-gray-600">
+                    {plan.description || "Flexible plan for sellers."}
+                  </p>
                   <p className="text-md mt-1 font-bold">
-                    {plan.price_per_month === '0.00' ? 'Free' : `GHS ${plan.price_per_month}/month`}
+                    {plan.price_per_month === "0.00"
+                      ? "Free"
+                      : `GHS ${plan.price_per_month}/month`}
                   </p>
                   {selectedPlan?.id === plan.id && (
-                    <div className="absolute top-3 right-3 text-purple-500">✔️</div>
+                    <div className="absolute top-3 right-3 text-purple-500">
+                      ✔️
+                    </div>
                   )}
                 </div>
               ))}
@@ -186,7 +207,7 @@ export default function OnboardingPage() {
           onClick={handleSubmit}
           className="w-full max-w-md mx-auto"
         >
-          {submitting ? 'Submitting...' : 'Continue'}
+          {submitting ? "Submitting..." : "Continue"}
         </Button>
       </div>
     </div>

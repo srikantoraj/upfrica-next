@@ -1,11 +1,9 @@
-
-
-"use client"
-import AmazonLeftFilter from '@/components/priceFiter/LeftFilter';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import ProductCard from '@/components/home/ProductList/ProductCard';
+"use client";
+import AmazonLeftFilter from "@/components/priceFiter/LeftFilter";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import ProductCard from "@/components/home/ProductList/ProductCard";
 
 const SkeletonLoader = () => (
   <div className="bg-gray-200 animate-pulse rounded-lg overflow-hidden border p-4 flex items-center space-x-6">
@@ -19,23 +17,18 @@ const SkeletonLoader = () => (
   </div>
 );
 
-
-
-
-
-
-
 const DetelsCategories = () => {
   const { slug } = useParams();
   const [categoryData, setCategoryData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-
   useEffect(() => {
     if (slug) {
       const fetchCategoryData = async () => {
         try {
-          const response = await fetch(`https://media.upfrica.com/api/categories/${slug}/products/`);
+          const response = await fetch(
+            `https://media.upfrica.com/api/categories/${slug}/products/`,
+          );
           const data = await response.json();
           setCategoryData(data.results || []);
         } catch (error) {
@@ -49,10 +42,10 @@ const DetelsCategories = () => {
   }, [slug]);
 
   return (
-    <div className={` ${loading ? 'h-screen' : 'h-auto'}`}>
+    <div className={` ${loading ? "h-screen" : "h-auto"}`}>
       <div className="grid lg:grid-cols-7 gap-10">
         {/* <PriceFilter /> */}
-        <div className='col-span-2  hidden lg:block'>
+        <div className="col-span-2  hidden lg:block">
           <AmazonLeftFilter />
         </div>
         <div className="col-span-5 p-4">
@@ -61,9 +54,12 @@ const DetelsCategories = () => {
           </h1>
           <div className="grid grid-cols-1 space-y-8 ">
             {loading
-              ? Array.from({ length: 4 }).map((_, index) => <SkeletonLoader key={index} />)
-              : categoryData.map((product) => <ProductCard key={product.id} product={product} />)
-            }
+              ? Array.from({ length: 4 }).map((_, index) => (
+                  <SkeletonLoader key={index} />
+                ))
+              : categoryData.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
           </div>
         </div>
       </div>
@@ -72,4 +68,3 @@ const DetelsCategories = () => {
 };
 
 export default DetelsCategories;
-

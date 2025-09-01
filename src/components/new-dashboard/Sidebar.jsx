@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import clsx from 'clsx';
-import { Home, Package, ShoppingCart } from 'lucide-react';
+import React from "react";
+import Link from "next/link";
+import clsx from "clsx";
+import { Home, Package, ShoppingCart } from "lucide-react";
 
 export default function Sidebar({ isOpen, onClose }) {
   return (
@@ -11,8 +11,8 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* ✨ Overlay for mobile */}
       <div
         className={clsx(
-          'fixed inset-0 z-30 bg-black bg-opacity-40 transition-opacity duration-300 md:hidden',
-          isOpen ? 'block' : 'hidden'
+          "fixed inset-0 z-30 bg-black bg-opacity-40 transition-opacity duration-300 md:hidden",
+          isOpen ? "block" : "hidden",
         )}
         onClick={onClose}
       />
@@ -20,12 +20,12 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Sidebar */}
       <aside
         className={clsx(
-          'fixed top-0 left-0 z-40 h-full w-64 border-r shadow-lg transition-transform duration-300 bg-white dark:bg-[#111827]',
+          "fixed top-0 left-0 z-40 h-full w-64 border-r shadow-lg transition-transform duration-300 bg-white dark:bg-[#111827]",
           {
-            'translate-x-0': isOpen,
-            '-translate-x-full': !isOpen,
-            'md:translate-x-0': true,
-          }
+            "translate-x-0": isOpen,
+            "-translate-x-full": !isOpen,
+            "md:translate-x-0": true,
+          },
         )}
       >
         {/* Logo or header */}

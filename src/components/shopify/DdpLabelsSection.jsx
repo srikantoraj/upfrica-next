@@ -12,9 +12,9 @@ export default function DdpLabelsSection() {
       {/* প্রধান বর্ণনা */}
       <p className="mb-4">
         If you calculate and collect duties and import taxes, you need to
-        purchase and use <strong>Delivered Duty Paid&nbsp;(DDP)</strong> shipping
-        labels instead of standard international labels. This prevents your
-        customers from being double‑charged for duties and taxes.
+        purchase and use <strong>Delivered Duty Paid&nbsp;(DDP)</strong>{" "}
+        shipping labels instead of standard international labels. This prevents
+        your customers from being double‑charged for duties and taxes.
       </p>
 
       <p className="mb-4">
@@ -40,7 +40,9 @@ export default function DdpLabelsSection() {
       </p>
 
       {/* টিপস */}
-      <h4 className="mb-2 font-medium text-gray-900">Tips for a pre‑paid duties experience</h4>
+      <h4 className="mb-2 font-medium text-gray-900">
+        Tips for a pre‑paid duties experience
+      </h4>
       <ul className="mb-4 list-disc space-y-2 pl-6">
         <li>
           If you include duties and taxes in the product price, clearly mention

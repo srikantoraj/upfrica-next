@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { getFromStorage, removeFromStorage } from '@/app/utils/storage';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getFromStorage, removeFromStorage } from "@/app/utils/storage";
 
 const LocalStorageComponent = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const user = getFromStorage('user');
+    const user = getFromStorage("user");
 
     if (user?.token) {
-      router.push('/');
+      router.push("/");
     } else {
-      removeFromStorage('user'); // Optional cleanup of bad data
+      removeFromStorage("user"); // Optional cleanup of bad data
     }
   }, [router]);
 

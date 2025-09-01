@@ -1,0 +1,1794 @@
+// src/app/page.js
+import Image from "next/image";
+import Script from "next/script";
+import Head from "next/head";
+
+export const revalidate = 1800; // ISR: refresh every 30 mins
+export const dynamic = "force-static";
+
+/** ✅ Ensure correct mobile scaling/fitting */
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
+// Choose the top hero style: 'curved' | 'mosaic' | 'classic'
+const HERO_STYLE = "curved";
+
+/** --- COUNTRY META -------------------------------------------------------- */
+/** @type {Record<string, {name:string,currency:'GHS'|'NGN'|'GBP',currencySymbol:string,lcpHeadline:string,lcpTagline:string,code:string,cities:string[]}>} */
+const COUNTRY_META = {
+  gh: {
+    name: "Ghana",
+    currency: "GHS",
+    currencySymbol: "GH₵",
+    lcpHeadline: "Shop Ghana — Fast Delivery, MoMo & BNPL",
+    lcpTagline: "Local sellers • Same-day/Next-day • Buyer Protection",
+    code: "GH",
+    cities: ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Tema"],
+  },
+  ng: {
+    name: "Nigeria",
+    currency: "NGN",
+    currencySymbol: "₦",
+    lcpHeadline: "Shop Nigeria — Fast Delivery & Pay on Delivery",
+    lcpTagline: "Local sellers • Same-day/Next-day • Buyer Protection",
+    code: "NG",
+    cities: ["Lagos", "Abuja", "Port Harcourt", "Ibadan", "Benin City", "Abeokuta"],
+  },
+  uk: {
+    name: "United Kingdom",
+    currency: "GBP",
+    currencySymbol: "£",
+    lcpHeadline: "Shop African Goods in the UK — Next-Day Delivery",
+    lcpTagline: "Verified sellers • Next-day • Diaspora favourites • Buyer Protection",
+    code: "UK",
+    cities: ["London", "Manchester", "Birmingham", "Leeds", "Glasgow", "Liverpool"],
+  },
+};
+
+
+// ✅ Stable demo images (bare Unsplash IDs; loader adds ?w=&q=)
+const PRODUCT_IMG_POOL = [
+  'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9', // phones
+  'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9', // beauty/hair
+  'https://images.unsplash.com/photo-1506806732259-39c2d0268443', // kitchen gear
+  'https://images.unsplash.com/photo-1556910103-1c02745aae4d',     // cookware
+  'https://images.unsplash.com/photo-1518444028785-8fbcd101ebb9', // speakers
+  'https://images.unsplash.com/photo-1530124566582-a618bc2615dc', // ring lights
+  'https://images.unsplash.com/photo-1512496015851-a90fb38ba796', // cosmetics/creams
+  'https://images.unsplash.com/photo-1545235617-9465d2a5560b',    // kettles
+  'https://images.unsplash.com/photo-1482049016688-2d3e1b311543', // food prep
+  'https://images.unsplash.com/photo-1517336714731-489689fd1ca8', // gadgets/accessories
+  'https://images.unsplash.com/photo-1520975922284-8b456906c813', // fabrics/supplies
+  'https://images.unsplash.com/photo-1539185441755-769473a23570', // sneakers
+];
+
+/** --- MOCK DATA LAYER ----------------------------------------------------- */
+async function getHomeData(cc, { shuffle = false } = {}) {
+  const meta = COUNTRY_META[cc] || COUNTRY_META.gh;
+
+  // Build rails with de-dupe + optional shuffle
+  const railsRaw = [
+    { key: "for_you", title: "Just for You", subtitle: "Handpicked picks for you", items: demoProducts(10, cc, { badge: "Recommended" }) },
+    { key: "trending_near_you", title: "Trending Near You", subtitle: "Hot right now in your area", items: demoProducts(12, cc) },
+    { key: "same_day", title: "Same-Day Delivery", subtitle: "Order now, get it today", items: demoProducts(10, cc, { badge: "Same-Day" }) },
+    { key: "verified_sellers", title: "From Verified Sellers", subtitle: "Top-rated, trusted shops", items: demoProducts(10, cc, { badge: "Verified" }) },
+    { key: "wholesale", title: "Wholesale & Bulk", subtitle: "MOQ deals • Unit pricing", items: demoWholesale(10, cc) },
+    { key: "seasonal", title: "Seasonal Picks", subtitle: "Back to School • Festivals • Eid", items: demoProducts(10, cc, { badge: "Deal" }) },
+  ];
+  const rails = dedupeRails(shuffle ? railsRaw.map(r => ({ ...r, items: shuffleArr(r.items) })) : railsRaw);
+
+  return {
+    country: cc,
+    hero: {
+      image: heroImage(cc),
+      alt: `Upfrica ${meta.name} marketplace deals banner`,
+      primaryCta: { label: "Browse Today's Deals", href: `/${cc}/deals` },
+      secondaryCta: { label: "Sell on Upfrica", href: `/${cc}/sell` },
+      searchPlaceholder: "Search products, brands, shops…",
+    },
+    carouselBanners: heroBanners(cc),
+    promos: promoTiles(cc),
+    featured: shuffle ? shuffleArr(demoFeatured(10, cc)) : demoFeatured(10, cc),
+    rails,
+    topShops: demoShops(6, cc),
+    categories: demoCategories(cc),
+    exploreNeeds: exploreByNeed(cc),
+    socialProof: demoSocialProof(cc),
+    guides: [
+      { title: "How Buyer Protection Works", href: `/${cc}/help/buyer-protection` },
+      { title: "Sell on Upfrica — Start in 3 Steps", href: `/${cc}/sell` },
+      { title: "Shipping Options & Delivery Times", href: `/${cc}/help/delivery` },
+    ],
+    seoBlocks: [
+      {
+        h2: "Upfrica — The African Marketplace Built for Speed and Trust",
+        body: `Discover thousands of items from local sellers and diaspora shops. Pay in ${meta.currencySymbol}, enjoy fast delivery, and shop confidently with Buyer Protection.`,
+      },
+      {
+        h2: `Popular categories in ${meta.name}`,
+        body:
+          "Mobile Phones, Beauty & Hair, Food & Groceries, Home & Living, Electronics, Fashion, Industrial & Wholesale.",
+      },
+    ],
+    faq: demoFAQ(cc),
+    cityLinks: meta.cities,
+  };
+}
+
+function heroImage(cc) {
+  const map = {
+    gh: "https://images.unsplash.com/photo-1560393464-5c69a73c5770?q=80&w=2400&auto=format&fit=crop",
+    ng: "https://images.unsplash.com/photo-1590648938591-6fc4f1a6391c?q=80&w=2400&auto=format&fit=crop",
+    uk: "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=2400&auto=format&fit=crop",
+  };
+  return map[cc] || map.gh;
+}
+
+/* --- HERO BANNERS (carousel) --------------------------------------------- */
+function heroBanners(cc) {
+  const prefix = `/${cc}`;
+  return [
+    { title:"Back to School", sub:"20% off essentials", href:`${prefix}/deals?tag=school`, img:"https://images.unsplash.com/photo-1520975922284-8b456906c813?q=80&w=1600&auto=format&fit=crop" },
+    { title:"Mega Flash Sale", sub:"New drops every hour", href:`${prefix}/deals?flash=true`, img:"https://images.unsplash.com/photo-1512295767273-ac109ac3acfa?q=80&w=1600&auto=format&fit=crop" },
+    { title:"Local Food", sub:"Delivering today", href:`${prefix}/food`, img:"https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?q=80&w=1600&auto=format&fit=crop" },
+  ];
+}
+
+function promoTiles(cc) {
+  if (cc === "gh")
+    return [
+      { title: "Same-Day in Accra", href: "/gh/same-day", image: "https://picsum.photos/seed/accra-same-day/1200/800" },
+      { title: "MoMo First", href: "/gh/momo", image: "https://picsum.photos/seed/gh-momo/1200/800" },
+      { title: "BNPL (Ghana Card)", href: "/gh/bnpl", image: "https://picsum.photos/seed/gh-bnpl/1200/800" },
+    ];
+  if (cc === "ng")
+    return [
+      { title: "Pay on Delivery Zones", href: "/ng/search?pod=true", image: "https://images.unsplash.com/photo-1586201375761-83865001e31b?q=80&w=1200&auto=format&fit=crop" },
+      { title: "Mobile Phones", href: "/ng/consumer-electronics/mobile-phones", image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=1200&auto=format&fit=crop" },
+      { title: "Beauty & Hair", href: "/ng/beauty", image: "https://images.unsplash.com/photo-1515651673353-3f8a83a77d89?q=80&w=1200&auto=format&fit=crop" },
+    ];
+  return [
+    { title: "Diaspora Favourites", href: "/uk/diaspora", image: "https://images.unsplash.com/photo-1526318472351-c75fcf070305?q=80&w=1200&auto=format&fit=crop" },
+    { title: "African Food & Groceries", href: "/uk/food", image: "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?q=80&w=1200&auto=format&fit=crop" },
+    { title: "Hair & Beauty", href: "/uk/beauty", image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1200&auto=format&fit=crop" },
+  ];
+}
+
+function demoProducts(n, cc, opts = {}) {
+  const titles = [
+    "Android Phone","Human Hair Wig","Spice Grinder","Jollof Rice Pot",
+    "Bluetooth Speaker","LED Ring Light","Shea Butter","Electric Kettle",
+    "Cassava Grater","Power Bank","African Print Fabric","Nike Air Max",
+  ];
+  const cities = (COUNTRY_META[cc]?.cities || ["City"]).slice(0, 6);
+
+  return Array.from({ length: n }).map((_, i) => {
+    const rating = 3.7 + ((i * 13) % 15) / 10; // 3.7 – 5.1
+    const reviews = 25 + ((i * 37) % 180);     // 25 – 204
+    const price = 10 * (i + 4);
+    const compareAt = i % 3 === 0 ? Math.round(price * 1.25) : undefined; // some items show savings
+
+    return {
+      id: `p-${cc}-${i + 1}`,
+      title: titles[i % titles.length],
+      price,
+      compareAt,
+      image: PRODUCT_IMG_POOL[(i + (cc?.charCodeAt?.(0) ?? 0)) % PRODUCT_IMG_POOL.length],
+      city: cities[i % cities.length],
+      rating: Math.min(5, Math.round(rating * 10) / 10),
+      reviews,
+      badge: opts.badge
+        ? opts.badge
+        : (i % 4 === 0 ? "Same-Day" : i % 4 === 1 ? "Verified" : i % 4 === 2 ? "Deal" : ""),
+    };
+  });
+}
+
+// NEW: Featured items (paid placements)
+function demoFeatured(n, cc) {
+  return demoProducts(n, cc).map((p, i) => ({
+    ...p,
+    id: `f-${p.id}`,
+    sponsored: true,
+    badge: i % 3 === 0 ? "Hot" : p.badge,
+  }));
+}
+
+function demoWholesale(n, cc) {
+  const cities = COUNTRY_META[cc]?.cities ?? [];
+  const pickCity = (idx) => (cities.length ? cities[idx % cities.length] : "City");
+  return Array.from({ length: n }).map((_, i) => ({
+    id: `w-${cc}-${i + 1}`,
+    title: ["Carton of Noodles (40x)", "Shea Butter Bulk (5kg)", "Android Phones Lot (10x)", "Human Hair Bundle (20x)"][i % 4],
+    price: 100 * (i + 3),
+    moq: [10, 20, 50, 100][i % 4],
+    unitPrice: 5 * (i + 2),
+    image: `https://picsum.photos/seed/upfrica-wh-${cc}-${i}/600/600`,
+    badge: "MOQ",
+    city: pickCity(i),
+  }));
+}
+
+function demoShops(n, cc) {
+  const cities = COUNTRY_META[cc]?.cities || [];
+  return Array.from({ length: n }).map((_, i) => ({
+    id: `shop-${cc}-${i + 1}`,
+    name: ["Accra Tech Hub", "Lagos Beauty Pro", "UK Afro Grocers", "Kumasi Home Deals", "Abuja Fashion Mall", "Tema Electronics"][i % 6],
+    rating: (Math.round((3.8 + (i % 5) * 0.3) * 10) / 10).toFixed(1),
+    city: cities[i % cities.length] || cities[0] || "City",
+    badges: i % 2 ? ["Verified", "Fast Delivery"] : ["Fast Delivery"],
+    image: `https://picsum.photos/seed/upfrica-shop-${cc}-${i}/800/600`,
+  }));
+}
+
+function demoCategories(cc) {
+  const cats = [
+    ["Consumer Electronics", "/electronics", "devices"],
+    ["Beauty & Hair", "/beauty", "hair"],
+    ["Food & Groceries", "/food", "food"],
+    ["Fashion", "/fashion", "fashion"],
+    ["Home & Living", "/home", "home"],
+    ["Wholesale", "/wholesale", "box"],
+    ["Vehicles", "/vehicles", "car"],
+    ["Industrial", "/industrial", "factory"],
+    ["Baby & Kids", "/kids", "baby"],
+    ["Sports & Fitness", "/sports", "dumbbell"],
+    ["Health", "/health", "heart"],
+    ["Services", "/services", "wrench"],
+  ];
+  return cats.map(([label, href, icon], i) => ({ id: `c-${cc}-${i}`, label, href: `/${cc}${href}`, icon }));
+}
+
+function exploreByNeed(cc){
+  const { currencySymbol } = COUNTRY_META[cc] || COUNTRY_META.gh;
+  const prefix = `/${cc}`;
+  return [
+    { label: 'Pay on Delivery', href: `${prefix}/deals?pod=true` },
+    { label: `Under ${currencySymbol}100`, href: `${prefix}/deals?price_lte=100` },
+    { label: 'New & Sealed', href: `${prefix}/search?condition=new` },
+    { label: 'Local Pickup', href: `${prefix}/search?delivery=pickup` },
+    { label: 'Free Delivery', href: `${prefix}/search?shipping=free` },
+  ];
+}
+
+function demoSocialProof(cc) {
+  const city = COUNTRY_META[cc]?.cities?.[0] ?? "your area";
+  return {
+    reviews: [
+      { user: "Ama", text: "Same-day delivery. Impressed!", rating: 5 },
+      { user: "Chinedu", text: "Item matched description.", rating: 5 },
+      { user: "Yvonne", text: "Great value and fast.", rating: 4 },
+    ],
+    recentOrdersTicker: [`Order delivered in 2h • ${city}`, "Order delivered in 4h • Lagos", "Next-day delivery in London"],
+  };
+}
+
+function demoFAQ(cc) {
+  return [
+    { q: "How does Buyer Protection work?", a: "If your order doesn't arrive or is not as described, we help you get a refund. See the policy page for details." },
+    { q: "What are the delivery times?", a: "Same-day in select cities, otherwise next-day to 3 days depending on the seller location." },
+    {
+      q: "Do you support Pay on Delivery?",
+      a: cc === "uk" ? "PoD is limited in the UK. Most orders use card or PayPal. Some local pickup sellers accept cash on collection." : "Yes, available in select cities and categories. Look for the Pay on Delivery badge.",
+    },
+    { q: "Is BNPL available?", a: cc === "gh" ? "Yes — BNPL is available with Ghana Card verification." : "BNPL is available for eligible buyers and categories." },
+    { q: "What about wholesale?", a: "Many sellers offer MOQ discounts. Check the Wholesale & Bulk rail and category for unit prices." },
+  ];
+}
+
+/** --- SEO METADATA -------------------------------------------------------- */
+export async function generateMetadata({ params } = {}) {
+  const cc = (params?.country || params?.region || "gh").toLowerCase();
+  const meta = COUNTRY_META[cc] || COUNTRY_META.gh;
+  const baseUrl = "https://www.upfrica.com";
+  const url = `${baseUrl}/${cc}`;
+
+  return {
+    title: `${meta.name} • Upfrica Marketplace — Fast Delivery, Local Sellers`,
+    description: meta.lcpTagline,
+    alternates: {
+      canonical: url,
+      languages: {
+        "en-GH": `${baseUrl}/gh`,
+        "en-NG": `${baseUrl}/ng`,
+        "en-GB": `${baseUrl}/uk`,
+        "x-default": `${baseUrl}/`,
+      },
+    },
+    openGraph: {
+      title: `Upfrica ${meta.name}`,
+      description: meta.lcpTagline,
+      url,
+      siteName: "Upfrica",
+      type: "website",
+      images: [{ url: `${baseUrl}/og/upfrica-${cc}.png`, width: 1200, height: 630, alt: `Upfrica ${meta.name}` }],
+      locale: "en",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `Upfrica ${meta.name}`,
+      description: meta.lcpTagline,
+      images: [`${baseUrl}/og/upfrica-${cc}.png`],
+    },
+  };
+}
+
+/* ------------------------------ VALUE PILLS ------------------------------ */
+function ValuePills({ cc }) {
+  const items = [
+    ["🛡️", "Buyer Protection", "Refunds if things go wrong"],
+    ["✅", "Verified Sellers", "Trusted stores"],
+    ["⚡", "Fast Delivery", "Same-day / Next-day"],
+    ["💳", "Flexible Payments", cc === "gh" ? "MoMo & BNPL" : cc === "ng" ? "Card/Transfer & PoD" : "Card & PayPal"],
+  ];
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 mt-8 md:mt-12" aria-label="Why Upfrica">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {items.map(([icon, h, p], i) => (
+          <div key={i} className="rounded-2xl border border-[var(--line)] bg-white p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-[var(--alt-surface)] border border-[var(--line)] flex items-center justify-center text-lg">
+              <span aria-hidden>{icon}</span>
+            </div>
+            <div>
+              <div className="font-semibold leading-none text-sm md:text-base">{h}</div>
+              <div className="text-[var(--ink-2)] text-xs mt-1">{p}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------ BRAND STRIP ------------------------------ */
+function BrandStrip() {
+  const brands = ["Upfrica Local", "KenteCo", "Jollof Express", "AfroBeauty", "TechAfrica", "HomeCraft"];
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 mt-6" aria-label="Featured brands">
+      <div className="rounded-2xl border border-[var(--line)] bg-white p-3 overflow-x-auto no-scrollbar">
+        <ul className="flex items-center gap-6 min-w-max">
+          {brands.map((b, i) => (
+            <li key={i} className="h-8 px-3 rounded-lg bg-[var(--alt-surface)] border border-[var(--line)] flex items-center text-sm text-[var(--ink-2)]">
+              {b}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------ PROMO TILES ------------------------------ */
+function PromoTiles({ tiles = [] }) {
+  return (
+    <section className="mx-auto max-w-7xl px-4 pt-4 pb-6">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+        {tiles.map((t, i) => (
+          <a key={i} href={t.href} className="relative rounded-2xl overflow-hidden border border-[var(--line)] bg-white group">
+            <div className="relative aspect-[4/3]">
+              {/* Decorative image; link text below provides the name */}
+              <Image
+                src={t.image}
+                alt=""
+                aria-hidden="true"
+                fill
+                sizes="(max-width: 640px) 100vw, 33vw"
+                className="object-cover transition-transform group-hover:scale-[1.02]"
+                priority={i === 0}
+                loading={i === 0 ? "eager" : "lazy"}
+                decoding="async"
+              />
+            </div>
+            <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 bg-gradient-to-t from-black/60 to-transparent text-white">
+              <div className="text-sm font-semibold">{t.title}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------ MOBILE SIDEBAR --------------------------- */
+function MobileSidebar({ cc, categories = [] }) {
+  const prefix = `/${cc}`;
+  const quick = [
+    ["🔥 Today’s Deals", `${prefix}/deals`],
+    ["⚡ Same-Day Near Me", `${prefix}/search?delivery=same-day`],
+    ["✅ Verified Sellers", `${prefix}/search?seller=verified`],
+    ["📦 Wholesale & Bulk", `${prefix}/wholesale`],
+    ["🧭 Explore", `${prefix}/search?sort=trending&near=me`],
+  ];
+  const earn = [
+    ["🛍️ Sell on Upfrica", `${prefix}/sell`],
+    ["🧭 Become an Agent", `${prefix}/agents`],
+    ["🔎 Sourcing Agent", `${prefix}/sourcing-agents`],
+    ["💼 Earn by Sourcing", `${prefix}/sourcing`],
+    ["🤝 Affiliate Program", `${prefix}/affiliate`],
+  ];
+  const support = [
+    ["🛡️ Buyer Protection", `${prefix}/help/buyer-protection`],
+    ["🚚 Delivery Options", `${prefix}/help/delivery`],
+    ["↩️ Returns & Refunds", `${prefix}/help/returns`],
+    ["📦 Track Order", `${prefix}/track`],
+    ["❓ Help Center", `${prefix}/help`],
+  ];
+  const account = [
+    ["👤 Sign in / Account", `${prefix}/account`],
+    ["🧾 Orders", `${prefix}/orders`],
+    ["❤️ Saved", `${prefix}/saved`],
+    ["💬 Messages", `${prefix}/messages`],
+    ["🛒 Cart", `${prefix}/cart`],
+  ];
+
+  return (
+    <>
+      {/* Backdrop – only in the tree when open */}
+      <label
+        htmlFor="nav-drawer"
+        aria-hidden="true"
+        tabIndex={-1}
+        className="fixed inset-0 z-[1000] bg-black/40 backdrop-blur-sm hidden peer-checked:block"
+      />
+
+      {/* Panel */}
+      <div
+        id="mobile-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mobile-menu-title"
+        tabIndex={-1}
+        hidden
+        className="fixed left-0 top-0 z-[1001] h-[100dvh] w-[88%] max-w-[420px] bg-white shadow-2xl rounded-r-2xl border-r border-[var(--line)] overflow-y-auto -translate-x-full transition-transform duration-300 peer-checked:translate-x-0"
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-[var(--line)] flex items-center justify-between">
+          <h2 id="mobile-menu-title" className="text-lg font-black">Menu</h2>
+          <label
+            htmlFor="nav-drawer"
+            className="p-3 rounded-xl hover:bg-[var(--alt-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--violet-500,#A435F0)]"
+            aria-label="Close menu"
+          >
+            ✕
+          </label>
+        </div>
+
+        {/* Search */}
+        <div className="p-4">
+          <form action={`${prefix}/search`} role="search" aria-label="Drawer Search" className="flex">
+            <input
+              name="q"
+              type="search"
+              placeholder="Search products, brands, shops…"
+              className="w-full h-11 rounded-l-xl border border-[var(--line)] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--violet-500,#A435F0)]"
+              list="hot-searches"
+            />
+            <button className="h-11 px-3 rounded-r-xl bg-[var(--brand-600)] text-white text-sm font-medium" aria-label="Search">
+              <span className="sr-only">Search</span>🔎
+            </button>
+          </form>
+        </div>
+
+        <MenuSection title="Quick links" items={quick} />
+
+        {/* Categories scroller */}
+        <div className="px-4 py-3 border-t border-[var(--line)]">
+          <div className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-2)] mb-2">Categories</div>
+          <div className="overflow-x-auto no-scrollbar -mx-1 px-1">
+            <ul className="flex gap-2 min-w-max">
+              {categories.slice(0, 18).map((c) => (
+                <li key={c.id} className="shrink-0">
+                  <a
+                    href={c.href}
+                    className="inline-flex items-center gap-1 rounded-full border border-[var(--line)] px-3 py-1.5 text-xs hover:border-[var(--violet-500,#A435F0)] hover:text-[var(--violet-500,#A435F0)]"
+                  >
+                    <span aria-hidden>{categoryIcon(c.icon)}</span>
+                    <span>{c.label}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <MenuSection title="Earn with Upfrica" items={earn} />
+        <MenuSection title="Support" items={support} />
+        <MenuSection title="Account" items={account} />
+
+        {/* Footer chips */}
+        <div className="p-4 border-t border-[var(--line)] text-xs text-[var(--ink-2)]">
+          <div className="flex flex-wrap gap-2">
+            <a className="px-2 py-1 rounded-md border border-[var(--line)]" href="/gh">🇬🇭 Ghana</a>
+            <a className="px-2 py-1 rounded-md border border-[var(--line)]" href="/ng">🇳🇬 Nigeria</a>
+            <a className="px-2 py-1 rounded-md border border-[var(--line)]" href="/uk">🇬🇧 UK</a>
+            <a className="px-2 py-1 rounded-md border border-[var(--line)]" href="/download-app">📱 Get the App</a>
+          </div>
+          <div className="mt-3">© {new Date().getFullYear()} Upfrica</div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function MenuSection({ title, items = [] }) {
+  return (
+    <nav className="px-2 py-3 border-t border-[var(--line)]" aria-label={title}>
+      <div className="px-2 text-xs font-semibold uppercase tracking-wide text-[var(--ink-2)] mb-2">{title}</div>
+      <ul className="space-y-1">
+        {items.map(([label, href]) => (
+          <li key={label}>
+            <a
+              href={href}
+              className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[var(--alt-surface)] border border-transparent hover:border-[var(--line)]"
+            >
+              <span className="text-sm">{label}</span>
+              <span aria-hidden>›</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+/** ------------------------------ PAGE ------------------------------------ */
+export default async function CountryHomePage({ params, searchParams } = {}) {
+  const cc = (params?.country || params?.region || "gh").toLowerCase();
+  const meta = COUNTRY_META[cc] || COUNTRY_META.gh;
+  const shuffle = String(searchParams?.shuffle || "").length > 0;
+  const data = await getHomeData(cc, { shuffle });
+
+  return (
+    <>
+      {/* LCP helpers for hero/tiles CDNs */}
+      <Head>
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="" />
+        <link rel="preconnect" href="https://picsum.photos" />
+      </Head>
+
+      <TopBar cc={cc} country={meta.name} ticker={data.socialProof.recentOrdersTicker} />
+
+      {/* Drawer lives at the root so it overlays the whole app */}
+      <input id="nav-drawer" type="checkbox" className="peer hidden" aria-hidden="true" />
+      <MobileSidebar cc={cc} categories={data.categories} />
+
+      {/* Location sheet lives at root (Amazon-style) */}
+      <LocationSheet cc={cc} cities={COUNTRY_META[cc]?.cities ?? []} />
+
+      <Header
+        cc={cc}
+        countryCode={meta.code}
+        searchPlaceholder={data.hero.searchPlaceholder}
+        deliverCity={COUNTRY_META[cc]?.cities?.[0] || "City"}
+        categories={data.categories}
+      />
+
+      <main
+        id="content-root"
+        data-country={cc}
+        className="min-h-[100svh] bg-[#f1f2f4] text-[var(--ink)] pb-[92px] md:pb-16 [padding-bottom:calc(env(safe-area-inset-bottom)+92px)] overflow-x-hidden"
+      >
+        <a href="#content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-yellow-300 px-3 py-1 rounded">
+          Skip to content
+        </a>
+
+        {HERO_STYLE === "curved" ? (
+          <HeroCurved
+            cc={cc}
+            headline={meta.lcpHeadline}
+            tagline={meta.lcpTagline}
+            image={data.hero.image}
+            alt={data.hero.alt}
+            primaryCta={data.hero.primaryCta}
+            secondaryCta={data.hero.secondaryCta}
+          />
+        ) : HERO_STYLE === "mosaic" ? (
+          <HeroMosaic
+            cc={cc}
+            headline={meta.lcpHeadline}
+            tagline={meta.lcpTagline}
+            image={data.hero.image}
+            alt={data.hero.alt}
+            primaryCta={data.hero.primaryCta}
+            secondaryCta={data.hero.secondaryCta}
+          />
+        ) : (
+          <Hero
+            headline={meta.lcpHeadline}
+            tagline={meta.lcpTagline}
+            image={data.hero.image}
+            alt={data.hero.alt}
+            primaryCta={data.hero.primaryCta}
+            secondaryCta={data.hero.secondaryCta}
+          />
+        )}
+
+        {/* NEW: rich banner carousel */}
+        <HeroCarousel banners={data.carouselBanners} />
+
+        <DockedSearch searchPlaceholder={data.hero.searchPlaceholder} intents={data.exploreNeeds} />
+
+        {/* NEW: quick Refresh + Map view */}
+        <section className="mx-auto max-w-7xl px-4 -mt-3">
+          <div className="flex gap-2">
+            <a href={`/${cc}?shuffle=1`} className="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border border-[var(--line)] bg-white">🔁 Refresh deals</a>
+            <a href={`/${cc}/nearby?map=1`} className="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border border-[var(--line)] bg-white">🗺️ Map view (Same-Day & Pickup)</a>
+          </div>
+        </section>
+
+        <FeaturedRail
+          cc={cc}
+          title="Featured Items"
+          subtitle="Sponsored picks from partners"
+          items={data.featured}
+          currency={meta.currency}
+          currencySymbol={meta.currencySymbol}
+        />
+
+        <ValuePills cc={cc} />
+
+        <BrandStrip />
+        <NavCategories categories={data.categories} />
+        <PromoTiles tiles={data.promos} />
+
+        {/* Rhythm breaker: lightweight video banner */}
+        <section className="mx-auto max-w-7xl px-4 py-8">
+          <div className="rounded-2xl overflow-hidden border border-[var(--line)] bg-black">
+            <video autoPlay muted loop playsInline className="w-full h-full">
+              <source src="https://storage.coverr.co/videos/coverr-shopping-people-6205/1080p.mp4" type="video/mp4" />
+            </video>
+          </div>
+        </section>
+
+        {data.rails.map((rail) => (
+          <ProductRail
+            key={rail.key}
+            railKey={rail.key}
+            cc={cc}
+            title={rail.title}
+            subtitle={rail.subtitle}
+            items={rail.items}
+            currency={meta.currency}
+            currencySymbol={meta.currencySymbol}
+          />
+        ))}
+
+        <TopShops shops={data.topShops} />
+        <CategoryGrid categories={data.categories} />
+        <SocialProof reviews={data.socialProof.reviews} />
+
+        <EarnWithUpfrica cc={cc} />
+
+        <ContentGuides guides={data.guides} />
+        <SEOBlocks blocks={data.seoBlocks} />
+        <FAQAccordion items={data.faq} />
+        <CityLinks cc={cc} cities={data.cityLinks} />
+        <SellCTA href={`/${cc}/sell`} />
+
+        {/* Floating CTAs */}
+        <div className="fixed right-3 bottom-[84px] md:bottom-6 z-40 flex flex-col gap-2">
+          <a href={`/${cc}/help?contact=whatsapp`} className="rounded-full shadow-lg border border-[var(--line)] bg-white px-4 py-2 text-sm font-bold">💬 Chat Support</a>
+          <a href={`/${cc}/sell`} className="rounded-full shadow-lg border border-[var(--line)] bg-white px-4 py-2 text-sm font-bold">💎 Become Verified Seller</a>
+        </div>
+        {/* App Install banner */}
+        <div className="md:hidden fixed inset-x-2 bottom-[64px] z-40 rounded-2xl border border-[var(--line)] bg-white p-3 shadow">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📱</span>
+            <div className="flex-1">
+              <div className="font-bold leading-tight">Get the Upfrica App</div>
+              <div className="text-xs text-[var(--ink-2)]">GH₵10 off your first order</div>
+            </div>
+            <a href="/download-app" className="rounded-lg bg-[var(--brand-600)] text-white text-sm font-semibold px-3 py-2">Install</a>
+          </div>
+        </div>
+
+        <Footer cc={cc} />
+
+        <StructuredData cc={cc} faq={data.faq} categories={data.categories} firstRailItems={data.rails[0]?.items ?? []} />
+
+        <BottomBar cc={cc} />
+      </main>
+    </>
+  );
+}
+
+/** --------------------------- COMPONENTS ---------------------------------- */
+function TopBar({ cc, country, ticker = [] }) {
+  const prefix = `/${cc}`;
+  return (
+    <div className="w-full text-white text-sm bg-gradient-to-r from-[var(--brand-700)] via-[var(--violet-600,#A435F0)] to-[var(--brand-600)]">
+      <div className="mx-auto max-w-7xl px-4 py-2 flex items-center justify-between gap-3 min-w-0">
+        <p className="text-xs sm:text-sm truncate">Shopping in <strong>{country}</strong></p>
+        <nav className="hidden sm:flex items-center gap-4" aria-label="Utility">
+          <a className="underline/50 hover:underline" href={`${prefix}/track`}>Track Order</a>
+          <a className="underline/50 hover:underline" href={`${prefix}/help`}>Help</a>
+          <a className="underline/50 hover:underline" href="/download-app">Download App</a>
+        </nav>
+      </div>
+      {ticker?.length > 0 && (
+        <div className="bg-white/5 border-t border-white/10 hidden md:block">
+          <div className="mx-auto max-w-7xl px-4 py-1 overflow-x-auto whitespace-nowrap text-xs">
+            {ticker.map((t, i) => (
+              <span key={i} className="mr-6 opacity-90 before:mr-2 before:inline-block before:h-1.5 before:w-1.5 before:rounded-full before:bg-[var(--violet-500,#A435F0)]">
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PromiseBar({ city }) {
+  return (
+    <div className="mx-auto max-w-7xl px-4 pb-2 text-xs md:text-sm text-[var(--ink-2)]">
+      Delivering to <strong>{city}</strong> • Order in <span className="font-semibold">2h 15m</span> for <strong>Same-Day</strong>
+    </div>
+  );
+}
+
+/* ---------- NEW: compact inline Deliver row + Amazon-style bottom sheet --- */
+function DeliverInline({ cc, city }) {
+  return (
+    <div className="mt-2 flex items-center gap-2 text-[13px] leading-5 text-[var(--ink-2)]">
+      <label
+        htmlFor="location-sheet"
+        className="inline-flex items-center gap-2 rounded-xl border border-[var(--line)] bg-white px-2 py-1 shrink-0 cursor-pointer"
+      >
+        <span aria-hidden>📍</span>
+        <span className="text-sm">Deliver to</span>
+        <span className="font-semibold text-sm">{city}</span>
+        <span className="text-[var(--ink-2)]">▾</span>
+      </label>
+      <span className="truncate">
+        · Order in <span className="font-semibold">2h 15m</span> for <span className="font-semibold">Same-Day</span>
+      </span>
+    </div>
+  );
+}
+
+function LocationSheet({ cc, cities = [] }) {
+  const prefix = `/${cc}`;
+  return (
+    <>
+      <input id="location-sheet" type="checkbox" className="hidden peer/location" aria-hidden="true" />
+      {/* Backdrop */}
+      <label
+        htmlFor="location-sheet"
+        aria-hidden="true"
+        className="fixed inset-0 z-[1000] hidden bg-black/40 backdrop-blur-sm peer-checked/location:block"
+      />
+      {/* Sheet */}
+      <aside
+        role="dialog"
+        aria-labelledby="ls-title"
+        className="fixed inset-x-0 bottom-0 z-[1001] translate-y-full peer-checked/location:translate-y-0 transition-transform duration-300
+                   rounded-t-2xl border-t border-[var(--line)] bg-white shadow-2xl max-h-[85vh] overflow-y-auto"
+      >
+        <div className="p-4">
+          <div className="mx-auto max-w-7xl">
+            <header className="flex items-start justify-between gap-2">
+              <h2 id="ls-title" className="text-lg font-black">Choose your location</h2>
+              <label htmlFor="location-sheet" className="p-2 rounded-lg hover:bg-[var(--alt-surface)]" aria-label="Close">✕</label>
+            </header>
+
+            <div className="mt-3 rounded-xl border border-[var(--line)] bg-[var(--alt-surface)] p-3">
+              <p className="text-sm">Delivery options and speed may vary by address.</p>
+              <a href={`${prefix}/account`} className="mt-2 inline-flex items-center justify-center rounded-lg bg-amber-400 px-4 py-2 text-sm font-bold">
+                Sign in to see your addresses
+              </a>
+            </div>
+
+            <div className="mt-4">
+              <div className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-2)] mb-2">Popular cities</div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {cities.map((c) => (
+                  <a
+                    key={c}
+                    href={`${prefix}/search?city=${encodeURIComponent(c)}`}
+                    className="rounded-lg border border-[var(--line)] px-3 py-2 text-sm hover:bg-[var(--alt-surface)]"
+                  >
+                    {c}
+                  </a>
+                ))}
+              </div>
+              <a href={`${prefix}/location`} className="mt-3 inline-block text-[var(--violet-500,#A435F0)] text-sm font-medium">
+                Enter a postcode / choose a different city →
+              </a>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+function Header({ cc, countryCode, searchPlaceholder, deliverCity, categories = [] }) {
+  const prefix = `/${cc}`;
+  const hotSearches = [
+    "Phones under GH₵500",
+    "Human Hair Kumasi",
+    "Spice Grinder",
+    "Jollof Pot",
+    "LED Ring Light",
+    "Shea Butter",
+  ];
+
+  return (
+    <header className="sticky top-0 z-[70] bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-b border-[var(--line)]">
+      <Script id="nav-drawer-a11y" strategy="lazyOnload">{`
+        ;(function () {
+          if (typeof window === 'undefined') return;
+          function init() {
+            var cb = document.getElementById('nav-drawer');
+            if (!cb) return;
+            var content = document.getElementById('content-root');
+            var trigger = document.getElementById('hamburger-trigger');
+            var panel = document.getElementById('mobile-menu');
+            var FOCUS_SELECTOR = [
+              'a[href]','button:not([disabled])','input:not([disabled])',
+              'select:not([disabled])','textarea:not([disabled])',
+              '[tabindex]:not([tabindex="-1"])','summary'
+            ].join(',');
+            function getFocusable(root){ return Array.prototype.slice.call(root.querySelectorAll(FOCUS_SELECTOR)); }
+            function lockScroll(locked){ document.documentElement.classList.toggle('overflow-hidden', locked); document.body.classList.toggle('overflow-hidden', locked); }
+            function setContentInert(locked){
+              if (!content) return;
+              if ('inert' in content) content.inert = locked;
+              else { content.setAttribute('aria-hidden', locked ? 'true' : 'false'); content.style.pointerEvents = locked ? 'none' : ''; }
+            }
+            function onChange(){
+              var open = cb.checked;
+              lockScroll(open); setContentInert(open);
+              if (trigger) trigger.setAttribute('aria-expanded', String(open));
+              if (panel) { panel.hidden = !open; panel.setAttribute('aria-hidden', String(!open)); }
+              if (open) { var closeBtn = document.querySelector('#mobile-menu label[for="nav-drawer"]'); if (closeBtn) setTimeout(function(){ closeBtn.focus(); }, 0); }
+              else { if (trigger) setTimeout(function(){ trigger.focus(); }, 0); }
+            }
+            function onKeydown(e){
+              if (e.key === 'Escape' && cb.checked) { cb.checked = false; onChange(); return; }
+              if (!cb.checked || e.key !== 'Tab' || !panel) return;
+              var nodes = getFocusable(panel); if (!nodes.length) return;
+              var first = nodes[0], last = nodes[nodes.length - 1], active = document.activeElement;
+              if (e.shiftKey && (active === first || !panel.contains(active))) { e.preventDefault(); last.focus(); }
+              else if (!e.shiftKey && (active === last || !panel.contains(active))) { e.preventDefault(); first.focus(); }
+            }
+            function onPanelClick(ev){ var a = ev.target && ev.target.closest ? ev.target.closest('a[href]') : null; if (!a) return; cb.checked = false; onChange(); }
+            cb.addEventListener('change', onChange);
+            document.addEventListener('keydown', onKeydown, true);
+            if (panel) panel.addEventListener('click', onPanelClick, { passive: true });
+            if (trigger) {
+              trigger.addEventListener('keydown', function(e){
+                if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); cb.checked = !cb.checked; onChange(); }
+              });
+            }
+            if (panel) { panel.hidden = !cb.checked; panel.setAttribute('aria-hidden', String(!cb.checked)); }
+            if (cb.checked) onChange();
+          }
+          if ('requestIdleCallback' in window) requestIdleCallback(init, { timeout: 3000 });
+          else window.addEventListener('load', function(){ setTimeout(init, 1); }, { once: true });
+        })();
+      `}</Script>
+
+      {/* Top row – tighter vertical space */}
+      <div className="mx-auto max-w-7xl px-4 py-2 flex items-center gap-2 sm:gap-3 text-[var(--ink)] min-w-0">
+        {/* Hamburger (mobile) */}
+        <label
+          id="hamburger-trigger"
+          htmlFor="nav-drawer"
+          role="button"
+          tabIndex={0}
+          aria-label="Open menu"
+          aria-controls="mobile-menu"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          className="md:hidden p-2 -ml-2 rounded-lg hover:bg-[var(--alt-surface)] group shrink-0"
+        >
+          <span className="relative block h-5 w-6">
+            <span className="absolute inset-x-0 top-0 h-[2px] bg-current transition-transform duration-200 group-aria-expanded:translate-y-[9px] group-aria-expanded:rotate-45"></span>
+            <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[2px] bg-current transition-opacity duration-200 group-aria-expanded:opacity-0"></span>
+            <span className="absolute inset-x-0 bottom-0 h-[2px] bg-current transition-transform duration-200 group-aria-expanded:-translate-y-[9px] group-aria-expanded:-rotate-45"></span>
+          </span>
+        </label>
+
+        {/* Brand */}
+        <a href="/" className="text-[22px] sm:text-2xl font-black tracking-tight shrink-0">
+          Upfrica<span className="text-[var(--brand-600)]">.{String(countryCode).toLowerCase()}</span>
+        </a>
+
+        {/* Deliver-to pill (desktop) */}
+        <div className="hidden md:block">
+          <DeliveryPill cc={cc} label="Deliver to" city={deliverCity} />
+        </div>
+
+        {/* Desktop search + All Categories */}
+        <div className="flex-1 hidden md:flex items-stretch gap-2 min-w-0">
+          <AllCategoriesMenu cc={cc} categories={categories} />
+          <form action={`/${cc}/search`} className="flex-1 flex min-w-0" role="search" aria-label="Site">
+            <label htmlFor="q" className="sr-only">Search</label>
+            <input
+              id="q"
+              name="q"
+              type="search"
+              placeholder={searchPlaceholder}
+              className="w-full h-11 rounded-l-xl border border-[var(--line)] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-600)]"
+              autoComplete="off"
+              list="hot-searches"
+            />
+            <button className="h-11 rounded-r-xl bg-[var(--brand-600)] px-4 text-white text-sm font-medium hover:bg-[var(--brand-700)]">
+              Search
+            </button>
+          </form>
+        </div>
+
+        {/* Right controls */}
+        <div className="ml-auto flex items-center gap-1 sm:gap-3 shrink-0">
+          {/* Hide on mobile to avoid overflow – available in drawer */}
+          <span className="hidden md:block"><CountrySwitcher /></span>
+          <span className="hidden md:block"><EarnDropdown cc={cc} /></span>
+
+          {/* NEW — Mobile Earn shortcut (topbar) */}
+          <a
+            href={`${prefix}/sell`}
+            className="md:hidden px-2 py-2 rounded-lg hover:bg-[var(--alt-surface)]"
+            aria-label="Earn with Upfrica"
+          >
+            <span className="inline-flex items-center justify-center rounded-lg ring-1 ring-[var(--line)] px-2 py-1 text-[18px] font-black">
+              💼
+            </span>
+          </a>
+
+          <a href={`/${cc}/account`} className="px-2 py-2 rounded-lg hover:bg-[var(--alt-surface)]">
+            <span className="hidden sm:inline">Account</span>
+            <span className="sm:hidden" aria-label="Account">👤</span>
+          </a>
+
+          {/* Cart — bold, ringed badge */}
+          <a href={`/${cc}/cart`} className="px-1 py-1 rounded-lg hover:bg-[var(--alt-surface)]" aria-label="Cart">
+            <span className="inline-flex items-center justify-center rounded-lg ring-2 ring-[var(--brand-600)] px-2 py-1 text-[18px] font-black">🛒</span>
+          </a>
+        </div>
+      </div>
+
+      {/* Promise bar (desktop only) */}
+      <div className="hidden md:block">
+        <PromiseBar city={deliverCity} />
+      </div>
+
+      {/* Mobile search + compact inline deliver row (no extra promise bar) */}
+      <div className="md:hidden px-4 pb-2 pt-1 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+        <form action={`/${cc}/search`} role="search" aria-label="Mobile Site Search" className="flex">
+          <input
+            name="q"
+            type="search"
+            placeholder={searchPlaceholder}
+            className="w-full h-11 rounded-l-xl border border-[var(--line)] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-600)]"
+            list="hot-searches"
+          />
+          <button className="h-11 px-3 rounded-r-xl bg-[var(--brand-600)] text-white text-sm font-medium" aria-label="Search">
+            🔎
+          </button>
+        </form>
+        <DeliverInline cc={cc} city={deliverCity} />
+      </div>
+
+      {/* shared hot searches datalist */}
+      <datalist id="hot-searches">
+        {hotSearches.map((s) => <option key={s} value={s} />)}
+      </datalist>
+    </header>
+  );
+}
+
+function AllCategoriesMenu({ cc, categories = [] }) {
+  const prefix = `/${cc}`;
+  return (
+    <div className="relative">
+      <details className="group">
+        <summary className="list-none inline-flex items-center gap-2 h-11 px-3 rounded-xl border border-[var(--line)] bg-white cursor-pointer select-none hover:bg-[var(--alt-surface)]">
+          <span>📂</span>
+          <span className="font-semibold text-sm">All Categories</span>
+          <span className="text-[var(--ink-2)] group-open:rotate-180 transition">▾</span>
+        </summary>
+        <div className="absolute left-0 mt-2 w-[680px] max-w-[90vw] rounded-2xl border border-[var(--line)] bg-white shadow-xl p-3 z-50">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {categories.slice(0, 12).map((c) => (
+              <a key={c.id} href={c.href} className="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-[var(--alt-surface)]">
+                <span className="text-lg" aria-hidden>{categoryIcon(c.icon)}</span>
+                <span className="text-sm">{c.label}</span>
+              </a>
+            ))}
+          </div>
+          <div className="mt-2 flex items-center justify-between">
+            <a href={`${prefix}/categories`} className="text-sm text-[var(--violet-500,#A435F0)] hover:underline">View all categories →</a>
+            <div className="text-xs text-[var(--ink-2)]">Tip: use the chips below the hero to jump quickly.</div>
+          </div>
+        </div>
+      </details>
+    </div>
+  );
+}
+
+function DeliveryPill({ cc, label = "Deliver to", city = "City" }) {
+  const cities = COUNTRY_META[cc]?.cities || COUNTRY_META.gh.cities;
+  return (
+    <div className="relative inline-block">
+      <details className="group">
+        <summary className="list-none inline-flex items-center gap-2 px-3 h-9 rounded-xl border border-[var(--line)] bg-white cursor-pointer select-none">
+          <span>📍</span><span className="text-sm">{label}</span>
+          <span className="font-semibold text-sm">{city}</span>
+          <span className="text-[var(--ink-2)] group-open:rotate-180 transition">▾</span>
+        </summary>
+        <div className="absolute left-0 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--line)] bg-white shadow-lg p-2 z-50">
+          {cities.map((c) => (
+            <a key={c} href={`/${cc}/search?city=${encodeURIComponent(c)}`} className="block px-3 py-2 rounded-lg hover:bg-[var(--alt-surface)] text-sm">
+              {c}
+            </a>
+          ))}
+          <a href={`/${cc}/location`} className="block px-3 py-2 rounded-lg text-sm text-[var(--violet-500,#A435F0)]">Choose a different city…</a>
+        </div>
+      </details>
+    </div>
+  );
+}
+
+function EarnDropdown({ cc }) {
+  const prefix = `/${cc}`;
+  const items = [
+    ["Sell on Upfrica", `${prefix}/sell`, "Start free"],
+    ["Become an Agent", `${prefix}/agents`, "Earn per seller"],
+    ["Become a Sourcing Agent", `${prefix}/sourcing-agents`, "Trusted pros"],
+    ["Earn Money Sourcing", `${prefix}/sourcing`, "Commission"],
+    ["Become an Affiliate", `${prefix}/affiliate`, "Referral pay"],
+  ];
+  return (
+    <div className="relative">
+      <details>
+        <summary className="list-none px-3 py-2 rounded-lg hover:bg-[var(--alt-surface)] cursor-pointer select-none">
+          💼 Earn
+        </summary>
+        <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--line)] bg-white shadow-lg p-1 z-50">
+          {items.map(([label, href, tag]) => (
+            <a key={label} href={href} className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[var(--alt-surface)] text-sm">
+              <span>{label}</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full border border-[var(--line)]">{tag}</span>
+            </a>
+          ))}
+        </div>
+      </details>
+    </div>
+  );
+}
+
+function CountrySwitcher() {
+  return (
+    <div className="relative">
+      <details className="group">
+        <summary className="list-none px-3 py-2 rounded-lg hover:bg-[var(--alt-surface)] cursor-pointer select-none">🌍 Country</summary>
+        <div className="absolute right-0 mt-2 w-48 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--line)] bg-white shadow-lg p-1">
+          {["gh", "ng", "uk"].map((c) => (
+            <a key={c} className="block px-3 py-2 rounded-lg hover:bg-[var(--alt-surface)]" href={`/${c}`}>
+              {({ gh: "🇬🇭", ng: "🇳🇬", uk: "🇬🇧" }[c] || "🌍")} {c.toUpperCase()}
+            </a>
+          ))}
+        </div>
+      </details>
+    </div>
+  );
+}
+
+function NavCategories({ categories }) {
+  if (!categories?.length) return null;
+  return (
+    <nav className="sticky top-[60px] z-30 bg-white border-b border-[var(--line)] hidden md:block">
+      <div className="mx-auto max-w-7xl px-4 flex gap-2 overflow-x-auto no-scrollbar py-2 scroll-fade">
+        {categories.map((c) => (
+          <a key={c.id} href={c.href} className="shrink-0 rounded-full border border-[var(--line)] px-3 py-1.5 text-sm text-[var(--ink-2)] hover:border-[var(--violet-500,#A435F0)] hover:text-[var(--violet-500,#A435F0)]">
+            {c.label}
+          </a>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+function Hero({ headline, tagline, image, alt, primaryCta, secondaryCta }) {
+  return (
+    <section id="content" className="relative">
+      <div className="mx-auto max-w-7xl px-4 grid md:grid-cols-2 gap-6 items-center py-8">
+        <div>
+          <h1 className="text-2xl sm:text-3xl md:text-5xl font-black leading-[1.1] text-[var(--ink)] line-clamp-3">{headline}</h1>
+          <p className="mt-3 text-[var(--ink-2)] text-base md:text-lg">{tagline}</p>
+
+          {/* Equal-width CTAs, lighter padding */}
+          <div className="mt-5 grid grid-cols-2 gap-2 max-w-md">
+            <a href={primaryCta.href} className="inline-flex items-center justify-center rounded-2xl bg-[var(--brand-600)] px-4 py-3 text-white font-semibold hover:bg-[var(--brand-700)] w-full">
+              {primaryCta.label}
+            </a>
+            <a href={secondaryCta.href} className="inline-flex items-center justify-center rounded-2xl border border-[var(--violet-500,#A435F0)] text-[var(--violet-600,#9333EA)] px-4 py-3 font-semibold hover:bg-[var(--violet-50,#F3E8FF)] w-full">
+              {secondaryCta.label}
+            </a>
+          </div>
+
+          <ul className="mt-6 grid grid-cols-2 gap-3 text-sm">
+            {["Buyer Protection", "Verified Sellers", "Same-Day / Next-Day", "Local Payments & BNPL"].map((t, i) => (
+              <li key={i} className="flex items-center gap-2 text-[var(--ink-2)]"><span className="text-[var(--success)]">●</span>{t}</li>
+            ))}
+          </ul>
+        </div>
+        <div className="relative aspect-[16/10] md:aspect-[5/4] rounded-2xl overflow-hidden bg-[var(--alt-surface)]">
+          <Image src={image} alt={alt} fill priority fetchPriority="high" sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** ------------------------------ HEROES ---------------------------------- */
+function HeroCurved({ cc, headline, tagline, image, alt, primaryCta, secondaryCta }) {
+  const primaryCity = COUNTRY_META[cc]?.cities?.[0] || "Your City";
+  return (
+    <section id="content" className="relative">
+      {/* ✅ Clip decorative elements so they never cause horizontal scroll */}
+      <div className="bg-gradient-to-br from-[var(--brand-50)] via-white to-[var(--accent-100)] rounded-b-3xl border-b border-[var(--line)] overflow-hidden">
+        <div className="relative mx-auto max-w-7xl px-4 pt-10 pb-16">
+          <div className="absolute -top-10 -left-10 h-64 w-64 bg-[var(--brand-100)]/60 rounded-full blur-3xl" />
+          <div className="absolute -bottom-10 -right-0 h-64 w-64 bg-[var(--accent-100)] rounded-full blur-3xl" />
+
+          <div className="relative grid md:grid-cols-12 gap-6 items-center">
+            <div className="md:col-span-6">
+              <h1 className="text-2xl md:text-5xl font-black tracking-tight leading-[1.08] line-clamp-3">{headline}</h1>
+              <p className="mt-3 text-[var(--ink-2)] text-base md:text-lg">{tagline}</p>
+
+              {/* Equal-width CTAs, lighter padding */}
+              <div className="mt-6 grid grid-cols-2 gap-2 max-w-md">
+                <a href={primaryCta.href} className="inline-flex items-center justify-center rounded-2xl bg-[var(--brand-600)] px-4 py-3 text-white font-semibold hover:bg-[var(--brand-700)] w-full">{primaryCta.label}</a>
+                <a href={secondaryCta.href} className="inline-flex items-center justify-center rounded-2xl border border-[var(--violet-500,#A435F0)] text-[var(--violet-600,#9333EA)] px-4 py-3 font-semibold hover:bg-[var(--violet-50,#F3E8FF)] w-full">{secondaryCta.label}</a>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
+                {["Buyer Protection", "Verified Sellers", "Same-Day / Next-Day", "Local Payments & BNPL"].map((t, i) => (
+                  <div key={i} className="flex items-center gap-2 text-[var(--ink-2)]"><span className="text-[var(--success)]">●</span>{t}</div>
+                ))}
+              </div>
+              <div className="mt-6 flex flex-wrap gap-4 text-sm text-[var(--ink-2)]">
+                <div className="flex items-center gap-2"><span>🛍️</span><span>50k+ items</span></div>
+                <div className="flex items-center gap-2"><span>🏬</span><span>5k+ sellers</span></div>
+                <div className="flex items-center gap-2"><span>📍</span><span>24+ cities</span></div>
+              </div>
+            </div>
+
+            <div className="md:col-span-6">
+              <div className="relative h-[320px] md:h-[420px] overflow-hidden">
+                <div className="absolute inset-0 rounded-3xl bg-[var(--alt-surface)] overflow-hidden shadow-[0_8px_24px_rgba(17,24,39,0.08)]">
+                  <Image src={image} alt={alt} fill priority fetchPriority="high" sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
+                </div>
+                {/* Decorative cards */}
+                <a href={`/${cc}/deals`} className="absolute -left-4 bottom-8 w-40 md:w-48 rounded-2xl overflow-hidden border border-[var(--line)] bg-white rotate-[-3deg]">
+                  <div className="relative h-28 w-full">
+                    <Image src="https://picsum.photos/seed/upfrica-hero-a/400/300" alt="" aria-hidden="true" fill sizes="160px" className="object-cover" />
+                  </div>
+                  <div className="p-2 text-xs font-semibold">Today’s Deals</div>
+                </a>
+                <a href={`/${cc}/search?delivery=same-day`} className="absolute right-2 -top-4 md:right-2 md:-top-6 w-36 md:w-44 rounded-2xl overflow-hidden border border-[var(--line)] bg-white rotate-[4deg]">
+                  <div className="relative h-24 w-full">
+                    <Image src="https://picsum.photos/seed/upfrica-hero-b/400/300" alt="" aria-hidden="true" fill sizes="140px" className="object-cover" />
+                  </div>
+                  <div className="p-2 text-xs font-semibold">Same-Day in {primaryCity}</div>
+                </a>
+                <a href={`/${cc}/wholesale`} className="absolute right-10 bottom-0 w-44 md:w-52 rounded-2xl overflow-hidden border border-[var(--line)] bg-white rotate-[1deg]">
+                  <div className="relative h-28 w-full">
+                    <Image src="https://picsum.photos/seed/upfrica-hero-c/400/300" alt="" aria-hidden="true" fill sizes="180px" className="object-cover" />
+                  </div>
+                  <div className="p-2 text-xs font-semibold">Wholesale & Bulk</div>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HeroMosaic({ cc, headline, tagline, image, alt, primaryCta, secondaryCta }) {
+  return (
+    <section id="content" className="relative overflow-hidden">
+      <div className="absolute -top-24 -left-24 h-72 w-72 bg-[var(--brand-100)] rounded-full blur-3xl" />
+      <div className="absolute -bottom-16 -right-24 h-72 w-72 bg-[var(--accent-100)] rounded-full blur-3xl" />
+
+      <div className="mx-auto max-w-7xl px-4 pt-8 pb-16">
+        <div className="grid md:grid-cols-12 gap-6 items-center">
+          <div className="md:col-span-5">
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.08] line-clamp-3">{headline}</h1>
+            <p className="mt-3 text-[var(--ink-2)] text-base md:text-lg">{tagline}</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <a href={primaryCta.href} className="inline-flex items-center rounded-2xl bg-[var(--brand-600)] px-5 py-3 text-white font-semibold shadow-sm hover:bg-[var(--brand-700)]">{primaryCta.label}</a>
+              <a href={secondaryCta.href} className="inline-flex items-center rounded-2xl border border-[var(--violet-500,#A435F0)] text-[var(--violet-500,#A435F0)] px-5 py-3 font-semibold hover:bg-[var(--violet-50,#F3E8FF)]">{secondaryCta.label}</a>
+            </div>
+            <ul className="mt-6 grid grid-cols-2 gap-3 text-sm">
+              {["Buyer Protection", "Verified Sellers", "Same-Day / Next-Day", "Local Payments & BNPL"].map((t, i) => (
+                <li key={i} className="flex items-center gap-2 text-[var(--ink-2)]"><span className="text-[var(--success)]">●</span>{t}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="md:col-span-7">
+            <div className="grid grid-cols-6 grid-rows-6 gap-3">
+              <div className="col-span-6 row-span-4 rounded-3xl overflow-hidden bg-[var(--alt-surface)] relative">
+                <Image src={image} alt={alt} fill priority fetchPriority="high" sizes="(max-width: 768px) 100vw, 60vw" className="object-cover" />
+              </div>
+              {/* Decorative tiles */}
+              <a href={`/${cc}/search?delivery=same-day`} className="col-span-3 row-span-2 rounded-3xl overflow-hidden bg-[var(--alt-surface)] border border-[var(--line)] relative group">
+                <Image src="https://images.unsplash.com/photo-1517957754649-85f9e86de2e3?q=80&w=1200&auto=format&fit=crop" alt="" aria-hidden="true" fill sizes="50vw" className="object-cover group-hover:scale-[1.02] transition-transform" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                <div className="absolute bottom-3 left-3 text-white font-semibold">Same-Day Delivery</div>
+              </a>
+              <a href={`/${cc}/search?seller=verified`} className="col-span-3 row-span-2 rounded-3xl overflow-hidden bg-[var(--alt-surface)] border border-[var(--line)] relative group">
+                <Image src="https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200&auto=format&fit=crop" alt="" aria-hidden="true" fill sizes="50vw" className="object-cover group-hover:scale-[1.02] transition-transform" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                <div className="absolute bottom-3 left-3 text-white font-semibold">Verified Sellers</div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* --------------------------- HERO CAROUSEL ------------------------------- */
+function HeroCarousel({ banners = [] }) {
+  if (!banners.length) return null;
+  return (
+    <section className="relative">
+      <div className="mx-auto max-w-7xl px-4 pt-6">
+        <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-px-4" aria-label="Promoted offers">
+          {banners.map((b, i) => (
+            <a key={i} href={b.href} className="snap-start shrink-0 w-[92%] md:w-[48%] lg:w-[32%] rounded-3xl overflow-hidden border border-[var(--line)] bg-white relative">
+              <div className="relative aspect-[16/9]">
+                <Image src={b.img} alt={b.title} fill sizes="(max-width:1024px) 92vw, 33vw" className="object-cover" />
+              </div>
+              <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/60 to-transparent text-white">
+                <div className="text-base md:text-lg font-extrabold leading-tight">{b.title}</div>
+                <div className="text-sm opacity-90">{b.sub}</div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** ------------------------- SEARCH & CHIPS ------------------------------- */
+function DockedSearch({ searchPlaceholder, intents = [] }) {
+  // Desktop only – chips only (no second input)
+  return (
+    <div className="relative hidden md:block -mt-8 lg:-mt-12 z-20">
+      <div className="mx-auto max-w-5xl px-4">
+        <div className="rounded-2xl border border-[var(--line)] bg-white/80 backdrop-blur shadow-md">
+          <nav aria-label="Quick filters" className="overflow-x-auto no-scrollbar -mx-1 px-1 py-2">
+            <ul className="flex gap-2 min-w-max">
+              {intents.slice(0, 10).map((c, i) => (
+                <li key={i} className="shrink-0">
+                  <a
+                    href={c.href}
+                    className="inline-block rounded-full border border-[var(--line)] px-3 py-1.5 text-xs
+                               text-[var(--ink-2)] hover:border-[var(--violet-500,#A435F0)] hover:text-[var(--violet-500,#A435F0)]"
+                  >
+                    {c.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** ------------------------------ RAILS ----------------------------------- */
+function railLink(cc, key) {
+  const base = `/${cc}`;
+  switch (key) {
+    case "featured": return `${base}/featured`;
+    case "same_day": return `${base}/search?delivery=same-day`;
+    case "verified_sellers": return `${base}/search?seller=verified`;
+    case "wholesale": return `${base}/wholesale`;
+    case "seasonal": return `${base}/deals?tag=seasonal`;
+    case "for_you": return `${base}/for-you`;
+    case "trending_near_you":
+    default: return `${base}/search?sort=trending&near=me`;
+  }
+}
+function productUrl(cc, id) { return `/${cc}/p/${id}`; }
+function compact(n){ try { return new Intl.NumberFormat(undefined,{notation:'compact',maximumFractionDigits:1}).format(n);} catch {return String(n??'');}}
+
+function ProductRail({ railKey, cc, title, subtitle, items, currency, currencySymbol }) {
+  const viewAllLink = railLink(cc, railKey);
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-8">
+      <div className="flex items-end justify-between">
+        <div>
+          <h2 className="text-lg md:text-xl font-bold">{title}</h2>
+          {subtitle && <p className="text-[var(--ink-2)] text-sm mt-1">{subtitle}</p>}
+        </div>
+        <a href={viewAllLink} className="text-[var(--violet-500,#A435F0)] text-sm hover:underline" aria-label={`View all ${title}`}>View all</a>
+      </div>
+
+      <div className="mt-4 overflow-x-auto no-scrollbar">
+        <ul className="flex gap-3 lg:gap-4 snap-x snap-mandatory scroll-p-4 overflow-x-auto no-scrollbar scroll-fade-right">
+          {items.map((p, idx) => {
+            const badge = p.badge || "Verified";
+            const showDiscount = Number.isFinite(p.compareAt) && p.compareAt > p.price;
+            const pct = showDiscount ? Math.round(100 * (1 - p.price / p.compareAt)) : 0;
+
+            // NEW: lightweight social proof/urgency
+            const soldThisWeek = 40 + ((idx * 37) % 160); // 40–199
+            const stockLeft = (idx % 7);                  // 0-6
+            const lowStock = stockLeft > 0 && stockLeft <= 3;
+
+            return (
+              <li key={p.id} className="snap-start shrink-0 w-[224px]">
+                {/* FIXED-HEIGHT, UNIFORM CARD */}
+                <a
+                  href={`/${cc}/p/${p.id}`}
+                  className="group block h-[460px] rounded-2xl border border-[var(--line)] bg-white hover:shadow-sm overflow-hidden flex flex-col"
+                >
+                  <div className="relative aspect-square">
+                    {/* Decorative image inside the same link as the product title */}
+                    <Image
+                      src={p.image}
+                      alt=""
+                      aria-hidden="true"
+                      fill
+                      sizes="(max-width:768px) 60vw, 224px"
+                      className="object-cover transition-transform group-hover:scale-[1.01]"
+                      loading="lazy"
+                      decoding="async"
+                      draggable={false}
+                    />
+                  </div>
+
+                  {/* CONTENT BLOCK WITH RESERVED ROWS */}
+                  <div className="p-3 flex-1 flex flex-col">
+                    <div className="text-sm font-medium leading-5 line-clamp-2 min-h-[40px]">{p.title}</div>
+
+                    {(p.city || p.rating) ? (
+                      <div className="mt-1 text-[11px] text-[var(--ink-2)] leading-4 min-h-4">
+                        {p.city}{p.city && p.rating ? " · " : ""}{p.rating ? <>★ {p.rating} · {compact(p.reviews)}</> : null}
+                      </div>
+                    ) : (
+                      <div className="mt-1 min-h-4" />
+                    )}
+
+                    <div className="mt-2 text-base font-extrabold tracking-tight">
+                      {formatMoney(p.price, currency, currencySymbol)}
+                    </div>
+
+                    {showDiscount ? (
+                      <div className="mt-1 h-4 text-[11px] text-[var(--ink-2)]">
+                        <span className="line-through opacity-60">{formatMoney(p.compareAt, currency, currencySymbol)}</span>
+                        <span className="ml-1 text-[var(--danger-700)] font-semibold">-{pct}%</span>
+                      </div>
+                    ) : (
+                      // Reserve discount row height for alignment
+                      <div className="mt-1 h-4" />
+                    )}
+
+                    {/* NEW: social proof + urgency */}
+                    <div className="mt-1 text-[11px] text-[var(--ink-2)]">🔥 {soldThisWeek} bought this week</div>
+                    {lowStock ? (
+                      <div className="mt-1 text-[10px] inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-[var(--danger-200)] text-[var(--danger-700)] bg-[var(--danger-50)] w-max">
+                        ⏳ Only {stockLeft} left
+                      </div>
+                    ) : <div className="mt-1 h-4" />}
+
+                    <div className="mt-auto flex items-center justify-between">
+                      <span className="self-start text-xs px-2.5 py-1 rounded-full bg-white border border-[var(--success-400)] text-[var(--success-700)]">
+                        {badge}
+                      </span>
+                      {showDiscount && <span className="text-[10px] text-[var(--ink-2)]">Ends today</span>}
+                    </div>
+                  </div>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+function FeaturedRail(props) {
+  return <ProductRail railKey="featured" {...props} />;
+}
+
+/** --------------------------- SHOPS / CATS ------------------------------- */
+function TopShops({ shops = [] }) {
+  if (!shops.length) return null;
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-8">
+      <div className="flex items-end justify-between">
+        <div>
+          <h2 className="text-lg md:text-xl font-bold">Top Shops Near You</h2>
+          <p className="text-[var(--ink-2)] text-sm mt-1">Follow trusted stores in your city</p>
+        </div>
+        <a href={`#`} className="text-[var(--violet-500,#A435F0)] text-sm hover:underline">See all shops</a>
+      </div>
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {shops.map((s) => (
+          <div key={s.id} className="rounded-2xl border border-[var(--line)] hover:shadow-sm overflow-hidden bg-white">
+            <a href={`/${s.id}`} className="block">
+              <div className="relative aspect-[4/3] bg-[var(--alt-surface)]">
+                {/* Keep alt here because this image is the *only* text inside the link */}
+                <Image src={s.image} alt={s.name} fill sizes="(max-width: 1024px) 100vw, 33vw" className="object-cover" />
+              </div>
+            </a>
+            <div className="p-3 flex items-start justify-between gap-2">
+              <div>
+                <div className="font-semibold">{s.name}</div>
+                <div className="text-sm text-[var(--ink-2)]">{s.city} • ⭐ {s.rating}</div>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {s.badges.map((b, i) => (
+                    <span key={i} className="text-xs bg-[var(--violet-50,#F3E8FF)] text-[var(--violet-600,#9333EA)] px-2 py-0.5 rounded-full">{b}</span>
+                  ))}
+                </div>
+              </div>
+              <button type="button" aria-label={`Follow ${s.name}`} className="text-xs px-2 py-1 rounded-full border border-[var(--line)] hover:border-[var(--violet-500,#A435F0)]">
+                Follow
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CategoryGrid({ categories = [] }) {
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-8">
+      <h2 className="text-lg md:text-xl font-bold">Shop by Category</h2>
+      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {categories.map((c) => (
+          <a key={c.id} href={c.href} className="rounded-2xl border border-[var(--line)] hover:shadow-sm p-3 flex items-center gap-2 bg-white">
+            <span className="text-xl" aria-hidden>{categoryIcon(c.icon)}</span>
+            <span className="text-sm font-medium">{c.label}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+function categoryIcon(key) {
+  const map = { devices: "📱", hair: "💇🏾‍♀️", food: "🥘", fashion: "👗", home: "🏠", box: "📦", car: "🚗", factory: "🏭", baby: "🍼", dumbbell: "🏋🏾", heart: "💖", wrench: "🛠️" };
+  return map[key] || "🛍️";
+}
+
+/** --------------------------- SOCIAL / GUIDES ---------------------------- */
+function SocialProof({ reviews = [] }) {
+  if (!reviews.length) return null;
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-6">
+      <div className="rounded-2xl border border-[var(--line)] bg-white">
+        <div className="p-4 border-b border-[var(--line)]">
+          <h2 className="text-lg md:text-xl font-bold">What buyers are saying</h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-4 p-4">
+          {reviews.map((r, i) => (
+            <div key={i} className="rounded-xl border border-[var(--line)] p-4 bg-white">
+              <div className="font-semibold">{r.user}</div>
+              <div className="text-yellow-500" aria-label={`${r.rating} stars`}>
+                {"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}
+              </div>
+              <p className="text-sm text-[var(--ink-2)] mt-1">{r.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** --------------------------- EARN WITH UPFRICA -------------------------- */
+function EarnWithUpfrica({ cc }) {
+  const prefix = `/${cc}`;
+  const items = [
+    { icon: "🛍️", title: "Sell on Upfrica", text: "Open a shop in minutes, reach local & diaspora buyers.", href: `${prefix}/sell`, badge: "Start free" },
+    { icon: "🧭", title: "Become an Agent", text: "Onboard sellers, help with listings & fulfillment.", href: `${prefix}/agents`, badge: "Earn per seller" },
+    { icon: "🔎", title: "Sourcing Agent", text: "Match buyers to vetted suppliers & wholesalers.", href: `${prefix}/sourcing-agents`, badge: "Trusted pros" },
+    { icon: "💼", title: "Earn Money Sourcing", text: "Bring products people want, earn commission on orders.", href: `${prefix}/sourcing`, badge: "Commission" },
+    { icon: "🤝", title: "Become an Affiliate", text: "Share links & coupons. Get paid for purchases.", href: `${prefix}/affiliate`, badge: "Referral pay" },
+  ];
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-10">
+      <div className="flex items-end justify-between">
+        <h2 className="text-lg md:text-xl font-bold">Earn with Upfrica</h2>
+        <a href={`${prefix}/sell`} className="text-[var(--violet-500,#A435F0)] text-sm hover:underline">All earning programs</a>
+      </div>
+      <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {items.map((it, i) => (
+          <a key={i} href={it.href} className="rounded-2xl border border-[var(--line)] bg-white p-4 hover:shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-[var(--alt-surface)] border border-[var(--line)] flex items-center justify-center text-lg" aria-hidden>{it.icon}</div>
+              <div className="flex-1">
+                <div className="font-semibold">{it.title}</div>
+                <p className="text-sm text-[var(--ink-2)] mt-1">{it.text}</p>
+              </div>
+              <span className="text-[10px] leading-none px-2 py-1 rounded-full border border-[var(--violet-500,#A435F0)] text-[var(--violet-600,#9333EA)]">{it.badge}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ContentGuides({ guides }) {
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-8">
+      <div className="rounded-2xl border border-[var(--line)] bg-white">
+        <div className="p-4 border-b border-[var(--line)]">
+          <h2 className="text-lg md:text-xl font-bold">Get the most out of Upfrica</h2>
+          <p className="text-sm text-[var(--ink-2)] mt-1">Guides & quick tips to help you buy and sell confidently.</p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-4 p-4">
+          {guides.map((g, i) => (
+            <a key={i} href={g.href} className="rounded-xl border border-[var(--line)] p-4 hover:shadow-sm bg-white">
+              <div className="font-semibold">{g.title}</div>
+              <div className="text-sm text-[var(--violet-500,#A435F0)] mt-1">Read more →</div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SEOBlocks({ blocks }) {
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-8">
+      <div className="rounded-2xl border border-[var(--line)] bg-white p-4 md:p-6">
+        {blocks.map((b, i) => (
+          <article key={i} className="prose max-w-none">
+            <h2>{b.h2}</h2>
+            <p>{b.body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FAQAccordion({ items = [] }) {
+  if (!items.length) return null;
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-8">
+      <h2 className="text-lg md:text-xl font-bold">Frequently Asked Questions</h2>
+      <div className="mt-3 divide-y rounded-2xl border border-[var(--line)] bg-white">
+        {items.map((it, i) => (
+          <details key={i} className="group p-4">
+            <summary className="font-semibold cursor-pointer list-none flex items-center justify-between">{it.q}<span className="ml-3 text-[var(--ink-2)] group-open:rotate-180 transition">▾</span></summary>
+            <p className="mt-2 text-sm text-[var(--ink-2)]">{it.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CityLinks({ cc, cities = [] }) {
+  if (!cities.length) return null;
+  return (
+    <section className="mx-auto max-w-7xl px-4 pb-4">
+      <div className="text-sm text-[var(--ink-2)]">
+        Popular cities:{" "}
+        {cities.map((c, i) => (
+          <a key={i} href={`/${cc}/search?city=${encodeURIComponent(c)}`} className="hover:underline">
+            {c}{i < cities.length - 1 ? ", " : ""}
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SellCTA({ href }) {
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-10">
+      <div className="rounded-2xl border border-[var(--line)] bg-gradient-to-br from-amber-50 to-orange-50 p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h3 className="text-xl md:text-2xl font-black">Sell on Upfrica</h3>
+          <p className="text-[var(--ink-2)] mt-1">Reach buyers in your country and the diaspora. Zero coding — start in minutes.</p>
+        </div>
+        <a href={href} className="inline-flex items-center rounded-xl bg-[var(--brand-600)] px-4 py-2.5 text-white font-semibold shadow-sm hover:bg-[var(--brand-700)] self-start">Start Selling</a>
+      </div>
+    </section>
+  );
+}
+
+function Footer({ cc }) {
+  const prefix = `/${cc}`;
+  return (
+    <footer className="border-t border-[var(--line)] bg-white">
+      <div className="mx-auto max-w-7xl px-4 py-10 grid md:grid-cols-4 gap-6 text-sm">
+        <div>
+          <div className="text-xl font-black">Upfrica</div>
+          <p className="text-[var(--ink-2)] mt-2">The African marketplace — fast, local, and trusted.</p>
+        </div>
+        <div>
+          <h4 className="font-semibold mb-2">Buyers</h4>
+          <ul className="space-y-1 text-[var(--ink-2)]">
+            <li><a href={`${prefix}/help/buyer-protection`} className="hover:underline">Buyer Protection</a></li>
+            <li><a href={`${prefix}/help/delivery`} className="hover:underline">Delivery Options</a></li>
+            <li><a href={`${prefix}/help/returns`} className="hover:underline">Returns & Refunds</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="font-semibold mb-2">Sellers & Earners</h4>
+          <ul className="space-y-1 text-[var(--ink-2)]">
+            <li><a href={`${prefix}/sell`} className="hover:underline">Sell on Upfrica</a></li>
+            <li><a href={`${prefix}/agents`} className="hover:underline">Become an Agent</a></li>
+            <li><a href={`${prefix}/sourcing-agents`} className="hover:underline">Become a Sourcing Agent</a></li>
+            <li><a href={`${prefix}/sourcing`} className="hover:underline">Earn Money Sourcing</a></li>
+            <li><a href={`${prefix}/affiliate`} className="hover:underline">Become an Affiliate</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="font-semibold mb-2">Company</h4>
+          <ul className="space-y-1 text-[var(--ink-2)]">
+            <li><a href={`/about`} className="hover:underline">About</a></li>
+            <li><a href={`/contact`} className="hover:underline">Contact</a></li>
+            <li><a href={`/careers`} className="hover:underline">Careers</a></li>
+          </ul>
+        </div>
+      </div>
+      <div className="border-t border-[var(--line)] py-4 text-center text-xs text-[var(--ink-2)]">© {new Date().getFullYear()} Upfrica. All rights reserved.</div>
+    </footer>
+  );
+}
+
+/* --- UPDATED: Mobile BottomBar with bolder icons & labels ----------------- */
+function BottomBar({ cc }) {
+  const prefix = `/${cc}`;
+  return (
+    <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-[var(--line)] [padding-bottom:env(safe-area-inset-bottom)]">
+      <div className="mx-auto max-w-7xl px-2 py-2.5 flex justify-between text-sm">
+        <a href={prefix} aria-current="page" className="group flex flex-col items-center gap-0.5 px-2 py-1">
+          <span className="text-[22px] leading-none font-extrabold">🏠</span>
+          <span className="text-[12px] font-semibold">Home</span>
+        </a>
+        <label htmlFor="nav-drawer" className="group flex flex-col items-center gap-0.5 px-2 py-1">
+          <span className="text-[22px] leading-none font-extrabold">📂</span>
+          <span className="text-[12px] font-semibold">Menu</span>
+        </label>
+        <a href={`${prefix}/deals`} className="group flex flex-col items-center gap-0.5 px-2 py-1">
+          <span className="text-[22px] leading-none font-extrabold">🔥</span>
+          <span className="text-[12px] font-semibold">Deals</span>
+        </a>
+        <a href={`${prefix}/messages`} className="group flex flex-col items-center gap-0.5 px-2 py-1">
+          <span className="text-[22px] leading-none font-extrabold">💬</span>
+          <span className="text-[12px] font-semibold">Messages</span>
+        </a>
+        <a href={`${prefix}/cart`} className="group flex flex-col items-center gap-0.5 px-2 py-1">
+          <span className="text-[22px] leading-none font-extrabold">🛒</span>
+          <span className="text-[12px] font-semibold">Cart</span>
+        </a>
+      </div>
+    </nav>
+  );
+}
+
+/** --- GLOBAL STRUCTURED DATA --------------------------------------------- */
+function StructuredData({ cc, faq = [], categories = [], firstRailItems = [] }) {
+  const baseUrl = "https://www.upfrica.com";
+  const pageUrl = `${baseUrl}/${cc}`;
+
+  const website = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Upfrica",
+    url: pageUrl,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${pageUrl}/search?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  const org = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Upfrica",
+    url: baseUrl,
+    logo: `${baseUrl}/logo.png`,
+    sameAs: ["https://facebook.com/upfrica", "https://instagram.com/upfrica"],
+  };
+
+  const offerCatalog = {
+    "@context": "https://schema.org",
+    "@type": "OfferCatalog",
+    name: "Popular Categories",
+    itemListElement: categories.slice(0, 8).map((c, i) => ({
+      "@type": "OfferCatalog",
+      position: i + 1,
+      name: c.label,
+      url: new URL(c.href, baseUrl).toString(),
+    })),
+  };
+
+  const itemList =
+    firstRailItems.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "Trending Near You",
+          itemListOrder: "http://schema.org/ItemListOrderAscending",
+          numberOfItems: firstRailItems.length,
+          itemListElement: firstRailItems.slice(0, 10).map((p, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            url: p?.id ? `${baseUrl}${productUrl(cc, p.id)}` : `${baseUrl}/${cc}`,
+            name: p?.title ?? "Item",
+          })),
+        }
+      : null;
+
+  const faqSchema =
+    faq.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faq.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }
+      : null;
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(website) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(org) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(offerCatalog) }} />
+      {itemList && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }} />}
+      {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
+    </>
+  );
+}
+
+/* --- HELPERS -------------------------------------------------------------- */
+function formatMoney(n, currency = "USD", symbol) {
+  if (!Number.isFinite(n)) return "";
+  const sym = symbol ?? ({ GHS:"GH₵", NGN:"₦", GBP:"£", USD:"$", EUR:"€" }[currency] || null);
+  const amount = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
+  return sym ? `${sym}${amount}` : new Intl.NumberFormat(undefined, {
+    style: "currency", currency, currencyDisplay: "narrowSymbol", maximumFractionDigits: 0
+  }).format(n);
+}
+function shuffleArr(arr){ return [...arr].sort(() => (Math.random() - 0.5)); }
+function dedupeRails(rails){
+  const seen = new Set();
+  return rails.map(r => ({
+    ...r,
+    items: r.items.filter(it => {
+      const key = it.id || `${it.title}-${it.image}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+  }));
+}

@@ -12,8 +12,7 @@ export default function ListingCTA(formik) {
       </button>
 
       <button
-         type="submit" 
-       
+        type="submit"
         className="px-6 py-3 text-sm font-medium text-gray-700 border-black border   hover:bg-gray-200 rounded-full"
         aria-label="Save for later"
       >

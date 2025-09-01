@@ -1,6 +1,14 @@
 import React from "react";
 
-const CategoreTitle = ({ id, name, type, value, onChange, placeholder,onClick }) => {
+const CategoreTitle = ({
+  id,
+  name,
+  type,
+  value,
+  onChange,
+  placeholder,
+  onClick,
+}) => {
   return (
     <input
       id={id}

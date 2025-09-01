@@ -41,7 +41,10 @@ const PriceRefinements = () => {
   return (
     <div className="mb-6 bg-white " role="group">
       {/* Price title */}
-      <h2 className="font-semibold text-base lg:text-lg text-gray-700" id="p_36-title">
+      <h2
+        className="font-semibold text-base lg:text-lg text-gray-700"
+        id="p_36-title"
+      >
         Price
       </h2>
 

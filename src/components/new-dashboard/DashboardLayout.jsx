@@ -1,27 +1,46 @@
-'use client';
+// src/components/new-dashboard/DashboardLayout.jsx
+"use client";
 
-import { useAuth } from '@/contexts/AuthContext';
-import { RoleViewProvider, useRoleView } from '@/contexts/RoleViewContext';
-import TopBar from './TopBar';
-import SellerSidebar from './SellerSidebar';
-import BuyerSidebar from './BuyerSidebar';
-import AgentSidebar from './AgentSidebar';
-import Footer from './Footer';
-import { normalizeRole } from '@/app/utils/roles';
-import { useSearchParams } from 'next/navigation';
+import React, { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRoleView } from "@/contexts/RoleViewContext";
+import TopBar from "./TopBar";
+import SellerSidebar from "./SellerSidebar";
+import BuyerSidebar from "./BuyerSidebar";
+import AgentSidebar from "./AgentSidebar";
+import Footer from "./Footer";
+import { normalizeRole } from "@/app/utils/roles";
+import { useSearchParams } from "next/navigation";
+
+// Placeholder affiliate
+const AffiliateSidebar = ({ isOpen }) => (
+  <div className="w-64 bg-pink-100 dark:bg-pink-900 p-4">Affiliate Sidebar</div>
+);
 
 function InnerDashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { roleView } = useRoleView();
+  const { roleView, displayRoles } = useRoleView();
   const { user } = useAuth();
-  const normalizedRole = normalizeRole(roleView);
+  const searchParams = useSearchParams();
 
-  const isBuyerOnly = Array.isArray(user?.account_type)
-    ? user.account_type.length === 1 && user.account_type.includes('buyer')
-    : user?.account_type === 'buyer';
+  const normalizedRole = normalizeRole(roleView);
+  const paymentSuccess = searchParams.get("payment") === "success";
+
+  const acct = user?.account_type;
+  const isBuyerOnly = Array.isArray(acct)
+    ? acct.length === 1 && acct.includes("buyer")
+    : acct === "buyer";
+
+  useEffect(() => {
+    if (paymentSuccess) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("payment");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [paymentSuccess]);
 
   const renderSidebar = () => {
-    if (normalizedRole === 'seller') {
+    if (normalizedRole === "seller") {
       return (
         <SellerSidebar
           key="seller"
@@ -31,7 +50,7 @@ function InnerDashboardLayout({ children }) {
         />
       );
     }
-    if (normalizedRole === 'agent') {
+    if (normalizedRole === "agent") {
       return (
         <AgentSidebar
           key="agent"
@@ -40,23 +59,11 @@ function InnerDashboardLayout({ children }) {
         />
       );
     }
-    return (
-      <BuyerSidebar
-        key="buyer"
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
-    );
+    if (normalizedRole === "affiliate") {
+      return <AffiliateSidebar key="affiliate" isOpen={sidebarOpen} />;
+    }
+    return <BuyerSidebar key="buyer" isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />;
   };
-
-useEffect(() => {
-  if (paymentSuccess) {
-    const url = new URL(window.location.href);
-    url.searchParams.delete('payment');
-    window.history.replaceState({}, '', url.toString());
-  }
-}, [paymentSuccess]);
-
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -64,12 +71,9 @@ useEffect(() => {
 
       {isBuyerOnly && (
         <div className="bg-indigo-100 dark:bg-indigo-900 text-indigo-900 dark:text-indigo-100 text-sm px-4 py-2 text-center shadow-sm">
-          🚀 Want to earn on Upfrica?{' '}
-          <a
-            href="/onboarding/account-type"
-            className="underline font-semibold hover:text-indigo-700 dark:hover:text-white"
-          >
-            Become a Seller or Agent
+          🚀 Want to earn on Upfrica?{" "}
+          <a href="/onboarding/account-type" className="underline font-semibold hover:text-indigo-700 dark:hover:text-white">
+            Become a Seller, Agent or Affiliate
           </a>
         </div>
       )}
@@ -80,21 +84,11 @@ useEffect(() => {
         <main className="flex-1 flex flex-col overflow-y-auto">
           <div className="flex-1 bg-green-50 dark:bg-[#0e1e1e] px-4 sm:px-6 lg:px-12 xl:px-40 py-6 overflow-y-auto">
             <div className="max-w-7xl mx-auto text-gray-800 dark:text-white">
-              <h1 className="text-xl font-bold mb-2">Main Content (children)</h1>
-              <p className="mb-6">This is where your dynamic page content goes.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="p-4 bg-white dark:bg-gray-800 shadow rounded-md text-sm"
-                  >
-                    Card {i + 1}
-                  </div>
-                ))}
-              </div>
+              {/* tiny debug pill (remove later) */}
+              <div className="text-xs opacity-70 mb-2">roles: {JSON.stringify(displayRoles)} | active: {normalizedRole}</div>
+              {children}
             </div>
           </div>
-
           <Footer />
         </main>
       </div>
@@ -103,28 +97,8 @@ useEffect(() => {
 }
 
 export default function DashboardLayout({ children }) {
-  const { hydrated, user } = useAuth();
-  const searchParams = useSearchParams();
-
+  const { hydrated } = useAuth();
   if (!hydrated) return null;
-
-  const roles = Array.isArray(user?.account_type)
-    ? user.account_type
-    : [user?.account_type];
-
-  const paymentSuccess = searchParams.get('payment') === 'success';
-
-  // ✅ Default to 'seller' if payment was successful and user has seller access
-  const defaultRole = useMemo(() => {
-    if (paymentSuccess && roles.includes('seller_private')) return 'seller';
-    if (paymentSuccess && roles.includes('seller_business')) return 'seller';
-    if (roles.includes('agent')) return 'agent';
-    return roles[0]; // fallback to first available role
-  }, [paymentSuccess, roles]);
-
-  return (
-    <RoleViewProvider roles={roles} defaultRole={defaultRole}>
-      <InnerDashboardLayout>{children}</InnerDashboardLayout>
-    </RoleViewProvider>
-  );
+  // RoleViewProvider is applied in app/(pages)/new-dashboard/layout.js
+  return <InnerDashboardLayout>{children}</InnerDashboardLayout>;
 }

@@ -1,12 +1,12 @@
-'use client';
-import React from 'react';
-import { Editor } from '@tinymce/tinymce-react';
-import { useRef } from 'react';
-import { Formik, FieldArray } from 'formik';
-import Link from 'next/link';
-import Script from 'next/script';
-import Footer from '@/components/common/footer/Footer';
-import { useSelector } from 'react-redux';
+"use client";
+import React from "react";
+import { Editor } from "@tinymce/tinymce-react";
+import { useRef } from "react";
+import { Formik, FieldArray } from "formik";
+import Link from "next/link";
+import Script from "next/script";
+import Footer from "@/components/common/footer/Footer";
+import { useSelector } from "react-redux";
 
 // Initial form values for creating a Help Blog Post.
 // In production, you might start with empty values or fetch defaults from your backend.
@@ -28,9 +28,9 @@ const initialFormValues = {
       // For image type:
       files: [], // File objects uploaded by the user.
       // For links type:
-      links: [] // Each link is an object: { text: "", url: "" }
-    }
-  ]
+      links: [], // Each link is an object: { text: "", url: "" }
+    },
+  ],
 };
 
 // Simple Formik validation
@@ -75,8 +75,6 @@ export default function CreateHelpBlogPage() {
                 console.error("Error:", error);
                 alert("Failed to create help blog post.");
               });
-
-
           }}
           enableReinitialize
         >
@@ -110,9 +108,6 @@ export default function CreateHelpBlogPage() {
                 )}
               </div>
 
-
-
-
               {/* Summary (TinyMCE) */}
               <div>
                 <label className="block text-gray-700 font-bold mb-1">
@@ -121,25 +116,25 @@ export default function CreateHelpBlogPage() {
                 <Editor
                   apiKey="cly2l2971z9pgqhfjufgnqbl1h4nomfzmiqbjositk620gut"
                   onInit={(evt, editor) => (summaryEditorRef.current = editor)}
-                  value={values.summary || ''}
+                  value={values.summary || ""}
                   onEditorChange={(content) => {
-                    setFieldValue('summary', content);
+                    setFieldValue("summary", content);
                   }}
                   init={{
                     height: 250,
                     menubar: false,
                     plugins: [
-                      'advlist autolink lists link charmap preview anchor',
-                      'searchreplace visualblocks code fullscreen',
-                      'insertdatetime media table help wordcount',
-                    ].join(' '),
+                      "advlist autolink lists link charmap preview anchor",
+                      "searchreplace visualblocks code fullscreen",
+                      "insertdatetime media table help wordcount",
+                    ].join(" "),
                     toolbar:
-                      'undo redo | formatselect | ' +
-                      'bold italic underline forecolor | ' +
-                      'alignleft aligncenter alignright alignjustify | ' +
-                      'bullist numlist outdent indent | removeformat | help',
+                      "undo redo | formatselect | " +
+                      "bold italic underline forecolor | " +
+                      "alignleft aligncenter alignright alignjustify | " +
+                      "bullist numlist outdent indent | removeformat | help",
                     content_style:
-                      'body {font - family:Helvetica,Arial,sans-serif; font-size:14px }',
+                      "body {font - family:Helvetica,Arial,sans-serif; font-size:14px }",
                   }}
                 />
                 {touched.summary && errors.summary && (
@@ -253,7 +248,9 @@ export default function CreateHelpBlogPage() {
                           </div>
 
                           {/* Conditionally render fields based on Section Type */}
-                          {["paragraph", "highlight"].includes(section.sectionType) && (
+                          {["paragraph", "highlight"].includes(
+                            section.sectionType,
+                          ) && (
                             <div className="mt-2">
                               <label className="block text-gray-700 font-bold mb-1">
                                 Content
@@ -275,29 +272,36 @@ export default function CreateHelpBlogPage() {
                               <label className="block text-gray-700 font-bold mb-1">
                                 Bullet Items
                               </label>
-                              <FieldArray name={`sections[${secIndex}].bulletItems`}>
+                              <FieldArray
+                                name={`sections[${secIndex}].bulletItems`}
+                              >
                                 {({ push, remove }) => (
                                   <div className="space-y-2">
-                                    {(section.bulletItems || []).map((item, index) => (
-                                      <div key={index} className="flex items-center gap-2">
-                                        <input
-                                          type="text"
-                                          name={`sections[${secIndex}].bulletItems[${index}]`}
-                                          value={item}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          placeholder="Bullet item"
-                                          className="flex-1 border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
-                                        />
-                                        <button
-                                          type="button"
-                                          onClick={() => remove(index)}
-                                          className="text-red-500 font-bold"
+                                    {(section.bulletItems || []).map(
+                                      (item, index) => (
+                                        <div
+                                          key={index}
+                                          className="flex items-center gap-2"
                                         >
-                                          X
-                                        </button>
-                                      </div>
-                                    ))}
+                                          <input
+                                            type="text"
+                                            name={`sections[${secIndex}].bulletItems[${index}]`}
+                                            value={item}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            placeholder="Bullet item"
+                                            className="flex-1 border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => remove(index)}
+                                            className="text-red-500 font-bold"
+                                          >
+                                            X
+                                          </button>
+                                        </div>
+                                      ),
+                                    )}
                                     <button
                                       type="button"
                                       onClick={() => push("")}
@@ -318,29 +322,36 @@ export default function CreateHelpBlogPage() {
                                 <label className="block text-gray-700 font-bold mb-1">
                                   Table Headers
                                 </label>
-                                <FieldArray name={`sections[${secIndex}].tableHeaders`}>
+                                <FieldArray
+                                  name={`sections[${secIndex}].tableHeaders`}
+                                >
                                   {({ push, remove }) => (
                                     <div className="space-y-2">
-                                      {(section.tableHeaders || []).map((header, index) => (
-                                        <div key={index} className="flex items-center gap-2">
-                                          <input
-                                            type="text"
-                                            name={`sections[${secIndex}].tableHeaders[${index}]`}
-                                            value={header}
-                                            onChange={handleChange}
-                                            onBlur={handleBlur}
-                                            placeholder="Header"
-                                            className="flex-1 border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
-                                          />
-                                          <button
-                                            type="button"
-                                            onClick={() => remove(index)}
-                                            className="text-red-500"
+                                      {(section.tableHeaders || []).map(
+                                        (header, index) => (
+                                          <div
+                                            key={index}
+                                            className="flex items-center gap-2"
                                           >
-                                            X
-                                          </button>
-                                        </div>
-                                      ))}
+                                            <input
+                                              type="text"
+                                              name={`sections[${secIndex}].tableHeaders[${index}]`}
+                                              value={header}
+                                              onChange={handleChange}
+                                              onBlur={handleBlur}
+                                              placeholder="Header"
+                                              className="flex-1 border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() => remove(index)}
+                                              className="text-red-500"
+                                            >
+                                              X
+                                            </button>
+                                          </div>
+                                        ),
+                                      )}
                                       <button
                                         type="button"
                                         onClick={() => push("")}
@@ -357,56 +368,74 @@ export default function CreateHelpBlogPage() {
                                 <label className="block text-gray-700 font-bold mb-1">
                                   Table Rows
                                 </label>
-                                <FieldArray name={`sections[${secIndex}].tableRows`}>
+                                <FieldArray
+                                  name={`sections[${secIndex}].tableRows`}
+                                >
                                   {({ push, remove }) => (
                                     <div className="space-y-4">
-                                      {(section.tableRows || []).map((row, rowIndex) => (
-                                        <div key={rowIndex} className="space-y-2 border p-2 rounded">
-                                          <label className="block font-bold text-gray-700">
-                                            Row {rowIndex + 1}
-                                          </label>
-                                          <FieldArray name={`sections[${secIndex}].tableRows[${rowIndex}]`}>
-                                            {({ push, remove }) => (
-                                              <div className="space-y-2">
-                                                {row.map((cell, cellIndex) => (
-                                                  <div key={cellIndex} className="flex items-center gap-2">
-                                                    <input
-                                                      type="text"
-                                                      name={`sections[${secIndex}].tableRows[${rowIndex}][${cellIndex}]`}
-                                                      value={cell}
-                                                      onChange={handleChange}
-                                                      onBlur={handleBlur}
-                                                      placeholder="Cell"
-                                                      className="flex-1 border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
-                                                    />
-                                                    <button
-                                                      type="button"
-                                                      onClick={() => remove(cellIndex)}
-                                                      className="text-red-500"
-                                                    >
-                                                      X
-                                                    </button>
-                                                  </div>
-                                                ))}
-                                                <button
-                                                  type="button"
-                                                  onClick={() => push("")}
-                                                  className="text-violet-700 underline"
-                                                >
-                                                  + Add Cell
-                                                </button>
-                                              </div>
-                                            )}
-                                          </FieldArray>
-                                          <button
-                                            type="button"
-                                            onClick={() => remove(rowIndex)}
-                                            className="text-red-500 underline"
+                                      {(section.tableRows || []).map(
+                                        (row, rowIndex) => (
+                                          <div
+                                            key={rowIndex}
+                                            className="space-y-2 border p-2 rounded"
                                           >
-                                            Remove Row
-                                          </button>
-                                        </div>
-                                      ))}
+                                            <label className="block font-bold text-gray-700">
+                                              Row {rowIndex + 1}
+                                            </label>
+                                            <FieldArray
+                                              name={`sections[${secIndex}].tableRows[${rowIndex}]`}
+                                            >
+                                              {({ push, remove }) => (
+                                                <div className="space-y-2">
+                                                  {row.map(
+                                                    (cell, cellIndex) => (
+                                                      <div
+                                                        key={cellIndex}
+                                                        className="flex items-center gap-2"
+                                                      >
+                                                        <input
+                                                          type="text"
+                                                          name={`sections[${secIndex}].tableRows[${rowIndex}][${cellIndex}]`}
+                                                          value={cell}
+                                                          onChange={
+                                                            handleChange
+                                                          }
+                                                          onBlur={handleBlur}
+                                                          placeholder="Cell"
+                                                          className="flex-1 border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
+                                                        />
+                                                        <button
+                                                          type="button"
+                                                          onClick={() =>
+                                                            remove(cellIndex)
+                                                          }
+                                                          className="text-red-500"
+                                                        >
+                                                          X
+                                                        </button>
+                                                      </div>
+                                                    ),
+                                                  )}
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => push("")}
+                                                    className="text-violet-700 underline"
+                                                  >
+                                                    + Add Cell
+                                                  </button>
+                                                </div>
+                                              )}
+                                            </FieldArray>
+                                            <button
+                                              type="button"
+                                              onClick={() => remove(rowIndex)}
+                                              className="text-red-500 underline"
+                                            >
+                                              Remove Row
+                                            </button>
+                                          </div>
+                                        ),
+                                      )}
                                       <button
                                         type="button"
                                         onClick={() => push([])}
@@ -430,7 +459,10 @@ export default function CreateHelpBlogPage() {
                                 type="file"
                                 name={`sections[${secIndex}].files`}
                                 onChange={(e) =>
-                                  setFieldValue(`sections[${secIndex}].files`, e.target.files)
+                                  setFieldValue(
+                                    `sections[${secIndex}].files`,
+                                    e.target.files,
+                                  )
                                 }
                                 multiple
                                 className="w-full"
@@ -440,42 +472,51 @@ export default function CreateHelpBlogPage() {
 
                           {section.sectionType === "links" && (
                             <div className="mt-2">
-                              <label className="block text-gray-700 font-bold mb-1">Links</label>
+                              <label className="block text-gray-700 font-bold mb-1">
+                                Links
+                              </label>
                               <FieldArray name={`sections[${secIndex}].links`}>
                                 {({ push, remove }) => (
                                   <div className="space-y-2">
-                                    {(section.links || []).map((link, index) => (
-                                      <div key={index} className="flex items-center gap-2">
-                                        <input
-                                          type="text"
-                                          name={`sections[${secIndex}].links[${index}].text`}
-                                          value={link.text}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          placeholder="Link text"
-                                          className="flex-1 border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
-                                        />
-                                        <input
-                                          type="text"
-                                          name={`sections[${secIndex}].links[${index}].url`}
-                                          value={link.url}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          placeholder="Link URL"
-                                          className="flex-1 border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
-                                        />
-                                        <button
-                                          type="button"
-                                          onClick={() => remove(index)}
-                                          className="text-red-500"
+                                    {(section.links || []).map(
+                                      (link, index) => (
+                                        <div
+                                          key={index}
+                                          className="flex items-center gap-2"
                                         >
-                                          X
-                                        </button>
-                                      </div>
-                                    ))}
+                                          <input
+                                            type="text"
+                                            name={`sections[${secIndex}].links[${index}].text`}
+                                            value={link.text}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            placeholder="Link text"
+                                            className="flex-1 border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
+                                          />
+                                          <input
+                                            type="text"
+                                            name={`sections[${secIndex}].links[${index}].url`}
+                                            value={link.url}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            placeholder="Link URL"
+                                            className="flex-1 border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => remove(index)}
+                                            className="text-red-500"
+                                          >
+                                            X
+                                          </button>
+                                        </div>
+                                      ),
+                                    )}
                                     <button
                                       type="button"
-                                      onClick={() => push({ text: "", url: "" })}
+                                      onClick={() =>
+                                        push({ text: "", url: "" })
+                                      }
                                       className="text-violet-700 underline"
                                     >
                                       + Add Link
@@ -485,7 +526,6 @@ export default function CreateHelpBlogPage() {
                               </FieldArray>
                             </div>
                           )}
-
                         </div>
                       ))}
                       <button

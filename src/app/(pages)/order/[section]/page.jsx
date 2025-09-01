@@ -1,9 +1,8 @@
 // app/orders/[section]/page.js
-'use client';
+"use client";
 import React from "react";
 import { useParams } from "next/navigation";
 import OrderCart from "@/components/order/OrderCart";
-
 
 const OrderSectionPage = () => {
   const { section } = useParams();
@@ -11,7 +10,7 @@ const OrderSectionPage = () => {
   let content;
   switch (section) {
     case "order":
-      content = <OrderCart/>;
+      content = <OrderCart />;
       break;
     case "your-sales":
       content = <p>sale page</p>;
@@ -23,7 +22,7 @@ const OrderSectionPage = () => {
       content = <p>cancellations page</p>;
       break;
     case "returns":
-      content =  <p>returns page</p>;
+      content = <p>returns page</p>;
       break;
     default:
       content = <AllOrders />; // Default Content

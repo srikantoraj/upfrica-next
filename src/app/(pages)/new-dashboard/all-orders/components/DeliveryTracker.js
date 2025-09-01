@@ -10,7 +10,10 @@ export default function DeliveryTracker({ stage = 0, steps = [] }) {
         const isLast = index === steps.length - 1;
 
         return (
-          <div key={index} className="flex-1 flex flex-col items-center relative">
+          <div
+            key={index}
+            className="flex-1 flex flex-col items-center relative"
+          >
             {/* Connector line */}
             {index > 0 && (
               <div className="absolute top-3 left-[-50%] w-full h-1 bg-gray-200 z-0">
@@ -28,7 +31,9 @@ export default function DeliveryTracker({ stage = 0, steps = [] }) {
             {/* Circle */}
             <div
               className={`w-6 h-6 rounded-full flex items-center justify-center z-10 mb-1 ${
-                isCompleted ? "bg-blue-600 text-white" : "bg-gray-300 text-white"
+                isCompleted
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-300 text-white"
               }`}
             >
               ✓

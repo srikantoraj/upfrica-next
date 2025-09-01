@@ -46,7 +46,7 @@ const Cart = () => {
 
   const handleCheckout = async () => {
     if (!token) {
-      router.push("/signin");
+      router.push("/login");
       return;
     }
     if (!agreed) return;
@@ -58,17 +58,14 @@ const Cart = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch(
-        "https://media.upfrica.com/api/cart/add/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Token ${token}`,
-          },
-          body: JSON.stringify({ items }),
-        }
-      );
+      const response = await fetch("https://media.upfrica.com/api/cart/add/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Token ${token}`,
+        },
+        body: JSON.stringify({ items }),
+      });
 
       if (!response.ok) throw new Error("Failed to add to cart");
       const result = await response.json();
@@ -83,7 +80,7 @@ const Cart = () => {
   // Calculate subtotal
   const subtotal = basket.reduce(
     (sum, item) => sum + (item.price_cents / 100) * item.quantity,
-    0
+    0,
   );
 
   // Calculate shipping per updated rules:
@@ -104,14 +101,16 @@ const Cart = () => {
     Object.values(bySeller).forEach((items) => {
       // build a list of units
       const units = [];
-      items.forEach(({ postage_fee = 0, secondary_postage_fee = 0, quantity }) => {
-        for (let i = 0; i < quantity; i++) {
-          units.push({
-            postage: postage_fee / 100,
-            secondary: secondary_postage_fee / 100,
-          });
-        }
-      });
+      items.forEach(
+        ({ postage_fee = 0, secondary_postage_fee = 0, quantity }) => {
+          for (let i = 0; i < quantity; i++) {
+            units.push({
+              postage: postage_fee / 100,
+              secondary: secondary_postage_fee / 100,
+            });
+          }
+        },
+      );
 
       if (units.length === 1) {
         total += units[0].postage;
@@ -149,7 +148,12 @@ const Cart = () => {
               >
                 <div className="flex-shrink-0 w-24 h-24 lg:w-28 lg:h-28">
                   <img
-                    src={product.image?.[0] || "https://via.placeholder.com/150"}
+                    src={
+                  
+                  product.image?.[0]?.image_url ||
+                  product.image?.[0]?.url ||
+                  "/placeholder.png"
+                    }
                     alt={product.title}
                     className="w-full h-full object-contain rounded-md"
                   />
@@ -179,10 +183,7 @@ const Cart = () => {
                     <div className="flex items-center space-x-2 ml-4">
                       <button
                         onClick={() =>
-                          handleQuantityChange(
-                            product.id,
-                            product.quantity - 1
-                          )
+                          handleQuantityChange(product.id, product.quantity - 1)
                         }
                         disabled={product.quantity <= 1}
                         className="p-1 border border-gray-300 rounded disabled:opacity-50"
@@ -192,10 +193,7 @@ const Cart = () => {
                       <span className="px-2">{product.quantity}</span>
                       <button
                         onClick={() =>
-                          handleQuantityChange(
-                            product.id,
-                            product.quantity + 1
-                          )
+                          handleQuantityChange(product.id, product.quantity + 1)
                         }
                         disabled={product.quantity >= 10}
                         className="p-1 border border-gray-300 rounded disabled:opacity-50"
@@ -221,10 +219,9 @@ const Cart = () => {
                     </div>
                     <p className="text-lg font-medium text-gray-900">
                       ₵
-                      {(
-                        (product.price_cents / 100) *
-                        product.quantity
-                      ).toFixed(2)}
+                      {((product.price_cents / 100) * product.quantity).toFixed(
+                        2,
+                      )}
                     </p>
                   </div>
                 </div>
@@ -298,9 +295,7 @@ const Cart = () => {
           <div>
             <div className="flex justify-between text-lg font-semibold text-gray-700 mt-4">
               <span>Shipping</span>
-              <span className="text-gray-900">
-                ₵{shippingCost.toFixed(2)}
-              </span>
+              <span className="text-gray-900">₵{shippingCost.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-xl font-semibold text-gray-900 mt-2">
               <span>Total cost</span>
@@ -324,17 +319,19 @@ const Cart = () => {
                 and{" "}
                 <Link href="/privacy" className="text-indigo-600 underline">
                   Privacy Policy
-                </Link>.
+                </Link>
+                .
               </label>
             </div>
 
             <button
               onClick={handleCheckout}
               disabled={basket.length === 0 || isLoading || !agreed}
-              className={`mt-4 w-full justify-center items-center py-3 text-lg font-semibold btn-primary rounded ${basket.length === 0 || isLoading || !agreed
+              className={`mt-4 w-full justify-center items-center py-3 text-lg font-semibold btn-primary rounded ${
+                basket.length === 0 || isLoading || !agreed
                   ? "opacity-50 cursor-not-allowed"
                   : "btn-primary"
-                }`}
+              }`}
             >
               {isLoading ? (
                 <div className="flex space-x-2 justify-center py-3">
@@ -358,10 +355,11 @@ const Cart = () => {
         <button
           onClick={handleCheckout}
           disabled={basket.length === 0 || isLoading || !agreed}
-          className={`py-3 px-4 text-sm font-semibold text-white bg-indigo-600 rounded ${basket.length === 0 || isLoading || !agreed
+          className={`py-3 px-4 text-sm font-semibold text-white bg-indigo-600 rounded ${
+            basket.length === 0 || isLoading || !agreed
               ? "opacity-50 cursor-not-allowed"
               : "hover:bg-indigo-700"
-            }`}
+          }`}
         >
           {isLoading ? (
             <div className="flex space-x-2">

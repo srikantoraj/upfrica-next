@@ -1,27 +1,27 @@
-'use client'
-import React, { useState } from 'react';
+"use client";
+import React, { useState } from "react";
 // import './styles.css'; // For custom transitions (optional)
 
 const attributes = [
   {
-    label: 'Item Height',
-    tooltip: 'Measured height from top to bottom when upright.',
-    options: ['15 in', '75 in', '250 cm'],
+    label: "Item Height",
+    tooltip: "Measured height from top to bottom when upright.",
+    options: ["15 in", "75 in", "250 cm"],
   },
   {
-    label: 'Item Length',
-    tooltip: 'Measured length from left to right when upright.',
-    options: ['0.5 in', '1 in', '18 in'],
+    label: "Item Length",
+    tooltip: "Measured length from left to right when upright.",
+    options: ["0.5 in", "1 in", "18 in"],
   },
   {
-    label: 'Item Width',
-    tooltip: 'Shortest horizontal side of the item.',
-    options: ['15 in', '100 cm', '150 cm'],
+    label: "Item Width",
+    tooltip: "Shortest horizontal side of the item.",
+    options: ["15 in", "100 cm", "150 cm"],
   },
   {
-    label: 'Type',
+    label: "Type",
     tooltip: 'Specific type of product, e.g., "Wardrobe"',
-    options: ['Wardrobe', 'Canvas Wardrobe', 'Freestanding Wardrobe'],
+    options: ["Wardrobe", "Canvas Wardrobe", "Freestanding Wardrobe"],
   },
 ];
 
@@ -88,7 +88,9 @@ const ItemAttributesForm = ({ formik }) => {
 
   return (
     <form className="">
-      <h2 className="text-lg font-semibold text-gray-800 mb-6 pt-5">Item Details</h2>
+      <h2 className="text-lg font-semibold text-gray-800 mb-6 pt-5">
+        Item Details
+      </h2>
 
       {attributes.map((attr, index) => (
         <div key={index} className="flex justify-between items-start mb-6">
@@ -107,10 +109,11 @@ const ItemAttributesForm = ({ formik }) => {
             <select
               onFocus={() => setOpenDropdown(attr.label)}
               onBlur={() => setOpenDropdown(null)}
-              value={values[attr.label] || ''}
+              value={values[attr.label] || ""}
               onChange={(e) => handleChange(attr.label, e.target.value)}
-              className={`w-full border border-gray-300 rounded-md p-2 text-sm transition-all duration-300 ease-in-out ${openDropdown === attr.label ? 'shadow-lg ' : 'shadow-sm'
-                } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+              className={`w-full border border-gray-300 rounded-md p-2 text-sm transition-all duration-300 ease-in-out ${
+                openDropdown === attr.label ? "shadow-lg " : "shadow-sm"
+              } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
             >
               <option value="">Select {attr.label}</option>
               {attr.options.map((opt, i) => (
@@ -126,7 +129,4 @@ const ItemAttributesForm = ({ formik }) => {
   );
 };
 
-
 export default ItemAttributesForm;
-
-

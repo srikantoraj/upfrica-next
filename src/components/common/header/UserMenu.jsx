@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { FaRegUser, FaShoppingBag, FaHeart, FaStore } from "react-icons/fa";
@@ -7,7 +7,7 @@ import { FiSettings } from "react-icons/fi";
 import { CiPower } from "react-icons/ci";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useDispatch } from 'react-redux';
+import { useDispatch } from "react-redux";
 import { clearUser } from "../../../app/store/slices/userSlice";
 import UserEmail from "./UserEmail";
 
@@ -18,7 +18,7 @@ export default function UserMenu() {
   const router = useRouter();
   const dispatch = useDispatch();
 
-  const toggleModal = () => setIsModalOpen(prev => !prev);
+  const toggleModal = () => setIsModalOpen((prev) => !prev);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -39,10 +39,10 @@ export default function UserMenu() {
 
   const logOut = () => {
     dispatch(clearUser());
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('user');
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("user");
     }
-    router.push('/');
+    router.push("/");
   };
 
   return (

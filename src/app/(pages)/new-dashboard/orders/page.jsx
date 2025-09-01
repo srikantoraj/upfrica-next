@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import OrdersPage from './components/OrdersPage';
+import OrdersPage from "./components/OrdersPage";
 
 export default function Page() {
   return <OrdersPage />;

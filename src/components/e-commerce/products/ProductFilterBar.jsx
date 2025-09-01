@@ -1,10 +1,14 @@
 // components/ProductFilterBar.jsx
-import { FaSearch, FaFilter } from 'react-icons/fa';
+import { FaSearch, FaFilter } from "react-icons/fa";
 
-export default function ProductFilterBar({ searchTerm, setSearchTerm, sortOrder, setSortOrder }) {
+export default function ProductFilterBar({
+  searchTerm,
+  setSearchTerm,
+  sortOrder,
+  setSortOrder,
+}) {
   return (
     <div className="w-full flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#f9fbfd] p-4 rounded-lg mb-6">
-      
       {/* Search Input */}
       <div className="relative w-full md:max-w-sm">
         <FaSearch className="absolute top-3 left-3 text-gray-400" />

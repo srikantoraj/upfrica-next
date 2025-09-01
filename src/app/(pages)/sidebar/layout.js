@@ -5,9 +5,9 @@ import React from "react";
 const layout = ({ children }) => {
   return (
     <div>
-       <div className="xl:pl-44">
-       <Header/>
-       </div>
+      <div className="xl:pl-44">
+        <Header />
+      </div>
       <div className="flex flex-col min-h-screen">
         {/* হেডার সর্বোপরি */}
 

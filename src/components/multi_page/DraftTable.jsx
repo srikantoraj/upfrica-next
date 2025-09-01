@@ -65,7 +65,10 @@ export default function FullDraftTable() {
         <thead>
           <tr className="bg-gray-100 text-xs uppercase">
             {headers.map((header, index) => (
-              <th key={index} className="p-2 whitespace-nowrap border-l border-r border-gray-300">
+              <th
+                key={index}
+                className="p-2 whitespace-nowrap border-l border-r border-gray-300"
+              >
                 {header}
               </th>
             ))}

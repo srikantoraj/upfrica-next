@@ -2,12 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation"; // ✅ Add this
-import {
-  AiOutlineHome,
-  AiOutlineUser,
-  AiOutlinePhone,
-} from "react-icons/ai";
-
+import { AiOutlineHome, AiOutlineUser, AiOutlinePhone } from "react-icons/ai";
 
 const OrderCard = ({
   status = "Processing",
@@ -52,15 +47,15 @@ const OrderCard = ({
 
   const maskedPhone = order.address.address_data.phone_number.replace(
     /(\+\d{3})\s\d{2}\s\d{3}/,
-    "$1 ***"
+    "$1 ***",
   );
 
   const sellerName =
     typeof product?.shop?.name === "string" && product.shop.name
       ? product.shop.name
       : typeof product?.user?.username === "string"
-      ? product.user.username
-      : "Seller";
+        ? product.user.username
+        : "Seller";
 
   return (
     <div className="bg-white rounded-xl shadow-upfrica mb-6 p-4">
@@ -88,7 +83,7 @@ const OrderCard = ({
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-        <button
+          <button
             className="h-8 text-white upfrica-btn-primary-sm"
             onClick={() => router.push(`/dashboard/all-orders/${order.id}`)}
           >
@@ -130,7 +125,11 @@ const OrderCard = ({
         {/* Top: Image + Info */}
         <div className="flex gap-4 mb-4">
           <div className="w-20 h-20 shrink-0">
-            <img src={imageUrl} alt={productTitle} className="w-20 h-20 object-cover rounded-md" />
+            <img
+              src={imageUrl}
+              alt={productTitle}
+              className="w-20 h-20 object-cover rounded-md"
+            />
           </div>
 
           <div className="flex-1 min-w-0">
@@ -149,9 +148,15 @@ const OrderCard = ({
         {/* Bottom: Buttons + Address */}
         <div>
           <div className="flex gap-2 mb-4 w-full overflow-x-auto scrollbar-hide">
-            <button className="upfrica-btn-primary-outline-sm text-black">🔁 Buy it again</button>
-            <button className="upfrica-btn-primary-outline-sm text-black">✍️ Write a review</button>
-            <button className="upfrica-btn-primary-outline-sm text-black">🛍️ Seller's items</button>
+            <button className="upfrica-btn-primary-outline-sm text-black">
+              🔁 Buy it again
+            </button>
+            <button className="upfrica-btn-primary-outline-sm text-black">
+              ✍️ Write a review
+            </button>
+            <button className="upfrica-btn-primary-outline-sm text-black">
+              🛍️ Seller's items
+            </button>
           </div>
 
           <hr className="border-t border-gray-200 my-4" />
@@ -179,7 +184,11 @@ const OrderCard = ({
 
               <div className="flex items-center space-x-2">
                 <AiOutlinePhone className="text-violet-600" size={18} />
-                <span>{showFullInfo ? order.address.address_data.phone_number : maskedPhone}</span>
+                <span>
+                  {showFullInfo
+                    ? order.address.address_data.phone_number
+                    : maskedPhone}
+                </span>
               </div>
             </div>
 

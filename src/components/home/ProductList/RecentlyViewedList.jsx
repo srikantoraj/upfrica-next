@@ -1,64 +1,56 @@
 // components/RecentlyViewedList.js
-'use client'
-import { useEffect, useState } from 'react';
+"use client";
+import { useEffect, useState } from "react";
 
-import ProductCard from './ProductCard';
+import ProductCard from "./ProductCard";
 // import RecentProductCard from './RecentProductCard';
-import { IoIosArrowRoundForward } from 'react-icons/io';
+import { IoIosArrowRoundForward } from "react-icons/io";
 
-const RECENTLY_VIEWED_KEY = 'upfricaRecentlyViewed';
+const RECENTLY_VIEWED_KEY = "upfricaRecentlyViewed";
 
 const RecentlyViewedList = ({ title }) => {
-    const [items, setItems] = useState([]);
-   
-    
-   
+  const [items, setItems] = useState([]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
+      if (stored && stored.length > 0) {
+        const parsedItems = JSON.parse(stored);
+        setItems(parsedItems);
+        console.log("recently preview product", parsedItems); // এখানে log করো
+      }
+    }
+  }, []);
 
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
-            if (stored && stored.length > 0) {
-                const parsedItems = JSON.parse(stored);
-                setItems(parsedItems);
-                console.log("recently preview product", parsedItems); // এখানে log করো
-            }
-        }
-    }, []);
-    
+  if (items.length === 0) return null;
 
-    if (items.length === 0) return null;
+  return (
+    <div className="container bg-white p-5 md:py-6 font-sans  my-2">
+      {/* Header */}
+      <div className="mb-4 lg:mb-8">
+        <div className="flex gap-4 pb-4 items-end justify-between md:justify-start">
+          <h1 className="text-xl md:text-3xl font-extrabold tracking-wide">
+            {title}
+          </h1>
+          <IoIosArrowRoundForward className="h-10 w-10 text-gray-700" />
+        </div>
+      </div>
 
-    return (
-        <div className='container bg-white p-5 md:py-6 font-sans  my-2'>
-            {/* Header */}
-            <div className="mb-4 lg:mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 lg:gap-5">
+        {items.map((item) => (
+          // <RecentProductCard key={item.id} product={item} />
 
-                <div className="flex gap-4 pb-4 items-end justify-between md:justify-start">
-                    <h1 className="text-xl md:text-3xl font-extrabold tracking-wide">{title}</h1>
-                    <IoIosArrowRoundForward className="h-10 w-10 text-gray-700" />
-                </div>
-            </div>
-
-
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 lg:gap-5">
-                {items.map((item) => ( 
-                
-                    // <RecentProductCard key={item.id} product={item} />
-                   
-                    
-                     <ProductCard key={item.id} product={item} /> 
-                    
-                ))}
-            </div>
-            {/* Optionally, add a link to view all if the list is long */}
-            {/* {items.length > 5 && (
+          <ProductCard key={item.id} product={item} />
+        ))}
+      </div>
+      {/* Optionally, add a link to view all if the list is long */}
+      {/* {items.length > 5 && (
                 <Link href="/recently-viewed">
                     <span>View All</span>
                 </Link>
             )} */}
-        </div>
-    );
+    </div>
+  );
 };
 
 export default RecentlyViewedList;

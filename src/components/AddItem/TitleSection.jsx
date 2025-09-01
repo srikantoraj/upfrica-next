@@ -83,8 +83,7 @@
 //   );
 // };
 
-
-'use client';
+"use client";
 
 import React, { useState } from "react";
 import { FiSettings } from "react-icons/fi";
@@ -114,14 +113,17 @@ export const TitleSection = ({ formik }) => {
           {showOptions && (
             <div className="absolute right-0 mt-2 w-80 p-4 bg-white border rounded-md shadow z-10 text-sm">
               <p className="mb-3 text-gray-700">
-                Enable the items below that you’d like to show as an option when listing an item.
+                Enable the items below that you’d like to show as an option when
+                listing an item.
               </p>
 
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <label className="font-medium">Subtitle</label>
                   <p className="text-xs text-gray-600">
-                    Subtitles appear in our search results in the list view, and can increase buyer interest by providing more descriptive info (non-refundable fee applies).
+                    Subtitles appear in our search results in the list view, and
+                    can increase buyer interest by providing more descriptive
+                    info (non-refundable fee applies).
                   </p>
                 </div>
 
@@ -144,7 +146,10 @@ export const TitleSection = ({ formik }) => {
 
       {/* Title Input */}
       <div className="mb-1">
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="title"
+          className="block text-sm font-medium text-gray-700"
+        >
           Item title
         </label>
         <input
@@ -167,5 +172,3 @@ export const TitleSection = ({ formik }) => {
     </div>
   );
 };
-
-

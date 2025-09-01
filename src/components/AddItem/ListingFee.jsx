@@ -21,7 +21,8 @@ export default function ListingFee() {
           >
             transaction fees
           </a>{" "}
-          will be applied. You accept that the duration of your listing may vary due to delayed appearance in search.{" "}
+          will be applied. You accept that the duration of your listing may vary
+          due to delayed appearance in search.{" "}
           <a
             href="https://www.ebay.co.uk/help/selling/listings/listings-overview?id=4072"
             target="_blank"
@@ -33,7 +34,8 @@ export default function ListingFee() {
         </p>
 
         <p>
-          By selecting <span className="font-semibold">List it for free</span>, you agree to pay the above fees, accept the{" "}
+          By selecting <span className="font-semibold">List it for free</span>,
+          you agree to pay the above fees, accept the{" "}
           <a
             href="https://www.ebay.co.uk/help/policies/member-behaviour-policies/user-agreement?id=4259"
             target="_blank"
@@ -69,7 +71,9 @@ export default function ListingFee() {
           >
             User Privacy Notice
           </a>
-          , agree to offer products and services that comply with all applicable laws, and assume full responsibility for the item offered and the content of your listing.
+          , agree to offer products and services that comply with all applicable
+          laws, and assume full responsibility for the item offered and the
+          content of your listing.
         </p>
       </div>
     </div>

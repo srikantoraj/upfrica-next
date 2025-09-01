@@ -1,10 +1,15 @@
-'use client'; // Ensure this is a client component to use React hooks
+"use client"; // Ensure this is a client component to use React hooks
 
-import React from 'react';
+import React from "react";
 
-const Addresses = ({addresses, options, onSelect, placeholder = 'Select an option' }) => {
-  console.log("addresses",);
-  
+const Addresses = ({
+  addresses,
+  options,
+  onSelect,
+  placeholder = "Select an option",
+}) => {
+  console.log("addresses");
+
   const handleChange = (e) => {
     const selectedId = e.target.value;
     onSelect(selectedId);

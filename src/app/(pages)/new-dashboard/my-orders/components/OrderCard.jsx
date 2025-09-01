@@ -1,6 +1,3 @@
-
-
-
 // "use client";
 
 // import React, { useState, useRef, useEffect } from "react";
@@ -136,9 +133,6 @@
 //                 )}
 //               </div>
 
-
-
-
 //             </div>
 //           );
 //         })}
@@ -201,7 +195,6 @@
 // } from "react-icons/ai";
 // import DirectBuyPopup from "@/components/DirectBuyPopup";
 
-
 // export default function OrderCard({
 //   order,
 //   items = [], // array of order_items to render
@@ -251,9 +244,6 @@
 //     // navigate to seller's storefront
 //     router.push(`/seller/${item.product.seller.id}/items`);
 //   };
-
-
-
 
 //   return (
 //     <div className="md:w-full bg-white rounded-xl shadow-upfrica mb-6 p-4">
@@ -359,7 +349,6 @@
 //                 </div>
 //               </div>
 
-
 //               {/* — New per-item buttons — */}
 //               <div className=" p-2 flex gap-2">
 //                 <button
@@ -442,7 +431,6 @@
 //     </div>
 //   );
 // }
-
 
 // "use client";
 
@@ -680,7 +668,6 @@
 //   );
 // }
 
-
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -715,7 +702,7 @@ export default function OrderCard({ order, items = [] }) {
 
   // close “More Actions” if clicking outside
   useEffect(() => {
-    const handler = e => {
+    const handler = (e) => {
       if (!dropdownRef.current?.contains(e.target)) {
         setItemDropdown(null);
       }
@@ -727,19 +714,19 @@ export default function OrderCard({ order, items = [] }) {
   const phone = order.address.address_data.phone_number;
   const maskedPhone = phone?.replace(/(\+\d{3})\s\d{2}\s\d{3}/, "$1 ***");
 
-  const handleBuyAgain = item => {
+  const handleBuyAgain = (item) => {
     setPopupItem(item.product);
     setPopupQuantity(item.quantity || 1);
     setShowBuyPopup(true);
   };
 
-  const handleWriteReview = item => {
+  const handleWriteReview = (item) => {
     const slug = item.product.seo_slug || item.product.slug;
     setReviewProductSlug(slug);
     setShowReviewPopup(true);
   };
 
-  const handleViewSellerItems = item => {
+  const handleViewSellerItems = (item) => {
     console.log("item", item);
     router.push(`/shops/${item?.shop?.slug}`);
     // router.push(`/seller/${item.product.seller.id}/items`);
@@ -759,7 +746,7 @@ export default function OrderCard({ order, items = [] }) {
           {order.order_items && (
             <div className="text-green-600 font-bold flex items-center mb-2 text-sm sm:text-base">
               ✅{" "}
-              {order.order_items.every(i => i.receive_status === 1)
+              {order.order_items.every((i) => i.receive_status === 1)
                 ? "Received"
                 : "Processing"}
             </div>
@@ -793,7 +780,7 @@ export default function OrderCard({ order, items = [] }) {
 
       {/* — Items List — */}
       <div className="mt-4 space-y-4">
-        {items.map(item => {
+        {items.map((item) => {
           const status = item.receive_status === 1 ? "Received" : "Processing";
           return (
             <div key={item.id} className="bg-gray-50 rounded-lg">
@@ -826,11 +813,16 @@ export default function OrderCard({ order, items = [] }) {
                 </div>
 
                 {/* — More Actions dropdown — */}
-                <div ref={dropdownRef} className="relative self-start sm:self-auto">
+                <div
+                  ref={dropdownRef}
+                  className="relative self-start sm:self-auto"
+                >
                   <button
                     className="text-sm upfrica-btn-primary-outline-sm px-2 py-1"
                     onClick={() =>
-                      setItemDropdown(open => (open === item.id ? null : item.id))
+                      setItemDropdown((open) =>
+                        open === item.id ? null : item.id,
+                      )
                     }
                   >
                     More Actions ▼
@@ -896,11 +888,13 @@ export default function OrderCard({ order, items = [] }) {
             <AiOutlineHome size={18} />
             <span className="text-xs sm:text-sm">
               {showFullInfo
-                ? `${order.address.address_data.address_line_1}${order.address.address_data.address_line_2
-                  ? ", " + order.address.address_data.address_line_2
-                  : ""
-                }, ${order.address.address_data.local_area}, ${order.address.address_data.town
-                }, ${order.address.address_data.country}`
+                ? `${order.address.address_data.address_line_1}${
+                    order.address.address_data.address_line_2
+                      ? ", " + order.address.address_data.address_line_2
+                      : ""
+                  }, ${order.address.address_data.local_area}, ${
+                    order.address.address_data.town
+                  }, ${order.address.address_data.country}`
                 : `${order.address.address_data.town}, ${order.address.address_data.country}`}
             </span>
           </div>
@@ -920,7 +914,7 @@ export default function OrderCard({ order, items = [] }) {
           </div>
         </div>
         <button
-          onClick={() => setShowFullInfo(v => !v)}
+          onClick={() => setShowFullInfo((v) => !v)}
           className="text-sm text-purple-600 mt-2 underline"
         >
           {showFullInfo ? "Hide full info ▲" : "Show full info ▼"}
@@ -949,7 +943,7 @@ export default function OrderCard({ order, items = [] }) {
         >
           <div
             className="bg-white rounded-lg shadow-lg w-full max-w-lg mx-4 p-6 relative max-h-[90vh] overflow-y-auto"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
@@ -967,11 +961,3 @@ export default function OrderCard({ order, items = [] }) {
     </div>
   );
 }
-
-
-
-
-
-
-
-

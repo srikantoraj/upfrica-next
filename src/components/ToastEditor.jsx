@@ -1,9 +1,7 @@
-import React from 'react'
+import React from "react";
 
 function ToastEditor() {
-  return (
-    <div>ToastEditor</div>
-  )
+  return <div>ToastEditor</div>;
 }
 
-export default ToastEditor
+export default ToastEditor;

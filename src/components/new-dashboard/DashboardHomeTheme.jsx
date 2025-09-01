@@ -1,7 +1,7 @@
 // src/components/new-dashboard/DashboardHome.jsx
-'use client';
-import React from 'react';
-import { ClipboardList, Package, MessageCircle } from 'lucide-react';
+"use client";
+import React from "react";
+import { ClipboardList, Package, MessageCircle } from "lucide-react";
 
 export default function DashboardContent() {
   return (
@@ -48,7 +48,9 @@ function Card({ icon, label, value, iconBg, iconColor }) {
       </div>
       <div>
         <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-        <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+        <p className="text-2xl font-bold text-gray-900 dark:text-white">
+          {value}
+        </p>
       </div>
     </div>
   );

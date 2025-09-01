@@ -25,7 +25,7 @@ const headers = [
   { label: "Sell it faster", width: "130px" },
   { label: "Last modified", width: "144px" },
   { label: "Hazard information", width: "144px" },
-  { label: "Selling fees", width: "148px" }
+  { label: "Selling fees", width: "148px" },
 ];
 
 export default function BulkGridTable() {
@@ -55,15 +55,29 @@ export default function BulkGridTable() {
         </thead>
         <tbody>
           <tr className="hover:bg-gray-50 text-sm">
-            <td className="px-2 py-2"><input type="checkbox" /></td>
-            <td className="px-2 py-2 text-blue-600"><FaRegEdit /></td>
-            <td className="px-2 py-2 text-yellow-500"><FiAlertCircle /></td>
             <td className="px-2 py-2">
-              <img src="https://pics.ebaystatic.com/aw/pics/stockimage1.jpg" className="w-10 h-10 object-cover" alt="product" />
+              <input type="checkbox" />
+            </td>
+            <td className="px-2 py-2 text-blue-600">
+              <FaRegEdit />
+            </td>
+            <td className="px-2 py-2 text-yellow-500">
+              <FiAlertCircle />
+            </td>
+            <td className="px-2 py-2">
+              <img
+                src="https://pics.ebaystatic.com/aw/pics/stockimage1.jpg"
+                className="w-10 h-10 object-cover"
+                alt="product"
+              />
             </td>
             <td className="px-2 py-2">Antiques &gt; Lighting</td>
             <td className="px-2 py-2">
-              <input type="text" className="w-full border rounded px-2 py-1" placeholder="Item title" />
+              <input
+                type="text"
+                className="w-full border rounded px-2 py-1"
+                placeholder="Item title"
+              />
             </td>
             <td className="px-2 py-2 text-gray-400">N/A</td>
             <td className="px-2 py-2">

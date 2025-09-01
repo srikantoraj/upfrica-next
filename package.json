@@ -10,14 +10,17 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.27.0",
+    "@headlessui/react": "^2.2.4",
     "@next/font": "^14.2.15",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-popover": "^1.1.14",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tooltip": "^1.2.7",
     "@reduxjs/toolkit": "^2.6.1",
+    "@tailwindcss/line-clamp": "^0.4.4",
     "@tinymce/tinymce-react": "^5.1.1",
-    "axios": "^1.10.0",
+    "axios": "^1.11.0",
+    "browser-image-compression": "^2.0.2",
     "chart.js": "^4.4.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -27,6 +30,7 @@
     "formik": "^2.4.6",
     "framer-motion": "^12.18.1",
     "html-react-parser": "^5.1.16",
+    "libphonenumber-js": "^1.12.12",
     "lucide-react": "^0.487.0",
     "next": "^14.2.29",
     "next-redux-wrapper": "^8.1.0",
@@ -39,7 +43,7 @@
     "react-country-region-selector": "^3.6.1",
     "react-datepicker": "^8.3.0",
     "react-dom": "^18",
-    "react-filebase64": "^1.0.2",
+    "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
     "react-images-uploading": "^3.1.7",
     "react-markdown": "^10.1.0",
@@ -57,7 +61,10 @@
     "yup": "^1.6.1"
   },
   "devDependencies": {
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.16",
     "postcss": "^8",
+    "prettier": "^3.6.2",
     "tailwindcss": "^3.4.17"
   }
 }

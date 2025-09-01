@@ -1,47 +1,42 @@
-'use client';
+"use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { AiOutlineHome, AiOutlineUser, AiOutlinePhone } from "react-icons/ai";
 
 const OrderCard = ({
-  status = "Processing",
-  date,
-  total,
-  orderNumber,
-  product,
-  price,
-  returnDate = "12 May",
   order,
+  items = [],
+  reviewedItemIds = [],
+  reviewedReviews = [], // ✅ accept reviewed reviews as prop
 }) => {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [showFullInfo, setShowFullInfo] = useState(false);
   const dropdownRef = useRef();
+
+  const status = order?.status_label || "Processing";
+  const date =
+    order?.created_at_formatted ||
+    new Date(order?.created_at).toLocaleDateString();
+  const itemTotalCents = items.reduce(
+    (sum, item) => sum + (item?.price_cents || 0),
+    0
+  );
+  const totalCents = order?.total_price_cents ?? itemTotalCents;
+  const total = `GHS ${(totalCents / 100).toFixed(2)}`;
+  const orderNumber =
+    order?.order_number || order?.id?.toString().padStart(7, "0");
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (!dropdownRef.current?.contains(e.target)) setDropdownOpen(false);
+      if (!dropdownRef.current?.contains(e.target)) {
+        setDropdownOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const maskedPhone = order?.address?.address_data?.phone_number?.replace(
-    /(\+\d{3})\s\d{2}\s\d{3}/,
-    "$1 ***"
-  );
-
-  const sellerName = product?.shop?.name || product?.user?.username || "Seller";
-
-  const getImageUrl = () => {
-    const img = product?.product_images?.[0];
-    if (typeof img === "string") return img;
-    if (img?.image && typeof img.image === "string") return img.image;
-    return "/placeholder.png";
-  };
-
-  const productTitle = product?.title || "Untitled Product";
 
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-upfrica mb-6 p-4">
@@ -69,14 +64,14 @@ const OrderCard = ({
 
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
           <button
-            className="h-8 text-white upfrica-btn-primary-sm"
+            className="h-9 text-white upfrica-btn-primary-sm"
             onClick={() => router.push(`/new-dashboard/orders/${order?.id}`)}
           >
             View details
           </button>
           <div className="relative w-full sm:w-auto" ref={dropdownRef}>
             <button
-              className="h-8 upfrica-btn-primary-outline-sm w-full sm:w-auto"
+              className="h-9 upfrica-btn-primary-outline-sm w-full sm:w-auto"
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
               More actions ▼
@@ -88,6 +83,7 @@ const OrderCard = ({
                   "Return this item",
                   "I didn’t receive it",
                   "Sell this item",
+                  "Invoice",
                   "Add note",
                   "Hide Order",
                   "Help & report",
@@ -105,77 +101,120 @@ const OrderCard = ({
         </div>
       </div>
 
-      {/* Product Info */}
-      <div className="mt-4">
-        <div className="flex gap-4 mb-4">
-          <div className="w-20 h-20 shrink-0 bg-gray-100 dark:bg-gray-700 rounded-md overflow-hidden">
-            <img
-              src={getImageUrl()}
-              alt={productTitle}
-              className="w-20 h-20 object-cover shrink-0 rounded-md"
-              onError={(e) => {
-                if (!e.currentTarget.src.includes("placeholder.png")) {
-                  e.currentTarget.src = "/placeholder.png";
-                }
-              }}
-            />
-          </div>
+      {/* Order Items */}
+      <div className="mt-5 space-y-4">
+        {items.map((item, index) => {
+          const product = item?.product || {};
+          const productUrl =
+            product?.frontend_url ||
+            (product?.slug && product?.seller_country
+              ? `/${product?.seller_country.toLowerCase()}/${product?.slug}`
+              : "#");
 
-          <div className="flex-1 min-w-0">
-            <div className="font-semibold text-black dark:text-white">{productTitle}</div>
-            <div className="text-sm text-gray-500 dark:text-gray-300">
-              Sold by: <span className="underline text-black dark:text-white cursor-pointer">{sellerName} ›</span>
+          const imageSrc =
+            product?.product_images?.[0]?.url ||
+            product?.image_objects?.[0]?.image_url ||
+            product?.thumbnail ||
+            "/placeholder.png";
+
+          const productTitle = product?.title || "Untitled Product";
+          const sellerUsername =
+            product?.seller_username ||
+            product?.seller_info?.username ||
+            product?.shop?.name ||
+            "Seller";
+
+          const price = `GHS ${(item?.price_cents || 0) / 100}`;
+
+          const review = reviewedReviews.find(
+            (r) => r.order_item_id === item.id
+          );
+          const reviewed = !!review;
+
+          return (
+            <div key={index} className="flex gap-4">
+              <Link
+                href={productUrl}
+                className="w-20 h-20 relative flex-shrink-0 rounded-md overflow-hidden"
+              >
+                <Image
+                  src={imageSrc}
+                  alt={productTitle}
+                  width={80}
+                  height={80}
+                  className="rounded-lg object-cover"
+                />
+              </Link>
+
+              <div className="flex-1 min-w-0">
+                <Link href={productUrl}>
+                  <div className="font-semibold text-black dark:text-white hover:underline">
+                    {productTitle}
+                  </div>
+                </Link>
+
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Sold by:{" "}
+                  <Link
+                    href={`/shop/${sellerUsername}`}
+                    className="underline text-black dark:text-white"
+                  >
+                    {sellerUsername} ›
+                  </Link>
+                </p>
+
+                <div className="text-sm text-black dark:text-white">{price}</div>
+
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Returns accepted until 12 May
+                </div>
+
+                <div className="mt-1">
+                  <Link
+                    href={productUrl}
+                    className="inline-block mt-1 text-sm font-medium text-purple-600 hover:underline"
+                  >
+                    🛒 Buy again
+                  </Link>
+                </div>
+
+                {/* ✅ Review CTA */}
+                <div className="mt-1">
+                  {reviewed ? (
+                    review.status === 1 ? (
+                      <div className="text-xs text-green-500 mt-1">
+                        ✅ Reviewed {review.rating ? `• ${review.rating}★` : ""}
+                        {review.can_edit && (
+                          <Link
+                            href={`/edit-review/${review.id}`}
+                            className="ml-2 text-blue-500 hover:underline"
+                          >
+                            ✏️ Edit
+                          </Link>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-yellow-600 mt-1">
+                        🕓 Review pending approval
+                      </div>
+                    )
+                  ) : (
+                    <Link
+                      href={`/${order.order_country_code || "gh"}/${
+                        product.slug
+                      }/write-review?order_item_id=${item.id}&product_id=${
+                        product.id
+                      }&utm_source=orders_page&utm_medium=review_cta`}
+                      className="text-xs text-purple-500 hover:underline mt-1 block"
+                    >
+                      ✍️ Write a review & earn points
+                    </Link>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="text-sm text-black dark:text-white">{price}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Returns accepted until {returnDate}</div>
-          </div>
-        </div>
-
-        {/* Action buttons and address */}
-        <div>
-          <div className="flex gap-2 mb-4 w-full overflow-x-auto scrollbar-hide">
-            <button className="upfrica-btn-primary-outline-sm text-black dark:text-white">🔁 Buy it again</button>
-            <button className="upfrica-btn-primary-outline-sm text-black dark:text-white">✍️ Write a review</button>
-            <button className="upfrica-btn-primary-outline-sm text-black dark:text-white">🛍️ Seller's items</button>
-          </div>
-
-          <hr className="border-t border-gray-300 dark:border-gray-700 my-4" />
-
-          <div className="text-sm text-gray-700 dark:text-gray-300 space-y-2">
-            <span className="font-semibold text-gray-800 dark:text-white">Delivery Info:</span>
-            <div className="grid grid-cols-1 items-center">
-              <div className="flex items-center space-x-2">
-                <AiOutlineHome className="text-violet-600" size={18} />
-                <span>
-                  {showFullInfo
-                    ? `${order?.address?.address_data?.address_line_1 || ""}${order?.address?.address_data?.address_line_2 ? ", " + order.address.address_data.address_line_2 : ""}, ${order?.address?.address_data?.local_area || ""}, ${order?.address?.address_data?.town || ""}, ${order?.address?.address_data?.country || ""}`
-                    : `${order?.address?.address_data?.town || ""}, ${order?.address?.address_data?.country || ""}`}
-                </span>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <AiOutlineUser className="text-violet-600" size={18} />
-                <span>
-                  {showFullInfo
-                    ? `${order?.buyer?.first_name} ${order?.buyer?.last_name}`
-                    : `${order?.buyer?.first_name} ${order?.buyer?.last_name?.[0] || ""}.`}
-                </span>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <AiOutlinePhone className="text-violet-600" size={18} />
-                <span>{showFullInfo ? order?.address?.address_data?.phone_number : maskedPhone}</span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowFullInfo(!showFullInfo)}
-              className="text-sm text-purple-600 dark:text-purple-400 mt-2 underline"
-            >
-              {showFullInfo ? "Hide full info ▲" : "Show full info ▼"}
-            </button>
-          </div>
-        </div>
+          );
+        })}
       </div>
     </div>
   );

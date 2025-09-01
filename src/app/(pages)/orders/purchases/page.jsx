@@ -1,4 +1,3 @@
 export default function PurchasesPage() {
-    return <h3>Your Purchases</h3>;
-  }
-  
+  return <h3>Your Purchases</h3>;
+}

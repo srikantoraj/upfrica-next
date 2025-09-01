@@ -40,8 +40,7 @@ const SalesCardGroup = ({ stats, loading }) => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {cards.map(({ title, data }, idx) => {
         const amount = `₵ ${(data.sales_cents / 100).toLocaleString()}`;
-        const percent =
-          data.growth_pct !== null ? `${data.growth_pct}%` : "--";
+        const percent = data.growth_pct !== null ? `${data.growth_pct}%` : "--";
         const message =
           data.items_sold > 0
             ? `${data.items_sold} items sold`
@@ -49,10 +48,7 @@ const SalesCardGroup = ({ stats, loading }) => {
         const progress = Math.round((data.items_sold / maxItems) * 100);
 
         return (
-          <div
-            key={idx}
-            className="rounded-xl p-4 shadow-md bg-white"
-          >
+          <div key={idx} className="rounded-xl p-4 shadow-md bg-white">
             <h4 className="text-sm font-medium text-black">{title}</h4>
             <div className="flex items-center justify-between mt-2">
               <p className="text-2xl font-bold text-black">{amount}</p>

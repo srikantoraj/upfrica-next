@@ -56,7 +56,7 @@
 
 //           {/* Disclaimer */}
 //           <p className="text-xs text-white opacity-80 pt-4 max-w-md">
-//             Unsubscribe anytime. By entering your email, you agree to receive marketing emails from Shopify. 
+//             Unsubscribe anytime. By entering your email, you agree to receive marketing emails from Shopify.
 //             By proceeding, you agree to the{' '}
 //             <a href="/legal/terms" target="_blank" className="underline hover:text-green-400">
 //               Terms and Conditions
@@ -73,7 +73,6 @@
 // };
 
 // export default NewsletterBanner;
-
 
 // import React from 'react';
 
@@ -133,7 +132,7 @@
 
 //           {/* Disclaimer */}
 //           <p className="text-xs text-gray-400 mt-4">
-//             Unsubscribe anytime. By entering your email, you agree to receive marketing emails from Shopify. 
+//             Unsubscribe anytime. By entering your email, you agree to receive marketing emails from Shopify.
 //             By proceeding, you agree to the{' '}
 //             <a href="/legal/terms" target="_blank" className="underline hover:text-white">
 //               Terms and Conditions
@@ -151,8 +150,7 @@
 
 // export default NewsletterBanner;
 
-
-import React from 'react';
+import React from "react";
 
 const NewsletterBanner = () => {
   return (
@@ -175,7 +173,8 @@ const NewsletterBanner = () => {
             The newsletter for entrepreneurs
           </h2>
           <p className="text-base sm:text-lg md:text-xl text-white mb-6 sm:mb-8">
-            Join millions of self-starters in getting business resources, tips, and inspiring stories in your inbox.
+            Join millions of self-starters in getting business resources, tips,
+            and inspiring stories in your inbox.
           </p>
 
           {/* Form */}
@@ -201,8 +200,16 @@ const NewsletterBanner = () => {
             </div>
 
             {/* Hidden fields */}
-            <input type="hidden" name="subscriptionId" value="DE84EF61-2A02-4778-8807-F01B108DE974" />
-            <input type="hidden" name="signup_page" value="/blog/international-import-shipping" />
+            <input
+              type="hidden"
+              name="subscriptionId"
+              value="DE84EF61-2A02-4778-8807-F01B108DE974"
+            />
+            <input
+              type="hidden"
+              name="signup_page"
+              value="/blog/international-import-shipping"
+            />
             <input type="hidden" name="locale" value="en-US" />
             <input type="hidden" name="blogHandle" value="blog" />
             <input type="hidden" name="form_type" value="subscribe" />
@@ -210,15 +217,24 @@ const NewsletterBanner = () => {
 
           {/* Disclaimer */}
           <p className="text-xs text-gray-400 mt-4">
-            Unsubscribe anytime. By entering your email, you agree to receive marketing emails from Shopify.
-            By proceeding, you agree to the{' '}
-            <a href="/legal/terms" target="_blank" className="underline hover:text-white">
+            Unsubscribe anytime. By entering your email, you agree to receive
+            marketing emails from Shopify. By proceeding, you agree to the{" "}
+            <a
+              href="/legal/terms"
+              target="_blank"
+              className="underline hover:text-white"
+            >
               Terms and Conditions
-            </a>{' '}
-            and{' '}
-            <a href="/legal/privacy" target="_blank" className="underline hover:text-white">
+            </a>{" "}
+            and{" "}
+            <a
+              href="/legal/privacy"
+              target="_blank"
+              className="underline hover:text-white"
+            >
               Privacy Policy
-            </a>.
+            </a>
+            .
           </p>
         </div>
       </div>
@@ -227,5 +243,3 @@ const NewsletterBanner = () => {
 };
 
 export default NewsletterBanner;
-
-

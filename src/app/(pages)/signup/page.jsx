@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { FcGoogle } from 'react-icons/fc'
-import { FaFacebookF } from 'react-icons/fa'
+import { FcGoogle } from "react-icons/fc";
+import { FaFacebookF } from "react-icons/fa";
 import { useFormik } from "formik";
 import { useRouter } from "next/navigation";
 
-import signUpLogo from '../../image/signin.svg';
+import signUpLogo from "../../image/signin.svg";
 import LoaderButton from "@/components/LoaderButton";
 
 const SignUp = () => {
@@ -44,7 +44,7 @@ const SignUp = () => {
         if (response.ok) {
           // push to verify page with email in the query string
           router.push(
-            `/verify-account?email=${encodeURIComponent(values.email)}`
+            `/verify-account?email=${encodeURIComponent(values.email)}`,
           );
         } else {
           setErrorMessage(data.message || "Signup failed. Please try again.");
@@ -92,15 +92,11 @@ const SignUp = () => {
             </h2>
             <p className="text-base text-[#85878A] text-center leading-6">
               Already a member?
-              <Link href="/signin">
+              <Link href="/login">
                 <span className="text-purple-500 font-medium ml-1">Log in</span>
               </Link>
               <br />
-             
             </p>
-
-
-
 
             {/* Social Buttons */}
             <div className="mt-4 flex space-x-4">
@@ -114,7 +110,7 @@ const SignUp = () => {
               <a
                 href="#"
                 onClick={(e) => {
-                  e.preventDefault()
+                  e.preventDefault();
                   // router.push('https://media.upfrica.com/accounts/facebook/signup/')
                 }}
                 className="flex-1 flex items-center justify-center border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition"
@@ -136,11 +132,13 @@ const SignUp = () => {
               </div>
             </div>
 
-
             <form onSubmit={formik.handleSubmit} className="space-y-4">
               {/* Email */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-[#85878A]">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-[#85878A]"
+                >
                   Email Address
                 </label>
                 <input
@@ -186,7 +184,10 @@ const SignUp = () => {
 
               {/* Username */}
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-[#85878A]">
+                <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-[#85878A]"
+                >
                   Username / Display Name
                 </label>
                 <input
@@ -203,7 +204,10 @@ const SignUp = () => {
 
               {/* Password */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-[#85878A]">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-[#85878A]"
+                >
                   Password
                 </label>
                 <div className="relative mt-1">
@@ -238,14 +242,21 @@ const SignUp = () => {
                   checked={formik.values.terms_of_service}
                   className="h-4 w-4 mt-1 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                 />
-                <label htmlFor="terms_of_service" className="text-sm text-[#85878A]">
+                <label
+                  htmlFor="terms_of_service"
+                  className="text-sm text-[#85878A]"
+                >
                   I agree to the{" "}
                   <Link href="/terms-of-use">
-                    <span className="text-blue-500 underline">Terms of Use</span>
+                    <span className="text-blue-500 underline">
+                      Terms of Use
+                    </span>
                   </Link>{" "}
                   and{" "}
                   <Link href="/privacy-policy">
-                    <span className="text-blue-500 underline">Privacy Policy</span>
+                    <span className="text-blue-500 underline">
+                      Privacy Policy
+                    </span>
                   </Link>
                 </label>
               </div>

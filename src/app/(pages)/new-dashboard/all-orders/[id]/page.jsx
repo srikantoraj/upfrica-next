@@ -1,15 +1,11 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { useSelector } from 'react-redux';
-import { BASE_API_URL } from '@/app/constants';
+import React, { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { useSelector } from "react-redux";
+import { BASE_API_URL } from "@/app/constants";
 import DeliveryTracker from "../components/DeliveryTracker";
-import {
-  AiOutlineHome,
-  AiOutlineUser,
-  AiOutlinePhone,
-} from 'react-icons/ai';
+import { AiOutlineHome, AiOutlineUser, AiOutlinePhone } from "react-icons/ai";
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
@@ -21,10 +17,10 @@ export default function OrderDetailsPage() {
   // modal + form state
   const [showDispatchModal, setShowDispatchModal] = useState(false);
   const [form, setForm] = useState({
-    shipping_carrier: '',
-    tracking_number: '',
-    tracking_link: '',
-    additional_info: '',
+    shipping_carrier: "",
+    tracking_number: "",
+    tracking_link: "",
+    additional_info: "",
     // default dispatch time is now
     date_dispatched: new Date().toISOString().slice(0, 16),
     // 0 = not dispatched, 1 = dispatched
@@ -39,7 +35,7 @@ export default function OrderDetailsPage() {
       try {
         const res = await fetch(
           `${BASE_API_URL}/api/seller/order-items/${id}/`,
-          { headers: { Authorization: `Token ${token}` } }
+          { headers: { Authorization: `Token ${token}` } },
         );
         if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
         const data = await res.json();
@@ -56,10 +52,10 @@ export default function OrderDetailsPage() {
   useEffect(() => {
     if (!order) return;
     setForm({
-      shipping_carrier: order.shipping_carrier || '',
-      tracking_number: order.tracking_number || '',
-      tracking_link: order.tracking_link || '',
-      additional_info: order.additional_info || '',
+      shipping_carrier: order.shipping_carrier || "",
+      tracking_number: order.tracking_number || "",
+      tracking_link: order.tracking_link || "",
+      additional_info: order.additional_info || "",
       // if already dispatched, show that time; otherwise default to now
       date_dispatched: order.date_dispatched
         ? new Date(order.date_dispatched).toISOString().slice(0, 16)
@@ -73,9 +69,9 @@ export default function OrderDetailsPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(f => ({
+    setForm((f) => ({
       ...f,
-      [name]: name === 'dispatch_status' ? parseInt(value, 10) : value
+      [name]: name === "dispatch_status" ? parseInt(value, 10) : value,
     }));
   };
 
@@ -91,29 +87,27 @@ export default function OrderDetailsPage() {
       additional_info: form.additional_info,
     };
     try {
-      const res = await fetch(
-        `${BASE_API_URL}/api/seller/order-items/${id}/`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Token ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await fetch(`${BASE_API_URL}/api/seller/order-items/${id}/`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Token ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
       if (!res.ok) throw new Error(`Update failed: ${res.status}`);
       const updated = await res.json();
       setOrder(updated);
       closeModal();
     } catch (err) {
       console.error(err);
-      alert('Failed to update dispatch info.');
+      alert("Failed to update dispatch info.");
     }
   };
 
   if (loading) return <div className="text-center p-6">Loading...</div>;
-  if (!order) return <div className="text-center text-red-600 p-6">Order not found.</div>;
+  if (!order)
+    return <div className="text-center text-red-600 p-6">Order not found.</div>;
 
   const item = order;
   const product = order.product;
@@ -127,15 +121,18 @@ export default function OrderDetailsPage() {
             ✅ {item?.dispatch_status === 1 ? "Dispatched" : "Processing"}
           </p>
           <div className="text-sm mt-1 text-gray-700">
-            <p><strong>Order #</strong> {String(order.id).padStart(6, "0")}</p>
-            <p><strong>Order date #</strong> {new Date(order.order_date).toLocaleString()}</p>
+            <p>
+              <strong>Order #</strong> {String(order.id).padStart(6, "0")}
+            </p>
+            <p>
+              <strong>Order date #</strong>{" "}
+              {new Date(order.order_date).toLocaleString()}
+            </p>
           </div>
         </div>
 
         <div className="flex flex-col sm:items-end sm:text-right">
-
           {/* dispatch tick mark (readonly) */}
-         
 
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <button
@@ -281,19 +278,17 @@ export default function OrderDetailsPage() {
         steps={[
           {
             label: "Ordered",
-            date: new Date(order.order_date).toLocaleDateString()
+            date: new Date(order.order_date).toLocaleDateString(),
           },
           {
             label: "Dispatched",
             date: item.date_dispatched
               ? new Date(item.date_dispatched).toLocaleDateString()
-              : "Soon"
+              : "Soon",
           },
           {
             label: "Delivered",
-            note: item.receive_status === 1
-              ? "Delivered"
-              : "Not confirmed"
+            note: item.receive_status === 1 ? "Delivered" : "Not confirmed",
           },
         ]}
       />
@@ -328,19 +323,18 @@ export default function OrderDetailsPage() {
           <div className="flex space-x-6">
             <div>
               <strong>Link:</strong>{" "}
-              {order.tracking_link
-                ? (
-                  <a
-                    href={order.tracking_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline"
-                  >
-                    View
-                  </a>
-                )
-                : "N/A"
-              }
+              {order.tracking_link ? (
+                <a
+                  href={order.tracking_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  View
+                </a>
+              ) : (
+                "N/A"
+              )}
             </div>
             <div>
               <strong>Additional info:</strong> {order.additional_info || "N/A"}
@@ -348,7 +342,6 @@ export default function OrderDetailsPage() {
           </div>
         </div>
       </div>
-
 
       {/* Product Info */}
       <div className="mt-6">
@@ -362,8 +355,12 @@ export default function OrderDetailsPage() {
           <div>
             <p className="font-medium">{product.title}</p>
             <p className="text-sm">Seller item no.: {product.id}</p>
-            <p className="text-sm">{item?.price_currency} {(item.price_cents / 100).toFixed(2)}</p>
-            <p className="text-xs text-gray-500">Returns accepted until 12 May</p>
+            <p className="text-sm">
+              {item?.price_currency} {(item.price_cents / 100).toFixed(2)}
+            </p>
+            <p className="text-xs text-gray-500">
+              Returns accepted until 12 May
+            </p>
           </div>
         </div>
       </div>
@@ -374,7 +371,11 @@ export default function OrderDetailsPage() {
           <h4 className="font-semibold mb-1">Delivery info</h4>
           <div className="flex items-center gap-2 text-gray-700">
             <AiOutlineHome />
-            <span>{showFullInfo ? order.address.address_data.address_line_1 : `${order.address.address_data.town}, ${order.address.address_data.country}`}</span>
+            <span>
+              {showFullInfo
+                ? order.address.address_data.address_line_1
+                : `${order.address.address_data.town}, ${order.address.address_data.country}`}
+            </span>
           </div>
           <div className="flex items-center gap-2 text-gray-700 mt-1">
             <AiOutlineUser />
@@ -386,25 +387,35 @@ export default function OrderDetailsPage() {
           </div>
           <div className="flex items-center gap-2 text-gray-700 mt-1">
             <AiOutlinePhone />
-            <span>{showFullInfo ? order.address.address_data.phone_number : "+233 *** ****"}</span>
+            <span>
+              {showFullInfo
+                ? order.address.address_data.phone_number
+                : "+233 *** ****"}
+            </span>
           </div>
           <button
             onClick={() => setShowFullInfo(!showFullInfo)}
             className="text-purple-600 underline mt-2 text-sm"
           >
-            {showFullInfo ? 'Hide full address' : 'View full address'}
+            {showFullInfo ? "Hide full address" : "View full address"}
           </button>
         </div>
 
         <div>
-          <h4 className="font-semibold mb-1">Payment method # {order.payment_method || "N/A"}</h4>
-         
-          <p>1 item &nbsp;&nbsp;&nbsp;&nbsp; +{(item.price_cents / 100).toFixed(2)}</p>
+          <h4 className="font-semibold mb-1">
+            Payment method # {order.payment_method || "N/A"}
+          </h4>
+
+          <p>
+            1 item &nbsp;&nbsp;&nbsp;&nbsp; +
+            {(item.price_cents / 100).toFixed(2)}
+          </p>
           <p>Order Quantity # &nbsp;&nbsp;&nbsp;&nbsp; {item.quantity}</p>
           <p>Discount &nbsp;&nbsp;&nbsp;&nbsp; -0.00</p>
           <p>Postage &nbsp;&nbsp;&nbsp;&nbsp; 0.00</p>
           <p className="font-semibold">
-            Total &nbsp;&nbsp;&nbsp;&nbsp; GHS {(item.price_cents * item.quantity / 100).toFixed(2)}
+            Total &nbsp;&nbsp;&nbsp;&nbsp; GHS{" "}
+            {((item.price_cents * item.quantity) / 100).toFixed(2)}
           </p>
         </div>
       </div>

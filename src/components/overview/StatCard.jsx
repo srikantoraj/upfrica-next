@@ -1,7 +1,15 @@
 // src/components/cards/StatCard.js
 import React from "react";
 
-const StatCard = ({ title, amount, percent, message, progress, bgColor, textColor }) => {
+const StatCard = ({
+  title,
+  amount,
+  percent,
+  message,
+  progress,
+  bgColor,
+  textColor,
+}) => {
   return (
     <div className={`rounded-xl p-4 shadow-md ${bgColor}`}>
       <h4 className={`text-sm font-medium ${textColor}`}>{title}</h4>
@@ -13,7 +21,10 @@ const StatCard = ({ title, amount, percent, message, progress, bgColor, textColo
       </div>
       <p className={`text-sm mt-1 ${textColor}`}>{message}</p>
       <div className="w-full h-2 mt-3 bg-gray-200 rounded">
-        <div className="h-2 bg-blue-400 rounded" style={{ width: `${progress}%` }}></div>
+        <div
+          className="h-2 bg-blue-400 rounded"
+          style={{ width: `${progress}%` }}
+        ></div>
       </div>
     </div>
   );

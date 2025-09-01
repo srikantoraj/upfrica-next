@@ -1,8 +1,7 @@
 // pages/ItemSpecificsForm.jsx
-'use client'
+"use client";
 import React, { useState } from "react";
 import ItemAttributeField from "./ItemAttributeField";
-
 
 const ItemSpecificsForm = () => {
   const [brand, setBrand] = useState("Apple");
@@ -17,13 +16,24 @@ const ItemSpecificsForm = () => {
 
       {/* Required Fields */}
       <fieldset className="border border-gray-200 rounded p-4 mb-8">
-        <legend className="text-lg font-semibold text-gray-700 px-2">Required</legend>
-        <p className="text-sm text-gray-500 mb-4">Buyers need these details to find your item.</p>
+        <legend className="text-lg font-semibold text-gray-700 px-2">
+          Required
+        </legend>
+        <p className="text-sm text-gray-500 mb-4">
+          Buyers need these details to find your item.
+        </p>
 
         <ItemAttributeField
           label="Brand"
           tooltip="Name of the brand, designer or artist that produces the product."
-          options={["Apple", "Samsung", "Fitbit", "Garmin", "Amazfit", "Unbranded"]}
+          options={[
+            "Apple",
+            "Samsung",
+            "Fitbit",
+            "Garmin",
+            "Amazfit",
+            "Unbranded",
+          ]}
           selected={brand}
           onChange={setBrand}
         />
@@ -31,7 +41,12 @@ const ItemSpecificsForm = () => {
         <ItemAttributeField
           label="Model"
           tooltip="Brand or manufacturer’s specific name used for the product."
-          options={["Apple Watch Series 8", "Apple Watch Series 7", "Apple Watch SE", "Apple Watch Series 9"]}
+          options={[
+            "Apple Watch Series 8",
+            "Apple Watch Series 7",
+            "Apple Watch SE",
+            "Apple Watch Series 9",
+          ]}
           selected={model}
           onChange={setModel}
         />
@@ -55,7 +70,13 @@ const ItemSpecificsForm = () => {
         <ItemAttributeField
           label="Band Material"
           tooltip="Main material of the band on the product."
-          options={["Fluoroelastomer", "Silicone", "Leather", "Nylon", "Stainless Steel"]}
+          options={[
+            "Fluoroelastomer",
+            "Silicone",
+            "Leather",
+            "Nylon",
+            "Stainless Steel",
+          ]}
           selected={bandMaterial}
           onChange={setBandMaterial}
         />

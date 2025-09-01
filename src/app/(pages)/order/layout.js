@@ -33,7 +33,7 @@ const OrderPageLayout = ({ children }) => {
                 Authorization: `Bearer ${user.token}`,
                 "Content-Type": "application/json",
               },
-            }
+            },
           );
           if (!response.ok)
             throw new Error(`Server responded with status ${response.status}`);

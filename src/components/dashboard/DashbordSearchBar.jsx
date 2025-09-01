@@ -118,7 +118,6 @@
 
 // export default DashbordSearchBar;
 
-
 // src/components/DashboardSearchBar.jsx
 "use client";
 
@@ -205,10 +204,7 @@ const DashbordSearchBar = () => {
                             href={child.route}
                             className={`
                               block px-2 py-1 rounded hover:bg-gray-200
-                              ${isChildActive
-                                ? "bg-gray-300"
-                                : ""
-                              }
+                              ${isChildActive ? "bg-gray-300" : ""}
                             `}
                           >
                             {child.label}
@@ -230,8 +226,12 @@ const DashbordSearchBar = () => {
           animation: spinReverse 5s linear infinite;
         }
         @keyframes spinReverse {
-          from { transform: rotate(0deg); }
-          to   { transform: rotate(-360deg); }
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(-360deg);
+          }
         }
       `}</style>
     </>

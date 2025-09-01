@@ -1,7 +1,7 @@
 // /app/settings/payouts/page.jsx
-'use client';
+"use client";
 
-import PayoutSettings from '@/components/new-dashboard/settings/PayoutSettings';
+import PayoutSettings from "@/components/new-dashboard/settings/PayoutSettings";
 
 export default function PayoutSettingsPage() {
   return (

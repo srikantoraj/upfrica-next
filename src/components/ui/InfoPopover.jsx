@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Info } from 'lucide-react';
+import React from "react";
+import { Info } from "lucide-react";
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-} from '@/components/ui/popover';
+} from "@/components/ui/popover";
 
-export default function InfoPopover({ children, side = 'top', iconSize = 16 }) {
+export default function InfoPopover({ children, side = "top", iconSize = 16 }) {
   return (
     <Popover>
       <PopoverTrigger asChild>

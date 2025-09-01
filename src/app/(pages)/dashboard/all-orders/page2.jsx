@@ -485,7 +485,6 @@
 //   )
 // }
 
-
 // 'use client'
 
 // import React, { useState, useEffect } from 'react'
@@ -765,7 +764,7 @@
 //                     {order.address.address_data.phone_number}
 //                   </span>
 //                 </div>
-                
+
 //               </div>
 
 //               {/* per-seller sections */}
@@ -873,7 +872,7 @@
 //   )
 // }
 
-import React from 'react';
+import React from "react";
 
 const page1 = () => {
   return (

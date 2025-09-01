@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
+import React from "react";
+import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -11,9 +11,15 @@ export default function Footer() {
           © {new Date().getFullYear()} Upfrica. All rights reserved.
         </div>
         <div className="flex flex-wrap justify-center md:justify-end gap-4 text-xs md:text-sm">
-          <Link href="/terms" className="hover:underline">Terms</Link>
-          <Link href="/privacy" className="hover:underline">Privacy</Link>
-          <Link href="/help" className="hover:underline">Help Center</Link>
+          <Link href="/terms" className="hover:underline">
+            Terms
+          </Link>
+          <Link href="/privacy" className="hover:underline">
+            Privacy
+          </Link>
+          <Link href="/help" className="hover:underline">
+            Help Center
+          </Link>
         </div>
       </div>
     </footer>

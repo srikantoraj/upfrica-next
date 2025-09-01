@@ -1,10 +1,10 @@
-'use client';
-import React from 'react';
-import { LuMenu } from 'react-icons/lu';
-import { useDispatch, useSelector } from 'react-redux';
-import { clearToggle } from '../app/store/slices/toggleSlice';
-import classNames from 'classnames';
-import { useAuth } from '@/contexts/AuthContext';
+"use client";
+import React from "react";
+import { LuMenu } from "react-icons/lu";
+import { useDispatch, useSelector } from "react-redux";
+import { clearToggle } from "../app/store/slices/toggleSlice";
+import classNames from "classnames";
+import { useAuth } from "@/contexts/AuthContext";
 
 const HeaderControls = () => {
   const dispatch = useDispatch();
@@ -16,14 +16,14 @@ const HeaderControls = () => {
   };
 
   const accountTypeLabels = {
-    buyer: 'Buyer',
-    seller_private: 'Seller (Private)',
-    seller_business: 'Seller (Business)',
-    agent: 'Sourcing Agent',
+    buyer: "Buyer",
+    seller_private: "Seller (Private)",
+    seller_business: "Seller (Business)",
+    agent: "Sourcing Agent",
   };
 
   return (
-    <div className={`my-2 ${toggle ? 'hidden' : 'block'}`}>
+    <div className={`my-2 ${toggle ? "hidden" : "block"}`}>
       <button
         onClick={handleToggleClick}
         className="p-2 rounded hover:bg-gray-100 transition"
@@ -41,12 +41,15 @@ const HeaderControls = () => {
           {[user.account_type].map((role) => (
             <span
               key={role}
-              className={classNames('text-[10px] font-medium px-2 py-0.5 rounded', {
-                'bg-green-100 text-green-800': role === 'buyer',
-                'bg-yellow-100 text-yellow-800': role === 'seller_private',
-                'bg-blue-100 text-blue-800': role === 'seller_business',
-                'bg-purple-100 text-purple-800': role === 'agent',
-              })}
+              className={classNames(
+                "text-[10px] font-medium px-2 py-0.5 rounded",
+                {
+                  "bg-green-100 text-green-800": role === "buyer",
+                  "bg-yellow-100 text-yellow-800": role === "seller_private",
+                  "bg-blue-100 text-blue-800": role === "seller_business",
+                  "bg-purple-100 text-purple-800": role === "agent",
+                },
+              )}
             >
               {accountTypeLabels[role] || role}
             </span>

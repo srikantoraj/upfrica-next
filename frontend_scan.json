@@ -1,0 +1,705 @@
+{
+  "root": "/Users/charliewiredu/Dev/NEXT/upfrica-next",
+  "framework": {
+    "next_app_router": false,
+    "next_pages_router": false,
+    "react_router": false
+  },
+  "routes": [],
+  "feature_hits_by_file": {
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/contexts/AuthContext.js": [
+      "affiliate",
+      "agent"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/contexts/RoleViewContext.js": [
+      "affiliate",
+      "agent",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/settings/layout.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/settings/page2.jsx": [
+      "Storefront",
+      "analytics",
+      "dashboard",
+      "payout"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/settings/payments/page.jsx": [
+      "dashboard",
+      "new-dashboard",
+      "payout"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/settings/payouts/page.jsx": [
+      "dashboard",
+      "new-dashboard",
+      "payout"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/password/new/page.jsx": [
+      "whatsapp"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/[region]/[slug]/page.jsx": [
+      "affiliate",
+      "agent",
+      "dashboard",
+      "has(",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/sell-online/page.jsx": [
+      "Subscription",
+      "commission"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dropship/page.jsx": [
+      "commission",
+      "whatsapp",
+      "wholesale"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/sidebar/layout.js": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/sidebar/page.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/products/new/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/sellplus/page.jsx": [
+      "whatsapp",
+      "wholesale"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/updated-profile/page.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/blog/page.jsx": [
+      "agent"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/shops/[slug]/ShopProfileCard.jsx": [
+      "whatsapp"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/layout.js": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/page.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/Sidebar.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/all-orders copy/page2.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/all-orders copy/components/OrderCard.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/all-orders copy/components/OrdersPage.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/all-orders copy/[id]/page1.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/all-orders/page2.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/all-orders/components/OrderCard.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/all-orders/components/OrdersPage.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/all-orders/[id]/page1.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/create-job/page.jsx": [
+      "agent"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/all-products/page.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/payment-success/page.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/dashboard/edit-job/[id]/page.jsx": [
+      "agent"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/layout.js": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/page.jsx": [
+      "affiliate",
+      "agent",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/layout-theme.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/page-theme.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/seller/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/seller/reviews/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/help-blogs/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/help-blogs/create-help-blog/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/draft/page.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/settings/page.jsx": [
+      "agent",
+      "dashboard",
+      "new-dashboard",
+      "payout"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/settings/security/page.jsx": [
+      "dashboard",
+      "new-dashboard",
+      "payout"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/settings/shop/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/settings/profile/page.jsx": [
+      "dashboard",
+      "new-dashboard",
+      "payout"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/settings/addresses/page.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/settings/payout/page.jsx": [
+      "dashboard",
+      "new-dashboard",
+      "payout"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/shipped-orders/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/temp/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/products/page.jsx": [
+      "Guard",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/products/page1.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/sales/components/OrderDetailsModal.jsx": [
+      "payout"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/sales/[id]/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/all-users/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/all-orders/page2.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/all-orders/components/OrderCard.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/all-orders/components/OrdersPage.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/all-orders/[id]/page1.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/agent/page.jsx": [
+      "Guard",
+      "agent",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/my-orders/page2.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/my-orders/components/OrderCard.jsx": [
+      "Storefront",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/my-orders/components/OrdersPage.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/my-orders/[id]/page1.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/add-new-product/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/out-of-stock/page.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/payment-success/page.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/quick-actions/page.jsx": [
+      "dashboard",
+      "payout"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/affiliate/page.jsx": [
+      "Guard",
+      "affiliate",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/affiliate/referrals/page.jsx": [
+      "affiliate",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/orders/components/OrderCard.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/orders/components/OrdersPage.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/jobs/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/jobs/create-job/page.jsx": [
+      "agent"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/jobs/edit-job/[id]/page.jsx": [
+      "agent"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/overview/page.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/pending-orders/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/buyer/page.jsx": [
+      "Guard",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/new-dashboard/reviews/page.jsx": [
+      "Guard",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/works/page.jsx": [
+      "whatsapp"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/login/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/onboarding/account-type/page.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/(pages)/help/dummy/page.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/app/utils/roles.js": [
+      "Subscription",
+      "affiliate",
+      "agent"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/constants/infoRegistry.js": [
+      "BNPL"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/TextSection.jsx": [
+      "whatsapp",
+      "wholesale"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/HeaderControls.jsx": [
+      "agent",
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/menuItems.js": [
+      "agent",
+      "analytics",
+      "dashboard",
+      "payout"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/ShopFAQSection.jsx": [
+      "wholesale"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/Sidebar/Sidebar.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/order/ProfileCard.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/order/OrderCart.jsx": [
+      "whatsapp"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/ui/PlanComparisonModal.jsx": [
+      "BNPL"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/ui/PlanComparisonTable.jsx": [
+      "BNPL"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/home/Faq/Faq.jsx": [
+      "Subscription"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/home/About/About.jsx": [
+      "Storefront"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/auth/RoleGuard.jsx": [
+      "Guard",
+      "affiliate",
+      "agent"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/auth/LoginForm.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/bigcommerce/TableOfContents.jsx": [
+      "whatsapp"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/bigcommerce/FashionAIImpact.jsx": [
+      "analytics"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/shopify/NewsletterBanner.jsx": [
+      "Subscription"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/shopify/SidebarNewsletterCTA.jsx": [
+      "Subscription"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/user/Users.jsx": [
+      "Subscription",
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/inpute/Photo.jsx": [
+      "agent"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/Careers/CareersHero.jsx": [
+      "agent"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/Careers/JobList .jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/Careers/Contact.jsx": [
+      "whatsapp"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/dashboard/DashbordSearchBar.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/dashboard/Sidebar.jsx": [
+      "analytics",
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/dashboard/Dashboard.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/RecentReviews.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/DynamicSidebar.jsx": [
+      "affiliate",
+      "agent"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/DashboardLayout.jsx": [
+      "affiliate",
+      "agent",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/CompleteSetupBanner.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/AffiliateSidebar.jsx": [
+      "affiliate",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/AgentSidebar.jsx": [
+      "agent",
+      "commission",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/RoleSwitcher.jsx": [
+      "affiliate",
+      "agent",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/SellerReviewCard.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/AgentDashboardHome.jsx": [
+      "Guard",
+      "agent",
+      "commission",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/page.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/Buyer-theme.jsx": [
+      "BNPL",
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/SellerSidebar.jsx": [
+      "BNPL",
+      "analytics",
+      "dashboard",
+      "new-dashboard",
+      "payout",
+      "wishlist"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/SellerProductReviewCard.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/Sidebar.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/SellerDashboardHome.jsx": [
+      "Subscription",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/TopBar.jsx": [
+      "affiliate",
+      "agent",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/RequireRole.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/BuyerSidebar.jsx": [
+      "BNPL",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/SellerReviewsPageContent.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/SellerReviewsSummaryCard.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/DynamicSidebarLayout.jsx": [
+      "affiliate",
+      "agent",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/DashboardHomeTheme.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/BuyerDashboardHome.jsx": [
+      "BNPL",
+      "affiliate",
+      "agent",
+      "dashboard",
+      "new-dashboard",
+      "wishlist"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/AffiliateDashboardHome.jsx": [
+      "Guard",
+      "affiliate",
+      "commission",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/MetricBox.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/MyReviewsPageContent.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/settings/ShopDetailsSettings.jsx": [
+      "payout"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/settings/PayoutSettings.jsx": [
+      "payout"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/products/ProductListResponsive.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/products/ProductSummaryPills.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/new-dashboard/products/ProductDashboard.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/common/AccessDeniedScreen.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/common/AccountTypeBadge.jsx": [
+      "affiliate",
+      "agent",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/common/footer/Footer.jsx": [
+      "dashboard",
+      "whatsapp"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/common/header/Header.jsx": [
+      "whatsapp"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/common/header/ShopingCart.jsx": [
+      "whatsapp"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/common/header/PhoneSlider.jsx": [
+      "affiliate",
+      "whatsapp"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/common/header/UserMenu.jsx": [
+      "dashboard",
+      "new-dashboard",
+      "wishlist"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/review/DisplayReviews.jsx": [
+      "whatsapp"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/e-commerce/products/ProductCard.jsx": [
+      "wishlist"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/e-commerce/products-list/ProductList.jsx": [
+      "dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/affiliate/CreateReferralDrawer.jsx": [
+      "affiliate"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/overview/EarningsChart.jsx": [
+      "analytics"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/overview/AnalyticsSection.jsx": [
+      "analytics"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/overview/Analytics.jsx": [
+      "analytics"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/overview/RecentOrders.jsx": [
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/overview/earningsData.js": [
+      "analytics"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/pricing/UpfricaPricing.jsx": [
+      "BNPL"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/onboarding/AccountTypeAndPlan.jsx": [
+      "BNPL",
+      "affiliate",
+      "agent",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/onboarding/AccountTypeSelector.jsx": [
+      "Storefront",
+      "affiliate",
+      "agent",
+      "commission"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/onboarding/AccountTypePage.jsx": [
+      "SellerPlan",
+      "affiliate",
+      "agent",
+      "commission",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/onboarding/AccountTypeAndPlan-1.jsx": [
+      "agent",
+      "dashboard",
+      "new-dashboard"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/help/HelpCenterPage.jsx": [
+      "analytics"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/components/ProductDetailSection/ProductDetailSection.jsx": [
+      "BNPL",
+      "whatsapp",
+      "wishlist"
+    ],
+    "/Users/charliewiredu/Dev/NEXT/upfrica-next/src/hooks/useOnboardingGate.js": [
+      "affiliate",
+      "agent"
+    ]
+  },
+  "keyword_counts": {
+    "Entitlement": 0,
+    "entitlement": 0,
+    "useEntitlements": 0,
+    "UpgradeGate": 0,
+    "Guard": 8,
+    "has(": 1,
+    "BNPL": 10,
+    "AddOn": 0,
+    "Addon": 0,
+    "SellerPlan": 1,
+    "SellerFeature": 0,
+    "Storefront": 4,
+    "Subscription": 7,
+    "affiliate": 23,
+    "agent": 31,
+    "commission": 7,
+    "wholesale": 4,
+    "whatsapp": 15,
+    "instant_payout": 0,
+    "pay_on_delivery": 0,
+    "wishlist": 5,
+    "payout": 13,
+    "SecurePayout": 0,
+    "analytics": 10,
+    "CampaignEventLog": 0,
+    "StorefrontViewsLog": 0,
+    "SellerAnalyticsDaily": 0,
+    "new-dashboard": 71,
+    "new_dashboard": 0,
+    "dashboard": 116
+  },
+  "entitlements": {
+    "useEntitlements_files": [],
+    "Guard_files": [],
+    "UpgradeGate_files": [],
+    "has_calls": [],
+    "my_entitlements_calls": []
+  },
+  "has_new_dashboard_route": false
+}

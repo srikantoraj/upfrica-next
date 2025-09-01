@@ -1,8 +1,8 @@
-import React from 'react';
+import React from "react";
 
 const CollectionInPersonSection = () => {
-    return (
-        <div className="space-y-4  rounded-md p-4">
+  return (
+    <div className="space-y-4  rounded-md p-4">
       {/* Header */}
       <div>
         <h3 className="text-lg font-semibold">Collection in person</h3>
@@ -13,7 +13,10 @@ const CollectionInPersonSection = () => {
 
       {/* City input field */}
       <div>
-        <label htmlFor="itemLocationCityState" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="itemLocationCityState"
+          className="block text-sm font-medium text-gray-700"
+        >
           City, area
         </label>
         <input
@@ -27,7 +30,7 @@ const CollectionInPersonSection = () => {
         </p>
       </div>
     </div>
-    );
+  );
 };
 
 export default CollectionInPersonSection;

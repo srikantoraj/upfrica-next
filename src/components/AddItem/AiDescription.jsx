@@ -27,7 +27,7 @@ const DescriptionEditor = ({ formik }) => {
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
           onClick={() => {
             const aiText = "This is a suggested AI description...";
-            formik.setFieldValue('description', aiText); // Example AI text
+            formik.setFieldValue("description", aiText); // Example AI text
           }}
         >
           Use AI description
@@ -36,6 +36,5 @@ const DescriptionEditor = ({ formik }) => {
     </section>
   );
 };
-
 
 export default DescriptionEditor;

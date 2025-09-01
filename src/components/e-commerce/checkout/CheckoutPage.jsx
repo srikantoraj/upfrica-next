@@ -1,40 +1,43 @@
-"use client"
-import { useState } from 'react';
-import { FaTrash, FaLock } from 'react-icons/fa';
+"use client";
+import { useState } from "react";
+import { FaTrash, FaLock } from "react-icons/fa";
 
 const initialCart = [
   {
     id: 1,
-    title: 'Apple MacBook Pro',
-    color: 'Dark Red',
+    title: "Apple MacBook Pro",
+    color: "Dark Red",
     price: 100,
     oldPrice: 129.99,
-    image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=400&q=80',
+    image:
+      "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=400&q=80",
     quantity: 1,
   },
   {
     id: 2,
-    title: 'Apple MacBook Pro',
-    color: 'Dark Red',
+    title: "Apple MacBook Pro",
+    color: "Dark Red",
     price: 100,
     oldPrice: 129.99,
-    image: 'https://images.unsplash.com/photo-1585386959984-a4155224c34d?auto=format&fit=crop&w=400&q=80',
+    image:
+      "https://images.unsplash.com/photo-1585386959984-a4155224c34d?auto=format&fit=crop&w=400&q=80",
     quantity: 1,
   },
   {
     id: 3,
-    title: 'Apple MacBook Pro',
-    color: 'Dark Red',
+    title: "Apple MacBook Pro",
+    color: "Dark Red",
     price: 100,
     oldPrice: 129.99,
-    image: 'https://images.unsplash.com/photo-1595950658703-ec8b0c22f5d3?auto=format&fit=crop&w=400&q=80',
+    image:
+      "https://images.unsplash.com/photo-1595950658703-ec8b0c22f5d3?auto=format&fit=crop&w=400&q=80",
     quantity: 1,
   },
 ];
 
 export default function CheckoutPage() {
   const [cart, setCart] = useState(initialCart);
-  const [coupon, setCoupon] = useState('');
+  const [coupon, setCoupon] = useState("");
 
   const updateQuantity = (id, type) => {
     const updated = cart.map((item) =>
@@ -42,11 +45,11 @@ export default function CheckoutPage() {
         ? {
             ...item,
             quantity:
-              type === 'inc'
+              type === "inc"
                 ? item.quantity + 1
                 : Math.max(0, item.quantity - 1),
           }
-        : item
+        : item,
     );
     setCart(updated);
   };
@@ -55,13 +58,18 @@ export default function CheckoutPage() {
     setCart(cart.filter((item) => item.id !== id));
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
 
   return (
     <div className="p-6 bg-[#f9fbfd] min-h-screen">
       {/* Top Nav */}
       <div className="flex gap-10 text-sm font-medium mb-6 border-b pb-2">
-        <span className="text-blue-500 border-b-2 border-blue-500">Cart Details</span>
+        <span className="text-blue-500 border-b-2 border-blue-500">
+          Cart Details
+        </span>
         <span className="text-gray-400">Shipping Information</span>
         <span className="text-gray-400">Payment</span>
       </div>
@@ -70,7 +78,8 @@ export default function CheckoutPage() {
         {/* Left: Cart Items */}
         <div className="flex-1 bg-white p-4 rounded shadow">
           <h3 className="font-semibold text-lg mb-4">
-            Cart Item <span className="text-sm text-gray-400">({cart.length})</span>
+            Cart Item{" "}
+            <span className="text-sm text-gray-400">({cart.length})</span>
           </h3>
           <table className="w-full text-sm">
             <thead className="border-b text-gray-500 text-left">
@@ -86,7 +95,10 @@ export default function CheckoutPage() {
               {cart.map((item) => (
                 <tr key={item.id} className="border-b">
                   <td className="py-4 flex items-center gap-3">
-                    <img src={item.image} className="w-14 h-14 rounded object-cover" />
+                    <img
+                      src={item.image}
+                      className="w-14 h-14 rounded object-cover"
+                    />
                     <div>
                       <p>{item.title}</p>
                       <p className="text-xs text-gray-400">{item.color}</p>
@@ -96,20 +108,22 @@ export default function CheckoutPage() {
                     <div>
                       ${item.price.toFixed(2)}
                       <br />
-                      <span className="text-xs line-through text-gray-400">${item.oldPrice}</span>
+                      <span className="text-xs line-through text-gray-400">
+                        ${item.oldPrice}
+                      </span>
                     </div>
                   </td>
                   <td>
                     <div className="flex items-center border rounded w-fit">
                       <button
-                        onClick={() => updateQuantity(item.id, 'dec')}
+                        onClick={() => updateQuantity(item.id, "dec")}
                         className="px-2"
                       >
                         −
                       </button>
                       <span className="px-2">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, 'inc')}
+                        onClick={() => updateQuantity(item.id, "inc")}
                         className="px-2"
                       >
                         +
@@ -118,7 +132,10 @@ export default function CheckoutPage() {
                   </td>
                   <td>${(item.price * item.quantity).toFixed(2)}</td>
                   <td>
-                    <button onClick={() => removeItem(item.id)} className="text-red-500">
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="text-red-500"
+                    >
                       <FaTrash />
                     </button>
                   </td>

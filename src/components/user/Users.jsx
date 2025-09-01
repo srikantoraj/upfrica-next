@@ -47,17 +47,16 @@ const Users = () => {
       >
         {/* "Back to App" row */}
         <div className="flex justify-between items-center pb-4">
-
           <h2 className="flex items-center gap-2  text-base font-semibold w-[300px]">
             <IoArrowBack className="h-5 w-5" />
-            Back 
+            Back
           </h2>
           {/* 6) Close button for mobile screens */}
           <button
             className="lg:hidden  text-sm text-gray-500 underline"
             onClick={() => setIsOpen(false)}
           >
-           <HiMiniXMark className="h-6 w-6" />
+            <HiMiniXMark className="h-6 w-6" />
           </button>
         </div>
         <hr />
@@ -77,8 +76,6 @@ const Users = () => {
             </Link>
           ))}
         </div>
-
-
       </div>
 
       {/* 7) Main Content Area (placeholder) */}

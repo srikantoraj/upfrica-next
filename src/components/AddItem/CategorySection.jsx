@@ -1,11 +1,10 @@
-'use client'
-import React from 'react';
-import { FiEdit2 } from 'react-icons/fi';
+"use client";
+import React from "react";
+import { FiEdit2 } from "react-icons/fi";
 
 export const CategorySection = () => {
   return (
     <div className="">
-
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-lg font-semibold text-gray-800">Item category</h2>

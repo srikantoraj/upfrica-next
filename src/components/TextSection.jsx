@@ -122,17 +122,13 @@
 //         </div>
 //         <RatingSection />
 
-
-
 //         <hr />
 //       </div>
-
 
 //       {/* Review Button */}
 //       {/* <button className="border py-1 px-2 md:px-4 hover:bg-purple-500 hover:text-white font-mediam tracking-wide text-purple-500 border-purple-500 rounded-lg">
 //         Write a review
 //       </button> */}
-
 
 //       {/* Edit, Delete, Published */}
 //       {/* <div className="flex gap-4 items-center text-base xl:text-lg flex-col sm:flex-row">
@@ -152,7 +148,6 @@
 //           <span className="text-[#a435f0]">Published</span>
 //         </div>
 //       </div> */}
-
 
 //       {/* Email and WhatsApp Section */}
 //       {/* <div className="flex gap-4 items-center text-lg">
@@ -210,7 +205,6 @@
 //         <p>payment:</p>
 //         <p>Buy now pay later.</p>
 //         </div>
-
 
 //         {/* Modal */}
 //         <div
@@ -311,7 +305,6 @@
 // };
 
 // export default TextSection;
-
 
 // // 'use client'
 // // import React, { useEffect } from 'react';
@@ -816,28 +809,44 @@
 
 // // export default ProductDetails;
 
-
-'use client';
-import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import { FaLocationPin, FaEdit, FaMinus, FaPlus, FaTrash, FaWhatsapp, FaArrowRight, FaStar } from 'react-icons/fa';
-import { HiXMark } from 'react-icons/hi2';
-import SalesEndSection from './SalesEndSection/SalesEndSection';
-import DeliveryDate from './DeliveryDate';
-import Image from 'next/image';
-import Link from 'next/link';
-import LaptopDetels from './LaptopDetels';
-import RatingSection from './RatingSection';
-import MultiPriceBoxes from './MultiPriceBoxes';
+"use client";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import {
+  FaLocationPin,
+  FaEdit,
+  FaMinus,
+  FaPlus,
+  FaTrash,
+  FaWhatsapp,
+  FaArrowRight,
+  FaStar,
+} from "react-icons/fa";
+import { HiXMark } from "react-icons/hi2";
+import SalesEndSection from "./SalesEndSection/SalesEndSection";
+import DeliveryDate from "./DeliveryDate";
+import Image from "next/image";
+import Link from "next/link";
+import LaptopDetels from "./LaptopDetels";
+import RatingSection from "./RatingSection";
+import MultiPriceBoxes from "./MultiPriceBoxes";
 import { TiShoppingCart } from "react-icons/ti";
 
 const QuantityControl = ({ quantity, onDecrease, onIncrease }) => (
   <div className="flex items-center text-lg">
-    <button onClick={onDecrease} className="px-2 py-1 font-bold" aria-label="Decrease quantity">
+    <button
+      onClick={onDecrease}
+      className="px-2 py-1 font-bold"
+      aria-label="Decrease quantity"
+    >
       <FaMinus />
     </button>
     <span className="py-1 px-2">{quantity}</span>
-    <button onClick={onIncrease} className="px-2 py-1 font-bold" aria-label="Increase quantity">
+    <button
+      onClick={onIncrease}
+      className="px-2 py-1 font-bold"
+      aria-label="Increase quantity"
+    >
       <FaPlus />
     </button>
   </div>
@@ -847,7 +856,15 @@ const TextSection = ({ product }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [basket, setBasket] = useState([]);
 
-  const { id, title, price, postage_fee, sale_end_date, sale_start_date, product_images } = product;
+  const {
+    id,
+    title,
+    price,
+    postage_fee,
+    sale_end_date,
+    sale_start_date,
+    product_images,
+  } = product;
   const [timeRemaining, setTimeRemaining] = useState({
     days: 0,
     hours: 0,
@@ -870,19 +887,28 @@ const TextSection = ({ product }) => {
   }, [sale_start_date, sale_end_date]);
 
   useEffect(() => {
-    const storedBasket = JSON.parse(localStorage.getItem('basket')) || [];
+    const storedBasket = JSON.parse(localStorage.getItem("basket")) || [];
     setBasket(storedBasket);
   }, []);
 
   const handleAddToBasket = () => {
-    const productData = { id, title, price, quantity: 1, image: product_images };
-    const currentBasket = JSON.parse(localStorage.getItem('basket')) || [];
-    const existingProductIndex = currentBasket.findIndex((item) => item.id === productData.id);
+    const productData = {
+      id,
+      title,
+      price,
+      quantity: 1,
+      image: product_images,
+    };
+    const currentBasket = JSON.parse(localStorage.getItem("basket")) || [];
+    const existingProductIndex = currentBasket.findIndex(
+      (item) => item.id === productData.id,
+    );
 
-    if (existingProductIndex >= 0) currentBasket[existingProductIndex].quantity += 1;
+    if (existingProductIndex >= 0)
+      currentBasket[existingProductIndex].quantity += 1;
     else currentBasket.push(productData);
 
-    localStorage.setItem('basket', JSON.stringify(currentBasket));
+    localStorage.setItem("basket", JSON.stringify(currentBasket));
     setBasket(currentBasket);
     setIsModalVisible(true);
   };
@@ -893,7 +919,7 @@ const TextSection = ({ product }) => {
     const newBasket = [...basket];
     newBasket[index].quantity = Math.max(1, newBasket[index].quantity + change);
     setBasket(newBasket);
-    localStorage.setItem('basket', JSON.stringify(newBasket));
+    localStorage.setItem("basket", JSON.stringify(newBasket));
   };
 
   return (
@@ -922,7 +948,10 @@ const TextSection = ({ product }) => {
               Osu
             </Link>
             ,{" "}
-            <Link href="/products?utf8=✓&country=GH" className="hover:underline">
+            <Link
+              href="/products?utf8=✓&country=GH"
+              className="hover:underline"
+            >
               GH
             </Link>
           </b>
@@ -934,10 +963,18 @@ const TextSection = ({ product }) => {
       {/* Price Information */}
       <div className="space-y-2">
         <p className="text-xl font-medium text-gray-800">
-          Price: <span className="text-3xl font-bold">${(price?.cents / 100).toFixed(2)}</span> each
+          Price:{" "}
+          <span className="text-3xl font-bold">
+            ${(price?.cents / 100).toFixed(2)}
+          </span>{" "}
+          each
         </p>
         <p className="text-gray-600 text-lg">
-          was <span className="line-through">${(price?.cents / 100).toFixed(2)}</span> You Save: $6.39 (3%)
+          was{" "}
+          <span className="line-through">
+            ${(price?.cents / 100).toFixed(2)}
+          </span>{" "}
+          You Save: $6.39 (3%)
         </p>
 
         {/* Sale End Timer */}
@@ -970,7 +1007,9 @@ const TextSection = ({ product }) => {
           <div className="space-y-4 text-xl">
             <div className="flex items-center space-x-2">
               <span className="font-normal text-black">Pickup:</span>
-              <span className="font-medium text-gray-400">Available at our downtown store.</span>
+              <span className="font-medium text-gray-400">
+                Available at our downtown store.
+              </span>
             </div>
             <div className="flex items-center space-x-2">
               <span className="font-normal text-black">Delivery:</span>
@@ -978,11 +1017,17 @@ const TextSection = ({ product }) => {
             </div>
             <div className="flex items-center space-x-2">
               <span className="font-normal text-black">Delivery Date:</span>
-              <span className="font-bold text-black"> <span className='text-purple-500'>26 Feb - 01 Mar</span> if order today</span>
+              <span className="font-bold text-black">
+                {" "}
+                <span className="text-purple-500">26 Feb - 01 Mar</span> if
+                order today
+              </span>
             </div>
             <div className="flex items-center space-x-2">
               <span className="font-normal text-black">Returns:</span>
-              <span className="font-medium text-gray-400">No return accepted</span>
+              <span className="font-medium text-gray-400">
+                No return accepted
+              </span>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -1001,27 +1046,29 @@ const TextSection = ({ product }) => {
               </div>
             </div>
 
-
             <div className="">
               <span className="font-bold text-black flex gap-2">
-                <TiShoppingCart className='h-6 w-6' />
+                <TiShoppingCart className="h-6 w-6" />
                 Buy Now, Pay Later.
               </span>
-              <div className='space-y-2 mt-3'>
-                <p className="font-medium text-gray-400">3 payments of $100.10 with <span className='text-black'>Upfica</span>. <span>Learn more</span></p>
-                <p className="font-medium text-gray-400">18+,TC apply offer subject to status</p>
+              <div className="space-y-2 mt-3">
+                <p className="font-medium text-gray-400">
+                  3 payments of $100.10 with{" "}
+                  <span className="text-black">Upfica</span>.{" "}
+                  <span>Learn more</span>
+                </p>
+                <p className="font-medium text-gray-400">
+                  18+,TC apply offer subject to status
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-
-
-
         {/* Modal */}
         <div
           className={`fixed inset-0 bg-black bg-opacity-50 px-5 z-50 overflow-y-auto 
-        ${isModalVisible ? 'opacity-100 visible' : 'opacity-0 invisible'} 
+        ${isModalVisible ? "opacity-100 visible" : "opacity-0 invisible"} 
         transition-opacity duration-300`}
           onClick={handleCloseModal}
         >
@@ -1033,7 +1080,7 @@ const TextSection = ({ product }) => {
           p-6 sm:p-8
           mx-auto mt-10 
           transform 
-          ${isModalVisible ? 'translate-y-0' : '-translate-y-full'}
+          ${isModalVisible ? "translate-y-0" : "-translate-y-full"}
           transition-transform duration-300
         `}
             onClick={(e) => e.stopPropagation()}
@@ -1043,7 +1090,10 @@ const TextSection = ({ product }) => {
               <h3 className="text-3xl font-bold">
                 {basket.length} Items added to basket
               </h3>
-              <button onClick={handleCloseModal} className="text-gray-600 hover:text-gray-900">
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-600 hover:text-gray-900"
+              >
                 <HiXMark className="h-8 w-8" />
               </button>
             </div>
@@ -1059,16 +1109,21 @@ const TextSection = ({ product }) => {
                     >
                       <div className="md:col-span-1">
                         <img
-                          src={item?.image?.[0] ?? 'https://via.placeholder.com/150'}
+                          src={
+                            item?.image?.[0] ??
+                            "https://via.placeholder.com/150"
+                          }
                           alt={item.title}
                           className="h-16 w-16 object-cover rounded"
                         />
                       </div>
                       <div className="md:col-span-4 w-full">
-                        <div className="font-medium text-gray-800">{item.title}</div>
+                        <div className="font-medium text-gray-800">
+                          {item.title}
+                        </div>
                         <div className="flex flex-wrap gap-5 items-center mt-2">
                           <p className="text-gray-700">
-                            Price: {item.price.currency_iso}{' '}
+                            Price: {item.price.currency_iso}{" "}
                             {(item.price.cents / 100).toFixed(2)}
                           </p>
                           <div className="flex items-center text-lg font-medium">
@@ -1084,7 +1139,9 @@ const TextSection = ({ product }) => {
                     </li>
                   ))
                 ) : (
-                  <p className="text-center text-gray-500">No items in the basket.</p>
+                  <p className="text-center text-gray-500">
+                    No items in the basket.
+                  </p>
                 )}
               </ul>
             </div>
@@ -1105,7 +1162,6 @@ const TextSection = ({ product }) => {
           </div>
         </div>
 
-
         {/* End of Modal */}
       </div>
     </div>
@@ -1113,6 +1169,3 @@ const TextSection = ({ product }) => {
 };
 
 export default TextSection;
-
-
-

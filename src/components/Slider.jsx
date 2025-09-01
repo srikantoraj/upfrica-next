@@ -155,8 +155,8 @@
 
 // // export default ProductGallery;
 
-"use client"
-import React, { useState } from 'react';
+"use client";
+import React, { useState } from "react";
 
 const ProductGallery = ({ images = [] }) => {
   // The first image is active by default.
@@ -167,7 +167,8 @@ const ProductGallery = ({ images = [] }) => {
 
   // When the mouse moves over the main image, calculate the percentage position
   const handleMouseMove = (e) => {
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const { left, top, width, height } =
+      e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - left) / width) * 100;
     const y = ((e.clientY - top) / height) * 100;
     setZoomPos({ x, y });
@@ -194,10 +195,10 @@ const ProductGallery = ({ images = [] }) => {
             className="absolute inset-0 pointer-events-none"
             style={{
               backgroundImage: `url(${activeImage})`,
-              backgroundSize: '200%',
+              backgroundSize: "200%",
               backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
               opacity: 0.8,
-              transition: 'opacity 0.15s ease',
+              transition: "opacity 0.15s ease",
             }}
           />
         )}
@@ -209,8 +210,9 @@ const ProductGallery = ({ images = [] }) => {
           <button
             key={idx}
             onClick={() => setActiveImage(img)}
-            className={`border rounded focus:outline-none ${activeImage === img ? 'border-blue-500' : 'border-transparent'
-              }`}
+            className={`border rounded focus:outline-none ${
+              activeImage === img ? "border-blue-500" : "border-transparent"
+            }`}
           >
             <img
               src={img}

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import PopularShoppingIdeas from './PopularShoppingIdeas';
-import PriceRefinements from '../home/ProductList/PriceRefinements';
-import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
-import { FaStar } from 'react-icons/fa';
+import React, { useState } from "react";
+import PopularShoppingIdeas from "./PopularShoppingIdeas";
+import PriceRefinements from "../home/ProductList/PriceRefinements";
+import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
+import { FaStar } from "react-icons/fa";
 
 /**
  * A simple filter group / accordion for each section
@@ -13,15 +13,13 @@ function FilterGroup({ title, children, defaultOpen = true }) {
   return (
     <div className="border-b border-gray-200 py-3">
       <div className="">
-        <h2 className="font-semibold text-base lg:text-lg text-gray-700">{title}</h2>
+        <h2 className="font-semibold text-base lg:text-lg text-gray-700">
+          {title}
+        </h2>
       </div>
 
       {/* Collapsible content */}
-      {open && (
-        <div className="mt-2 text-base lg:text-lg">
-          {children}
-        </div>
-      )}
+      {open && <div className="mt-2 text-base lg:text-lg">{children}</div>}
 
       {/* {<button
         onClick={() => setOpen(!open)}
@@ -73,15 +71,21 @@ function LeftFilter() {
       {/* Deals & Discounts */}
       <FilterGroup title="Deals & Discounts">
         <ul className="space-y-1  text-gray-600">
-          <li><a href="#allDiscounts" className="hover:text-blue-700">All Discounts</a></li>
-          <li><a href="#todaysDeals" className="hover:text-blue-700">Today's Deals</a></li>
+          <li>
+            <a href="#allDiscounts" className="hover:text-blue-700">
+              All Discounts
+            </a>
+          </li>
+          <li>
+            <a href="#todaysDeals" className="hover:text-blue-700">
+              Today's Deals
+            </a>
+          </li>
         </ul>
       </FilterGroup>
 
-
-
       {/* Example for brand list — can be huge, so might want its own collapsible “See more” */}
-      <FilterGroup title="Brands" >
+      <FilterGroup title="Brands">
         <ul className="text-base lg:text-lg space-y-1 text-gray-600">
           <li className="flex items-center space-x-2">
             <input type="checkbox" id="brand1" />
@@ -127,11 +131,15 @@ function LeftFilter() {
       <FilterGroup title="Department">
         <div className="flex items-center space-x-2 text-base lg:text-lg text-gray-600">
           <input type="checkbox" id="climatePledgeFriendly" />
-          <label htmlFor="climatePledgeFriendly">Household Cleaning Tools</label>
+          <label htmlFor="climatePledgeFriendly">
+            Household Cleaning Tools
+          </label>
         </div>
         <div className="flex items-center space-x-2 text-base lg:text-lg text-gray-600">
           <input type="checkbox" id="climatePledgeFriendly" />
-          <label htmlFor="climatePledgeFriendly">Household Mops, Buckets &</label>
+          <label htmlFor="climatePledgeFriendly">
+            Household Mops, Buckets &
+          </label>
         </div>
         <div className="flex items-center space-x-2 text-base lg:text-lg text-gray-600">
           <input type="checkbox" id="climatePledgeFriendly" />
@@ -141,7 +149,6 @@ function LeftFilter() {
           <input type="checkbox" id="climatePledgeFriendly" />
           <label htmlFor="climatePledgeFriendly">Fruit & Vegetable Tools</label>
         </div>
-
       </FilterGroup>
 
       {/* all top brand  */}
@@ -171,7 +178,6 @@ function LeftFilter() {
           <input type="checkbox" id="climatePledgeFriendly" />
           <label htmlFor="climatePledgeFriendly">Amazon Brands</label>
         </div>
-
       </FilterGroup>
 
       {/* more products  */}
@@ -188,7 +194,6 @@ function LeftFilter() {
           <input type="checkbox" id="climatePledgeFriendly" />
           <label htmlFor="climatePledgeFriendly">FSA or HSA Eligible</label>
         </div>
-
       </FilterGroup>
     </aside>
   );

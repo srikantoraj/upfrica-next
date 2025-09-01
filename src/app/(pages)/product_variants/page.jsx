@@ -1,7 +1,3 @@
-
-
-
-
 "use client";
 import React, { useState } from "react";
 import { FaTrashAlt } from "react-icons/fa";
@@ -86,11 +82,14 @@ const ProductVariantForm = () => {
       <div className="my-8">
         <div>
           <strong className="text-lg text-gray-800 block">
-            Sliding Gate Opener Electric/Battery and Solar | Sliding Gate Opener Kit 12v DC 1200kg Heavy Duty Security Gate Operator set
+            Sliding Gate Opener Electric/Battery and Solar | Sliding Gate Opener
+            Kit 12v DC 1200kg Heavy Duty Security Gate Operator set
           </strong>
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-3">
-          <span className="text-base font-semibold text-gray-700">Current price:</span>
+          <span className="text-base font-semibold text-gray-700">
+            Current price:
+          </span>
           <span className="font-bold text-green-700 text-lg">$7,900.00</span>
           <span className="line-through text-gray-500">$8,600.00</span>
           <span className="text-sm font-semibold text-red-500">8% off</span>
@@ -102,7 +101,10 @@ const ProductVariantForm = () => {
       <h3 className="text-xl font-bold text-gray-800 mb-4">Product Variants</h3>
 
       {variants.map((variant, i) => (
-        <div key={i} className="border border-gray-300 rounded-lg mb-8 shadow-sm bg-white">
+        <div
+          key={i}
+          className="border border-gray-300 rounded-lg mb-8 shadow-sm bg-white"
+        >
           <div className="bg-gray-100 px-4 py-3 flex flex-wrap md:flex-nowrap md:items-center gap-4">
             <div className="flex-1">
               <label className="text-sm font-medium text-gray-700 block mb-1">
@@ -279,6 +281,3 @@ const ProductVariantForm = () => {
 };
 
 export default ProductVariantForm;
-
-
-

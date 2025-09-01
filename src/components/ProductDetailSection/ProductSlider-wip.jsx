@@ -11,7 +11,7 @@ import "swiper/css/navigation";
 const ProductSliderPremium = ({ mediaItems = [] }) => {
   const items = Array.isArray(mediaItems)
     ? mediaItems.map((item) =>
-        typeof item === "string" ? { type: "image", src: item } : item
+        typeof item === "string" ? { type: "image", src: item } : item,
       )
     : [];
 
@@ -57,16 +57,22 @@ const ProductSliderPremium = ({ mediaItems = [] }) => {
       if (count) {
         setBgColor(
           `rgb(${Math.floor(r / count)}, ${Math.floor(
-            g / count
-          )}, ${Math.floor(b / count)})`
+            g / count,
+          )}, ${Math.floor(b / count)})`,
         );
       }
     };
   }, [current, modalCurrent, isModalOpen]);
 
   const onMouseMove = (e) => {
-    if (current?.type !== "image" || !containerRef.current || window.innerWidth < 768) return;
-    const { left, top, width, height } = containerRef.current.getBoundingClientRect();
+    if (
+      current?.type !== "image" ||
+      !containerRef.current ||
+      window.innerWidth < 768
+    )
+      return;
+    const { left, top, width, height } =
+      containerRef.current.getBoundingClientRect();
     const x = Math.min(100, Math.max(0, ((e.clientX - left) / width) * 100));
     const y = Math.min(100, Math.max(0, ((e.clientY - top) / height) * 100));
     setZoomPos({ x, y });
@@ -87,11 +93,16 @@ const ProductSliderPremium = ({ mediaItems = [] }) => {
 
   return (
     <div className="space-y-4">
-      <div className="relative border rounded-lg mx-auto overflow-hidden bg-black" style={{ width: "100%", maxWidth: 600, aspectRatio: "1/1" }}>
+      <div
+        className="relative border rounded-lg mx-auto overflow-hidden bg-black"
+        style={{ width: "100%", maxWidth: 600, aspectRatio: "1/1" }}
+      >
         {loaded && (
           <motion.div
             key={bgColor}
-            animate={{ background: `linear-gradient(to bottom, ${bgColor}, #000)` }}
+            animate={{
+              background: `linear-gradient(to bottom, ${bgColor}, #000)`,
+            }}
             transition={{ duration: 0.8 }}
             className="absolute inset-0 z-0"
           />

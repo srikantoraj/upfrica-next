@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
-import { BASE_API_URL } from '@/app/constants';
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import { BASE_API_URL } from "@/app/constants";
 
 export default function ShopSettingsPage() {
   const { token } = useAuth();
@@ -14,7 +14,7 @@ export default function ShopSettingsPage() {
 
   useEffect(() => {
     if (!token) {
-      console.log('⛔️ No auth token yet');
+      console.log("⛔️ No auth token yet");
       return;
     }
 
@@ -23,11 +23,11 @@ export default function ShopSettingsPage() {
         const res = await fetch(`${BASE_API_URL}/api/shops/me/`, {
           headers: { Authorization: `Token ${token}` },
         });
-        if (!res.ok) throw new Error('Failed to load shop');
+        if (!res.ok) throw new Error("Failed to load shop");
         const data = await res.json();
         setShop(data);
       } catch (err) {
-        console.error('❌ FETCH ERROR:', err);
+        console.error("❌ FETCH ERROR:", err);
         setShop(null);
       } finally {
         setLoading(false);
@@ -38,10 +38,13 @@ export default function ShopSettingsPage() {
   }, [token]);
 
   const validationSchema = Yup.object().shape({
-    name: Yup.string().required('Shop name is required'),
+    name: Yup.string().required("Shop name is required"),
     description: Yup.string().nullable(),
     seller_contact_number: Yup.string()
-      .matches(/^\+\d{6,20}$/, 'Use full international format, e.g. +233245123456')
+      .matches(
+        /^\+\d{6,20}$/,
+        "Use full international format, e.g. +233245123456",
+      )
       .nullable(),
     bg_color: Yup.string().nullable(),
   });
@@ -50,10 +53,10 @@ export default function ShopSettingsPage() {
   if (!shop) return <p className="p-4 text-red-500">Shop not found.</p>;
 
   const initialValues = {
-    name: shop.name || '',
-    description: shop.description || '',
-    seller_contact_number: shop.seller_contact_number || '',
-    bg_color: shop.bg_color || '#ffffff',
+    name: shop.name || "",
+    description: shop.description || "",
+    seller_contact_number: shop.seller_contact_number || "",
+    bg_color: shop.bg_color || "#ffffff",
     logo: null,
     banner: null,
   };
@@ -69,24 +72,30 @@ export default function ShopSettingsPage() {
         onSubmit={async (values, { setSubmitting }) => {
           try {
             const formData = new FormData();
-            formData.append('name', values.name);
-            formData.append('description', values.description);
-            formData.append('seller_contact_number', values.seller_contact_number || '');
-            formData.append('bg_color', values.bg_color);
-            if (values.logo) formData.append('logo', values.logo);
-            if (values.banner) formData.append('banner', values.banner);
+            formData.append("name", values.name);
+            formData.append("description", values.description);
+            formData.append(
+              "seller_contact_number",
+              values.seller_contact_number || "",
+            );
+            formData.append("bg_color", values.bg_color);
+            if (values.logo) formData.append("logo", values.logo);
+            if (values.banner) formData.append("banner", values.banner);
 
-            const res = await fetch(`${BASE_API_URL}/api/shops/${shop.slug}/update/`, {
-              method: 'PATCH',
-              headers: { Authorization: `Token ${token}` },
-              body: formData,
-            });
+            const res = await fetch(
+              `${BASE_API_URL}/api/shops/${shop.slug}/update/`,
+              {
+                method: "PATCH",
+                headers: { Authorization: `Token ${token}` },
+                body: formData,
+              },
+            );
 
-            if (!res.ok) throw new Error('Failed to update shop');
+            if (!res.ok) throw new Error("Failed to update shop");
             setSaved(true);
           } catch (err) {
-            console.error('❌ SUBMIT ERROR:', err);
-            alert('Failed to save changes');
+            console.error("❌ SUBMIT ERROR:", err);
+            alert("Failed to save changes");
           } finally {
             setSubmitting(false);
           }
@@ -97,11 +106,12 @@ export default function ShopSettingsPage() {
             {/* Shop Name */}
             <div>
               <label className="block mb-1 font-medium">Shop Name</label>
-              <Field
+              <Field name="name" className="w-full border px-3 py-2 rounded" />
+              <ErrorMessage
                 name="name"
-                className="w-full border px-3 py-2 rounded"
+                component="p"
+                className="text-red-500 text-sm"
               />
-              <ErrorMessage name="name" component="p" className="text-red-500 text-sm" />
             </div>
 
             {/* Description */}
@@ -117,13 +127,19 @@ export default function ShopSettingsPage() {
 
             {/* Seller Phone */}
             <div>
-              <label className="block mb-1 font-medium">Contact Phone Number</label>
+              <label className="block mb-1 font-medium">
+                Contact Phone Number
+              </label>
               <Field
                 name="seller_contact_number"
                 placeholder="+233245123456"
                 className="w-full border px-3 py-2 rounded"
               />
-              <ErrorMessage name="seller_contact_number" component="p" className="text-red-500 text-sm" />
+              <ErrorMessage
+                name="seller_contact_number"
+                component="p"
+                className="text-red-500 text-sm"
+              />
               <p className="text-xs text-gray-500 mt-1">
                 Must be full international format, e.g. +233245123456.
               </p>
@@ -143,13 +159,19 @@ export default function ShopSettingsPage() {
             <div>
               <label className="block mb-1 font-medium">Logo</label>
               {shop.shop_logo && (
-                <img src={shop.shop_logo} alt="Logo" className="h-20 mb-2 rounded border" />
+                <img
+                  src={shop.shop_logo}
+                  alt="Logo"
+                  className="h-20 mb-2 rounded border"
+                />
               )}
               <input
                 name="logo"
                 type="file"
                 accept="image/*"
-                onChange={(e) => setFieldValue('logo', e.currentTarget.files[0])}
+                onChange={(e) =>
+                  setFieldValue("logo", e.currentTarget.files[0])
+                }
               />
             </div>
 
@@ -157,13 +179,19 @@ export default function ShopSettingsPage() {
             <div>
               <label className="block mb-1 font-medium">Banner</label>
               {shop.top_banner && (
-                <img src={shop.top_banner} alt="Banner" className="h-20 mb-2 rounded border" />
+                <img
+                  src={shop.top_banner}
+                  alt="Banner"
+                  className="h-20 mb-2 rounded border"
+                />
               )}
               <input
                 name="banner"
                 type="file"
                 accept="image/*"
-                onChange={(e) => setFieldValue('banner', e.currentTarget.files[0])}
+                onChange={(e) =>
+                  setFieldValue("banner", e.currentTarget.files[0])
+                }
               />
             </div>
 
@@ -172,10 +200,12 @@ export default function ShopSettingsPage() {
               disabled={isSubmitting}
               className="bg-violet-600 text-white px-4 py-2 rounded hover:bg-violet-700"
             >
-              {isSubmitting ? 'Saving...' : 'Save Changes'}
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </button>
 
-            {saved && <p className="text-green-600 mt-2">Changes saved successfully!</p>}
+            {saved && (
+              <p className="text-green-600 mt-2">Changes saved successfully!</p>
+            )}
           </Form>
         )}
       </Formik>

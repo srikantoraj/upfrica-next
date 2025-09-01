@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const ShopifyShippingHero = () => {
   return (
@@ -8,9 +8,13 @@ const ShopifyShippingHero = () => {
         <div className="">
           {/* Breadcrumb */}
           <div className="uppercase text-xs tracking-wide font-semibold text-gray-500 pb-2">
-            <a href="/blog" className="hover:underline">blog</a>
+            <a href="/blog" className="hover:underline">
+              blog
+            </a>
             <span className="mx-2">|</span>
-            <a href="/blog/topics/backoffice" className="hover:underline">Backoffice</a>
+            <a href="/blog/topics/backoffice" className="hover:underline">
+              Backoffice
+            </a>
           </div>
 
           {/* Title */}
@@ -20,13 +24,21 @@ const ShopifyShippingHero = () => {
 
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-gray-700 mb-6">
-            Shopify has tools you need to keep pace with rapidly evolving trade policies.
+            Shopify has tools you need to keep pace with rapidly evolving trade
+            policies.
           </p>
 
           {/* Author Info */}
           <div className="md:hidden mt-6 flex flex-col  text-gray-600 text-sm">
-            <span className="font-semibold">by <a href="/blog/authors/joe-hitchcock" className="hover:underline">Joe Hitchcock</a></span>
-            <span>Updated on <time>Apr 11, 2025</time></span>
+            <span className="font-semibold">
+              by{" "}
+              <a href="/blog/authors/joe-hitchcock" className="hover:underline">
+                Joe Hitchcock
+              </a>
+            </span>
+            <span>
+              Updated on <time>Apr 11, 2025</time>
+            </span>
           </div>
         </div>
       </div>

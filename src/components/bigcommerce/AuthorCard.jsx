@@ -15,7 +15,8 @@ const AuthorCard = () => {
         Reed Hartman
       </a>
       <p className="text-sm text-gray-600">
-        Content Marketing Manager at BigCommerce, helping ecommerce businesses grow.
+        Content Marketing Manager at BigCommerce, helping ecommerce businesses
+        grow.
       </p>
     </div>
   );

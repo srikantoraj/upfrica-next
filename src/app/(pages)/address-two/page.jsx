@@ -44,7 +44,6 @@
 //   }, [token]);
 
 //   console.log(address);
-  
 
 //   // UI রেন্ডার
 //   if (loading) return <p>লোড হচ্ছে…</p>;
@@ -133,8 +132,8 @@ import { useSelector } from "react-redux";
 const AddressTwo = () => {
   // ১) এখানে স্টেট ডিফাইন করা হচ্ছে অ্যারে হিসেবে
   const [addresses, setAddresses] = useState([]);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const token = useSelector((state) => state.auth.token);
 
   useEffect(() => {
@@ -173,12 +172,11 @@ const AddressTwo = () => {
     fetchAddresses();
   }, [token]);
 
-  console.log("address",addresses);
-  
+  console.log("address", addresses);
 
   // ৩) লোডিং / এরর হ্যান্ডেল
   if (loading) return <p>লোড হচ্ছে…</p>;
-  if (error)   return <p style={{ color: "red" }}>Error: {error}</p>;
+  if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
   // ৪) এখানে আমরা map করে প্রতিটি address দেখাব
   return (
@@ -210,4 +208,3 @@ const AddressTwo = () => {
 };
 
 export default AddressTwo;
-

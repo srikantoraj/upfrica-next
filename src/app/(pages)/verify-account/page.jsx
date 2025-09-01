@@ -1,25 +1,25 @@
-'use client';
+"use client";
 // export const dynamic = "force-dynamic";
 
-import React, { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import { useDispatch } from 'react-redux';
-import { setUser } from '@/app/store/slices/userSlice';
-import logo from '../../../public/images/logo.png';
-import verifyIllustration from '../../image/signin.svg';
-import LoaderButton from '@/components/LoaderButton';
+import React, { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/app/store/slices/userSlice";
+import logo from "../../../public/images/logo.png";
+import verifyIllustration from "../../image/signin.svg";
+import LoaderButton from "@/components/LoaderButton";
 
 const VerifyAccountPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useDispatch();
 
-  const redirect = searchParams.get('redirect') || '/';
-  const emailFromQuery = searchParams.get('email') || '';
+  const redirect = searchParams.get("redirect") || "/";
+  const emailFromQuery = searchParams.get("email") || "";
 
   const [submissionStatus, setSubmissionStatus] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -27,15 +27,15 @@ const VerifyAccountPage = () => {
   const formik = useFormik({
     initialValues: {
       email: emailFromQuery,
-      token: '',
+      token: "",
     },
     validationSchema: Yup.object({
       email: Yup.string()
-        .email('Invalid email address')
-        .required('Email is required'),
+        .email("Invalid email address")
+        .required("Email is required"),
       token: Yup.string()
-        .matches(/^\d{6}$/, 'Token must be exactly 6 digits')
-        .required('Verification token is required'),
+        .matches(/^\d{6}$/, "Token must be exactly 6 digits")
+        .required("Verification token is required"),
     }),
     onSubmit: async (values, { setSubmitting, setErrors }) => {
       setErrorMessage(null);
@@ -43,25 +43,25 @@ const VerifyAccountPage = () => {
 
       try {
         const response = await fetch(
-          'https://media.upfrica.com/api/verify-account/',
+          "https://media.upfrica.com/api/verify-account/",
           {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(values),
-          }
+          },
         );
         const data = await response.json();
 
         if (response.ok) {
           dispatch(setUser(data));
-          setSubmissionStatus('✅ Account verified!');
+          setSubmissionStatus("✅ Account verified!");
           setTimeout(() => router.push(redirect), 1000);
         } else {
-          setErrors({ email: data.message || 'Verification failed' });
+          setErrors({ email: data.message || "Verification failed" });
         }
       } catch (err) {
-        console.error('Unexpected error:', err);
-        setErrorMessage('An unexpected error occurred. Please try again.');
+        console.error("Unexpected error:", err);
+        setErrorMessage("An unexpected error occurred. Please try again.");
       } finally {
         setSubmitting(false);
       }
@@ -87,12 +87,7 @@ const VerifyAccountPage = () => {
           {/* Logo */}
           <div className="flex justify-center mb-6">
             <Link href="/" aria-label="Go to homepage" className="inline-block">
-              <Image
-                src={logo}
-                alt="Upfrica Logo"
-                width={150}
-                height={48}
-              />
+              <Image src={logo} alt="Upfrica Logo" width={150} height={48} />
             </Link>
           </div>
 
@@ -100,7 +95,8 @@ const VerifyAccountPage = () => {
             Verify Your Account
           </h2>
           <p className="text-base text-[#85878A] text-center mb-8 leading-relaxed">
-            Enter the <strong>6-digit</strong> verification token sent to your email.
+            Enter the <strong>6-digit</strong> verification token sent to your
+            email.
           </p>
 
           <form onSubmit={formik.handleSubmit} className="space-y-6">
@@ -121,8 +117,8 @@ const VerifyAccountPage = () => {
                 placeholder="you@example.com"
                 className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                   formik.touched.email && formik.errors.email
-                    ? 'border-red-500 ring-red-200'
-                    : 'border-gray-300 focus:ring-purple-500 focus:border-purple-500'
+                    ? "border-red-500 ring-red-200"
+                    : "border-gray-300 focus:ring-purple-500 focus:border-purple-500"
                 }`}
               />
               {formik.touched.email && formik.errors.email && (
@@ -151,8 +147,8 @@ const VerifyAccountPage = () => {
                 placeholder="123456"
                 className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                   formik.touched.token && formik.errors.token
-                    ? 'border-red-500 ring-red-200'
-                    : 'border-gray-300 focus:ring-purple-500 focus:border-purple-500'
+                    ? "border-red-500 ring-red-200"
+                    : "border-gray-300 focus:ring-purple-500 focus:border-purple-500"
                 }`}
               />
               {formik.touched.token && formik.errors.token && (

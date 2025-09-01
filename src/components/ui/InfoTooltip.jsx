@@ -1,13 +1,17 @@
-'use client';
+"use client";
 
-import { Info } from 'lucide-react';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Info } from "lucide-react";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 
 export default function InfoTooltip({
   content,
   iconSize = 14,
-  className = '',
-  side = 'top',
+  className = "",
+  side = "top",
 }) {
   return (
     <Popover>
@@ -24,7 +28,7 @@ export default function InfoTooltip({
         side={side}
         className="text-sm leading-snug text-gray-700 max-w-xs"
       >
-        {typeof content === 'string' ? <span>{content}</span> : content}
+        {typeof content === "string" ? <span>{content}</span> : content}
       </PopoverContent>
     </Popover>
   );

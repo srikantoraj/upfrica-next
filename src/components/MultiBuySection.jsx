@@ -6,7 +6,6 @@
 
 //   // const tiers = secondary_data?.multi_buy === "yes" ? JSON.parse(secondary_data.multi_buy_tiers) : [];
 
-
 //   let tiers = [];
 
 //   if (secondary_data?.multi_buy === "yes") {
@@ -19,16 +18,18 @@
 //     }
 //   }
 
-
 //   // Don't render if no multi-buy tiers
 //   if (!tiers?.length) {
 //     return null;
 //   }
 
-
 import React, { useMemo } from "react";
 
-export default function MultiBuySection({ product, onTierSelect, selectedTier }) {
+export default function MultiBuySection({
+  product,
+  onTierSelect,
+  selectedTier,
+}) {
   const { secondary_data } = product || [];
 
   let tiers = [];
@@ -48,7 +49,9 @@ export default function MultiBuySection({ product, onTierSelect, selectedTier })
   const toUnits = (cents) => (parseInt(cents, 10) / 100).toFixed(2);
 
   const multiBuyOptions = useMemo(() => {
-    const sortedTiers = [...tiers].sort((a, b) => a.min_quantity - b.min_quantity);
+    const sortedTiers = [...tiers].sort(
+      (a, b) => a.min_quantity - b.min_quantity,
+    );
     return sortedTiers.map(({ min_quantity, price_each }, idx, arr) => {
       const isLast = idx === arr.length - 1;
       const label = isLast
@@ -81,7 +84,9 @@ export default function MultiBuySection({ product, onTierSelect, selectedTier })
               `}
             >
               <div className="text-sm text-gray-600">{opt.label}</div>
-              <div className="text-base font-bold text-black">₵{opt.price} each</div>
+              <div className="text-base font-bold text-black">
+                ₵{opt.price} each
+              </div>
             </div>
           );
         })}

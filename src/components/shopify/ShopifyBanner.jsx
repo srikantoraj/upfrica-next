@@ -61,8 +61,7 @@
 
 // export default ShopifyBanner;
 
-
-import React from 'react';
+import React from "react";
 
 const BlogHeaderBanner = () => {
   return (
@@ -75,7 +74,8 @@ const BlogHeaderBanner = () => {
 
         {/* Description */}
         <p className="text-sm md:text-base text-gray-700 max-w-xl mb-6">
-          Start your free trial with Shopify today—then use these resources to guide you through every step of the process.
+          Start your free trial with Shopify today—then use these resources to
+          guide you through every step of the process.
         </p>
 
         {/* Button Group */}
@@ -120,7 +120,3 @@ const BlogHeaderBanner = () => {
 };
 
 export default BlogHeaderBanner;
-
-
-
-

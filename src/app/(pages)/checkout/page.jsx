@@ -484,8 +484,7 @@
 
 // export default Checkout;
 
-
-'use client';
+"use client";
 
 import React, { useEffect, useState, useMemo } from "react";
 import { CountryDropdown } from "react-country-region-selector";
@@ -534,7 +533,7 @@ const Checkout = () => {
   const subtotal = useMemo(
     () =>
       basket.reduce((sum, i) => sum + (i.price_cents / 100) * i.quantity, 0),
-    [basket]
+    [basket],
   );
   // shipping cost
   const shippingCost = useMemo(() => {
@@ -567,8 +566,12 @@ const Checkout = () => {
   const LoadingDots = ({ color = "white" }) => (
     <div className="flex space-x-2 justify-center py-3">
       <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce`} />
-      <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-150`} />
-      <div className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-300`} />
+      <div
+        className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-150`}
+      />
+      <div
+        className={`h-2 w-2 bg-${color} rounded-full animate-bounce delay-300`}
+      />
     </div>
   );
 
@@ -717,7 +720,6 @@ const Checkout = () => {
               ))}
             </div>
 
-            
             {/* 3. Summary only on mobile/md/lg (still scrolls) */}
             <div className="block xl:hidden px-4 pb-20">
               <div className="flex justify-between text-gray-700">
@@ -747,10 +749,11 @@ const Checkout = () => {
                 disabled={!selectedAddress || !paymentMethod || isLoading}
                 className={`
                     w-full py-3 text-white font-semibold rounded-lg
-                    ${!selectedAddress || !paymentMethod || isLoading
-                    ? "bg-indigo-300 cursor-not-allowed"
-                    : "btn-primary"
-                  }
+                    ${
+                      !selectedAddress || !paymentMethod || isLoading
+                        ? "bg-indigo-300 cursor-not-allowed"
+                        : "btn-primary"
+                    }
     `}
               >
                 {isLoading ? <LoadingDots color="white" /> : "Place Order"}
@@ -764,10 +767,11 @@ const Checkout = () => {
                 disabled={!selectedAddress || !paymentMethod || isLoading}
                 className={`
       w-full py-3 text-white font-semibold rounded-lg
-      ${!selectedAddress || !paymentMethod || isLoading
-                    ? "bg-indigo-300 cursor-not-allowed"
-                    : "btn-primary"
-                  }
+      ${
+        !selectedAddress || !paymentMethod || isLoading
+          ? "bg-indigo-300 cursor-not-allowed"
+          : "btn-primary"
+      }
     `}
               >
                 {isLoading ? <LoadingDots color="white" /> : "Place Order"}
@@ -798,10 +802,11 @@ const Checkout = () => {
                     setSelectedAddress(a.id);
                     setShowChangeModal(false);
                   }}
-                  className={`p-4 border rounded-lg text-left hover:border-indigo-400 ${selectedAddress === a.id
-                    ? "border-indigo-600"
-                    : "border-gray-200"
-                    }`}
+                  className={`p-4 border rounded-lg text-left hover:border-indigo-400 ${
+                    selectedAddress === a.id
+                      ? "border-indigo-600"
+                      : "border-gray-200"
+                  }`}
                 >
                   <p className="font-medium">
                     {a.address_data.street}, {a.address_data.city}
@@ -861,7 +866,7 @@ const Checkout = () => {
                           country: vals.country,
                         },
                       }),
-                    }
+                    },
                   );
                   const json = await res.json();
                   setAddresses((prev) => [...prev, json]);
@@ -920,7 +925,11 @@ const Checkout = () => {
                     disabled={isSubmitting}
                     className="w-full py-3  rounded-lg font-semibold btn-primary transition"
                   >
-                    {isSubmitting ? <LoadingDots color="white" /> : "Save Address"}
+                    {isSubmitting ? (
+                      <LoadingDots color="white" />
+                    ) : (
+                      "Save Address"
+                    )}
                   </button>
                 </Form>
               )}
@@ -933,6 +942,3 @@ const Checkout = () => {
 };
 
 export default Checkout;
-
-
-

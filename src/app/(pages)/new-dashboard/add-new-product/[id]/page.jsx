@@ -4,13 +4,13 @@ import { FaMinus, FaPencilAlt, FaPlus } from "react-icons/fa";
 import { IoMdNotifications, IoMdPhotos } from "react-icons/io";
 // import { IoMdNotifications } from "react-icons/io";
 import { useFormik } from "formik";
-import Categore from "@/components/inpute/Categore";
-import Conditon from "@/components/inpute/Conditon";
-import Brand from "@/components/inpute/Brand";
-import Title from "@/components/inpute/Title";
-import Description from "@/components/inpute/Description";
-import Photo from "@/components/inpute/Photo";
-import SubmitButton from "@/components/inpute/SubmitButton";
+import Categore from "@/components/input/Categore";
+import Conditon from "@/components/input/Conditon";
+import Brand from "@/components/input/Brand";
+import Title from "@/components/input/Title";
+import Description from "@/components/input/Description";
+import Photo from "@/components/input/Photo";
+import SubmitButton from "@/components/input/SubmitButton";
 import useCategories from "@/components/api/data";
 
 const NewProduct = ({ params }) => {
@@ -23,12 +23,11 @@ const NewProduct = ({ params }) => {
   const { id } = params || {}; // Safely destructure id
 
   const { categories, conditions } = useCategories();
-  // console.log("Categories from useCategories:", categories); // দেখাচ্ছে 
-
+  // console.log("Categories from useCategories:", categories); // দেখাচ্ছে
 
   useEffect(() => {
     setCategorie(categories);
-    setCondition(condition)
+    setCondition(condition);
   }, [categories, conditions]);
 
   useEffect(() => {
@@ -52,7 +51,7 @@ const NewProduct = ({ params }) => {
           {
             method: "GET",
             headers: myHeaders,
-          }
+          },
         );
 
         if (!response.ok) {
@@ -65,10 +64,10 @@ const NewProduct = ({ params }) => {
 
         // Matching category with product's category_id
         const matchedCategory = categories.find(
-          (category) => category.id === data.category_id
+          (category) => category.id === data.category_id,
         );
         const matchedCondition = conditions.find(
-          (condition) => condition.id === data.condition_id
+          (condition) => condition.id === data.condition_id,
         );
 
         // Formik এ সেট করার সময় category_name এ matchedCategory.name সেট করা হচ্ছে
@@ -82,8 +81,8 @@ const NewProduct = ({ params }) => {
           secondary_postage_fee_cents: data?.secondary_postage_fee_cents || 0,
           price_currency: data?.price_currency || "GHS",
           status: data?.status || "",
-          category_name: matchedCategory ? matchedCategory.name : '', // Set category name if matched
-          condition_name: matchedCondition ? matchedCondition.name : '',
+          category_name: matchedCategory ? matchedCategory.name : "", // Set category name if matched
+          condition_name: matchedCondition ? matchedCondition.name : "",
         });
 
         setLoading(false);
@@ -97,9 +96,6 @@ const NewProduct = ({ params }) => {
       fetchProduct();
     }
   }, [id, categories]);
-
-
-
 
   const formik = useFormik({
     initialValues: {
@@ -132,28 +128,35 @@ const NewProduct = ({ params }) => {
         myHeaders.append("Authorization", `Bearer ${token}`);
         myHeaders.append("Content-Type", "application/json");
 
-        console.log(values)
+        console.log(values);
 
-
-        const response = await fetch(`https://upfrica-staging.herokuapp.com/api/v1/products/${id}`, {
-          method: "PATCH",
-          headers: myHeaders,
-          body: JSON.stringify({
-            product: {
-              title: values?.title,
-              description: values?.description,
-              product_quantity: values?.product_quantity,
-              price_cents: values?.price_cents,
-              sale_price_cents: values?.sale_price_cents,
-              postage_fee_cents: values?.postage_fee_cents,
-              secondary_postage_fee_cents: values?.secondary_postage_fee_cents,
-              price_currency: values?.price_currency,
-              status: values?.status,
-              category_id: categories.find(cat => cat.name === values.category_name)?.id || null,
-              condition_id: conditions.find(cond => cond.name === values.condition_name)?.id || null,
-            }
-          }),
-        });
+        const response = await fetch(
+          `https://upfrica-staging.herokuapp.com/api/v1/products/${id}`,
+          {
+            method: "PATCH",
+            headers: myHeaders,
+            body: JSON.stringify({
+              product: {
+                title: values?.title,
+                description: values?.description,
+                product_quantity: values?.product_quantity,
+                price_cents: values?.price_cents,
+                sale_price_cents: values?.sale_price_cents,
+                postage_fee_cents: values?.postage_fee_cents,
+                secondary_postage_fee_cents:
+                  values?.secondary_postage_fee_cents,
+                price_currency: values?.price_currency,
+                status: values?.status,
+                category_id:
+                  categories.find((cat) => cat.name === values.category_name)
+                    ?.id || null,
+                condition_id:
+                  conditions.find((cond) => cond.name === values.condition_name)
+                    ?.id || null,
+              },
+            }),
+          },
+        );
 
         if (!response.ok) {
           throw new Error("Failed to update product");
@@ -162,7 +165,6 @@ const NewProduct = ({ params }) => {
         const updatedProduct = await response.json();
         console.log("Product updated successfully:", updatedProduct);
         alert("Product updated successfully!");
-
       } catch (error) {
         console.error("Error updating product:", error);
         alert("Failed to update product");
@@ -172,14 +174,10 @@ const NewProduct = ({ params }) => {
     },
   });
 
-
   const toggleForm = (e) => {
     e.preventDefault();
     setIsOpen(!isOpen);
   };
-
-
-
 
   return (
     <div className="flex justify-center pt-5 md:pt-20 bg-slate-50 px-2 md:px-4">

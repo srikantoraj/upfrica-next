@@ -1,79 +1,111 @@
+// src/app/store/slices/cartSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
-// Helper to load basket items from localStorage if available
-const loadBasketFromLocalStorage = () => {
-  if (typeof window !== "undefined") {
-    const basket = localStorage.getItem("basket");
-    return basket ? JSON.parse(basket) : [];
+const STORAGE_KEY = "basket";
+
+const read = () => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
   }
-  return [];
+};
+
+const write = (items) => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  } catch {}
 };
 
 const initialState = {
-  items: loadBasketFromLocalStorage(),
+  items: read(),
 };
 
-const basketSlice = createSlice({
+const cartSlice = createSlice({
   name: "basket",
   initialState,
   reducers: {
-    setBasket: (state, action) => {
-      state.items = action.payload;
-      if (typeof window !== "undefined") {
-        localStorage.setItem("basket", JSON.stringify(state.items));
-      }
+    setBasket(state, action) {
+      state.items = Array.isArray(action.payload) ? action.payload : [];
+      write(state.items);
     },
-    addToBasket: (state, action) => {
-      // const existingIndex = state.items.findIndex(item => item.id === action.payload.id);
-      // if (existingIndex !== -1) {
-      //   state.items[existingIndex].quantity += 1;
-      // } else {
-      //   state.items.push({ ...action.payload, quantity: 1 });
-      // }
-      // if (typeof window !== 'undefined') {
-      //   localStorage.setItem('basket', JSON.stringify(state.items));
-      // }
 
-      const existingIndex = state.items.findIndex((item) =>
-          item.id === action.payload.id && item.sku === action.payload.sku
+    // Replaces quantity (not +=) if the item exists; otherwise pushes new
+    addToBasket(state, action) {
+      const payload = action.payload || {};
+      const qty = Math.max(1, Number(payload.quantity ?? 1));
+      const idx = state.items.findIndex(
+        (i) => i.id === payload.id && i.sku === payload.sku
       );
 
-      if (existingIndex !== -1) {
-        // যদি আগেই থাকে, তাহলে quantity আপডেট করো (+= না করে নতুনটা বসাও)
-        state.items[existingIndex].quantity = action.payload.quantity;
+      if (idx !== -1) {
+        // keep existing fields, refresh with latest payload, set quantity
+        state.items[idx] = { ...state.items[idx], ...payload, quantity: qty };
       } else {
-        // নতুন হলে, পাঠানো quantity সেট করো
-        state.items.push({ ...action.payload });
+        state.items.push({ ...payload, quantity: qty });
       }
-
-      // localStorage-এ সংরক্ষণ
-      if (typeof window !== "undefined") {
-        localStorage.setItem("basket", JSON.stringify(state.items));
-      }
+      write(state.items);
     },
 
+    updateQuantity(state, action) {
+      const { id, sku, quantity } = action.payload || {};
+      const idx = state.items.findIndex((i) => i.id === id && i.sku === sku);
+      if (idx === -1) return;
 
-
-    removeFromBasket: (state, action) => {
-      state.items = state.items.filter((item) => item.id !== action.payload);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("basket", JSON.stringify(state.items));
+      const q = Number(quantity);
+      if (!Number.isFinite(q) || q <= 0) {
+        // treat <= 0 as remove
+        state.items.splice(idx, 1);
+      } else {
+        state.items[idx].quantity = q;
       }
+      write(state.items);
     },
-    updateQuantity: (state, action) => {
-      const { id, quantity } = action.payload;
-      const item = state.items.find((item) => item.id === id);
-      if (item) {
-        item.quantity = quantity;
+
+    removeFromBasket(state, action) {
+      // Accept either { id, sku } or just id (legacy)
+      const payload = action.payload;
+      if (payload && typeof payload === "object") {
+        const { id, sku } = payload;
+        state.items = state.items.filter(
+          (i) => !(i.id === id && (sku ? i.sku === sku : true))
+        );
+      } else {
+        const id = payload;
+        state.items = state.items.filter((i) => i.id !== id);
       }
-      if (typeof window !== "undefined") {
-        localStorage.setItem("basket", JSON.stringify(state.items));
-      }
+      write(state.items);
+    },
+
+    clearBasket(state) {
+      state.items = [];
+      write(state.items);
     },
   },
 });
 
-export const { setBasket, addToBasket, removeFromBasket, updateQuantity } =
-  basketSlice.actions;
+export const {
+  setBasket,
+  addToBasket,
+  updateQuantity,
+  removeFromBasket,
+  clearBasket,
+} = cartSlice.actions;
 
-export default basketSlice.reducer;
+// ---- Selectors -------------------------------------------------------------
+export const selectBasketItems = (s) => s.basket.items;
+export const selectBasketCount = (s) =>
+  s.basket.items.reduce((n, i) => n + (i.quantity || 0), 0);
+
+// If each item stores a per-unit price in cents (e.g., price_cents), this works:
+export const selectBasketSubtotalCents = (s) =>
+  s.basket.items.reduce(
+    (sum, i) => sum + (i.price_cents || 0) * (i.quantity || 1),
+    0
+  );
+
+export default cartSlice.reducer;

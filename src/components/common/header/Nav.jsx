@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 
 const Navbar = () => {
@@ -18,9 +17,7 @@ const Navbar = () => {
       <ul className=" text-base font-medium flex gap-6 tracking-wide text-gray-800">
         {datas.map((data) => (
           <li key={data.id} className="hover:text-purple-500">
-            <Link href={data.url} >
-              {data.title}
-            </Link>
+            <Link href={data.url}>{data.title}</Link>
           </li>
         ))}
       </ul>

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import * as TooltipPrimitive from '@radix-ui/react-tooltip';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+import { cn } from "@/lib/utils";
 
 export function TooltipProvider({ ...props }) {
   return <TooltipPrimitive.Provider delayDuration={300} {...props} />;
@@ -21,7 +21,7 @@ export function TooltipContent({ className, sideOffset = 4, ...props }) {
         sideOffset={sideOffset}
         className={cn(
           "z-50 max-w-xs rounded-md bg-black/90 px-3 py-1.5 text-xs text-white shadow-md animate-in fade-in-0 zoom-in-95",
-          className
+          className,
         )}
         {...props}
       />

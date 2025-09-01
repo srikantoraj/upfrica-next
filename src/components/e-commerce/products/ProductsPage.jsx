@@ -1,13 +1,12 @@
-"use client"
-import { useState } from 'react';
+"use client";
+import { useState } from "react";
 
-
-import Product from './Product';
-import ProductFilterBar from './ProductFilterBar';
+import Product from "./Product";
+import ProductFilterBar from "./ProductFilterBar";
 
 export default function ProductsPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortOrder, setSortOrder] = useState('high');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState("high");
 
   return (
     <div className="pt-5">

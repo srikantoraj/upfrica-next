@@ -229,10 +229,10 @@
 //     </div>
 //   );
 // }
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import {
   FiSearch,
   FiStar,
@@ -241,16 +241,16 @@ import {
   FiCalendar,
   FiTrash,
   FiCheck,
-} from 'react-icons/fi';
-import Pagination from '@/components/Pagination';
-import LoaderButton from '@/components/LoaderButton';
+} from "react-icons/fi";
+import Pagination from "@/components/Pagination";
+import LoaderButton from "@/components/LoaderButton";
 
 const PAGE_SIZE = 20;
 
 export default function PendingReviewsPage() {
   const { token } = useSelector((state) => state.auth);
   const [reviews, setReviews] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -266,11 +266,11 @@ export default function PendingReviewsPage() {
         const res = await fetch(
           `https://media.upfrica.com/api/products-reviews/pending/?page=${currentPage}`,
           {
-            method: 'GET',
+            method: "GET",
             headers: { Authorization: `Token ${token}` },
-          }
+          },
         );
-        if (!res.ok) throw new Error('Failed to load reviews');
+        if (!res.ok) throw new Error("Failed to load reviews");
         const data = await res.json();
         setReviews(data.results || []);
         setTotalPages(Math.ceil((data.count || 0) / PAGE_SIZE));
@@ -285,24 +285,21 @@ export default function PendingReviewsPage() {
 
   // Approve a review
   const handleApprove = async (id) => {
-    if (!window.confirm('Approve this review?')) return;
+    if (!window.confirm("Approve this review?")) return;
     setApprovingId(id);
     try {
-      await fetch(
-        `https://media.upfrica.com/api/reviews/${id}/approve/`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Token ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(id),
-        }
-      );
+      await fetch(`https://media.upfrica.com/api/reviews/${id}/approve/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(id),
+      });
       setReviews((prev) => prev.filter((r) => r.id !== id));
     } catch (err) {
       console.error(err);
-      alert('Could not approve review.');
+      alert("Could not approve review.");
     } finally {
       setApprovingId(null);
     }
@@ -310,22 +307,22 @@ export default function PendingReviewsPage() {
 
   // Delete a review
   const handleDelete = async (r) => {
-    if (!window.confirm('Delete this review?')) return;
+    if (!window.confirm("Delete this review?")) return;
     setDeletingId(r.id);
     try {
       await fetch(
         `https://media.upfrica.com/api/products/${r.product.slug}/reviews/${r.id}/`,
         {
-          method: 'DELETE',
+          method: "DELETE",
           headers: {
             Authorization: `Token ${token}`,
           },
-        }
+        },
       );
       setReviews((prev) => prev.filter((rev) => rev.id !== r.id));
     } catch (err) {
       console.error(err);
-      alert('Could not delete review.');
+      alert("Could not delete review.");
     } finally {
       setDeletingId(null);
     }
@@ -333,7 +330,7 @@ export default function PendingReviewsPage() {
 
   // Filter by review or product title
   const filtered = reviews.filter((r) => {
-    const rt = r.title?.toLowerCase() || '';
+    const rt = r.title?.toLowerCase() || "";
     const pt = r.product.title.toLowerCase();
     return (
       rt.includes(searchTerm.toLowerCase()) ||
@@ -373,8 +370,6 @@ export default function PendingReviewsPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          
-
           {filtered.map((r) => (
             <div
               key={r.id}
@@ -392,43 +387,47 @@ export default function PendingReviewsPage() {
                   )}
                 </div>
                 <h2 className="text-base  text-gray-800 truncate">
-                 Title: {r.product.title || 'N/A'}
+                  Title: {r.product.title || "N/A"}
                 </h2>
               </div>
 
               {/* Second row: all other info */}
               <div className="grid grid-cols-2 gap-4 text-sm text-gray-700">
                 <div>
-                  <span className="font-semibold text-gray-800">Review:</span>{' '}
-                  {r.title || 'N/A'}
+                  <span className="font-semibold text-gray-800">Review:</span>{" "}
+                  {r.title || "N/A"}
                 </div>
                 <div className="flex items-center">
                   <FiStar className="mr-1 text-yellow-500" />
-                  <span>{r.rating != null ? `${r.rating}/5` : 'N/A'}</span>
+                  <span>{r.rating != null ? `${r.rating}/5` : "N/A"}</span>
                 </div>
                 <div className="flex items-center">
                   <FiCalendar className="mr-1 text-gray-500" />
                   <span>
                     {r.created_at
                       ? new Date(r.created_at).toLocaleDateString()
-                      : 'N/A'}
+                      : "N/A"}
                   </span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-800">Comment:</span>{' '}
-                  {r.comment || 'N/A'}
+                  <span className="font-medium text-gray-800">Comment:</span>{" "}
+                  {r.comment || "N/A"}
                 </div>
                 <div className="col-span-2">
                   <div className="flex items-center mb-1">
                     <FiHelpCircle className="mr-1 text-gray-500" />
-                    <span className="font-medium text-gray-800">Questions:</span>
+                    <span className="font-medium text-gray-800">
+                      Questions:
+                    </span>
                   </div>
                   {r.questions && Object.keys(r.questions).length > 0 ? (
                     <ul className="list-disc list-inside text-gray-700 ml-4">
                       {Object.entries(r.questions).map(([k, v]) => (
                         <li key={k}>
-                          <span className="capitalize">{k.replace(/_/g, ' ')}:</span>{' '}
-                          {v || 'N/A'}
+                          <span className="capitalize">
+                            {k.replace(/_/g, " ")}:
+                          </span>{" "}
+                          {v || "N/A"}
                         </li>
                       ))}
                     </ul>
@@ -443,10 +442,11 @@ export default function PendingReviewsPage() {
                 <LoaderButton
                   loading={approvingId === r.id}
                   onClick={() => handleApprove(r.id)}
-                  className={`flex items-center px-4 py-2 rounded-full font-semibold ${approvingId === r.id
-                      ? 'bg-green-300 text-white'
-                      : 'bg-green-400 hover:bg-green-600 text-white'
-                    }`}
+                  className={`flex items-center px-4 py-2 rounded-full font-semibold ${
+                    approvingId === r.id
+                      ? "bg-green-300 text-white"
+                      : "bg-green-400 hover:bg-green-600 text-white"
+                  }`}
                 >
                   <FiCheck className="mr-2" />
                   Approve
@@ -454,10 +454,11 @@ export default function PendingReviewsPage() {
                 <LoaderButton
                   loading={deletingId === r.id}
                   onClick={() => handleDelete(r)}
-                  className={`flex items-center px-4 py-2 rounded-full font-semibold ${deletingId === r.id
-                      ? 'bg-red-100 text-white'
-                      : 'bg-red-400 hover:bg-red-600 text-white'
-                    }`}
+                  className={`flex items-center px-4 py-2 rounded-full font-semibold ${
+                    deletingId === r.id
+                      ? "bg-red-100 text-white"
+                      : "bg-red-400 hover:bg-red-600 text-white"
+                  }`}
                 >
                   <FiTrash className="mr-2" />
                   Delete

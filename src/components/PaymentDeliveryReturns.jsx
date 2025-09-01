@@ -1,10 +1,12 @@
 // components/PaymentDeliveryReturns.js
-import React from 'react';
+import React from "react";
 
-const PaymentDeliveryReturns = ({ secondaryData, dispatchTime, seller_payment_terms = '' }) => {
+const PaymentDeliveryReturns = ({
+  secondaryData,
+  dispatchTime,
+  seller_payment_terms = "",
+}) => {
   const { cancellable, cancellation_policy } = secondaryData || {};
-
-
 
   const dispatchDays = parseInt(dispatchTime) || 0;
 
@@ -22,27 +24,30 @@ const PaymentDeliveryReturns = ({ secondaryData, dispatchTime, seller_payment_te
   // 1. Define your payment methods in an array of objects
   const paymentMethods = [
     {
-      name: 'MTN MOMO',
-      logoUrl: 'https://uploads-eu-west-1.insided.com/mtngroup-en/attachment/96f3ec28-bc42-49ee-be5d-6ed5345e516c_thumb.png',
+      name: "MTN MOMO",
+      logoUrl:
+        "https://uploads-eu-west-1.insided.com/mtngroup-en/attachment/96f3ec28-bc42-49ee-be5d-6ed5345e516c_thumb.png",
     },
     {
-      name: 'Google Pay',
-      logoUrl: 'https://lh3.googleusercontent.com/z4nOBXDSMJ2zwyW9Nd1KHYEJgbhuqnVLvAGUXh0uEUn8f9QHnPYUY_64oYwOxRsDx26SEb5PgZJzLJRU6RwToFL00Wq--pBGmAwe=s0',
+      name: "Google Pay",
+      logoUrl:
+        "https://lh3.googleusercontent.com/z4nOBXDSMJ2zwyW9Nd1KHYEJgbhuqnVLvAGUXh0uEUn8f9QHnPYUY_64oYwOxRsDx26SEb5PgZJzLJRU6RwToFL00Wq--pBGmAwe=s0",
     },
     {
-      name: 'VISA',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg',
+      name: "VISA",
+      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg",
     },
     {
-      name: 'MasterCard',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Mastercard_2019_logo.svg',
+      name: "MasterCard",
+      logoUrl:
+        "https://upload.wikimedia.org/wikipedia/commons/a/a4/Mastercard_2019_logo.svg",
     },
   ];
 
   return (
-    <div className="mt-6 w-full max-w-3xl mx-auto py-2  border-gray-200 rounded-lg">
+    <div className="mt-6 w-full max-w-3xl mx-auto py-2  border-gray-200 rounded-lg space-y-0">
       {/* Title */}
-      <h2 className="text-xl lg:text-2xl font-bold mb-6">
+      <h2 className="text-xl lg:text-2xl font-bold mb-2">
         Payment, Delivery and Returns
       </h2>
 
@@ -57,7 +62,7 @@ const PaymentDeliveryReturns = ({ secondaryData, dispatchTime, seller_payment_te
           <li>✅ Pay &amp; Collect (Available at checkout)</li>
         </ul> */}
         <div
-          className='space-y-1 text-base lg:text-lg'
+          className="space-y-1 text-base lg:text-lg"
           dangerouslySetInnerHTML={{ __html: seller_payment_terms }}
         />
         <div className="mt-2">
@@ -88,20 +93,17 @@ const PaymentDeliveryReturns = ({ secondaryData, dispatchTime, seller_payment_te
         <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-y-2 lg:gap-y-0 lg:gap-x-6">
           <p className="text-base lg:text-lg font-semibold">Returns:</p>
           <div>
-            {!cancellable && <p className="text-base lg:text-lg">
-              The seller won't accept returns for this item.
-             
-             
-            </p>}
-            {
-              cancellable && (
-                <p className="text-base lg:text-lg">
-                  You can return this item within
-                  <span className="font-bold"> 7 days</span> of receiving it.
-
-                </p>
-              )
-            }
+            {!cancellable && (
+              <p className="text-base lg:text-lg">
+                The seller won't accept returns for this item.
+              </p>
+            )}
+            {cancellable && (
+              <p className="text-base lg:text-lg">
+                You can return this item within
+                <span className="font-bold"> 7 days</span> of receiving it.
+              </p>
+            )}
           </div>
         </div>
 
@@ -111,10 +113,17 @@ const PaymentDeliveryReturns = ({ secondaryData, dispatchTime, seller_payment_te
           <div className="flex items-center space-x-4 mt-2 lg:mt-0">
             {/* 2. Map over your paymentMethods array to render each payment method */}
             {paymentMethods.map((method, index) => (
-                    <div key={index} className="border-[2px] lg:border-[3px] border-black p-2 rounded flex items-center justify-center w-20 h-12">
-                        <img className="max-h-6" src={method.logoUrl} alt={method.name} />
-                    </div>
-                ))}
+              <div
+                key={index}
+                className="border-[2px] lg:border-[3px] border-black p-2 rounded flex items-center justify-center w-20 h-12"
+              >
+                <img
+                  className="max-h-6"
+                  src={method.logoUrl}
+                  alt={method.name}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </div>

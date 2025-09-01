@@ -50,8 +50,7 @@
 
 // export default Prelist;
 
-
-import React from 'react';
+import React from "react";
 
 function Prelist() {
   return (
@@ -78,7 +77,12 @@ function Prelist() {
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z"
+                />
               </svg>
               Search
             </span>
@@ -91,19 +95,22 @@ function Prelist() {
             {
               title: "Share item details",
               desc: "Use keywords like brand, model or unique info (ISBN, MPN, VIN).",
-              image: "https://i.ebayimg.com/00/s/MTIwMFgxNTAw/z/6TYAAOSw2NFlzRIU/%24_1.PNG?set_id=2",
+              image:
+                "https://i.ebayimg.com/00/s/MTIwMFgxNTAw/z/6TYAAOSw2NFlzRIU/%24_1.PNG?set_id=2",
               step: 1,
             },
             {
               title: "Find a match",
               desc: "We'll search our catalogue to find similar items.",
-              image: "https://i.ebayimg.com/00/s/MTIwMFgxNTAw/z/-QAAAOSw2HZnkubn/$_1.PNG?set_id=2",
+              image:
+                "https://i.ebayimg.com/00/s/MTIwMFgxNTAw/z/-QAAAOSw2HZnkubn/$_1.PNG?set_id=2",
               step: 2,
             },
             {
               title: "Edit and list",
               desc: "You can preview or make changes before listing your item.",
-              image: "https://i.ebayimg.com/00/s/MTIwMFgxNTAw/z/HA0AAOSwfi1nkubn/$_1.PNG?set_id=2",
+              image:
+                "https://i.ebayimg.com/00/s/MTIwMFgxNTAw/z/HA0AAOSwfi1nkubn/$_1.PNG?set_id=2",
               step: 3,
             },
           ].map(({ step, title, desc, image }) => (
@@ -111,10 +118,18 @@ function Prelist() {
               key={step}
               className="bg-white rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow duration-300"
             >
-              <img src={image} alt={`Step ${step}`} className="w-full h-48 object-cover" />
+              <img
+                src={image}
+                alt={`Step ${step}`}
+                className="w-full h-48 object-cover"
+              />
               <div className="p-5">
-                <p className="text-blue-600 font-semibold text-sm">STEP {step}</p>
-                <h3 className="text-lg font-bold text-gray-800 mt-1">{title}</h3>
+                <p className="text-blue-600 font-semibold text-sm">
+                  STEP {step}
+                </p>
+                <h3 className="text-lg font-bold text-gray-800 mt-1">
+                  {title}
+                </h3>
                 <p className="text-gray-600 mt-2 text-sm">{desc}</p>
               </div>
             </div>
@@ -126,4 +141,3 @@ function Prelist() {
 }
 
 export default Prelist;
-

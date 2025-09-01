@@ -8,7 +8,9 @@ const ProductSlider = ({ images = [], selectedColor }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [zoomPosition, setZoomPosition] = useState(null);
-  const [bgGradient, setBgGradient] = useState("linear-gradient(to bottom, #1f1f1f, #000)");
+  const [bgGradient, setBgGradient] = useState(
+    "linear-gradient(to bottom, #1f1f1f, #000)",
+  );
   const imageContainerRef = useRef(null);
 
   const safeImages = Array.isArray(images)
@@ -16,7 +18,7 @@ const ProductSlider = ({ images = [], selectedColor }) => {
         (img) =>
           typeof img === "string" &&
           !img.toLowerCase().includes(".mp4") &&
-          !img.toLowerCase().includes("video")
+          !img.toLowerCase().includes("video"),
       )
     : [];
 
@@ -71,7 +73,9 @@ const ProductSlider = ({ images = [], selectedColor }) => {
   useEffect(() => {
     const listener = (e) => {
       const color = e.detail;
-      const matchIndex = safeImages.findIndex(img => img.toLowerCase().includes(color));
+      const matchIndex = safeImages.findIndex((img) =>
+        img.toLowerCase().includes(color),
+      );
       if (matchIndex !== -1) setSelectedIndex(matchIndex);
     };
 
@@ -81,12 +85,17 @@ const ProductSlider = ({ images = [], selectedColor }) => {
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
-  const nextImage = () => setSelectedIndex((prev) => (prev + 1) % safeImages.length);
-  const prevImage = () => setSelectedIndex((prev) => (prev - 1 + safeImages.length) % safeImages.length);
+  const nextImage = () =>
+    setSelectedIndex((prev) => (prev + 1) % safeImages.length);
+  const prevImage = () =>
+    setSelectedIndex(
+      (prev) => (prev - 1 + safeImages.length) % safeImages.length,
+    );
 
   const handleMouseMove = (e) => {
     if (!imageContainerRef.current) return;
-    const { left, top, width, height } = imageContainerRef.current.getBoundingClientRect();
+    const { left, top, width, height } =
+      imageContainerRef.current.getBoundingClientRect();
     const x = Math.min(100, Math.max(0, ((e.clientX - left) / width) * 100));
     const y = Math.min(100, Math.max(0, ((e.clientY - top) / height) * 100));
     setZoomPosition({ x, y });
@@ -95,7 +104,9 @@ const ProductSlider = ({ images = [], selectedColor }) => {
   const handleMouseLeave = () => setZoomPosition(null);
 
   if (safeImages.length === 0) {
-    return <p className="text-center text-gray-500">No valid images available</p>;
+    return (
+      <p className="text-center text-gray-500">No valid images available</p>
+    );
   }
 
   return (
@@ -150,7 +161,9 @@ const ProductSlider = ({ images = [], selectedColor }) => {
             width={60}
             height={60}
             className={`cursor-pointer rounded-md ${
-              selectedIndex === i ? "border-2 border-green-500" : "border border-gray-300"
+              selectedIndex === i
+                ? "border-2 border-green-500"
+                : "border border-gray-300"
             }`}
             onClick={() => setSelectedIndex(i)}
           />
@@ -175,7 +188,9 @@ const ProductSlider = ({ images = [], selectedColor }) => {
                 width={60}
                 height={60}
                 className={`cursor-pointer rounded-md ${
-                  selectedIndex === i ? "border-2 border-orange-500" : "opacity-60"
+                  selectedIndex === i
+                    ? "border-2 border-orange-500"
+                    : "opacity-60"
                 }`}
                 onClick={() => setSelectedIndex(i)}
               />

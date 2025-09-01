@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -9,8 +8,8 @@ import { FaEdit, FaTrash } from "react-icons/fa";
 
 // 1) Custom hook: fetch addresses
 const useFetchAddresses = () => {
-  const [data, setData]       = useState([]);
-  const [error, setError]     = useState(null);
+  const [data, setData] = useState([]);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const token = useSelector((s) => s.auth.token);
 
@@ -53,12 +52,12 @@ const useFetchAddresses = () => {
 const EditModal = ({ address, onClose, onSaved, onDeleted }) => {
   const [form, setForm] = useState({
     full_name: address.full_name,
-    street:    address.address_data.street,
-    city:      address.address_data.city,
-    state:     address.address_data.state,
-    zip_code:  address.address_data.zip_code,
-    country:   address.address_data.country,
-    phone:     address.address_data.phone_number,
+    street: address.address_data.street,
+    city: address.address_data.city,
+    state: address.address_data.state,
+    zip_code: address.address_data.zip_code,
+    country: address.address_data.country,
+    phone: address.address_data.phone_number,
   });
   const token = useSelector((s) => s.auth.token);
 
@@ -86,12 +85,12 @@ const EditModal = ({ address, onClose, onSaved, onDeleted }) => {
               phone_number: form.phone,
             },
           }),
-        }
+        },
       );
       if (!res.ok) throw new Error(await res.text());
       const updated = await res.json();
-      console.log('updated',updated);
-      
+      console.log("updated", updated);
+
       onSaved(updated);
       onClose();
     } catch (err) {
@@ -108,7 +107,7 @@ const EditModal = ({ address, onClose, onSaved, onDeleted }) => {
         {
           method: "DELETE",
           headers: { Authorization: `Token ${token}` },
-        }
+        },
       );
       if (!res.ok) throw new Error(await res.text());
       onDeleted(address.id);
@@ -173,14 +172,7 @@ const EditModal = ({ address, onClose, onSaved, onDeleted }) => {
 const AddressCard = ({ item, onEdit }) => {
   const {
     full_name,
-    address_data: {
-      street,
-      city,
-      state,
-      zip_code,
-      country,
-      phone_number,
-    },
+    address_data: { street, city, state, zip_code, country, phone_number },
   } = item;
 
   return (
@@ -248,8 +240,8 @@ const AddressCard = ({ item, onEdit }) => {
 // 4) Page component
 export default function AddressPage() {
   const { data: addresses, error, loading } = useFetchAddresses();
-  const [modalAddress, setModalAddress]    = useState(null);
-  const [list, setList]                    = useState([]);
+  const [modalAddress, setModalAddress] = useState(null);
+  const [list, setList] = useState([]);
 
   // keep local copy of data to update/delete
   useEffect(() => {
@@ -257,9 +249,7 @@ export default function AddressPage() {
   }, [addresses]);
 
   const handleSaved = (updated) => {
-    setList((prev) =>
-      prev.map((a) => (a.id === updated.id ? updated : a))
-    );
+    setList((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
   };
 
   const handleDeleted = (id) => {
@@ -267,7 +257,7 @@ export default function AddressPage() {
   };
 
   if (loading) return <Loading />;
-  if (error)   return <p className="text-red-500">Error: {error}</p>;
+  if (error) return <p className="text-red-500">Error: {error}</p>;
 
   return (
     <div className="container mx-auto my-10">
@@ -300,5 +290,3 @@ export default function AddressPage() {
     </div>
   );
 }
-
-

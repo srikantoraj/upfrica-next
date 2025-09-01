@@ -1,5 +1,5 @@
 // components/order/OrderBord.js
-'use client';
+"use client";
 import Link from "next/link";
 import React from "react";
 import { usePathname } from "next/navigation";
@@ -11,9 +11,17 @@ const OrderBord = () => {
 
   const links = [
     { href: "/order/order", label: "All Orders", icon: BiSolidShoppingBag },
-    { href: "/order/your-sales", label: "Your Sales", icon: BiSolidShoppingBag },
+    {
+      href: "/order/your-sales",
+      label: "Your Sales",
+      icon: BiSolidShoppingBag,
+    },
     { href: "/order/orders", label: "Orders", icon: BiSolidShoppingBag },
-    { href: "/order/cancellations", label: "Cancellations", icon: FaTimesCircle },
+    {
+      href: "/order/cancellations",
+      label: "Cancellations",
+      icon: FaTimesCircle,
+    },
     { href: "/order/returns", label: "Returns", icon: FaUndoAlt },
   ];
 

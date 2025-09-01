@@ -1,4 +1,3 @@
 export default function CancellationsPage() {
-    return <h3>Your Cancellations</h3>;
-  }
-  
+  return <h3>Your Cancellations</h3>;
+}

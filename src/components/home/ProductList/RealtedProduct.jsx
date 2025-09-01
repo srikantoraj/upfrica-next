@@ -3,14 +3,12 @@ import React from "react";
 import RelatedProductCard from "./RelatedProductCard";
 import RelatedProductCardSkeleton from "./RelatedProductCardSkeleton";
 
-
 // const RealtedProduct = ({ productSlug, productTitle,relatedProducts, location = "Ghana" }) => {
 //   const [products, setProducts] = useState([]);
 //   const [loading, setLoading] = useState(true);
 //   const [error, setError] = useState(null);
 
 //   console.log("related product component data",relatedProducts);
-
 
 //   // Truncate product title for SEO heading
 //   const truncateTitle = (str, max = 50) => {
@@ -72,7 +70,6 @@ import RelatedProductCardSkeleton from "./RelatedProductCardSkeleton";
 
 //   // console.log('products',products);
 
-
 //   return (
 //     <div className="py-10">
 //       <h3 className="text-lg md:text-lg lg:text-xl font-medium border-b pb-2 mb-4">
@@ -91,7 +88,12 @@ import RelatedProductCardSkeleton from "./RelatedProductCardSkeleton";
 //   );
 // };
 
-const RealtedProduct = ({ productSlug, productTitle, relatedProducts, location = "Ghana" }) => {
+const RealtedProduct = ({
+  productSlug,
+  productTitle,
+  relatedProducts,
+  location = "Ghana",
+}) => {
   // 1. SEO Title
   const truncateTitle = (str, max = 50) => {
     if (!str || typeof str !== "string") return "";
@@ -140,6 +142,5 @@ const RealtedProduct = ({ productSlug, productTitle, relatedProducts, location =
     </div>
   );
 };
-
 
 export default RealtedProduct;

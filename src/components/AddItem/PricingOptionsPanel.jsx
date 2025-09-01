@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import React, { useState } from "react";
 
 export default function PricingOptionsPanel() {
@@ -53,7 +53,8 @@ export default function PricingOptionsPanel() {
             {
               key: "immediatePay",
               label: "Immediate payment",
-              description: "Require immediate payment for Buy it now purchases.",
+              description:
+                "Require immediate payment for Buy it now purchases.",
               indent: true,
             },
             {

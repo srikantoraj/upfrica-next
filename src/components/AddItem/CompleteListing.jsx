@@ -15,11 +15,9 @@ const CompleteListing = () => {
         </button>
       </div>
       <p className="text-sm text-gray-600 mt-2 max-w-2xl">
-        You can add up to 24 photos and a 1-minute video. Buyers want to see all details and angles.{" "}
-        <a
-          href="#"
-          className="text-blue-600 underline hover:text-blue-800"
-        >
+        You can add up to 24 photos and a 1-minute video. Buyers want to see all
+        details and angles.{" "}
+        <a href="#" className="text-blue-600 underline hover:text-blue-800">
           Tips for taking pro photos
         </a>
       </p>

@@ -1,4 +1,3 @@
-
 // import Link from 'next/link';
 // import React from 'react';
 
@@ -71,7 +70,6 @@
 
 // export default NavTitle;
 
-
 // import Link from 'next/link';
 // import React from 'react';
 
@@ -117,26 +115,25 @@
 
 // export default NavTitle;
 
-
-import Link from 'next/link';
-import React from 'react';
+import Link from "next/link";
+import React from "react";
 
 const navItems = [
-  { name: 'Home', href: '/' },
-  { name: 'Browse', href: '/products' },
-  { name: 'Deals', href: '/todays-deals' },
-  { name: 'Shops', href: '/shops' },
-  { name: 'Categories', href: '/categories' },
-  { name: 'How It Works', href: '/how-it-works' },
-  { name: 'UK Site', href: 'https://upfrica.co.uk', external: true },
-  { name: 'Careers', href: '/careers', external: true },
+  { name: "Home", href: "/" },
+  { name: "Browse", href: "/products" },
+  { name: "Deals", href: "/todays-deals" },
+  { name: "Shops", href: "/shops" },
+  { name: "Categories", href: "/categories" },
+  { name: "How It Works", href: "/how-it-works" },
+  { name: "UK Site", href: "https://upfrica.co.uk", external: true },
+  { name: "Careers", href: "/careers", external: true },
 ];
 
 const NavTitle = ({ isOpen }) => {
   return (
     // <div
-    //   className={`absolute  left-0 w-full  bg-white z-50 top-40 transition-all duration-200 ease-in-out transform 
-    //     ${isOpen ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} 
+    //   className={`absolute  left-0 w-full  bg-white z-50 top-40 transition-all duration-200 ease-in-out transform
+    //     ${isOpen ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}
     //     2xl:hidden`}
     // >
     //   <ul className="flex flex-col text-black py-4 ">
@@ -167,14 +164,15 @@ const NavTitle = ({ isOpen }) => {
     <>
       {/* BACKDROP */}
       <div
-        className={`fixed 2xl:hidden inset-0 bg-white transition-opacity duration-300 ease-in-out top-10 z-40 ${isOpen ? 'opacity-80 visible' : 'opacity-0 invisible'
-          }`}
+        className={`fixed 2xl:hidden inset-0 bg-white transition-opacity duration-300 ease-in-out top-10 z-40 ${
+          isOpen ? "opacity-80 visible" : "opacity-0 invisible"
+        }`}
       />
 
       {/* MENU */}
       <div
         className={`absolute left-0 w-full  bg-white z-50 top-24 lg:top-40 transition-all duration-300 ease-in-out transform 
-          ${isOpen ? 'bg-opacity-100 ' : '-translate-y-full opacity-0'} 
+          ${isOpen ? "bg-opacity-100 " : "-translate-y-full opacity-0"} 
           2xl:hidden`}
       >
         <ul className="flex flex-col text-black py-4">
@@ -206,4 +204,3 @@ const NavTitle = ({ isOpen }) => {
 };
 
 export default NavTitle;
-

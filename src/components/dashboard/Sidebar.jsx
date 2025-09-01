@@ -31,7 +31,6 @@ export default function Sidebar() {
 
   // যেসব আইটেমে সাবমেনু আছে, সেগুলো ট্র্যাক রাখার জন্য
   const [openDropdown, setOpenDropdown] = useState("");
-  
 
   // মেনু আইটেম লিস্ট
   const menuItems = [
@@ -51,7 +50,7 @@ export default function Sidebar() {
         { label: "All Videos", route: "/dashboard/videos" },
       ],
     },
-  
+
     {
       label: "Profile",
       route: "/profile",
@@ -62,13 +61,16 @@ export default function Sidebar() {
       route: "#",
       icon: FaRegEdit,
       children: [
-        { label: "Create Tour Itinerary", route: "/dashboard/create-tour-itienrary" },
+        {
+          label: "Create Tour Itinerary",
+          route: "/dashboard/create-tour-itienrary",
+        },
         { label: "Add new Hotel", route: "/dashboard/create-hotel-itienrary" },
         { label: "Add new Story", route: "/dashboard/add-new-story" },
         { label: "Add new Video", route: "/dashboard/add-new-video" },
       ],
     },
-  
+
     {
       label: "Settings",
       route: "/settings",

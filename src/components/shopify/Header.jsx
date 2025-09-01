@@ -77,7 +77,6 @@
 
 // export default ShopifyHeader;
 
-
 // 'use client';
 
 // import { useState } from 'react';
@@ -192,14 +191,13 @@
 
 // export default ShopifyStickyHeader;
 
+"use client";
 
-'use client';
-
-import { useState } from 'react';
-import Link from 'next/link';
-import { FaChevronDown } from 'react-icons/fa';
-import { FiSearch } from 'react-icons/fi';
-import { IoClose } from 'react-icons/io5';
+import { useState } from "react";
+import Link from "next/link";
+import { FaChevronDown } from "react-icons/fa";
+import { FiSearch } from "react-icons/fi";
+import { IoClose } from "react-icons/io5";
 
 const ShopifyStickyHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -208,7 +206,6 @@ const ShopifyStickyHeader = () => {
   return (
     <header className="sticky top-0 z-20 text-black bg-white shadow-md before:absolute before:top-0 before:left-0 before:pointer-events-none before:w-full before:h-14 before:z-20 after:absolute after:top-0 after:left-0 after:will-change-[opacity] after:pointer-events-none after:h-full after:w-full after:z-10 after:transition-opacity after:duration-200 after:bg-white before:border-y before:border-black/20 after:opacity-100 pointer-events-auto before:opacity-100">
       <div className="relative z-20 flex items-center h-14 px-4  container">
-
         {/* LEFT: Logo + Title (only visible on small screens) */}
         <div className="flex items-center w-full sm:w-auto">
           <Link href="/" className="flex items-center mr-3 sm:mr-5">
@@ -226,21 +223,35 @@ const ShopifyStickyHeader = () => {
             className="flex flex-col gap-y-0.5 leading-tight lg:hidden"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            <span className="text-xs font-bold uppercase text-gray-500">Blog</span>
+            <span className="text-xs font-bold uppercase text-gray-500">
+              Blog
+            </span>
             <span className="text-base font-bold flex items-center">
               Menu
-              <FaChevronDown className={`ml-1 transition-transform duration-200 ${mobileMenuOpen ? 'rotate-180' : ''}`} />
+              <FaChevronDown
+                className={`ml-1 transition-transform duration-200 ${mobileMenuOpen ? "rotate-180" : ""}`}
+              />
             </span>
           </button>
         </div>
 
         {/* NAVIGATION - Desktop only */}
         <nav className="hidden lg:flex items-center ml-10 gap-6 text-base font-medium">
-          <Link href="/blog" className="hover:underline">Blog</Link>
-          <Link href="/blog/topics/find-an-idea" className="hover:underline">Find an Idea</Link>
-          <Link href="/blog/topics/starting-up" className="hover:underline">Starting Up</Link>
-          <Link href="/blog/topics/marketing" className="hover:underline">Marketing</Link>
-          <Link href="/blog/latest" className="hover:underline">Latest</Link>
+          <Link href="/blog" className="hover:underline">
+            Blog
+          </Link>
+          <Link href="/blog/topics/find-an-idea" className="hover:underline">
+            Find an Idea
+          </Link>
+          <Link href="/blog/topics/starting-up" className="hover:underline">
+            Starting Up
+          </Link>
+          <Link href="/blog/topics/marketing" className="hover:underline">
+            Marketing
+          </Link>
+          <Link href="/blog/latest" className="hover:underline">
+            Latest
+          </Link>
           <div className="relative">
             <button
               onClick={() => setMoreOpen(!moreOpen)}
@@ -251,12 +262,42 @@ const ShopifyStickyHeader = () => {
             </button>
             {moreOpen && (
               <div className="absolute top-full left-0 mt-2 w-56 bg-white shadow-lg rounded z-50">
-                <Link href="/blog/topics/guides" className="block px-4 py-2 hover:bg-gray-100">Guides</Link>
-                <Link href="/blog/topics/podcasts" className="block px-4 py-2 hover:bg-gray-100">Shopify Podcast</Link>
-                <Link href="/blog/topics/founder-stories" className="block px-4 py-2 hover:bg-gray-100">Founder Stories</Link>
-                <Link href="/blog/topics/sell-online" className="block px-4 py-2 hover:bg-gray-100">Ecommerce Tips</Link>
-                <Link href="/blog/topics" className="block px-4 py-2 hover:bg-gray-100">All Topics</Link>
-                <Link href="/enterprise/blog" className="block px-4 py-2 hover:bg-gray-100">Enterprise Blog</Link>
+                <Link
+                  href="/blog/topics/guides"
+                  className="block px-4 py-2 hover:bg-gray-100"
+                >
+                  Guides
+                </Link>
+                <Link
+                  href="/blog/topics/podcasts"
+                  className="block px-4 py-2 hover:bg-gray-100"
+                >
+                  Shopify Podcast
+                </Link>
+                <Link
+                  href="/blog/topics/founder-stories"
+                  className="block px-4 py-2 hover:bg-gray-100"
+                >
+                  Founder Stories
+                </Link>
+                <Link
+                  href="/blog/topics/sell-online"
+                  className="block px-4 py-2 hover:bg-gray-100"
+                >
+                  Ecommerce Tips
+                </Link>
+                <Link
+                  href="/blog/topics"
+                  className="block px-4 py-2 hover:bg-gray-100"
+                >
+                  All Topics
+                </Link>
+                <Link
+                  href="/enterprise/blog"
+                  className="block px-4 py-2 hover:bg-gray-100"
+                >
+                  Enterprise Blog
+                </Link>
               </div>
             )}
           </div>
@@ -275,7 +316,11 @@ const ShopifyStickyHeader = () => {
             className="lg:hidden"
             aria-label="Toggle Menu"
           >
-            {mobileMenuOpen ? <IoClose className="w-6 h-6" /> : <FaChevronDown className="w-5 h-5" />}
+            {mobileMenuOpen ? (
+              <IoClose className="w-6 h-6" />
+            ) : (
+              <FaChevronDown className="w-5 h-5" />
+            )}
           </button>
         </div>
       </div>
@@ -284,26 +329,54 @@ const ShopifyStickyHeader = () => {
       {mobileMenuOpen && (
         <div className="lg:hidden absolute top-14 left-0 right-0 w-full bg-white shadow-md z-10 transition-all duration-300 p-6 max-h-[80vh] overflow-y-auto">
           <ul className="space-y-6 text-base font-semibold">
-            <li><Link href="/blog">Overview</Link></li>
-            <li><Link href="/blog/topics/find-an-idea">Find an Idea</Link></li>
-            <li><Link href="/blog/topics/starting-up">Starting Up</Link></li>
-            <li><Link href="/blog/topics/marketing">Marketing</Link></li>
-            <li><Link href="/blog/latest">Latest</Link></li>
+            <li>
+              <Link href="/blog">Overview</Link>
+            </li>
+            <li>
+              <Link href="/blog/topics/find-an-idea">Find an Idea</Link>
+            </li>
+            <li>
+              <Link href="/blog/topics/starting-up">Starting Up</Link>
+            </li>
+            <li>
+              <Link href="/blog/topics/marketing">Marketing</Link>
+            </li>
+            <li>
+              <Link href="/blog/latest">Latest</Link>
+            </li>
             <li>
               <span className="uppercase text-xs text-gray-400">More</span>
               <ul className="pl-4 mt-2 space-y-2">
-                <li><Link href="/blog/topics/guides">Guides</Link></li>
-                <li><Link href="/blog/topics/podcasts">Shopify Podcast</Link></li>
-                <li><Link href="/blog/topics/founder-stories">Founder Stories</Link></li>
-                <li><Link href="/blog/topics/sell-online">Ecommerce Tips</Link></li>
-                <li><Link href="/blog/topics">All Topics</Link></li>
-                <li><Link href="/enterprise/blog">Enterprise Blog</Link></li>
+                <li>
+                  <Link href="/blog/topics/guides">Guides</Link>
+                </li>
+                <li>
+                  <Link href="/blog/topics/podcasts">Shopify Podcast</Link>
+                </li>
+                <li>
+                  <Link href="/blog/topics/founder-stories">
+                    Founder Stories
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/blog/topics/sell-online">Ecommerce Tips</Link>
+                </li>
+                <li>
+                  <Link href="/blog/topics">All Topics</Link>
+                </li>
+                <li>
+                  <Link href="/enterprise/blog">Enterprise Blog</Link>
+                </li>
               </ul>
             </li>
           </ul>
 
           {/* Search Field for Mobile */}
-          <form action="/blog/international-import-shipping" method="get" className="mt-6">
+          <form
+            action="/blog/international-import-shipping"
+            method="get"
+            className="mt-6"
+          >
             <div className="flex items-center border border-gray-300 rounded-full px-4 py-2">
               <input
                 type="text"
@@ -323,4 +396,3 @@ const ShopifyStickyHeader = () => {
 };
 
 export default ShopifyStickyHeader;
-

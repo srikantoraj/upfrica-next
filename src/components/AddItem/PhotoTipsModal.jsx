@@ -13,7 +13,10 @@ export const PhotoTipsModal = ({ onClose }) => {
           <li>Use neutral backgrounds</li>
           <li>Include close-ups of any flaws</li>
         </ul>
-        <button onClick={onClose} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 text-lg">
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-400 hover:text-red-600 text-lg"
+        >
           &times;
         </button>
         <div className="text-right">

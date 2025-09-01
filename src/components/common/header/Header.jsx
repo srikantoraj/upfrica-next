@@ -1,40 +1,39 @@
+"use client";
 
-'use client'
-
-import React, { useState } from 'react'
-import { BiUser } from "react-icons/bi"
-import { FaWhatsapp } from "react-icons/fa"
-import { IoMdMenu } from "react-icons/io"
-import { IoClose } from "react-icons/io5"
-import { useSelector, useDispatch } from 'react-redux'
-import Navbar from "./Nav"           // Adjust paths as needed
-import Link from "next/link"
-import UserMenu from "./UserMenu"
-import UserName from "./UserName"
-import ShopingCart from "./ShopingCart"
-import SearchBox from "./SearchBox"
-import PhoneSlider from "./PhoneSlider"
-import NavTitle from "./NavTitle"
+import React, { useState } from "react";
+import { BiUser } from "react-icons/bi";
+import { FaWhatsapp } from "react-icons/fa";
+import { IoMdMenu } from "react-icons/io";
+import { IoClose } from "react-icons/io5";
+import { useSelector, useDispatch } from "react-redux";
+import Navbar from "./Nav"; // Adjust paths as needed
+import Link from "next/link";
+import UserMenu from "./UserMenu";
+import UserName from "./UserName";
+import ShopingCart from "./ShopingCart";
+import SearchBox from "./SearchBox";
+import PhoneSlider from "./PhoneSlider";
+import NavTitle from "./NavTitle";
 import {
   selectCountryList,
   selectSelectedCountry,
-  setSelectedCountry
-} from '@/app/store/slices/countrySlice' 
+  setSelectedCountry,
+} from "@/app/store/slices/countrySlice";
 
 export default function Header() {
-  const dispatch = useDispatch()
-  const countries = useSelector(selectCountryList)
-  const selectedCountry = useSelector(selectSelectedCountry)
-  console.log("selected country", selectedCountry)
+  const dispatch = useDispatch();
+  const countries = useSelector(selectCountryList);
+  const selectedCountry = useSelector(selectSelectedCountry);
+  console.log("selected country", selectedCountry);
 
-  const [showMenu, setShowMenu] = useState(false)
-  const toggleMenu = () => setShowMenu(!showMenu)
+  const [showMenu, setShowMenu] = useState(false);
+  const toggleMenu = () => setShowMenu(!showMenu);
 
   const handleCountryChange = (e) => {
-    const code = e.target.value
-    const country = countries.find(c => c.code === code)
-    if (country) dispatch(setSelectedCountry(country))
-  }
+    const code = e.target.value;
+    const country = countries.find((c) => c.code === code);
+    if (country) dispatch(setSelectedCountry(country));
+  };
 
   return (
     <header className="bg-white">
@@ -56,15 +55,26 @@ export default function Header() {
             <div className="flex items-center space-x-3">
               <ShopingCart />
               <UserMenu />
-              {showMenu
-                ? <IoClose onClick={toggleMenu} className="h-6 w-6 cursor-pointer" />
-                : <IoMdMenu onClick={toggleMenu} className="h-6 w-6 cursor-pointer" />
-              }
+              {showMenu ? (
+                <IoClose
+                  onClick={toggleMenu}
+                  className="h-6 w-6 cursor-pointer"
+                />
+              ) : (
+                <IoMdMenu
+                  onClick={toggleMenu}
+                  className="h-6 w-6 cursor-pointer"
+                />
+              )}
             </div>
           </div>
 
           {/* Mobile nav titles */}
-          {showMenu && <div className="px-0"><NavTitle isOpen={showMenu} /></div>}
+          {showMenu && (
+            <div className="px-0">
+              <NavTitle isOpen={showMenu} />
+            </div>
+          )}
         </div>
 
         {/* Mobile: Search, PhoneSlider, Country Dropdown & WhatsApp */}
@@ -80,8 +90,10 @@ export default function Header() {
                 onChange={handleCountryChange}
                 className="border border-violet-700 rounded-md px-3 py-2 ring-0 focus:ring-0 focus:border-violet-700"
               >
-                <option value="" disabled>Select Country</option>
-                {countries.map(c => (
+                <option value="" disabled>
+                  Select Country
+                </option>
+                {countries.map((c) => (
                   <option key={c.code} value={c.code}>
                     {c.name}
                   </option>
@@ -109,7 +121,9 @@ export default function Header() {
                 alt="Upfrica Logo"
               />
             </Link>
-            <div className="w-auto"><SearchBox /></div>
+            <div className="w-auto">
+              <SearchBox />
+            </div>
           </div>
 
           <div className="flex items-center justify-between space-x-3">
@@ -120,8 +134,10 @@ export default function Header() {
                 onChange={handleCountryChange}
                 className="border border-gray-300 rounded-md px-3 py-2 ring-0 focus:ring-0 focus:border-violet-700"
               >
-                <option value="" disabled>Select Country</option>
-                {countries.map(c => (
+                <option value="" disabled>
+                  Select Country
+                </option>
+                {countries.map((c) => (
                   <option key={c.code} value={c.code}>
                     {c.name}
                   </option>
@@ -154,6 +170,5 @@ export default function Header() {
 
       <Navbar />
     </header>
-  )
+  );
 }
-

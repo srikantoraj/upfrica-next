@@ -1,6 +1,5 @@
-
-import React from 'react'
-import { FaShoppingBag, FaCheckCircle } from 'react-icons/fa'
+import React from "react";
+import { FaShoppingBag, FaCheckCircle } from "react-icons/fa";
 
 export default function HeroBanner() {
   return (
@@ -19,7 +18,8 @@ export default function HeroBanner() {
         h-[500px]
       "
       style={{
-        backgroundImage: "url('https://images.pexels.com/photos/4559715/pexels-photo-4559715.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')"
+        backgroundImage:
+          "url('https://images.pexels.com/photos/4559715/pexels-photo-4559715.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')",
       }}
     >
       {/* Dark semi-transparent + blur overlay */}
@@ -55,5 +55,5 @@ export default function HeroBanner() {
         </a>
       </div>
     </section>
-  )
+  );
 }

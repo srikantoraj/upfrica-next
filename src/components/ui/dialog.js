@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { X } from 'lucide-react';
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { X } from "lucide-react";
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
 
-export function DialogContent({ children, className = '', ...props }) {
+export function DialogContent({ children, className = "", ...props }) {
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" />
@@ -23,9 +23,12 @@ export function DialogContent({ children, className = '', ...props }) {
   );
 }
 
-export function DialogTitle({ children, className = '', ...props }) {
+export function DialogTitle({ children, className = "", ...props }) {
   return (
-    <DialogPrimitive.Title className={`text-lg font-semibold text-gray-900 ${className}`} {...props}>
+    <DialogPrimitive.Title
+      className={`text-lg font-semibold text-gray-900 ${className}`}
+      {...props}
+    >
       {children}
     </DialogPrimitive.Title>
   );

@@ -1,5 +1,3 @@
-
-
 // export default SellerOrdersData;
 // src/components/overview/SellerOrdersData.js
 import React from "react";
@@ -42,8 +40,7 @@ const SellerOrdersData = ({ orders, loading }) => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {orders.map((item, idx) => {
         const Icon = iconMap[item.seller] || FaInbox;
-        const growthDisplay =
-          item.growth != null ? `${item.growth}%` : "--";
+        const growthDisplay = item.growth != null ? `${item.growth}%` : "--";
         return (
           <div
             key={idx}
@@ -56,21 +53,15 @@ const SellerOrdersData = ({ orders, loading }) => {
                   {item.seller} Orders
                 </h3>
               </div>
-              <p className="text-xl font-bold text-gray-900">
-                {item.orders}
-              </p>
+              <p className="text-xl font-bold text-gray-900">{item.orders}</p>
               <p className="text-sm text-green-500 font-medium">
                 {growthDisplay}
               </p>
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-500">Avg. Target Orders</p>
-              <p className="text-md font-bold text-gray-700">
-                {item.target}
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                Avg. Ship Time
-              </p>
+              <p className="text-md font-bold text-gray-700">{item.target}</p>
+              <p className="text-sm text-gray-500 mt-2">Avg. Ship Time</p>
               <p className="text-md font-bold text-gray-700">
                 {item.avgShipTime ?? "--"}
               </p>

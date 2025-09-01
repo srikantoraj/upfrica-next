@@ -1,11 +1,9 @@
-
-
 import React, { use } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 
-const CreateReviews = ({slug}) => {
+const CreateReviews = ({ slug }) => {
   const { token } = useSelector((state) => state.auth);
   const router = useRouter();
   const initialValues = {
@@ -29,7 +27,7 @@ const CreateReviews = ({slug}) => {
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     console.log("Submitted values:", values); // 🔍 এখানে ডেটা দেখা যাবে
     if (!token) {
-      router.push("/signin");
+      router.push("/login");
       return;
     }
     const payload = {
@@ -49,10 +47,10 @@ const CreateReviews = ({slug}) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            'Authorization': `Token ${token}`,
+            Authorization: `Token ${token}`,
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -61,8 +59,7 @@ const CreateReviews = ({slug}) => {
 
       alert("Review submitted successfully!");
       resetForm();
-      console.log('revews', response);
-
+      console.log("revews", response);
     } catch (error) {
       console.error(error);
       alert("Something went wrong while submitting.");
@@ -191,13 +188,15 @@ const CreateReviews = ({slug}) => {
             </div>
 
             {/* Submit */}
-            {!isSubmitting && <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-[#A435F0] text-white px-6 py-2 rounded font-semibold"
-            >
-              {"Post Review"}
-            </button>}
+            {!isSubmitting && (
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-[#A435F0] text-white px-6 py-2 rounded font-semibold"
+              >
+                {"Post Review"}
+              </button>
+            )}
             {isSubmitting && (
               <button
                 type="button"
@@ -219,4 +218,3 @@ const CreateReviews = ({slug}) => {
 };
 
 export default CreateReviews;
-

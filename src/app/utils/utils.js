@@ -9,15 +9,16 @@
  * @returns {number} - The converted price.
  */
 export const convertPrice = (price, baseCurrency, targetCurrency, rates) => {
-    const baseRateObj = rates.find(rate => rate.currency === baseCurrency);
-    const targetRateObj = rates.find(rate => rate.currency === targetCurrency);
+  const baseRateObj = rates.find((rate) => rate.currency === baseCurrency);
+  const targetRateObj = rates.find((rate) => rate.currency === targetCurrency);
 
-    if (!baseRateObj || !targetRateObj) {
-        // If either rate is missing, return the original price.
-        return price;
-    }
+  if (!baseRateObj || !targetRateObj) {
+    // If either rate is missing, return the original price.
+    return price;
+  }
 
-    // Calculate the conversion factor: (target rate / base rate)
-    const conversionFactor = parseFloat(targetRateObj.rate) / parseFloat(baseRateObj.rate);
-    return price * conversionFactor;
+  // Calculate the conversion factor: (target rate / base rate)
+  const conversionFactor =
+    parseFloat(targetRateObj.rate) / parseFloat(baseRateObj.rate);
+  return price * conversionFactor;
 };

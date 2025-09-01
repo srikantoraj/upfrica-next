@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import React, { useState } from "react";
 
 const ScheduleListing = () => {
@@ -8,9 +8,7 @@ const ScheduleListing = () => {
   const [minute, setMinute] = useState("00");
 
   const hours = [...Array(24).keys()].map((h) => String(h).padStart(2, "0"));
-  const minutes = [...Array(60).keys()].map((m) =>
-    String(m).padStart(2, "0")
-  );
+  const minutes = [...Array(60).keys()].map((m) => String(m).padStart(2, "0"));
 
   return (
     <div className="">
@@ -42,7 +40,10 @@ const ScheduleListing = () => {
       {isScheduled && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 items-end">
           <div>
-            <label htmlFor="schedule-date" className="block text-sm font-medium">
+            <label
+              htmlFor="schedule-date"
+              className="block text-sm font-medium"
+            >
               Day
             </label>
             <input

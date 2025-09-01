@@ -1,18 +1,17 @@
+"use client";
 
-'use client';
-
-import { useState, useEffect } from 'react';
-import { IoMdSearch, IoMdClose } from 'react-icons/io';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useSelector } from 'react-redux';
-import { convertPrice } from '@/app/utils/utils';
-import { selectSelectedCountry } from '@/app/store/slices/countrySlice';
+import { useState, useEffect } from "react";
+import { IoMdSearch, IoMdClose } from "react-icons/io";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useSelector } from "react-redux";
+import { convertPrice } from "@/app/utils/utils";
+import { selectSelectedCountry } from "@/app/store/slices/countrySlice";
 
 // Animated skeleton loader for when results are loading
 const SkeletonLoader = () => (
   <div className="space-y-2 p-3">
-    {[1, 2, 3, 4].map(i => (
+    {[1, 2, 3, 4].map((i) => (
       <div key={i} className="flex items-center space-x-4 animate-pulse">
         <div className="w-12 h-12 bg-gray-300 rounded" />
         <div className="flex-1 space-y-2">
@@ -25,15 +24,15 @@ const SkeletonLoader = () => (
 );
 
 export default function SearchBox() {
-  const [searchText, setSearchText] = useState('');
-  const [debouncedSearchText, setDebouncedSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
+  const [debouncedSearchText, setDebouncedSearchText] = useState("");
   const [results, setResults] = useState([]);
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
   const selectedCountry = useSelector(selectSelectedCountry);
-  const exchangeRates = useSelector(state => state.exchangeRates.rates);
+  const exchangeRates = useSelector((state) => state.exchangeRates.rates);
 
   // Debounce the search input
   useEffect(() => {
@@ -65,7 +64,7 @@ export default function SearchBox() {
       }
       try {
         const res = await fetch(
-          `https://media.upfrica.com/api/products/search/?q=${encodeURIComponent(debouncedSearchText)}`
+          `https://media.upfrica.com/api/products/search/?q=${encodeURIComponent(debouncedSearchText)}`,
         );
         const data = await res.json();
         setResults(data.results || []);
@@ -81,14 +80,14 @@ export default function SearchBox() {
   }, [debouncedSearchText]);
 
   const clearSearch = () => {
-    setSearchText('');
+    setSearchText("");
     setResults([]);
     setDropdownVisible(false);
     setLoading(false);
   };
 
-  const handleKeyDown = e => {
-    if (e.key === 'Enter') {
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
       e.preventDefault();
       const q = searchText.trim();
       if (q) router.push(`/filter?q=${encodeURIComponent(q)}`);
@@ -105,7 +104,7 @@ export default function SearchBox() {
       <input
         type="text"
         value={searchText}
-        onChange={e => setSearchText(e.target.value)}
+        onChange={(e) => setSearchText(e.target.value)}
         onKeyDown={handleKeyDown}
         onFocus={() => results.length > 0 && setDropdownVisible(true)}
         placeholder="Search for products..."
@@ -128,7 +127,7 @@ export default function SearchBox() {
             {loading ? (
               <SkeletonLoader />
             ) : (
-              results.map(item => {
+              results.map((item) => {
                 // Destructure and normalize
                 const {
                   id,
@@ -141,11 +140,11 @@ export default function SearchBox() {
                   on_sales,
                   seller_country,
                   seo_slug,
-                  slug
+                  slug,
                 } = item;
 
                 // Determine routing slug
-                const countryCode = seller_country?.toLowerCase() || 'gh';
+                const countryCode = seller_country?.toLowerCase() || "gh";
                 const linkSlug = seo_slug || slug;
 
                 // Convert prices
@@ -153,20 +152,22 @@ export default function SearchBox() {
                   price_cents / 100,
                   price_currency,
                   selectedCountry?.code,
-                  exchangeRates
+                  exchangeRates,
                 );
-                const saleActive = (
-                  (sale_end_date && new Date(sale_end_date) > new Date() && sale_price_cents > 0)
-                  || on_sales
-                );
-                const sale = saleActive && sale_price_cents
-                  ? convertPrice(
-                    sale_price_cents / 100,
-                    price_currency,
-                    selectedCountry?.code,
-                    exchangeRates
-                  )
-                  : null;
+                const saleActive =
+                  (sale_end_date &&
+                    new Date(sale_end_date) > new Date() &&
+                    sale_price_cents > 0) ||
+                  on_sales;
+                const sale =
+                  saleActive && sale_price_cents
+                    ? convertPrice(
+                        sale_price_cents / 100,
+                        price_currency,
+                        selectedCountry?.code,
+                        exchangeRates,
+                      )
+                    : null;
 
                 return (
                   <Link
@@ -177,7 +178,7 @@ export default function SearchBox() {
                   >
                     <div className="flex items-center gap-4">
                       <img
-                        src={product_images?.[0] || '/placeholder.jpg'}
+                        src={product_images?.[0] || "/placeholder.jpg"}
                         alt={title}
                         className="w-12 h-12 object-cover rounded"
                       />
@@ -187,7 +188,8 @@ export default function SearchBox() {
                         </p>
                         <div className="text-sm text-gray-900 flex items-baseline gap-2">
                           <span>
-                            {selectedCountry?.symbol} {(sale ?? regular).toFixed(2)}
+                            {selectedCountry?.symbol}{" "}
+                            {(sale ?? regular).toFixed(2)}
                           </span>
                           {sale && (
                             <span className="line-through text-gray-500">

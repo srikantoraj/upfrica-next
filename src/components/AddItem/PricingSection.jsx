@@ -2,12 +2,7 @@ import PriceFields from "./PriceFields";
 import PricingOptionsPanel from "./PricingOptionsPanel";
 import SoldListingsSummary from "./SoldListingsSummary";
 
-
-
-export default function PricingSection({formik}) {
-
-
-
+export default function PricingSection({ formik }) {
   return (
     <div>
       <PricingOptionsPanel />

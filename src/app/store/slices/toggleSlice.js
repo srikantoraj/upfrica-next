@@ -1,21 +1,21 @@
 // store/slices/tokenSlice.js
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-    toggle: true,
+  toggle: true,
 };
 
 const toggleSlice = createSlice({
-    name: 'toggle',
-    initialState,
-    reducers: {
-        setToggle(state, action) {
-            state.toggle = action.payload;
-        },
-        clearToggle(state) {
-            state.toggle = !state.toggle;
-        },
+  name: "toggle",
+  initialState,
+  reducers: {
+    setToggle(state, action) {
+      state.toggle = action.payload;
     },
+    clearToggle(state) {
+      state.toggle = !state.toggle;
+    },
+  },
 });
 
 export const { setToggle, clearToggle } = toggleSlice.actions;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const CtaFooterBanner = () => {
   return (
@@ -11,7 +11,8 @@ const CtaFooterBanner = () => {
 
         {/* Paragraph */}
         <p className="text-base md:text-lg text-gray-700 max-w-2xl mx-auto mb-8">
-          Learn on the go. Try Shopify for free, and explore all the tools you need to start, run, and grow your business.
+          Learn on the go. Try Shopify for free, and explore all the tools you
+          need to start, run, and grow your business.
         </p>
 
         {/* Button */}

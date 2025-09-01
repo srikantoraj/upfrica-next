@@ -1,38 +1,38 @@
-'use client'
+"use client";
 
-import * as Popover from '@radix-ui/react-popover'
-import { Info, X } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import * as Popover from "@radix-ui/react-popover";
+import { Info, X } from "lucide-react";
+import { useState, useEffect } from "react";
 
-export default function InfoPopover({ content, link, linkText = 'Read more' }) {
-  const [open, setOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-  const [showSheet, setShowSheet] = useState(false)
+export default function InfoPopover({ content, link, linkText = "Read more" }) {
+  const [open, setOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showSheet, setShowSheet] = useState(false);
 
   // Detect screen size
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Close on scroll
   useEffect(() => {
-    const closeOnScroll = () => setOpen(false)
-    window.addEventListener('scroll', closeOnScroll)
-    return () => window.removeEventListener('scroll', closeOnScroll)
-  }, [])
+    const closeOnScroll = () => setOpen(false);
+    window.addEventListener("scroll", closeOnScroll);
+    return () => window.removeEventListener("scroll", closeOnScroll);
+  }, []);
 
   // Handle animation mount/unmount
   useEffect(() => {
     if (open) {
-      setShowSheet(true)
+      setShowSheet(true);
     } else {
-      const timeout = setTimeout(() => setShowSheet(false), 300)
-      return () => clearTimeout(timeout)
+      const timeout = setTimeout(() => setShowSheet(false), 300);
+      return () => clearTimeout(timeout);
     }
-  }, [open])
+  }, [open]);
 
   return (
     <>
@@ -50,11 +50,13 @@ export default function InfoPopover({ content, link, linkText = 'Read more' }) {
             <div className="fixed inset-0 z-50 bg-black/40 flex items-end justify-center">
               <div
                 className={`bg-white dark:bg-zinc-900 rounded-t-2xl w-full max-w-md p-6 shadow-xl transform transition-transform duration-300 ${
-                  open ? 'translate-y-0' : 'translate-y-full'
+                  open ? "translate-y-0" : "translate-y-full"
                 }`}
               >
                 <div className="flex justify-between items-start mb-4">
-                  <p className="text-sm text-zinc-700 dark:text-zinc-200">{content}</p>
+                  <p className="text-sm text-zinc-700 dark:text-zinc-200">
+                    {content}
+                  </p>
                   <button
                     onClick={() => setOpen(false)}
                     className="text-zinc-400 hover:text-zinc-600 dark:hover:text-white"
@@ -112,5 +114,5 @@ export default function InfoPopover({ content, link, linkText = 'Read more' }) {
         </Popover.Root>
       )}
     </>
-  )
+  );
 }

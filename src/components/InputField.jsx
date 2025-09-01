@@ -1,7 +1,15 @@
 // InputField.js
 import React from "react";
 
-const InputField = ({ id, name, type, value, onChange, placeholder,onClick }) => {
+const InputField = ({
+  id,
+  name,
+  type,
+  value,
+  onChange,
+  placeholder,
+  onClick,
+}) => {
   return (
     <input
       id={id}

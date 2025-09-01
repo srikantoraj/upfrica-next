@@ -1,23 +1,29 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect } from "react";
-import { FaMinus, FaPencilAlt, FaPlus, FaArrowLeft, FaListAlt } from "react-icons/fa";
+import {
+  FaMinus,
+  FaPencilAlt,
+  FaPlus,
+  FaArrowLeft,
+  FaListAlt,
+} from "react-icons/fa";
 import { IoMdNotifications } from "react-icons/io";
-import { BASE_API_URL } from '@/app/constants';
-import { AiOutlineCheckCircle, AiOutlineCloseCircle } from 'react-icons/ai';
+import { BASE_API_URL } from "@/app/constants";
+import { AiOutlineCheckCircle, AiOutlineCloseCircle } from "react-icons/ai";
 import { useFormik } from "formik";
-import Title from "@/components/inpute/Title";
-import Description from "@/components/inpute/Description";
-import Categore from "@/components/inpute/Categore";
-import Conditon from "@/components/inpute/Conditon";
-import Photo from "@/components/inpute/Photo";
-import Brand from "@/components/inpute/Brand";
+import Title from "@/components/input/Title";
+import Description from "@/components/input/Description";
+import Categore from "@/components/input/Categore";
+import Conditon from "@/components/input/Conditon";
+import Photo from "@/components/input/Photo";
+import Brand from "@/components/input/Brand";
 import { useSelector } from "react-redux";
-import PriceSection from "@/components/inpute/PriceSection";
-import Promotions from "@/components/inpute/Promotions";
-import DeliverySection from "@/components/inpute/DeliverySection";
-import CancellationReturns from "@/components/inpute/CancellationReturns";
-import ApprovalNotesSelect from "@/components/inpute/ApprovalNotesSelect";
+import PriceSection from "@/components/input/PriceSection";
+import Promotions from "@/components/input/Promotions";
+import DeliverySection from "@/components/input/DeliverySection";
+import CancellationReturns from "@/components/input/CancellationReturns";
+import ApprovalNotesSelect from "@/components/input/ApprovalNotesSelect";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -111,18 +117,18 @@ const AddNewProducts = () => {
       formData.append("postage_fee_cents_currency", values.price_currency);
       formData.append(
         "secondary_postage_fee_cents",
-        values.secondary_postage_fee_cents.toString()
+        values.secondary_postage_fee_cents.toString(),
       );
       formData.append(
         "secondary_postage_fee_cents_currency",
-        values.price_currency
+        values.price_currency,
       );
       // Multi-buy
       if (values.multi_buy === "yes") {
         formData.append("multi_buy", values.multi_buy);
         formData.append(
           "multi_buy_tiers",
-          JSON.stringify(values.multi_buy_tiers)
+          JSON.stringify(values.multi_buy_tiers),
         );
       }
       // Approval notes
@@ -140,7 +146,7 @@ const AddNewProducts = () => {
       };
       formData.append(
         "cancellation_policy",
-        cancel === "no" ? "" : JSON.stringify(cancellationPolicy)
+        cancel === "no" ? "" : JSON.stringify(cancellationPolicy),
       );
       // Supplier fields
       formData.append("supplierLink", values.supplierLink);
@@ -161,17 +167,22 @@ const AddNewProducts = () => {
       formData.append("totalCost", values.totalCost);
       // Images
       selectedImages.forEach((img, idx) =>
-        formData.append("images", img.file, img.file.name || `image_${idx}.png`)
+        formData.append(
+          "images",
+          img.file,
+          img.file.name || `image_${idx}.png`,
+        ),
       );
 
       // API request
       const headers = new Headers();
       headers.append("Authorization", `Token ${token}`);
       try {
-        const response = await fetch(
-          `${BASE_API_URL}/api/product/create/`,
-          { method: "POST", headers, body: formData }
-        );
+        const response = await fetch(`${BASE_API_URL}/api/product/create/`, {
+          method: "POST",
+          headers,
+          body: formData,
+        });
         const result = await response.json();
         if (response.ok) {
           setPopupMessage("Product created successfully!");
@@ -204,7 +215,9 @@ const AddNewProducts = () => {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
               <IoMdNotifications />
-              <h1 className="text-base font-bold">Homepage Positions (Admin)</h1>
+              <h1 className="text-base font-bold">
+                Homepage Positions (Admin)
+              </h1>
             </div>
             <button onClick={togglePositions} className="focus:outline-none">
               {positionsOpen ? <FaMinus /> : <FaPlus />}
@@ -228,7 +241,12 @@ const AddNewProducts = () => {
                 <div className="flex space-x-4">
                   {["no", "yes"].map((v) => (
                     <label key={v} className="flex items-center">
-                      <input type="radio" name="bulk" value={v} className="mr-2" />
+                      <input
+                        type="radio"
+                        name="bulk"
+                        value={v}
+                        className="mr-2"
+                      />
                       {v.charAt(0).toUpperCase() + v.slice(1)}
                     </label>
                   ))}
@@ -305,10 +323,26 @@ const AddNewProducts = () => {
               <h1 className="text-2xl font-bold mb-4">Supplier Information</h1>
               {/* Supplier fields (link, backup, name, phone) */}
               {[
-                { id: "supplierLink", label: "Supplier Link or GPS*", placeholder: "Link" },
-                { id: "backupSupplier", label: "Backup Supplier Link", placeholder: "2nd Supplier link" },
-                { id: "supplerName", label: "Supplier Name", placeholder: "Supplier Name" },
-                { id: "supplerNumber", label: "Supplier Phone Number", placeholder: "Supplier phone number" }
+                {
+                  id: "supplierLink",
+                  label: "Supplier Link or GPS*",
+                  placeholder: "Link",
+                },
+                {
+                  id: "backupSupplier",
+                  label: "Backup Supplier Link",
+                  placeholder: "2nd Supplier link",
+                },
+                {
+                  id: "supplerName",
+                  label: "Supplier Name",
+                  placeholder: "Supplier Name",
+                },
+                {
+                  id: "supplerNumber",
+                  label: "Supplier Phone Number",
+                  placeholder: "Supplier phone number",
+                },
               ].map(({ id, label, placeholder }) => (
                 <div key={id}>
                   <label className="block font-bold mb-2">{label}</label>
@@ -474,7 +508,9 @@ const AddNewProducts = () => {
 
               {/* Title */}
               <h2 className="text-2xl font-semibold">
-                {popupSuccess ? "Product Created!" : "Oops, Something Went Wrong"}
+                {popupSuccess
+                  ? "Product Created!"
+                  : "Oops, Something Went Wrong"}
               </h2>
 
               {/* Message */}

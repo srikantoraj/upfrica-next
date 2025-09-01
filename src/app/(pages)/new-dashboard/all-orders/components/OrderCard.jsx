@@ -8,7 +8,6 @@
 //   AiOutlinePhone,
 // } from "react-icons/ai";
 
-
 // const OrderCard = ({
 //   status = "Processing",
 //   date = "1 Dec 2024",
@@ -148,7 +147,6 @@
 
 //         {/* Bottom: Buttons + Address */}
 //         <div>
-        
 
 //           <hr className="border-t border-gray-200 my-4" />
 
@@ -193,8 +191,6 @@
 // };
 
 // export default OrderCard;
-
-
 
 "use client";
 
@@ -292,19 +288,16 @@ const OrderCard = ({
             </button>
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 bg-white border rounded-md shadow-lg z-10 w-48">
-                {[
-                 "Contact Buyer",
-                 
-                  "Hide Order",
-                  "Ask Admin Help",
-                ].map((label, i) => (
-                  <button
-                    key={i}
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    {label}
-                  </button>
-                ))}
+                {["Contact Buyer", "Hide Order", "Ask Admin Help"].map(
+                  (label, i) => (
+                    <button
+                      key={i}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                    >
+                      {label}
+                    </button>
+                  ),
+                )}
               </div>
             )}
           </div>
@@ -344,9 +337,11 @@ const OrderCard = ({
               <AiOutlineHome size={18} className="text-violet-600" />
               <span>
                 {showFullInfo
-                  ? `${addr.address_line_1 || ""}${addr.address_line_2 ? `, ${addr.address_line_2}` : ""
-                  }, ${addr.local_area || ""}, ${addr.town || ""}, ${addr.country || ""
-                  }`
+                  ? `${addr.address_line_1 || ""}${
+                      addr.address_line_2 ? `, ${addr.address_line_2}` : ""
+                    }, ${addr.local_area || ""}, ${addr.town || ""}, ${
+                      addr.country || ""
+                    }`
                   : `${addr.town || ""}, ${addr.country || ""}`}
               </span>
             </div>

@@ -12,7 +12,10 @@ const Footer = () => {
         </ul>
       </div>
       <div className="text-center mx-auto md:mx-0">
-        <p>Copyright © 2024. <span className="text-pink-400">GoGirls</span> All rights reserved.</p>
+        <p>
+          Copyright © 2024. <span className="text-pink-400">GoGirls</span> All
+          rights reserved.
+        </p>
       </div>
     </div>
   );

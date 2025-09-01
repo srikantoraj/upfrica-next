@@ -1,6 +1,6 @@
-'use client'
-import { useState } from 'react';
-import { FaChevronRight } from 'react-icons/fa';
+"use client";
+import { useState } from "react";
+import { FaChevronRight } from "react-icons/fa";
 
 const DropdownSelect = ({ label, tooltip, options, selected, setSelected }) => {
   const [open, setOpen] = useState(false);
@@ -8,10 +8,7 @@ const DropdownSelect = ({ label, tooltip, options, selected, setSelected }) => {
   return (
     <div className="mb-6 flex items-center justify-between gap-4">
       {/* Label (Left) */}
-      <div className="w-1/3 text-sm font-medium text-gray-700 ">
-        {label}
-        
-      </div>
+      <div className="w-1/3 text-sm font-medium text-gray-700 ">{label}</div>
 
       {/* Dropdown (Right) */}
       <div className="w-2/3 relative">
@@ -34,11 +31,12 @@ const DropdownSelect = ({ label, tooltip, options, selected, setSelected }) => {
                   setOpen(false);
                 }}
                 className={` cursor-pointer select-none py-2 px-3 hover:bg-blue-100 ${
-                  option === selected ? 'font-semibold text-blue-600' : 'text-gray-900'
+                  option === selected
+                    ? "font-semibold text-blue-600"
+                    : "text-gray-900"
                 }`}
               >
                 <span>{option}</span>
-                
               </li>
             ))}
           </ul>

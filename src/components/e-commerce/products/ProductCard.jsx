@@ -1,5 +1,5 @@
 // components/ProductCard.jsx
-import { FaStar, FaRegHeart, FaRegEye } from 'react-icons/fa';
+import { FaStar, FaRegHeart, FaRegEye } from "react-icons/fa";
 
 export default function ProductCard({ product }) {
   return (

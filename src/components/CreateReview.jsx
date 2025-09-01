@@ -1,10 +1,7 @@
-
-
-
 import React from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 
-const CreateReves = ({slug}) => {
+const CreateReves = ({ slug }) => {
   const initialValues = {
     title: "",
     rating: "",
@@ -23,7 +20,6 @@ const CreateReves = ({slug}) => {
     return errors;
   };
 
-
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     const payload = {
       title: values.title,
@@ -34,12 +30,11 @@ const CreateReves = ({slug}) => {
         value: values.value,
       },
     };
-  
+
     // Token localStorage থেকে নেওয়া
     const token = localStorage.getItem("token");
-    console.log("token",token);
-    
-  
+    console.log("token", token);
+
     try {
       const response = await fetch(
         `https://media.upfrica.com/api/products/${slug}/reviews/`,
@@ -47,16 +42,16 @@ const CreateReves = ({slug}) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Token ${token}` 
+            Authorization: `Token ${token}`,
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
-  
+
       if (!response.ok) {
         throw new Error("Failed to post review");
       }
-  
+
       alert("Review submitted successfully!");
       resetForm();
     } catch (error) {
@@ -66,8 +61,6 @@ const CreateReves = ({slug}) => {
       setSubmitting(false);
     }
   };
-  
-
 
   return (
     <section className="mt-12">
@@ -204,4 +197,3 @@ const CreateReves = ({slug}) => {
 };
 
 export default CreateReves;
-

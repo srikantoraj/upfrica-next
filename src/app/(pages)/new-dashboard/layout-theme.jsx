@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
 import React, { useEffect } from "react";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import HeaderControls from "@/components/HeaderControls";
 import DynamicSidebar from "@/components/new-dashboard/DynamicSidebar";
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from "@/contexts/AuthContext";
 
 const Layout = ({ children }) => {
   const { user, hydrated, requiresOnboarding } = useAuth();
@@ -15,12 +15,12 @@ const Layout = ({ children }) => {
     if (!hydrated) return;
 
     if (!user) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
     if (requiresOnboarding) {
-      router.push('/onboarding/account-type');
+      router.push("/onboarding/account-type");
     }
   }, [hydrated, user, requiresOnboarding, router]);
 

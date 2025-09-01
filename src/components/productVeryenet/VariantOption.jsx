@@ -1,7 +1,7 @@
 import React from "react";
 
 const VariantOption = ({ data, onChange, onRemove }) => {
-    if (!data) return null; // 👈 Prevents crashing on undefined data
+  if (!data) return null; // 👈 Prevents crashing on undefined data
   return (
     <div className="bg-white p-3 border rounded mb-3">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-2">
@@ -17,7 +17,9 @@ const VariantOption = ({ data, onChange, onRemove }) => {
           className="form-input"
           placeholder="Additional Price (e.g. 199.99)"
           value={data.additionalPrice}
-          onChange={(e) => onChange({ ...data, additionalPrice: e.target.value })}
+          onChange={(e) =>
+            onChange({ ...data, additionalPrice: e.target.value })
+          }
         />
         <label className="flex items-center gap-2">
           <input
@@ -42,7 +44,9 @@ const VariantOption = ({ data, onChange, onRemove }) => {
           type="file"
           multiple
           className="form-input"
-          onChange={(e) => onChange({ ...data, images: Array.from(e.target.files) })}
+          onChange={(e) =>
+            onChange({ ...data, images: Array.from(e.target.files) })
+          }
         />
       </div>
     </div>

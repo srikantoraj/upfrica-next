@@ -1,5 +1,5 @@
-import { HiXMark } from 'react-icons/hi2';
-import Link from 'next/link';
+import { HiXMark } from "react-icons/hi2";
+import Link from "next/link";
 
 const CartModal = ({
   basket,
@@ -11,7 +11,7 @@ const CartModal = ({
   return (
     <div
       className={`fixed inset-0 bg-black bg-opacity-50 px-5 z-50 overflow-y-auto 
-        ${isModalVisible ? 'opacity-100 visible' : 'opacity-0 invisible'} 
+        ${isModalVisible ? "opacity-100 visible" : "opacity-0 invisible"} 
         transition-opacity duration-300`}
       onClick={handleCloseModal}
     >
@@ -23,7 +23,7 @@ const CartModal = ({
           p-6 sm:p-8
           mx-auto mt-10 
           transform 
-          ${isModalVisible ? 'translate-y-0' : '-translate-y-full'}
+          ${isModalVisible ? "translate-y-0" : "-translate-y-full"}
           transition-transform duration-300
         `}
         onClick={(e) => e.stopPropagation()}
@@ -33,7 +33,10 @@ const CartModal = ({
           <h3 className="text-3xl font-bold">
             {basket.length} Items added to basket
           </h3>
-          <button onClick={handleCloseModal} className="text-gray-600 hover:text-gray-900">
+          <button
+            onClick={handleCloseModal}
+            className="text-gray-600 hover:text-gray-900"
+          >
             <HiXMark className="h-8 w-8" />
           </button>
         </div>
@@ -49,16 +52,20 @@ const CartModal = ({
                 >
                   <div className="md:col-span-1">
                     <img
-                      src={item?.image?.[0] ?? 'https://via.placeholder.com/150'}
+                      src={
+                        item?.image?.[0] ?? "https://via.placeholder.com/150"
+                      }
                       alt={item.title}
                       className="h-16 w-16 object-cover rounded"
                     />
                   </div>
                   <div className="md:col-span-4 w-full">
-                    <div className="font-medium text-gray-800">{item.title}</div>
+                    <div className="font-medium text-gray-800">
+                      {item.title}
+                    </div>
                     <div className="flex flex-wrap gap-5 items-center mt-2">
                       <p className="text-gray-700">
-                        Price: {item.price.currency_iso}{' '}
+                        Price: {item.price.currency_iso}{" "}
                         {(item.price.cents / 100).toFixed(2)}
                       </p>
                       <div className="flex items-center text-lg font-medium">
@@ -74,7 +81,9 @@ const CartModal = ({
                 </li>
               ))
             ) : (
-              <p className="text-center text-gray-500">No items in the basket.</p>
+              <p className="text-center text-gray-500">
+                No items in the basket.
+              </p>
             )}
           </ul>
         </div>

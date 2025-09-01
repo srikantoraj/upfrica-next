@@ -1,6 +1,6 @@
-"use client"
-import React from 'react';
-import styled from 'styled-components';
+"use client";
+import React from "react";
+import styled from "styled-components";
 
 const Loader = () => {
   return (
@@ -8,7 +8,7 @@ const Loader = () => {
       <div className="loader" />
     </StyledWrapper>
   );
-}
+};
 
 const StyledWrapper = styled.div`
   .loader {
@@ -34,7 +34,7 @@ const StyledWrapper = styled.div`
     width: 0%;
     height: 100%;
     border-radius: 0;
-   animation: moving 2s ease-in-out infinite; /* Duration increased to 2s */
+    animation: moving 2s ease-in-out infinite; /* Duration increased to 2s */
   }
 
   @keyframes moving {

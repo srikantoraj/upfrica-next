@@ -20,9 +20,7 @@ export default function DomesticPostage() {
       </p>
 
       <div className="mb-4">
-        <button
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
+        <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
           <Plus size={16} />
           Add primary service
         </button>

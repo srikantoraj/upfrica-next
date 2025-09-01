@@ -1,14 +1,14 @@
-import React from 'react';
-import { IoIosArrowRoundForward } from 'react-icons/io';
-import CategoryItem from './CategoryItem';
+import React from "react";
+import { IoIosArrowRoundForward } from "react-icons/io";
+import CategoryItem from "./CategoryItem";
 
 const Categories = async () => {
-  const res = await fetch('https://upfrica.com/api/v1/categories', {
+  const res = await fetch("https://upfrica.com/api/v1/categories", {
     next: { revalidate: 300 }, // Cache for 5 minutes
   });
 
   if (!res.ok) {
-    throw new Error('Failed to fetch categories');
+    throw new Error("Failed to fetch categories");
   }
 
   const data = await res.json();
@@ -18,7 +18,11 @@ const Categories = async () => {
   categories = categories.filter((category) => category.image);
 
   if (!categories || categories.length === 0) {
-    return <p className="text-center text-lg font-medium">No categories available.</p>;
+    return (
+      <p className="text-center text-lg font-medium">
+        No categories available.
+      </p>
+    );
   }
 
   return (
@@ -33,7 +37,7 @@ const Categories = async () => {
 
       {/* Horizontal Scrollable Categories */}
       <div className="overflow-x-auto whitespace-nowrap py-4">
-        <div className="flex gap-4 md:gap-6" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex gap-4 md:gap-6" style={{ scrollbarWidth: "none" }}>
           {categories.map((data) => (
             <div
               key={data.id}
@@ -59,4 +63,3 @@ const Categories = async () => {
 };
 
 export default Categories;
-

@@ -80,7 +80,6 @@
 //                 alert("Failed to create help blog post.");
 //               });
 
-
 //           }}
 //           enableReinitialize
 //         >
@@ -113,9 +112,6 @@
 //                   <div className="text-red-600 text-sm">{errors.title}</div>
 //                 )}
 //               </div>
-
-
-
 
 //               {/* Summary (TinyMCE) */}
 //               <div>
@@ -560,63 +556,62 @@
 //   );
 // };
 
+"use client";
 
-'use client'
-
-import React, { useRef, useEffect, useState } from 'react'
-import { Editor } from '@tinymce/tinymce-react'
-import { Formik, FieldArray } from 'formik'
-import { useSelector } from 'react-redux'
-import { useRouter } from 'next/navigation'
-import Script from 'next/script'
-import Footer from '@/components/common/footer/Footer'
+import React, { useRef, useEffect, useState } from "react";
+import { Editor } from "@tinymce/tinymce-react";
+import { Formik, FieldArray } from "formik";
+import { useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
+import Script from "next/script";
+import Footer from "@/components/common/footer/Footer";
 
 const initialFormValues = {
-  title: '',
-  summary: '',
+  title: "",
+  summary: "",
   tags: [],
   categories: [],
   sections: [
     {
-      sectionTitle: '',
-      sectionType: '',
-      sectionContent: '',
+      sectionTitle: "",
+      sectionType: "",
+      sectionContent: "",
       bulletItems: [],
       tableHeaders: [],
       tableRows: [],
       files: [],
-      links: []
-    }
-  ]
-}
+      links: [],
+    },
+  ],
+};
 
 const validate = (values) => {
-  const errors = {}
-  if (!values.title) errors.title = 'Title is required.'
-  if (!values.summary) errors.summary = 'Summary is required.'
-  return errors
-}
+  const errors = {};
+  if (!values.title) errors.title = "Title is required.";
+  if (!values.summary) errors.summary = "Summary is required.";
+  return errors;
+};
 
 export default function CreateHelpBlogPage() {
-  const summaryEditorRef = useRef(null)
-  const { token } = useSelector((state) => state.auth)
-  const router = useRouter()
+  const summaryEditorRef = useRef(null);
+  const { token } = useSelector((state) => state.auth);
+  const router = useRouter();
 
-  const [categoryOptions, setCategoryOptions] = useState([])
+  const [categoryOptions, setCategoryOptions] = useState([]);
 
   // Fetch available blog categories for the multi-select
   useEffect(() => {
-    if (!token) return
-    fetch('https://media.upfrica.com/api/blog-categories/', {
-      headers: { Authorization: `Token ${token}` }
+    if (!token) return;
+    fetch("https://media.upfrica.com/api/blog-categories/", {
+      headers: { Authorization: `Token ${token}` },
     })
       .then((res) => {
-        if (!res.ok) throw new Error(`Status ${res.status}`)
-        return res.json()
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        return res.json();
       })
       .then((data) => setCategoryOptions(data))
-      .catch((err) => console.error('Failed to load categories', err))
-  }, [token])
+      .catch((err) => console.error("Failed to load categories", err));
+  }, [token]);
 
   return (
     <>
@@ -629,29 +624,29 @@ export default function CreateHelpBlogPage() {
           initialValues={initialFormValues}
           validate={validate}
           onSubmit={(values, { setSubmitting }) => {
-            const headers = new Headers()
-            headers.append('Authorization', `Token ${token}`)
-            headers.append('Content-Type', 'application/json')
+            const headers = new Headers();
+            headers.append("Authorization", `Token ${token}`);
+            headers.append("Content-Type", "application/json");
 
-            fetch('https://media.upfrica.com/api/admin/helpblogs/', {
-              method: 'POST',
+            fetch("https://media.upfrica.com/api/admin/helpblogs/", {
+              method: "POST",
               headers,
               body: JSON.stringify(values),
-              redirect: 'follow'
+              redirect: "follow",
             })
               .then((res) => {
-                if (!res.ok) throw new Error(`Status ${res.status}`)
-                return res.json()
+                if (!res.ok) throw new Error(`Status ${res.status}`);
+                return res.json();
               })
               .then((result) => {
-                alert('Help blog post created successfully!')
-                router.back()
+                alert("Help blog post created successfully!");
+                router.back();
               })
               .catch((error) => {
-                console.error('Error:', error)
-                alert('Failed to create help blog post.')
+                console.error("Error:", error);
+                alert("Failed to create help blog post.");
               })
-              .finally(() => setSubmitting(false))
+              .finally(() => setSubmitting(false));
           }}
           enableReinitialize
         >
@@ -663,7 +658,7 @@ export default function CreateHelpBlogPage() {
             handleBlur,
             handleSubmit,
             setFieldValue,
-            isSubmitting
+            isSubmitting,
           }) => (
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Title */}
@@ -695,22 +690,22 @@ export default function CreateHelpBlogPage() {
                   onInit={(evt, editor) => (summaryEditorRef.current = editor)}
                   value={values.summary}
                   onEditorChange={(content) =>
-                    setFieldValue('summary', content)
+                    setFieldValue("summary", content)
                   }
                   init={{
                     height: 250,
                     menubar: false,
                     plugins: [
-                      'advlist autolink lists link charmap preview anchor',
-                      'searchreplace visualblocks code fullscreen',
-                      'insertdatetime media table help wordcount'
-                    ].join(' '),
+                      "advlist autolink lists link charmap preview anchor",
+                      "searchreplace visualblocks code fullscreen",
+                      "insertdatetime media table help wordcount",
+                    ].join(" "),
                     toolbar:
-                      'undo redo | formatselect | bold italic underline forecolor | ' +
-                      'alignleft aligncenter alignright alignjustify | ' +
-                      'bullist numlist outdent indent | removeformat | help',
+                      "undo redo | formatselect | bold italic underline forecolor | " +
+                      "alignleft aligncenter alignright alignjustify | " +
+                      "bullist numlist outdent indent | removeformat | help",
                     content_style:
-                      'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                      "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
                   }}
                 />
                 {touched.summary && errors.summary && (
@@ -748,7 +743,7 @@ export default function CreateHelpBlogPage() {
                       ))}
                       <button
                         type="button"
-                        onClick={() => push('')}
+                        onClick={() => push("")}
                         className="text-violet-700 underline"
                       >
                         + Add Tag
@@ -770,9 +765,9 @@ export default function CreateHelpBlogPage() {
                   onChange={(e) => {
                     const selected = Array.from(
                       e.target.selectedOptions,
-                      (opt) => parseInt(opt.value, 10)
-                    )
-                    setFieldValue('categories', selected)
+                      (opt) => parseInt(opt.value, 10),
+                    );
+                    setFieldValue("categories", selected);
                   }}
                   className="w-full border border-violet-700 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
                 >
@@ -850,27 +845,27 @@ export default function CreateHelpBlogPage() {
                           </div>
 
                           {/* Paragraph or Highlight */}
-                          {['paragraph', 'highlight'].includes(
-                            section.sectionType
+                          {["paragraph", "highlight"].includes(
+                            section.sectionType,
                           ) && (
-                              <div className="mt-2">
-                                <label className="block text-gray-700 font-bold mb-1">
-                                  Content
-                                </label>
-                                <textarea
-                                  name={`sections[${secIndex}].sectionContent`}
-                                  value={section.sectionContent}
-                                  onChange={handleChange}
-                                  onBlur={handleBlur}
-                                  placeholder="Enter content"
-                                  rows="4"
-                                  className="w-full border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
-                                />
-                              </div>
-                            )}
+                            <div className="mt-2">
+                              <label className="block text-gray-700 font-bold mb-1">
+                                Content
+                              </label>
+                              <textarea
+                                name={`sections[${secIndex}].sectionContent`}
+                                value={section.sectionContent}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                placeholder="Enter content"
+                                rows="4"
+                                className="w-full border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
+                              />
+                            </div>
+                          )}
 
                           {/* Bullet List */}
-                          {section.sectionType === 'bullet' && (
+                          {section.sectionType === "bullet" && (
                             <div className="mt-2">
                               <label className="block text-gray-700 font-bold mb-1">
                                 Bullet Items
@@ -903,11 +898,11 @@ export default function CreateHelpBlogPage() {
                                             X
                                           </button>
                                         </div>
-                                      )
+                                      ),
                                     )}
                                     <button
                                       type="button"
-                                      onClick={() => push('')}
+                                      onClick={() => push("")}
                                       className="text-violet-700 underline"
                                     >
                                       + Add Bullet
@@ -919,7 +914,7 @@ export default function CreateHelpBlogPage() {
                           )}
 
                           {/* Table */}
-                          {section.sectionType === 'table' && (
+                          {section.sectionType === "table" && (
                             <div className="mt-2 space-y-4">
                               {/* Headers */}
                               <div>
@@ -954,11 +949,11 @@ export default function CreateHelpBlogPage() {
                                               X
                                             </button>
                                           </div>
-                                        )
+                                        ),
                                       )}
                                       <button
                                         type="button"
-                                        onClick={() => push('')}
+                                        onClick={() => push("")}
                                         className="text-violet-700 underline"
                                       >
                                         + Add Header
@@ -1019,7 +1014,7 @@ export default function CreateHelpBlogPage() {
                                                   ))}
                                                   <button
                                                     type="button"
-                                                    onClick={() => push('')}
+                                                    onClick={() => push("")}
                                                     className="text-violet-700 underline"
                                                   >
                                                     + Add Cell
@@ -1035,7 +1030,7 @@ export default function CreateHelpBlogPage() {
                                               Remove Row
                                             </button>
                                           </div>
-                                        )
+                                        ),
                                       )}
                                       <button
                                         type="button"
@@ -1052,7 +1047,7 @@ export default function CreateHelpBlogPage() {
                           )}
 
                           {/* Image Upload */}
-                          {section.sectionType === 'image' && (
+                          {section.sectionType === "image" && (
                             <div className="mt-2">
                               <label className="block text-gray-700 font-bold mb-1">
                                 Upload Images
@@ -1063,7 +1058,7 @@ export default function CreateHelpBlogPage() {
                                 onChange={(e) =>
                                   setFieldValue(
                                     `sections[${secIndex}].files`,
-                                    e.target.files
+                                    e.target.files,
                                   )
                                 }
                                 multiple
@@ -1073,54 +1068,50 @@ export default function CreateHelpBlogPage() {
                           )}
 
                           {/* Links */}
-                          {section.sectionType === 'links' && (
+                          {section.sectionType === "links" && (
                             <div className="mt-2">
                               <label className="block text-gray-700 font-bold mb-1">
                                 Links
                               </label>
-                              <FieldArray
-                                name={`sections[${secIndex}].links`}
-                              >
+                              <FieldArray name={`sections[${secIndex}].links`}>
                                 {({ push, remove }) => (
                                   <div className="space-y-2">
-                                    {(section.links || []).map(
-                                      (link, idx) => (
-                                        <div
-                                          key={idx}
-                                          className="flex items-center gap-2"
+                                    {(section.links || []).map((link, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <input
+                                          type="text"
+                                          name={`sections[${secIndex}].links[${idx}].text`}
+                                          value={link.text}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          placeholder="Link text"
+                                          className="flex-1 border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
+                                        />
+                                        <input
+                                          type="text"
+                                          name={`sections[${secIndex}].links[${idx}].url`}
+                                          value={link.url}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          placeholder="Link URL"
+                                          className="flex-1 border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => remove(idx)}
+                                          className="text-red-500 font-bold"
                                         >
-                                          <input
-                                            type="text"
-                                            name={`sections[${secIndex}].links[${idx}].text`}
-                                            value={link.text}
-                                            onChange={handleChange}
-                                            onBlur={handleBlur}
-                                            placeholder="Link text"
-                                            className="flex-1 border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
-                                          />
-                                          <input
-                                            type="text"
-                                            name={`sections[${secIndex}].links[${idx}].url`}
-                                            value={link.url}
-                                            onChange={handleChange}
-                                            onBlur={handleBlur}
-                                            placeholder="Link URL"
-                                            className="flex-1 border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
-                                          />
-                                          <button
-                                            type="button"
-                                            onClick={() => remove(idx)}
-                                            className="text-red-500 font-bold"
-                                          >
-                                            X
-                                          </button>
-                                        </div>
-                                      )
-                                    )}
+                                          X
+                                        </button>
+                                      </div>
+                                    ))}
                                     <button
                                       type="button"
                                       onClick={() =>
-                                        push({ text: '', url: '' })
+                                        push({ text: "", url: "" })
                                       }
                                       className="text-violet-700 underline"
                                     >
@@ -1137,14 +1128,14 @@ export default function CreateHelpBlogPage() {
                         type="button"
                         onClick={() =>
                           push({
-                            sectionTitle: '',
-                            sectionType: '',
-                            sectionContent: '',
+                            sectionTitle: "",
+                            sectionType: "",
+                            sectionContent: "",
                             bulletItems: [],
                             tableHeaders: [],
                             tableRows: [],
                             files: [],
-                            links: []
+                            links: [],
                           })
                         }
                         className="text-violet-700 underline font-bold text-lg"
@@ -1160,8 +1151,9 @@ export default function CreateHelpBlogPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`text-xl px-4 py-2 bg-[#A435F0] text-white rounded-md font-bold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 ${isSubmitting ? 'opacity-50' : ''
-                  }`}
+                className={`text-xl px-4 py-2 bg-[#A435F0] text-white rounded-md font-bold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                  isSubmitting ? "opacity-50" : ""
+                }`}
               >
                 {isSubmitting ? (
                   <div className="flex space-x-2 justify-center items-center h-6">
@@ -1170,7 +1162,7 @@ export default function CreateHelpBlogPage() {
                     <div className="h-2 w-2 bg-white rounded-full animate-bounce" />
                   </div>
                 ) : (
-                  'Create Help Blog'
+                  "Create Help Blog"
                 )}
               </button>
             </form>
@@ -1181,7 +1173,7 @@ export default function CreateHelpBlogPage() {
       <Scripts />
       <Footer />
     </>
-  )
+  );
 }
 
 const Scripts = () => (
@@ -1189,4 +1181,4 @@ const Scripts = () => (
     strategy="afterInteractive"
     src="//static.zdassets.com/hc/assets/en-gb.3e9727124d078807077c.js"
   />
-)
+);

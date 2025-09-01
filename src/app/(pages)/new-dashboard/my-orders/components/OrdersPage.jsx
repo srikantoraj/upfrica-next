@@ -167,7 +167,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
-import { BASE_API_URL } from '@/app/constants';
+import { BASE_API_URL } from "@/app/constants";
 import OrderCard from "./OrderCard";
 import Pagination from "@/components/Pagination";
 import { AiOutlineSearch, AiOutlineClose } from "react-icons/ai";
@@ -236,14 +236,14 @@ export default function OrdersPage() {
     debounceRef.current = setTimeout(() => {
       fetch(
         `${BASE_API_URL}/api/buyer/orders/search/?q=${encodeURIComponent(
-          searchQuery
+          searchQuery,
         )}&page=${pageParam}`,
         {
           headers: {
             Authorization: `Token ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       )
         .then((res) => {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -270,7 +270,6 @@ export default function OrdersPage() {
     }
   };
 
-
   // ── Skeleton card for loading state
   // const SkeletonCard = () => (
   //   <div className="border rounded-lg bg-white p-4 animate-pulse flex space-x-4">
@@ -283,8 +282,7 @@ export default function OrdersPage() {
   //   </div>
   // );
 
-
-    // ── Skeleton mimicking OrderCard
+  // ── Skeleton mimicking OrderCard
   const SkeletonCard = () => (
     <div className="md:w-full bg-white rounded-xl shadow-upfrica mb-6 p-4 animate-pulse">
       {/* — Header skeleton — */}
@@ -314,7 +312,10 @@ export default function OrdersPage() {
       {/* — Items list skeleton — */}
       <div className="mt-4 space-y-4">
         {[...Array(2)].map((_, idx) => (
-          <div key={idx} className="bg-gray-50 rounded-lg p-3 animate-pulse flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div
+            key={idx}
+            className="bg-gray-50 rounded-lg p-3 animate-pulse flex flex-col sm:flex-row items-start sm:items-center gap-4"
+          >
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-300 rounded-md" />
             <div className="flex-1 min-w-0 space-y-2">
               <div className="h-4 bg-gray-300 rounded w-3/4" />
@@ -403,11 +404,9 @@ export default function OrdersPage() {
           )}
         </>
       )}
-
     </div>
   );
 }
-
 
 // loading cart
 

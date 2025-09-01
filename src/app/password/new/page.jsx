@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 import Link from "next/link";
 import React, { useState } from "react";
@@ -13,9 +12,7 @@ const ForgotPassword = () => {
   const formik = useFormik({
     initialValues: { email: "" },
     validationSchema: Yup.object({
-      email: Yup.string()
-        .email("সঠিক ইমেইল দিন")
-        .required("ইমেইল আবশ্যক"),
+      email: Yup.string().email("সঠিক ইমেইল দিন").required("ইমেইল আবশ্যক"),
     }),
     validateOnChange: false,
     validateOnBlur: false,
@@ -23,11 +20,14 @@ const ForgotPassword = () => {
       setSubmissionStatus(null);
       setErrorMessage(null);
       try {
-        const response = await fetch("https://media.upfrica.com/api/forgot-password/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: values.email }),
-        });
+        const response = await fetch(
+          "https://media.upfrica.com/api/forgot-password/",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: values.email }),
+          },
+        );
         const data = await response.json();
         if (response.ok) {
           setSubmissionStatus("রিসেট টোকেন আপনার ইমেইলে পাঠানো হয়েছে!");
@@ -35,7 +35,10 @@ const ForgotPassword = () => {
             window.location.href = `/reset-password?email=${encodeURIComponent(values.email)}`;
           }, 1500);
         } else {
-          setErrorMessage(data.message || "রিসেট টোকেন পাঠানো ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+          setErrorMessage(
+            data.message ||
+              "রিসেট টোকেন পাঠানো ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
+          );
         }
       } catch (error) {
         setErrorMessage("এরর: " + error.message);
@@ -56,15 +59,22 @@ const ForgotPassword = () => {
               loading="lazy"
             />
           </a>
-          <h2 className="text-3xl font-extrabold text-gray-900">Forgot your password?</h2>
-          <p className="mt-2 text-sm text-gray-600">We’ll send you instructions to reset your password.</p>
+          <h2 className="text-3xl font-extrabold text-gray-900">
+            Forgot your password?
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            We’ll send you instructions to reset your password.
+          </p>
         </div>
 
         {/* Form */}
         <div className="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
           <form onSubmit={formik.handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email address
               </label>
               <input
@@ -79,7 +89,9 @@ const ForgotPassword = () => {
                 }`}
               />
               {formik.errors.email && (
-                <p className="text-red-500 text-sm mt-1">{formik.errors.email}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {formik.errors.email}
+                </p>
               )}
             </div>
 
@@ -93,21 +105,30 @@ const ForgotPassword = () => {
               </button>
             </div>
 
-            {submissionStatus && <p className="text-green-600 text-center text-sm">{submissionStatus}</p>}
-            {errorMessage && <p className="text-red-500 text-center text-sm">{errorMessage}</p>}
+            {submissionStatus && (
+              <p className="text-green-600 text-center text-sm">
+                {submissionStatus}
+              </p>
+            )}
+            {errorMessage && (
+              <p className="text-red-500 text-center text-sm">{errorMessage}</p>
+            )}
           </form>
 
           {/* Navigation Links */}
           <div className="mt-6 text-center text-sm text-gray-600 space-y-2">
             <p>
               Remember your password?{" "}
-              <Link href="/signin" className="text-purple-600 hover:underline">
+              <Link href="/login" className="text-purple-600 hover:underline">
                 Sign in
               </Link>
             </p>
             <p>
               Didn’t receive confirmation instructions?{" "}
-              <a href="/confirmation/new" className="text-purple-600 hover:underline">
+              <a
+                href="/confirmation/new"
+                className="text-purple-600 hover:underline"
+              >
                 Resend
               </a>
             </p>
@@ -122,7 +143,10 @@ const ForgotPassword = () => {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 transition"
           >
-            <i className="fab fa-whatsapp text-xl" style={{ color: "#4DC247" }}></i>
+            <i
+              className="fab fa-whatsapp text-xl"
+              style={{ color: "#4DC247" }}
+            ></i>
             Need Help? Chat with us
           </a>
         </div>
@@ -131,15 +155,31 @@ const ForgotPassword = () => {
         <footer className="text-center text-sm text-gray-500 mt-10 space-y-2">
           <div>© 2025 Upfrica Marketplace BD. All rights reserved.</div>
           <div className="space-x-2">
-            <a href="/about" className="hover:underline">About</a>|
-            <a href="/privacy" className="hover:underline">Privacy</a>|
-            <a href="/terms" className="hover:underline">Terms</a>
+            <a href="/about" className="hover:underline">
+              About
+            </a>
+            |
+            <a href="/privacy" className="hover:underline">
+              Privacy
+            </a>
+            |
+            <a href="/terms" className="hover:underline">
+              Terms
+            </a>
           </div>
           <div className="space-x-3 text-lg">
-            <a href="https://www.facebook.com/upfrica" target="_blank"><i className="fa fa-facebook"></i></a>
-            <a href="https://www.twitter.com/upfrica" target="_blank"><i className="fa fa-twitter"></i></a>
-            <a href="https://www.instagram.com/upfrica" target="_blank"><i className="fa fa-instagram"></i></a>
-            <a href="https://www.pinterest.co.uk/upfrica" target="_blank"><i className="fa fa-pinterest"></i></a>
+            <a href="https://www.facebook.com/upfrica" target="_blank">
+              <i className="fa fa-facebook"></i>
+            </a>
+            <a href="https://www.twitter.com/upfrica" target="_blank">
+              <i className="fa fa-twitter"></i>
+            </a>
+            <a href="https://www.instagram.com/upfrica" target="_blank">
+              <i className="fa fa-instagram"></i>
+            </a>
+            <a href="https://www.pinterest.co.uk/upfrica" target="_blank">
+              <i className="fa fa-pinterest"></i>
+            </a>
           </div>
         </footer>
       </div>
@@ -148,4 +188,3 @@ const ForgotPassword = () => {
 };
 
 export default ForgotPassword;
-

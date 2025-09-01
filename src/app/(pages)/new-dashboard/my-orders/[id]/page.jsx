@@ -1,15 +1,11 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { useSelector } from 'react-redux';
-import { BASE_API_URL } from '@/app/constants';
-import DeliveryTracker from '../components/DeliveryTracker';
-import {
-  AiOutlineHome,
-  AiOutlineUser,
-  AiOutlinePhone,
-} from 'react-icons/ai';
+import React, { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { useSelector } from "react-redux";
+import { BASE_API_URL } from "@/app/constants";
+import DeliveryTracker from "../components/DeliveryTracker";
+import { AiOutlineHome, AiOutlineUser, AiOutlinePhone } from "react-icons/ai";
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
@@ -25,10 +21,9 @@ export default function OrderDetailsPage() {
     (async () => {
       setLoadingOrder(true);
       try {
-        const res = await fetch(
-          `${BASE_API_URL}/api/buyer/orders/${id}/`,
-          { headers: { Authorization: `Token ${token}` } }
-        );
+        const res = await fetch(`${BASE_API_URL}/api/buyer/orders/${id}/`, {
+          headers: { Authorization: `Token ${token}` },
+        });
         if (!res.ok) throw new Error(`Failed to fetch order: ${res.status}`);
         const data = await res.json();
         setOrder(data);
@@ -36,7 +31,7 @@ export default function OrderDetailsPage() {
           data.order_items.map((it) => ({
             ...it,
             loading: false,
-          }))
+          })),
         );
       } catch (err) {
         console.error(err);
@@ -48,53 +43,42 @@ export default function OrderDetailsPage() {
 
   const handleMarkReceived = async (itemId) => {
     setItems((prev) =>
-      prev.map((it) =>
-        it.id === itemId ? { ...it, loading: true } : it
-      )
+      prev.map((it) => (it.id === itemId ? { ...it, loading: true } : it)),
     );
     try {
       const res = await fetch(
         `${BASE_API_URL}/api/buyer/order-item/${itemId}/`,
         {
-          method: 'PATCH',
+          method: "PATCH",
           headers: {
             Authorization: `Token ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ receive_status: 1 }),
-        }
+        },
       );
       if (!res.ok) throw new Error(`Status update failed: ${res.status}`);
       setItems((prev) =>
         prev.map((it) =>
-          it.id === itemId
-            ? { ...it, receive_status: 1, loading: false }
-            : it
-        )
+          it.id === itemId ? { ...it, receive_status: 1, loading: false } : it,
+        ),
       );
     } catch (err) {
       console.error(err);
       setItems((prev) =>
-        prev.map((it) =>
-          it.id === itemId ? { ...it, loading: false } : it
-        )
+        prev.map((it) => (it.id === itemId ? { ...it, loading: false } : it)),
       );
     }
   };
 
   const orderTotal = items.reduce(
     (sum, it) => sum + (it.price_cents * it.quantity) / 100,
-    0
+    0,
   );
 
-  if (loadingOrder)
-    return <div className="text-center p-6">Loading...</div>;
+  if (loadingOrder) return <div className="text-center p-6">Loading...</div>;
   if (!order)
-    return (
-      <div className="text-center text-red-600 p-6">
-        Order not found.
-      </div>
-    );
+    return <div className="text-center text-red-600 p-6">Order not found.</div>;
 
   return (
     <div className="bg-white shadow rounded-xl p-4 max-w-3xl mx-auto mt-6">
@@ -102,7 +86,7 @@ export default function OrderDetailsPage() {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 bg-gray-50 p-4 rounded-md">
         <div>
           <p className="font-bold text-lg">
-            Order #{String(order.id).padStart(6, '0')}
+            Order #{String(order.id).padStart(6, "0")}
           </p>
           <p className="text-sm text-gray-700">
             Placed on {new Date(order.created_at).toLocaleString()}
@@ -110,9 +94,7 @@ export default function OrderDetailsPage() {
         </div>
         <div className="text-sm text-gray-700">
           <p>{items.length} item(s)</p>
-          <p className="font-semibold">
-            Total: GHS {orderTotal.toFixed(2)}
-          </p>
+          <p className="font-semibold">Total: GHS {orderTotal.toFixed(2)}</p>
         </div>
       </div>
 
@@ -127,21 +109,20 @@ export default function OrderDetailsPage() {
             <div className="flex justify-between items-center mb-2">
               <div>
                 <p
-                  className={`font-bold ${received ? 'text-green-700' : 'text-orange-500'
-                    }`}
+                  className={`font-bold ${
+                    received ? "text-green-700" : "text-orange-500"
+                  }`}
                 >
-                  {received ? '✅ Received' : '🕒 Processing'}
+                  {received ? "✅ Received" : "🕒 Processing"}
                 </p>
-                <p className="text-xs text-gray-500">
-                  Item ID: {item.id}
-                </p>
+                <p className="text-xs text-gray-500">Item ID: {item.id}</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
                 <button
                   onClick={() => {
                     if (
                       window.confirm(
-                        'Are you sure you want to mark this item as received?'
+                        "Are you sure you want to mark this item as received?",
                       )
                     ) {
                       handleMarkReceived(item.id);
@@ -157,12 +138,12 @@ export default function OrderDetailsPage() {
                       <div className="h-2 w-2 bg-violet-700 rounded-full animate-bounce" />
                     </div>
                   ) : (
-                    'Mark as received'
+                    "Mark as received"
                   )}
                 </button>
 
                 <button
-                  onClick={() => console.log('Review item', item.id)}
+                  onClick={() => console.log("Review item", item.id)}
                   className="upfrica-btn-primary-outline-sm text-green-700 h-8"
                 >
                   Write a review
@@ -175,39 +156,34 @@ export default function OrderDetailsPage() {
               stage={received ? 2 : 1}
               steps={[
                 {
-                  label: 'Ordered',
+                  label: "Ordered",
                   date: new Date(order.created_at).toLocaleDateString(),
                 },
-                { label: 'Dispatched', date: 'Soon' },
+                { label: "Dispatched", date: "Soon" },
                 {
-                  label: 'Delivered',
-                  note: received ? 'Delivered' : 'Not confirmed',
+                  label: "Delivered",
+                  note: received ? "Delivered" : "Not confirmed",
                 },
               ]}
             />
 
             {/* Tracking */}
             <div className="mt-2 text-sm">
-              <strong>Tracking:</strong> {order.tracking_number || 'N/A'}
+              <strong>Tracking:</strong> {order.tracking_number || "N/A"}
             </div>
 
             {/* Product Info */}
             <div className="mt-4 flex items-start gap-4">
               <img
-                src={
-                  product.product_images?.[0] || '/placeholder.png'
-                }
+                src={product.product_images?.[0] || "/placeholder.png"}
                 alt={product.title}
                 className="w-20 h-20 object-cover rounded-md"
               />
               <div className="flex-1">
                 <p className="font-medium">{product.title}</p>
+                <p className="text-sm">Seller Item No.: {product.id}</p>
                 <p className="text-sm">
-                  Seller Item No.: {product.id}
-                </p>
-                <p className="text-sm">
-                  GHS {(item.price_cents / 100).toFixed(2)} ×{' '}
-                  {item.quantity}
+                  GHS {(item.price_cents / 100).toFixed(2)} × {item.quantity}
                 </p>
               </div>
             </div>
@@ -241,23 +217,23 @@ export default function OrderDetailsPage() {
             <span>
               {showFullInfo
                 ? order.address.address_data.phone_number
-                : '+233 *** ****'}
+                : "+233 *** ****"}
             </span>
           </div>
           <button
             onClick={() => setShowFullInfo((f) => !f)}
             className="text-purple-600 underline mt-2 text-sm"
           >
-            {showFullInfo ? 'Hide full address' : 'View full address'}
+            {showFullInfo ? "Hide full address" : "View full address"}
           </button>
         </div>
 
         {/* Payment Summary */}
         <div>
           <h4 className="font-semibold mb-1">Payment method</h4>
-          <p>{order.payment_method || 'N/A'}</p>
+          <p>{order.payment_method || "N/A"}</p>
           <p>
-            Items ({items.length}) &nbsp;&nbsp;&nbsp;&nbsp; GHS{' '}
+            Items ({items.length}) &nbsp;&nbsp;&nbsp;&nbsp; GHS{" "}
             {orderTotal.toFixed(2)}
           </p>
           <p>Discount &nbsp;&nbsp;&nbsp;&nbsp; -GHS 0.00</p>

@@ -1,99 +1,54 @@
-import ShopPageClient from './ShopPageClient';
-import { BASE_API_URL } from '@/app/constants';
+// src/app/(pages)/shops/[slug]/page.jsx
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { BASE_API_URL } from "@/app/constants";
 
-export async function generateMetadata({ params }) {
-  const slug = params.slug;
-
-  const res = await fetch(`${BASE_API_URL}/api/shops/${slug}/products/`, {
-    next: { revalidate: 60 },
-  });
-
-  if (!res.ok) {
-    return {
-      title: 'Shop | Upfrica',
-      description: 'Explore verified African shops and sellers on Upfrica.',
-    };
-  }
-
-  const data = await res.json();
-  const shop = data.shop || {};
-  const products = data.results || [];
-
-  const truncate = (text = '', max = 40) =>
-    text.length > max ? text.slice(0, max) + '...' : text;
-
-  const shopName = truncate(shop.name || '');
-  const shopType = shop.shoptype?.name || 'Shop';
-  const town = shop.user?.town || '';
-  const country = shop.user?.country_name || shop.user?.country || 'Africa';
-
-  // Dynamic Title
-  const title = `${shopName} Shop. Online ${shopType}, ${town} :Upfrica ${country}`;
-
-  // Dynamic Meta Description
-  const description = `${shopName}: Online shopping anywhere with ${shopName} Shop, ${town}, ${country}. Low prices on Upfrica: ${shopName} Shop, ${shopType}`;
-
-  // Keywords
-  const keywords = [
-    shopName,
-    shopType,
-    town,
-    country,
-    'Upfrica',
-    'online shopping',
-    'marketplace',
-  ].filter(Boolean).join(', ');
-
-  // Image
-  const image = products?.length > 0
-    ? `https://www.upfrica.com${products[products.length - 1]?.ordered_product_images?.[0] || ''}`
-    : shop.top_banner || 'https://upfrica.com/default-og-banner.jpg';
-
-  // Canonical URL
-  const canonicalUrl = `https://upfrica.com/shops/${slug}`;
-
-  // Structured Data
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "Store",
-    name: shop.name,
-    description: description,
-    url: canonicalUrl,
-    image: image,
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: town,
-      addressCountry: country,
-    },
-  };
-
-  return {
-    title,
-    description,
-    keywords,
-    alternates: {
-      canonical: canonicalUrl,
-    },
-    openGraph: {
-      title,
-      description,
-      url: canonicalUrl,
-      images: [image],
-      siteName: 'Upfrica',
-      type: 'website',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [image],
-    },
-    other: {
-      'application/ld+json': JSON.stringify(structuredData),
-    },
-  };
+function getAuthHeaders() {
+  const t =
+    cookies().get("auth_token")?.value || cookies().get("token")?.value;
+  return t ? { Authorization: `Token ${t}` } : {};
 }
 
-export default function Page({ params }) {
-  return <ShopPageClient slug={params.slug} />;
+function pickRegionFromCookie() {
+  // your RegionSetter stores { name, code, symbol, region }
+  const raw = cookies().get("selected_country")?.value;
+  if (!raw) return null;
+  try {
+    const v = JSON.parse(decodeURIComponent(raw));
+    return (v?.region || v?.code)?.toString().slice(0, 2).toLowerCase() || null;
+  } catch {
+    return null;
+  }
+}
+
+export default async function Page({ params }) {
+  const { slug } = params;
+
+  let cc = null;
+
+  // 1) Try API (no-store so we don't loop on cached empties)
+  try {
+    const r = await fetch(`${BASE_API_URL}/api/shops/${slug}/products/`, {
+      headers: getAuthHeaders(),
+      cache: "no-store",
+    });
+    if (r.ok) {
+      const data = await r.json();
+      cc =
+        data?.shop?.user?.country_code?.toLowerCase() ||
+        data?.shop?.user?.country?.code?.toLowerCase() ||
+        data?.shop?.seller_country?.toLowerCase() ||
+        data?.shop?.listing_country_code?.toLowerCase() ||
+        null;
+    }
+  } catch {}
+
+  // 2) Cookie fallback
+  if (!cc) cc = pickRegionFromCookie();
+
+  // 3) Optional default (comment out if you’d rather 404)
+  if (!cc) cc = "gh";
+
+  // 4) Redirect to canonical regional path
+  redirect(`/${cc}/shops/${slug}`);
 }

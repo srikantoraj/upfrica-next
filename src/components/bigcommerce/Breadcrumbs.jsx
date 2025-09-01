@@ -1,6 +1,5 @@
 import React from "react";
 
-
 const Breadcrumbs = () => {
   const items = [
     { name: "Blog Home", href: "https://www.bigcommerce.com/blog/" },

@@ -2,7 +2,7 @@ import { FaRegEdit } from "react-icons/fa";
 import { AiFillWarning } from "react-icons/ai";
 import { BsImage } from "react-icons/bs";
 
- const DraftListingRow = () => {
+const DraftListingRow = () => {
   return (
     <tr>
       <td>
@@ -46,8 +46,12 @@ import { BsImage } from "react-icons/bs";
         </select>
       </td>
       <td>1</td>
-      <td>£ <input type="text" placeholder="Buy it now" /></td>
-      <td>£ <input type="text" placeholder="Starting bid" /></td>
+      <td>
+        £ <input type="text" placeholder="Buy it now" />
+      </td>
+      <td>
+        £ <input type="text" placeholder="Starting bid" />
+      </td>
       <td>No</td>
       <td>
         <select defaultValue="2">
@@ -73,4 +77,3 @@ import { BsImage } from "react-icons/bs";
 };
 
 export default DraftListingRow;
-

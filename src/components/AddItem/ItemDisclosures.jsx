@@ -1,5 +1,5 @@
-'use client'
-import React, { useState } from 'react';
+"use client";
+import React, { useState } from "react";
 
 export default function ItemDisclosures() {
   const [productDocuments, setProductDocuments] = useState(false);
@@ -13,7 +13,8 @@ export default function ItemDisclosures() {
 
       {/* Description */}
       <p className="text-gray-700 text-sm">
-        Provide more details about your item’s safety and quality standards if you post to buyers in the EU/UK.
+        Provide more details about your item’s safety and quality standards if
+        you post to buyers in the EU/UK.
       </p>
 
       {/* Product Documents Switch */}
@@ -21,7 +22,8 @@ export default function ItemDisclosures() {
         <div>
           <label className="block font-medium mb-1">Product documents</label>
           <p className="text-sm text-gray-600">
-            Upload user guides, certificates, documents and accessibility information that are included with the item.{" "}
+            Upload user guides, certificates, documents and accessibility
+            information that are included with the item.{" "}
             <a
               href="https://www.ebay.co.uk/help/selling/selling/hazardous-materials-labeling?id=5407"
               target="_blank"

@@ -21,9 +21,9 @@ const BlogPage = () => {
         <BlogHeader />
         <PdfDownloadCard />
         {/* <BlogContent /> */}
-        <WhatIsAI/>
-        <AIMachineTypes/>
-        <FashionAIImpact/>
+        <WhatIsAI />
+        <AIMachineTypes />
+        <FashionAIImpact />
         <AuthorCard />
       </main>
     </div>

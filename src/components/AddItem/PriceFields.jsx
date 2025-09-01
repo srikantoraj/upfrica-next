@@ -20,7 +20,9 @@ export default function PricingSection({ formik }) {
 
         {/* Duration */}
         <div>
-          <label className="block font-medium text-sm mb-1">Auction duration</label>
+          <label className="block font-medium text-sm mb-1">
+            Auction duration
+          </label>
           <select
             name="pricing.duration"
             value={values.duration}
@@ -52,7 +54,9 @@ export default function PricingSection({ formik }) {
         </div>
 
         <div>
-          <label className="block font-medium text-sm mb-1">Buy it now <span className="text-gray-500">(optional)</span></label>
+          <label className="block font-medium text-sm mb-1">
+            Buy it now <span className="text-gray-500">(optional)</span>
+          </label>
           <div className="relative">
             <span className="absolute left-3 top-2.5 text-gray-500">£</span>
             <input
@@ -84,7 +88,8 @@ export default function PricingSection({ formik }) {
       {/* Reserve Price */}
       <div>
         <label className="block font-medium text-sm mb-1">
-          Reserve price <span className="text-gray-500">(optional — fees apply)</span>
+          Reserve price{" "}
+          <span className="text-gray-500">(optional — fees apply)</span>
         </label>
         <div className="relative">
           <span className="absolute left-3 top-2.5 text-gray-500">£</span>
@@ -97,7 +102,8 @@ export default function PricingSection({ formik }) {
           />
         </div>
         <p className="text-xs text-gray-500 mt-1">
-          This is the lowest price you're willing to sell for. Fees apply even if the item doesn’t sell.
+          This is the lowest price you're willing to sell for. Fees apply even
+          if the item doesn’t sell.
         </p>
       </div>
 

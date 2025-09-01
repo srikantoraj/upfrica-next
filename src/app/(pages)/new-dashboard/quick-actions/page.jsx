@@ -1,55 +1,102 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
+import React, { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 
 // Placeholder counts & permissions—replace with real data/fetches
 const pendingCount = 12;
 const newMessagesCount = 3;
-const userPermissions = ['basic', 'premium']; // e.g. ['basic'] or ['premium']
+const userPermissions = ["basic", "premium"]; // e.g. ['basic'] or ['premium']
 
 const GROUPS = [
   {
-    title: 'Dashboard',
+    title: "Dashboard",
     actions: [
-      { id: 'add-product', label: 'Add New Product', icon: '➕', href: '/products/new' },
-      { id: 'message-admin', label: 'Message Admin', icon: '💬', href: '/messages/admin', count: newMessagesCount },
+      {
+        id: "add-product",
+        label: "Add New Product",
+        icon: "➕",
+        href: "/products/new",
+      },
+      {
+        id: "message-admin",
+        label: "Message Admin",
+        icon: "💬",
+        href: "/messages/admin",
+        count: newMessagesCount,
+      },
     ],
   },
   {
-    title: 'Orders',
+    title: "Orders",
     actions: [
-      { id: 'pending-fulfillment', label: 'Pending Fulfillment', icon: '🚚', href: '/orders/pending', count: pendingCount },
-      { id: 'all-orders', label: 'All Orders', icon: '📋', href: '/orders' },
+      {
+        id: "pending-fulfillment",
+        label: "Pending Fulfillment",
+        icon: "🚚",
+        href: "/orders/pending",
+        count: pendingCount,
+      },
+      { id: "all-orders", label: "All Orders", icon: "📋", href: "/orders" },
     ],
   },
   {
-    title: 'Products',
+    title: "Products",
     actions: [
-      { id: 'bulk-import', label: 'Bulk Import / Export', icon: '📥', href: '/products/import' },
-      { id: 'drafts', label: 'Drafts', icon: '📝', href: '/products/drafts' },
+      {
+        id: "bulk-import",
+        label: "Bulk Import / Export",
+        icon: "📥",
+        href: "/products/import",
+      },
+      { id: "drafts", label: "Drafts", icon: "📝", href: "/products/drafts" },
     ],
   },
   {
-    title: 'Promotions',
+    title: "Promotions",
     actions: [
-      { id: 'create-coupon', label: 'Create Coupon', icon: '🏷️', href: '/promotions/coupons/new' },
-      { id: 'start-flash-sale', label: 'Start Flash Sale', icon: '⚡', href: '/promotions/flash-sales/new' },
+      {
+        id: "create-coupon",
+        label: "Create Coupon",
+        icon: "🏷️",
+        href: "/promotions/coupons/new",
+      },
+      {
+        id: "start-flash-sale",
+        label: "Start Flash Sale",
+        icon: "⚡",
+        href: "/promotions/flash-sales/new",
+      },
     ],
   },
   {
-    title: 'Reports',
-    requires: 'premium',
+    title: "Reports",
+    requires: "premium",
     actions: [
-      { id: 'view-reports', label: 'View Reports', icon: '📊', href: '/reports' },
+      {
+        id: "view-reports",
+        label: "View Reports",
+        icon: "📊",
+        href: "/reports",
+      },
     ],
   },
   {
-    title: 'Payments',
+    title: "Payments",
     actions: [
-      { id: 'payout-settings', label: 'Payout Settings', icon: '💰', href: '/payments/settings' },
-      { id: 'transaction-logs', label: 'Transaction Logs', icon: '📑', href: '/payments/logs' },
+      {
+        id: "payout-settings",
+        label: "Payout Settings",
+        icon: "💰",
+        href: "/payments/settings",
+      },
+      {
+        id: "transaction-logs",
+        label: "Transaction Logs",
+        icon: "📑",
+        href: "/payments/logs",
+      },
     ],
   },
 ];
@@ -57,12 +104,14 @@ const GROUPS = [
 export default function QuickActionsPage() {
   const [openGroups, setOpenGroups] = useState(() => {
     const init = {};
-    GROUPS.forEach(g => { init[g.title] = true; });
+    GROUPS.forEach((g) => {
+      init[g.title] = true;
+    });
     return init;
   });
 
-  const toggleGroup = title => {
-    setOpenGroups(prev => ({ ...prev, [title]: !prev[title] }));
+  const toggleGroup = (title) => {
+    setOpenGroups((prev) => ({ ...prev, [title]: !prev[title] }));
   };
 
   return (
@@ -74,8 +123,17 @@ export default function QuickActionsPage() {
           <span className="ml-2 font-bold text-xl">My Store</span>
         </div>
         <div className="space-x-4">
-          <Link href="/profile" className="hover:underline">My Profile</Link>
-          <button onClick={() => {/* logout logic */ }} className="hover:underline">Logout</button>
+          <Link href="/profile" className="hover:underline">
+            My Profile
+          </Link>
+          <button
+            onClick={() => {
+              /* logout logic */
+            }}
+            className="hover:underline"
+          >
+            Logout
+          </button>
         </div>
       </header>
 
@@ -83,9 +141,10 @@ export default function QuickActionsPage() {
       <main className="flex-1 p-6">
         <h1 className="text-2xl font-semibold mb-4">Quick Actions</h1>
         <div className="space-y-6">
-          {GROUPS.map(group => {
+          {GROUPS.map((group) => {
             // permission-aware: skip if requires not met
-            if (group.requires && !userPermissions.includes(group.requires)) return null;
+            if (group.requires && !userPermissions.includes(group.requires))
+              return null;
 
             return (
               <section key={group.title} className="border rounded-lg">
@@ -94,12 +153,12 @@ export default function QuickActionsPage() {
                   onClick={() => toggleGroup(group.title)}
                 >
                   <span className="font-medium">{group.title}</span>
-                  <span>{openGroups[group.title] ? '−' : '+'}</span>
+                  <span>{openGroups[group.title] ? "−" : "+"}</span>
                 </button>
 
                 {openGroups[group.title] && (
                   <div className="grid gap-4 p-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-                    {group.actions.map(action => (
+                    {group.actions.map((action) => (
                       <Link
                         key={action.id}
                         href={action.href}

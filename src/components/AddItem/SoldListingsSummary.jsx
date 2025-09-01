@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import React, { useState } from "react";
 
 export default function SoldListingsSummary() {
@@ -28,13 +28,16 @@ export default function SoldListingsSummary() {
           <div>
             <h3 className="font-medium">Recommended starting bid</h3>
             <p>
-              A competitive price intended to create more engagement with your listing. Based on sold prices of similar listings (excluding postage and fees).
+              A competitive price intended to create more engagement with your
+              listing. Based on sold prices of similar listings (excluding
+              postage and fees).
             </p>
           </div>
           <div>
             <h3 className="font-medium">Median sold price</h3>
             <p>
-              The median sold price per item for similar listings, excluding postage and Buyer Protection fees.
+              The median sold price per item for similar listings, excluding
+              postage and Buyer Protection fees.
             </p>
           </div>
           <div>

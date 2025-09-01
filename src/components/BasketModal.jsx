@@ -46,7 +46,6 @@
 //     router.push("/cart");
 //   };
 
-
 //    // কারেন্সি সিম্বল
 //   const selectedCountry = useSelector(selectSelectedCountry);
 //   const symbol = selectedCountry?.symbol ?? "₵";
@@ -54,8 +53,8 @@
 //   return (
 //     <div
 //       className={`
-//         fixed inset-0 z-50 flex justify-center items-start 
-//         bg-black bg-opacity-50 overflow-y-auto 
+//         fixed inset-0 z-50 flex justify-center items-start
+//         bg-black bg-opacity-50 overflow-y-auto
 //         transition-opacity duration-300
 //         ${isModalVisible ? "opacity-100 visible" : "opacity-0 invisible"}
 //       `}
@@ -64,7 +63,7 @@
 //       {/* Modal Container */}
 //       <div
 //         className={`
-//           relative bg-white rounded-lg shadow-lg 
+//           relative bg-white rounded-lg shadow-lg
 //           w-full sm:w-2/3 md:w-3/4 lg:w-1/2 xl:w-2/5 2xl:w-1/3
 //           max-w-3xl mx-2
 //           lg:mx-auto mt-10 p-6 sm:p-8
@@ -133,7 +132,7 @@
 //                   </div>
 
 //                   {/* Price & Subtotal */}
-//                   <div className="flex items-center justify-between pt-2">                   
+//                   <div className="flex items-center justify-between pt-2">
 //                     {/* Remove */}
 //                   <button
 //                     onClick={() => handleRemoveProduct(product.id)}
@@ -148,7 +147,6 @@
 //                     </span>
 //                   </div>
 
-                  
 //                 </div>
 //               </div>
 //             );
@@ -197,7 +195,7 @@ export default function BasketModal({
   handleRemoveProduct,
   saleActive,
   activePrice,
-  quantity
+  quantity,
 }) {
   const router = useRouter();
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
@@ -282,7 +280,11 @@ export default function BasketModal({
                   {/* Image */}
                   <div className="w-[100px] h-[100px] flex-shrink-0">
                     <img
-                      src={product.image?.[0] || "https://via.placeholder.com/150"}
+                      src={
+                        product.image?.[0]?.image_url ||
+                  product.image?.[0]?.url ||
+                  "/placeholder.png"
+                      }
                       alt={product.title}
                       className="h-full w-full object-cover rounded-md"
                     />
@@ -309,7 +311,7 @@ export default function BasketModal({
                             if (product.quantity > 1) {
                               handleQuantityChange(
                                 product.id,
-                                product.quantity - 1
+                                product.quantity - 1,
                               );
                             }
                           }}
@@ -327,7 +329,7 @@ export default function BasketModal({
                           onClick={() =>
                             handleQuantityChange(
                               product.id,
-                              product.quantity + 1
+                              product.quantity + 1,
                             )
                           }
                         >
@@ -356,9 +358,7 @@ export default function BasketModal({
               );
             })
           ) : (
-            <p className="text-center text-gray-500">
-              No items in the basket.
-            </p>
+            <p className="text-center text-gray-500">No items in the basket.</p>
           )}
         </div>
 

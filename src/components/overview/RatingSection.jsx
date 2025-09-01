@@ -22,13 +22,18 @@ const RatingSection = () => {
         <h3 className="text-lg font-semibold text-gray-700">Recent Users</h3>
         <div className="flex items-center text-yellow-400">
           {[...Array(5)].map((_, i) => (
-            <FaStar key={i} className={i < Math.round(ratings.average) ? "" : "text-gray-300"} />
+            <FaStar
+              key={i}
+              className={i < Math.round(ratings.average) ? "" : "text-gray-300"}
+            />
           ))}
         </div>
       </div>
 
       <div className="flex items-center gap-2 mb-4">
-        <span className="text-4xl font-bold text-yellow-500">{ratings.average}</span>
+        <span className="text-4xl font-bold text-yellow-500">
+          {ratings.average}
+        </span>
         <span className="text-gray-400 text-lg">/5</span>
       </div>
 
@@ -42,7 +47,9 @@ const RatingSection = () => {
                 style={{ width: `${(count / total) * 100}%` }}
               ></div>
             </div>
-            <span className="text-sm text-gray-500 w-10 text-right">{count}</span>
+            <span className="text-sm text-gray-500 w-10 text-right">
+              {count}
+            </span>
           </div>
         ))}
       </div>

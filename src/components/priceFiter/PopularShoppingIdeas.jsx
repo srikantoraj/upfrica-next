@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
+import React, { useState } from "react";
+import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 
 /**
  * Example data matching the snippet:
@@ -60,11 +60,7 @@ const PopularShoppingIdeas = () => {
       <ul className="space-y-1">
         {visibleItems.map((item) => (
           <li key={item.label} className="text-lg">
-            <a
-              href={item.href}
-              className="text-gray-600"
-              role="link"
-            >
+            <a href={item.href} className="text-gray-600" role="link">
               {item.label}
             </a>
           </li>
@@ -79,7 +75,16 @@ const PopularShoppingIdeas = () => {
           aria-label="See more or see less items"
           className="mt-2 flex items-center text-base  text-blue-700 hover:underline"
         >
-          {expanded ? <div className='flex items-center gap-1 text-base'><IoIosArrowUp className='h-6 w-6 text-gray-800' /> <p>See Less</p></div> : <div className='flex items-center gap-1'><IoIosArrowDown className='h-6 w-6 text-gray-800' /> <p className='flex items-center gap-1 text-base'>See More</p></div>}
+          {expanded ? (
+            <div className="flex items-center gap-1 text-base">
+              <IoIosArrowUp className="h-6 w-6 text-gray-800" /> <p>See Less</p>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1">
+              <IoIosArrowDown className="h-6 w-6 text-gray-800" />{" "}
+              <p className="flex items-center gap-1 text-base">See More</p>
+            </div>
+          )}
         </button>
       )}
     </div>

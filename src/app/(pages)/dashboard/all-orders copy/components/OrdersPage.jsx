@@ -64,11 +64,14 @@ export default function OrdersPage() {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       const lowerQuery = searchQuery.toLowerCase();
-      const filtered = orders.flatMap(order =>
-        order.order_items.filter(item =>
-          item.product.title.toLowerCase().includes(lowerQuery) ||
-          String(order.id).includes(lowerQuery)
-        ).map(item => ({ ...item, order }))
+      const filtered = orders.flatMap((order) =>
+        order.order_items
+          .filter(
+            (item) =>
+              item.product.title.toLowerCase().includes(lowerQuery) ||
+              String(order.id).includes(lowerQuery),
+          )
+          .map((item) => ({ ...item, order })),
       );
       setSearchResults(filtered);
       setSearchLoading(false);
@@ -77,9 +80,11 @@ export default function OrdersPage() {
     return () => clearTimeout(debounceRef.current);
   }, [searchQuery, orders]);
 
-  const displayItems = searchQuery ? searchResults : orders.flatMap(order =>
-    order.order_items.map(item => ({ ...item, order }))
-  );
+  const displayItems = searchQuery
+    ? searchResults
+    : orders.flatMap((order) =>
+        order.order_items.map((item) => ({ ...item, order })),
+      );
 
   return (
     <div className="p-0 bg-gray-100 min-h-screen text-black font-sans">
@@ -113,11 +118,15 @@ export default function OrdersPage() {
       {loading ? (
         <div className="text-center text-gray-600">Loading your orders...</div>
       ) : error ? (
-        <p className="text-red-600 text-center">Error loading orders: {error}</p>
+        <p className="text-red-600 text-center">
+          Error loading orders: {error}
+        </p>
       ) : (
         <div className="space-y-6">
           {displayItems.length === 0 ? (
-            <p className="text-center text-gray-500">No matching orders found.</p>
+            <p className="text-center text-gray-500">
+              No matching orders found.
+            </p>
           ) : (
             displayItems.map((item, index) => (
               <OrderCard
@@ -126,13 +135,18 @@ export default function OrdersPage() {
                 product={item.product} // ✅ Pass product as well if needed
                 status={item.receive_status === 1 ? "Received" : "Processing"}
                 date={new Date(item.order.created_at).toLocaleDateString()}
-                total={`GHS ${(item.price_cents * item.quantity / 100).toFixed(2)}`}
+                total={`GHS ${((item.price_cents * item.quantity) / 100).toFixed(2)}`}
                 orderNumber={String(item.order.id).padStart(8, "0")}
                 productTitle={item.product.title}
-                seller={item.product.user_display_name || `Seller ${item.product.user}`}
+                seller={
+                  item.product.user_display_name ||
+                  `Seller ${item.product.user}`
+                }
                 price={`GHS ${(item.price_cents / 100).toFixed(2)}`}
                 returnDate="12 May"
-                imageUrl={item.product.product_images?.[0] || "/placeholder.png"}
+                imageUrl={
+                  item.product.product_images?.[0] || "/placeholder.png"
+                }
               />
             ))
           )}

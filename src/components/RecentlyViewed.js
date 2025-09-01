@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect } from "react";
@@ -8,7 +7,6 @@ const RECENTLY_VIEWED_KEY = "upfricaRecentlyViewed";
 const RecentlyViewed = ({ product }) => {
   // console.log("new recently vew product", product);
   useEffect(() => {
-   
     if (!product?.id || typeof window === "undefined") return;
 
     console.log("new recently viewed product", product);

@@ -1,40 +1,44 @@
-import Header from "@/components/common/header/Header";
-import ProductList from "@/components/home/ProductList/ProductList";
-import FAQ from "@/components/home/Faq/Faq";
-import Footer from "@/components/common/footer/Footer";
-import Categories from "@/components/home/Categories/Categories";
-import AboutSection from "@/components/home/About/About";
-import Link from "next/link";
-import User from "@/components/User";
-import Cover from "@/components/common/header/Cover";
-import EarlyDeals from "@/components/EarlyDeals";
-import Selling from "@/components/Selling";
-import Tranding from "@/components/WomenFasion";
-import SellectedItem from "@/components/SellectedItem";
-import NewArrivals from "@/components/common/New arrivals/NewArrivals";
-import WomenFasion from "@/components/WomenFasion";
-import MenFashion from "@/components/men fashion/MenFashion";
-import RecentlyViewedList from "@/components/home/ProductList/RecentlyViewedList";
-// import LocaleRedirect from "@/components/LocaleRedirect/LocaleRedirect";
+// app/page.js
+import { headers, cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  return (
-    <div className="bg-gray-100">
-      {/* <LocaleRedirect /> */}
-      <Header />
-      <EarlyDeals />
-      <ProductList title={"Selected by Upfrica"} />
-      <Selling />
-      <RecentlyViewedList title="Recently Viewed Products" />
-      <WomenFasion title="Trending in Women’s Fashion" />
-      <SellectedItem />
-      <MenFashion title="Trending in Men’s Fashion" />
-      <Selling color="green" />
-      <NewArrivals title="New arrivals" />
-      <Categories />
-      <FAQ />
-      <Footer />
-      <User />
-    </div>
-  );
+export const dynamic = "force-dynamic";
+
+const SUPPORTED = new Set(["gh", "ng", "uk"]);
+const ALIAS = { gb: "uk" };
+
+function canon(v) { if (!v) return null; const lc = v.toLowerCase(); return ALIAS[lc] || lc; }
+function fromAcceptLang(al) {
+  if (!al) return null;
+  for (const part of al.toLowerCase().split(",")) {
+    const m = part.trim().match(/-([a-z]{2})$/i);
+    if (m) return canon(m[1]);
+  }
+  return null;
+}
+function isBot(ua="") {
+  return /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|whatsapp|discordbot/i.test(ua);
+}
+
+export default function Root() {
+  const h = headers();
+  const ua = h.get("user-agent") || "";
+  if (isBot(ua)) {
+    // Simple static chooser for bots (x-default content)
+    return (
+      <main className="max-w-3xl mx-auto p-6">
+        <h1 className="text-2xl font-black mb-4">Choose your country</h1>
+        <ul className="space-y-2">
+          <li><a className="underline" href="/gh">🇬🇭 Ghana</a></li>
+          <li><a className="underline" href="/ng">🇳🇬 Nigeria</a></li>
+          <li><a className="underline" href="/uk">🇬🇧 United Kingdom</a></li>
+        </ul>
+      </main>
+    );
+  }
+
+  const cookieCc = canon(cookies().get("cc")?.value);
+  const langCc = fromAcceptLang(h.get("accept-language"));
+  const cc = (cookieCc && SUPPORTED.has(cookieCc)) ? cookieCc : (langCc || "gh");
+  redirect(`/${cc}`);
 }

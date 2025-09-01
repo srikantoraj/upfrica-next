@@ -11,7 +11,11 @@ const RecentUsers = () => {
         {recentUsers.map((user, i) => (
           <li key={i} className="flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full" />
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-10 h-10 rounded-full"
+              />
               <div>
                 <p className="font-semibold text-gray-800">{user.name}</p>
                 <p className="text-sm text-gray-500">{user.role}</p>

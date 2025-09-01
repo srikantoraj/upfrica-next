@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Box,
@@ -12,39 +12,39 @@ import {
   MessageCircle,
   Banknote,
   Bell,
-  User
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/Card';
-import { Button } from '@/components/ui/button';
+  User,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/button";
 import {
   LineChart as ReLineChart,
   Line,
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer
-} from 'recharts';
+  ResponsiveContainer,
+} from "recharts";
 
 const dummyChartData = [
-  { name: 'Mon', orders: 5, views: 200 },
-  { name: 'Tue', orders: 2, views: 180 },
-  { name: 'Wed', orders: 4, views: 220 },
-  { name: 'Thu', orders: 1, views: 150 },
-  { name: 'Fri', orders: 6, views: 300 },
-  { name: 'Sat', orders: 3, views: 190 },
-  { name: 'Sun', orders: 7, views: 250 },
+  { name: "Mon", orders: 5, views: 200 },
+  { name: "Tue", orders: 2, views: 180 },
+  { name: "Wed", orders: 4, views: 220 },
+  { name: "Thu", orders: 1, views: 150 },
+  { name: "Fri", orders: 6, views: 300 },
+  { name: "Sat", orders: 3, views: 190 },
+  { name: "Sun", orders: 7, views: 250 },
 ];
 
 const navItems = [
-  { label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
-  { label: 'My Products', icon: <Box size={16} /> },
-  { label: 'Orders', icon: <Package size={16} /> },
-  { label: 'Marketing Tools', icon: <Megaphone size={16} /> },
-  { label: 'Analytics', icon: <LineChart size={16} /> },
-  { label: 'My Plan & Add-ons', icon: <Layers size={16} /> },
-  { label: 'Store Settings', icon: <Settings size={16} /> },
-  { label: 'Messages', icon: <MessageCircle size={16} /> },
-  { label: 'Payouts & Finances', icon: <Banknote size={16} /> },
+  { label: "Dashboard", icon: <LayoutDashboard size={16} /> },
+  { label: "My Products", icon: <Box size={16} /> },
+  { label: "Orders", icon: <Package size={16} /> },
+  { label: "Marketing Tools", icon: <Megaphone size={16} /> },
+  { label: "Analytics", icon: <LineChart size={16} /> },
+  { label: "My Plan & Add-ons", icon: <Layers size={16} /> },
+  { label: "Store Settings", icon: <Settings size={16} /> },
+  { label: "Messages", icon: <MessageCircle size={16} /> },
+  { label: "Payouts & Finances", icon: <Banknote size={16} /> },
 ];
 
 export default function DashboardPage() {
@@ -55,7 +55,10 @@ export default function DashboardPage() {
         <div className="text-2xl font-bold">upfrica</div>
         <nav className="space-y-2">
           {navItems.map(({ label, icon }) => (
-            <div key={label} className="flex items-center gap-2 hover:bg-gray-700 rounded p-2 cursor-pointer">
+            <div
+              key={label}
+              className="flex items-center gap-2 hover:bg-gray-700 rounded p-2 cursor-pointer"
+            >
               {icon}
               <span>{label}</span>
             </div>
@@ -78,7 +81,10 @@ export default function DashboardPage() {
         <Card className="mb-4">
           <CardContent>
             <h2 className="text-lg font-semibold">Welcome back, Kofi!</h2>
-            <p>Your current plan: <strong>Growth</strong> | Active Listings: <strong>8/50</strong></p>
+            <p>
+              Your current plan: <strong>Growth</strong> | Active Listings:{" "}
+              <strong>8/50</strong>
+            </p>
             <div className="mt-2 space-x-2">
               <Button>Upgrade Plan</Button>
               <Button variant="outline">Auto-fix Listings</Button>
@@ -89,10 +95,10 @@ export default function DashboardPage() {
         {/* Key Stats Overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           {[
-            { label: 'Orders', value: 12 },
-            { label: 'Revenue', value: '₵4,200' },
-            { label: 'Views', value: 1230 },
-            { label: 'Reviews', value: 32 },
+            { label: "Orders", value: 12 },
+            { label: "Revenue", value: "₵4,200" },
+            { label: "Views", value: 1230 },
+            { label: "Reviews", value: 32 },
           ].map((stat) => (
             <Card key={stat.label}>
               <CardContent className="text-center">
@@ -126,7 +132,9 @@ export default function DashboardPage() {
         {/* Performance Snapshot */}
         <Card className="mb-4">
           <CardContent>
-            <h3 className="text-md font-medium mb-2">📈 Sales Trend (Last 7 Days)</h3>
+            <h3 className="text-md font-medium mb-2">
+              📈 Sales Trend (Last 7 Days)
+            </h3>
             <ResponsiveContainer width="100%" height={200}>
               <ReLineChart data={dummyChartData}>
                 <XAxis dataKey="name" />
@@ -136,7 +144,9 @@ export default function DashboardPage() {
                 <Line type="monotone" dataKey="views" stroke="#6366f1" />
               </ReLineChart>
             </ResponsiveContainer>
-            <div className="mt-2 text-sm text-gray-600">🟢 CTR: 4.3% | 🟡 Conversion Rate: 2.1%</div>
+            <div className="mt-2 text-sm text-gray-600">
+              🟢 CTR: 4.3% | 🟡 Conversion Rate: 2.1%
+            </div>
           </CardContent>
         </Card>
 
@@ -144,7 +154,10 @@ export default function DashboardPage() {
         <Card className="mb-4">
           <CardContent className="space-y-2">
             <p>🔔 “Product ‘Samsung TV 40"’ was flagged – action required”</p>
-            <p>🟢 “Try boosting your visibility – 12 users viewed your shop today.”</p>
+            <p>
+              🟢 “Try boosting your visibility – 12 users viewed your shop
+              today.”
+            </p>
             <p>⚙️ “Update your store banner for more trust.”</p>
           </CardContent>
         </Card>
@@ -160,7 +173,14 @@ export default function DashboardPage() {
 
         {/* Footer */}
         <footer className="mt-6 text-sm text-gray-500 text-center">
-          Need Help? <a href="/help" className="underline">Visit Help Center</a> | <a href="/contact" className="underline">Contact Support</a>
+          Need Help?{" "}
+          <a href="/help" className="underline">
+            Visit Help Center
+          </a>{" "}
+          |{" "}
+          <a href="/contact" className="underline">
+            Contact Support
+          </a>
         </footer>
       </main>
     </div>

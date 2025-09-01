@@ -14,10 +14,8 @@ const ResponsiveHeader = ({ handleToggleClick }) => {
       >
         <LuMenu className="w-6 h-6 text-gray-700" />
       </button>
-
     </div>
   );
 };
 
 export default ResponsiveHeader;
-

@@ -1,17 +1,17 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useSelector } from 'react-redux'
-import { MdCheck, MdChat } from 'react-icons/md'
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import { MdCheck, MdChat } from "react-icons/md";
 import {
   AiOutlineArrowLeft,
   AiOutlineHome,
   AiOutlineMail,
   AiOutlinePhone,
-} from 'react-icons/ai'
+} from "react-icons/ai";
 
-const STATUSES = ['Ordered', 'Processing', 'Shipped', 'Received']
+const STATUSES = ["Ordered", "Processing", "Shipped", "Received"];
 
 function OrderDetailsSkeleton() {
   return (
@@ -78,121 +78,124 @@ function OrderDetailsSkeleton() {
         </div>
       </div>
     </main>
-  )
+  );
 }
 
 export default function OrderDetails({ params }) {
-  const { id } = params
-  const router = useRouter()
-  const token = useSelector((state) => state.auth.token)
+  const { id } = params;
+  const router = useRouter();
+  const token = useSelector((state) => state.auth.token);
 
-  const [order, setOrder] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [statuses, setStatuses] = useState({})
-  const [loadingReceive, setLoadingReceive] = useState({})
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [statuses, setStatuses] = useState({});
+  const [loadingReceive, setLoadingReceive] = useState({});
 
   // fetch order
   useEffect(() => {
-    if (!token) return
-      ; (async () => {
-        setLoading(true)
-        try {
-          const res = await fetch(
-            `https://media.upfrica.com/api/buyer/orders/${id}/`,
-            { headers: { Authorization: `Token ${token}` } }
-          )
-          if (!res.ok) throw new Error(`HTTP ${res.status}`)
-          const data = await res.json()
-          setOrder(data)
-        } catch (err) {
-          console.error(err)
-        } finally {
-          setLoading(false)
-        }
-      })()
-  }, [id, token])
+    if (!token) return;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `https://media.upfrica.com/api/buyer/orders/${id}/`,
+          { headers: { Authorization: `Token ${token}` } },
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setOrder(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id, token]);
 
   // init statuses
   useEffect(() => {
-    if (!order) return
-    const init = {}
+    if (!order) return;
+    const init = {};
     order.order_items.forEach((item) => {
-      const sid = item.product.user
+      const sid = item.product.user;
       if (!(sid in init)) {
-        init[sid] = item.receive_status === 1 ? STATUSES.length - 1 : 0
+        init[sid] = item.receive_status === 1 ? STATUSES.length - 1 : 0;
       }
-    })
-    setStatuses(init)
-  }, [order])
+    });
+    setStatuses(init);
+  }, [order]);
 
   // handle receive
   const handleReceive = async (sellerId) => {
-    if (statuses[sellerId] === STATUSES.length - 1) return
-    if (!window.confirm('Confirm you have received all items from this seller.')) {
-      return
+    if (statuses[sellerId] === STATUSES.length - 1) return;
+    if (
+      !window.confirm("Confirm you have received all items from this seller.")
+    ) {
+      return;
     }
-    setLoadingReceive((p) => ({ ...p, [sellerId]: true }))
+    setLoadingReceive((p) => ({ ...p, [sellerId]: true }));
     try {
-      const items = order.order_items.filter((i) => i.product.user === sellerId)
+      const items = order.order_items.filter(
+        (i) => i.product.user === sellerId,
+      );
       const headers = new Headers({
         Authorization: `Token ${token}`,
-        'Content-Type': 'application/json',
-      })
-      const body = JSON.stringify({ receive_status: 1 })
+        "Content-Type": "application/json",
+      });
+      const body = JSON.stringify({ receive_status: 1 });
       await Promise.all(
         items.map((it) =>
-          fetch(
-            `https://media.upfrica.com/api/seller/order-items/${it.id}/`,
-            { method: 'PATCH', headers, body }
-          ).then((r) => {
-            if (!r.ok) throw new Error(`Item ${it.id} failed`)
-            return r.json()
-          })
-        )
-      )
-      setStatuses((p) => ({ ...p, [sellerId]: STATUSES.length - 1 }))
-      alert('Items marked as received.')
+          fetch(`https://media.upfrica.com/api/seller/order-items/${it.id}/`, {
+            method: "PATCH",
+            headers,
+            body,
+          }).then((r) => {
+            if (!r.ok) throw new Error(`Item ${it.id} failed`);
+            return r.json();
+          }),
+        ),
+      );
+      setStatuses((p) => ({ ...p, [sellerId]: STATUSES.length - 1 }));
+      alert("Items marked as received.");
     } catch (err) {
-      console.error(err)
-      alert('Failed to mark received: ' + err.message)
+      console.error(err);
+      alert("Failed to mark received: " + err.message);
     } finally {
-      setLoadingReceive((p) => ({ ...p, [sellerId]: false }))
+      setLoadingReceive((p) => ({ ...p, [sellerId]: false }));
     }
-  }
+  };
 
-  if (loading) return <OrderDetailsSkeleton />
+  if (loading) return <OrderDetailsSkeleton />;
   if (!order) {
     return (
-      <div className="p-6 text-center text-red-600">
-        Unable to load order.
-      </div>
-    )
+      <div className="p-6 text-center text-red-600">Unable to load order.</div>
+    );
   }
 
   // group by seller
   const bySeller = order.order_items.reduce((acc, item) => {
-    const sid = item.product.user
-      ; (acc[sid] ||= []).push(item)
-    return acc
-  }, {})
+    const sid = item.product.user;
+    (acc[sid] ||= []).push(item);
+    return acc;
+  }, {});
 
   return (
     <main className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow space-y-8">
       {/* back + header */}
       <div className="flex items-center space-x-3">
         <button
-          onClick={() => router.push('/dashboard/all-orders')}
+          onClick={() => router.push("/dashboard/all-orders")}
           className="p-1 rounded-full hover:bg-gray-100"
         >
           <AiOutlineArrowLeft size={20} />
         </button>
         <h1 className="text-2xl font-bold">
-          Order #{String(order.id).padStart(6, '0')}
+          Order #{String(order.id).padStart(6, "0")}
         </h1>
       </div>
 
       {Object.entries(bySeller).map(([sellerId, items]) => {
-        const idx = statuses[sellerId] ?? 0
+        const idx = statuses[sellerId] ?? 0;
         return (
           <section
             key={sellerId}
@@ -233,22 +236,20 @@ export default function OrderDetails({ params }) {
                   <button
                     onClick={() => handleReceive(item.product.user)}
                     disabled={
-                      statuses[item.product.user] ===
-                      STATUSES.length - 1 ||
+                      statuses[item.product.user] === STATUSES.length - 1 ||
                       loadingReceive[item.product.user]
                     }
-                    className={`px-4 py-2 rounded-full font-medium transition ${statuses[item.product.user] ===
-                        STATUSES.length - 1
-                        ? 'bg-gray-300 text-gray-600 cursor-default'
-                        : 'bg-violet-600 text-white hover:bg-violet-700'
-                      }`}
+                    className={`px-4 py-2 rounded-full font-medium transition ${
+                      statuses[item.product.user] === STATUSES.length - 1
+                        ? "bg-gray-300 text-gray-600 cursor-default"
+                        : "bg-violet-600 text-white hover:bg-violet-700"
+                    }`}
                   >
                     {loadingReceive[item.product.user]
-                      ? 'Receiving…'
-                      : statuses[item.product.user] ===
-                        STATUSES.length - 1
-                        ? 'Received'
-                        : 'Mark Received'}
+                      ? "Receiving…"
+                      : statuses[item.product.user] === STATUSES.length - 1
+                        ? "Received"
+                        : "Mark Received"}
                   </button>
                 </div>
               ))}
@@ -261,10 +262,11 @@ export default function OrderDetails({ params }) {
                 {STATUSES.map((_, i) => (
                   <div key={i} className="flex flex-col items-center">
                     <div
-                      className={`w-8 h-8 flex items-center justify-center rounded-full ${i <= idx
-                          ? 'bg-violet-600 text-white'
-                          : 'bg-gray-200 text-gray-400'
-                        }`}
+                      className={`w-8 h-8 flex items-center justify-center rounded-full ${
+                        i <= idx
+                          ? "bg-violet-600 text-white"
+                          : "bg-gray-200 text-gray-400"
+                      }`}
                     >
                       {i <= idx && <MdCheck />}
                     </div>
@@ -280,7 +282,7 @@ export default function OrderDetails({ params }) {
               </div>
             </div>
           </section>
-        )
+        );
       })}
 
       {/* address & contact */}
@@ -295,7 +297,7 @@ export default function OrderDetails({ params }) {
                 `, ${order.address.address_data.address_line_2}`}
             </p>
             <p className="text-gray-700">
-              {order.address.address_data.local_area},{' '}
+              {order.address.address_data.local_area},{" "}
               {order.address.address_data.town}
             </p>
             <p className="text-gray-700">
@@ -317,5 +319,5 @@ export default function OrderDetails({ params }) {
         </div>
       </section>
     </main>
-  )
+  );
 }

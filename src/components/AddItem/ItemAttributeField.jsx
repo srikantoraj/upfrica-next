@@ -1,12 +1,18 @@
 // components/ItemAttributeField.jsx
 import React, { useState } from "react";
 
-const ItemAttributeField = ({ label, tooltip, options = [], selected, onChange }) => {
+const ItemAttributeField = ({
+  label,
+  tooltip,
+  options = [],
+  selected,
+  onChange,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredOptions = options.filter(option =>
-    option.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredOptions = options.filter((option) =>
+    option.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -56,13 +62,18 @@ const ItemAttributeField = ({ label, tooltip, options = [], selected, onChange }
                 <span>{opt}</span>
                 {opt === selected && (
                   <svg className="w-4 h-4 text-green-500" viewBox="0 0 20 20">
-                    <path d="M7.629 13.53l-3.3-3.3L2.5 12.06l5.13 5.13 10.37-10.37-1.83-1.83z" fill="currentColor" />
+                    <path
+                      d="M7.629 13.53l-3.3-3.3L2.5 12.06l5.13 5.13 10.37-10.37-1.83-1.83z"
+                      fill="currentColor"
+                    />
                   </svg>
                 )}
               </div>
             ))}
             {filteredOptions.length === 0 && (
-              <div className="px-3 py-2 text-sm text-gray-500">No results found</div>
+              <div className="px-3 py-2 text-sm text-gray-500">
+                No results found
+              </div>
             )}
           </div>
         )}

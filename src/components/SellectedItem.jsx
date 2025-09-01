@@ -78,17 +78,19 @@
 
 // export default SellectedItem;
 
-
-import React from 'react';
-import ProductCard from './home/ProductList/ProductCard';
-import { IoIosArrowRoundForward } from 'react-icons/io';
+import React from "react";
+import ProductCard from "./home/ProductList/ProductCard";
+import { IoIosArrowRoundForward } from "react-icons/io";
 
 const SellectedItem = async () => {
   try {
     //const res = await fetch("https://media.upfrica.com/api/product-list/trending-machines/", {
-    const res = await fetch("http://127.0.0.1:8000/api/product-list/trending-machines/", {    
-      next: { revalidate: 120 }, // Revalidate every 2 minutes
-    });
+    const res = await fetch(
+      "http://127.0.0.1:8000/api/product-list/trending-machines/",
+      {
+        next: { revalidate: 120 }, // Revalidate every 2 minutes
+      },
+    );
 
     // Handle HTTP errors
     if (!res.ok) {
@@ -97,9 +99,13 @@ const SellectedItem = async () => {
       console.error("Error details:", errorText);
       return (
         <div className="container mx-auto px-6 py-12 text-center">
-          <h1 className="text-2xl font-bold text-red-600">Error fetching products</h1>
+          <h1 className="text-2xl font-bold text-red-600">
+            Error fetching products
+          </h1>
           <p className="text-gray-700">Status Code: {res.status}</p>
-          <pre className="bg-gray-100 p-4 rounded-md text-gray-600">{errorText}</pre>
+          <pre className="bg-gray-100 p-4 rounded-md text-gray-600">
+            {errorText}
+          </pre>
         </div>
       );
     }
@@ -115,7 +121,9 @@ const SellectedItem = async () => {
       console.error("Error parsing JSON:", error);
       return (
         <div className="container mx-auto px-6 py-12 text-center">
-          <h1 className="text-2xl font-bold text-red-600">Error parsing product data</h1>
+          <h1 className="text-2xl font-bold text-red-600">
+            Error parsing product data
+          </h1>
           <p className="text-gray-700">{error.message}</p>
         </div>
       );
@@ -133,17 +141,16 @@ const SellectedItem = async () => {
 
     return (
       <div className="container   py-12 bg-white rounded-lg">
-        {/* Section Title */} 
+        {/* Section Title */}
         <div className="mb-4 lg:mb-8">
           <div className=" pb-2 lg:pb-4">
             <h1 className="text-xl md:text-3xl font-extrabold text-gray-900 tracking-wide">
               Trending in <br className="hidden lg:inline" />
-              <span className='flex gap-2 lg:gap-4 items-center justify-between md:justify-start'>
-                 Machines Today
-                 <IoIosArrowRoundForward className="h-10 w-10 text-gray-700" />
-                  </span>
+              <span className="flex gap-2 lg:gap-4 items-center justify-between md:justify-start">
+                Machines Today
+                <IoIosArrowRoundForward className="h-10 w-10 text-gray-700" />
+              </span>
             </h1>
-            
           </div>
           {/* <p className="text-xl font-normal text-gray-500">All with Free Delivery</p> */}
         </div>
@@ -168,4 +175,3 @@ const SellectedItem = async () => {
 };
 
 export default SellectedItem;
-

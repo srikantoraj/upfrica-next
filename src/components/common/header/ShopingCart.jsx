@@ -47,33 +47,34 @@
 
 // export default ShopingCart;
 
-
 // ShopingCart.jsx
 "use client";
-import React from 'react';
-import Link from 'next/link';
-import { AiOutlineShoppingCart } from 'react-icons/ai';
-import { useSelector } from 'react-redux';
+import React from "react";
+import Link from "next/link";
+import { AiOutlineShoppingCart } from "react-icons/ai";
+import { useSelector } from "react-redux";
 
 const ShopingCart = () => {
-    const basketItems = useSelector((state) => state.basket.items);
-    const basketCount = basketItems.reduce((total, item) => total + item.quantity, 0);
+  const basketItems = useSelector((state) => state.basket.items);
+  const basketCount = basketItems.reduce(
+    (total, item) => total + item.quantity,
+    0,
+  );
 
-    return (
-        <div>
-            {basketCount > 0 && (
-                <Link href='/cart'>
-                    <div className="relative flex items-center mx-4">
-                        <AiOutlineShoppingCart className="w-8 h-8 text-purple-500" />
-                        <span className="absolute top-[-8px] right-[-12px] bg-purple-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
-                            {basketCount}
-                        </span>
-                    </div>
-                </Link>
-            )}
-        </div>
-    );
+  return (
+    <div>
+      {basketCount > 0 && (
+        <Link href="/cart">
+          <div className="relative flex items-center mx-4">
+            <AiOutlineShoppingCart className="w-8 h-8 text-purple-500" />
+            <span className="absolute top-[-8px] right-[-12px] bg-purple-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
+              {basketCount}
+            </span>
+          </div>
+        </Link>
+      )}
+    </div>
+  );
 };
 
 export default ShopingCart;
-

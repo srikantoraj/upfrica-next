@@ -1,7 +1,7 @@
-'use client'
+"use client";
 // app/my-orders/layout.tsx
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Layout({ children }) {
   const pathname = usePathname();

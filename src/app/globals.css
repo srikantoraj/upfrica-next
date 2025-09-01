@@ -1,3 +1,4 @@
+/* src/app/global.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,130 +6,283 @@
 html {
   transition: background-color 0.3s, color 0.3s;
 }
+
 /* Base font styles */
 body {
   @apply text-base text-gray-800 leading-relaxed;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   background-color: #fff;
 }
 
 /* Headings */
 h1, h2, h3, h4, h5, h6 {
   @apply font-semibold text-gray-900 leading-tight;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* Add responsive heading styles */
-h1 {
-  @apply text-2xl md:text-3xl lg:text-4xl;
-}
-h2 {
-  @apply text-xl md:text-2xl;
-}
-h3 {
-  @apply text-lg md:text-xl;
+h1 { @apply text-2xl md:text-3xl lg:text-4xl; }
+h2 { @apply text-xl md:text-2xl; }
+h3 { @apply text-lg md:text-xl; }
+
+/* === Upfrica design tokens ================================================= */
+:root{
+  /* ==== PRIMARY BRAND: BLUE (AA/AAA on white) ============================ */
+  --brand-700:#1246CA;  /* AAA on white; pressed */
+  --brand-600:#1E5BFF;  /* Primary */
+  --brand-500:#3B7BFF;
+  --brand-400:#6A9BFF;
+  --brand-300:#9CB8FF;
+  --brand-200:#C7D7FF;
+  --brand-100:#E6EFFF;
+  --brand-50:#F3F7FF;
+
+  /* ==== SUPPORT: VIOLET / PURPLE (independent from brand-blue) =========== */
+  --violet-800:#5022C3; /* deep */
+  --violet-700:#6D28D2;
+  --violet-600:#7C3AED;
+  --violet-550:#892DE1; /* hover */
+  --violet-500:#A435F0; /* purple */
+  --violet-400:#A78BFA;
+  --violet-300:#C4B5FD;
+  --violet-200:#DDD6FE;
+  --violet-100:#EDE9FE;
+  --violet-50:#F5F3FF;
+
+  /* Legacy purple aliases (kept so old CSS keeps working) */
+  --brand-purple-700: var(--violet-700);
+  --brand-purple-600: var(--violet-600);
+  --brand-purple-500: var(--violet-550);
+  --brand-purple-400: var(--violet-500);
+  --brand-purple-350: var(--violet-550);
+  --brand-purple-300: var(--violet-500);
+  --brand-purple-100: var(--violet-100);
+  --brand-purple-50:  var(--violet-50);
+
+
+  --success-50:#ecfdf5;
+  --success-200:#a7f3d0;
+  --success-400:#34d399;
+  --success-700:#047857;
+  --success:#10b981;
+
+  /* Neutrals */
+  --ink:#0F172A; --ink-2:#334155; --line:#E5E7EB;
+  --surface:#FFFFFF; --alt-surface:#F8FAFC;
+
+  /* Status */
+  --success:#16A34A; --warning:#F59E0B; --danger:#DC2626; --info:#2563EB;
+
+  /* Commerce */
+  --commerce-600:#10B981;
+
+  /* Country accent (dynamic via [data-country]) */
+  --accent:#F59E0B;
+  --accent-100:#FFF7E6;
+
+  /* Controls/focus tokens used by ud-* utilities */
+  --ud-btn-radius:.75rem;
+  --ud-btn-min-inline:8rem;
+  --ud-focus-ring:2px solid var(--brand-600);
+  --ud-focus-offset:2px;
+  --color-knockout:#fff;
 }
 
-/* Utility: Improved readability */
+/* Country tints */
+[data-country="ng"]{ --accent:#16A34A; --accent-100:#ECFDF5; }
+[data-country="uk"]{ --accent:#1D4ED8; --accent-100:#EFF6FF; }
+
+/* Helpers */
+.no-scrollbar::-webkit-scrollbar{ display:none; }
+.no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+
+/* ================= Utilities & component-style utilities ================== */
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  .text-balance { text-wrap: balance; }
 
   /* Font sizing */
-  .text-body {
-    @apply text-sm md:text-base text-gray-700 leading-relaxed;
-  }
+  .text-body   { @apply text-sm md:text-base text-gray-700 leading-relaxed; }
+  .text-caption{ @apply text-xs text-gray-500; }
 
-  .text-caption {
-    @apply text-xs text-gray-500;
-  }
+  .heading-lg  { @apply text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight; }
+  .heading-md  { @apply text-xl font-medium text-gray-800; }
+  .heading-sm  { @apply text-lg font-medium text-gray-700; }
 
-  .heading-lg {
-    @apply text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight;
-  }
+  .btn-base { @apply text-sm md:text-base font-medium tracking-wide rounded-3xl py-2 px-4; }
 
-  .heading-md {
-    @apply text-xl font-medium text-gray-800;
-  }
+  /* Primary (blue) */
+  .btn-primary { background-color: var(--brand-600); color:#fff; }
+  .btn-primary:hover { background-color: var(--brand-700); }
 
-  .heading-sm {
-    @apply text-lg font-medium text-gray-700;
-  }
-
-  .btn-base {
-    @apply text-sm md:text-base font-medium tracking-wide rounded-3xl py-2 px-4;
-  }
-
-  .btn-primary {
-    @apply bg-[#8710D8] text-white hover:bg-purple-700;
-  }
+  /* Optional violet CTA variant */
+  .btn-primary--violet { background-color: var(--violet-600); color:#fff; }
+  .btn-primary--violet:hover { background-color: var(--violet-700); }
 
   .btn-outline {
-    @apply border border-[#f7c32e] text-gray-800 hover:bg-[#f7c32e];
+    @apply border text-gray-800;
+    border-color: var(--accent);
+  }
+  .btn-outline:hover { background-color: var(--accent); color:#111827; }
+
+  .btn-ghost { @apply border border-gray-300 text-gray-600 hover:bg-gray-100; }
+
+  /* Back-compat utilities (tokenized) */
+  .upfrica-btn-primary-outline-sm {
+    @apply rounded-full border py-1 px-4 text-sm whitespace-nowrap;
+    border-color: var(--violet-500, #A435F0); color: var(--violet-600, #7C3AED);
+  }
+  .upfrica-btn-black-outline-sm { @apply rounded-full border border-black py-1 px-4 text-sm whitespace-nowrap; }
+  .upfrica-btn-primary-sm {
+    @apply rounded-full border py-1 px-4 text-sm whitespace-nowrap;
+    background-color: var(--violet-500, #A435F0);
+    border-color: var(--violet-500, #A435F0);
+    color:#fff;
   }
 
-  .btn-ghost {
-    @apply border border-gray-300 text-gray-600 hover:bg-gray-100;
+  .scrollbar-hide { -ms-overflow-style:none; scrollbar-width:none; }
+  .scrollbar-hide::-webkit-scrollbar { display:none; }
+
+  ::-webkit-scrollbar-thumb { background-color: var(--violet-500, #a435f0); border-radius: 4px; }
+
+  .upfricaBlack { color:#0f1111 !important; }
+  .upfricaTextStrong-18 { font-weight:700 !important; font-size:18px !important; line-height:24px !important; }
+
+  .shadow-upfrica{
+    --tw-shadow:0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+    --tw-shadow-colored:0 1px 2px var(--tw-shadow-color), 0 1px 3px 1px var(--tw-shadow-color);
+    box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow);
   }
 
-  /* This is correct and avoids redundancy */
-.upfrica-btn-primary-outline-sm {
-  @apply rounded-full border border-[#A435F0] py-1 px-4 text-sm whitespace-nowrap;
+
+
+
+
+  /* Select niceties */
+  select { transition: all .3s ease; }
+  .no-native-arrow { -webkit-appearance:none; -moz-appearance:none; appearance:none; background-image:none !important; }
+  .no-native-arrow::-ms-expand { display:none; }
+
+  /* Blue ↔ violet gradient helper for ribbons/top bars */
+  .bg-brand-mix{
+    background-image:linear-gradient(90deg, var(--brand-700), var(--violet-600), var(--brand-600));
+  }
+
+
+
+  /* Edge fade helpers for horizontal scrollers */
+.scroll-fade       { --fade: 32px;
+  -webkit-mask-image: linear-gradient(to right,
+      transparent 0, #000 var(--fade),
+      #000 calc(100% - var(--fade)), transparent 100%);
+          mask-image: linear-gradient(to right,
+      transparent 0, #000 var(--fade),
+      #000 calc(100% - var(--fade)), transparent 100%);
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
 }
 
-.upfrica-btn-black-outline-sm {
-  @apply rounded-full border border-[#000000] py-1 px-4 text-sm whitespace-nowrap;
+.scroll-fade-right { --fade: 32px;
+  -webkit-mask-image: linear-gradient(to right,
+      #000 0, #000 calc(100% - var(--fade)), transparent 100%);
+          mask-image: linear-gradient(to right,
+      #000 0, #000 calc(100% - var(--fade)), transparent 100%);
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
 }
 
-.upfrica-btn-primary-sm {
-  @apply bg-[#A435F0] rounded-full border border-[#A435F0] py-1 px-4 text-sm whitespace-nowrap;
+.scroll-fade-left  { --fade: 32px;
+  -webkit-mask-image: linear-gradient(to right,
+      transparent 0, #000 var(--fade), #000 100%);
+          mask-image: linear-gradient(to right,
+      transparent 0, #000 var(--fade), #000 100%);
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
 }
 
+  /* === Upfrica button system (tokenized) ================================ */
+  .ud-btn{
+    position:relative; display:inline-flex; align-items:center; justify-content:center; gap:.4rem;
+    max-inline-size:100%; min-inline-size:var(--ud-btn-min-inline); padding-inline:1.2rem;
+    white-space:nowrap; user-select:none; vertical-align:bottom; cursor:pointer;
+    color:var(--ink); background-color:var(--alt-surface);
+    border:1px solid var(--line); border-radius:var(--ud-btn-radius);
+    transition:background-color .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .ud-btn-xsmall{ inline-size:auto; block-size:2.8rem; padding-inline:.8rem; }
+  .ud-btn-small { inline-size:auto; block-size:3.4rem; }
+  .ud-btn-medium{ inline-size:auto; block-size:4rem; }
+  .ud-btn-large { inline-size:auto; block-size:4.8rem; }
+  .ud-btn-round { --ud-btn-radius:100rem; min-inline-size:4rem; }
+  .ud-btn-round-xsmall{ padding-inline:1rem; }
+  .ud-btn:focus-visible{ outline:var(--ud-focus-ring); outline-offset:var(--ud-focus-offset); }
+  .ud-btn.ud-btn-disabled, .ud-btn[disabled]{ opacity:.55; cursor:not-allowed; }
 
+  /* Solid brand (blue) */
+  .ud-btn-primary{ color:#fff; background-color:var(--brand-600); border-color:transparent; }
+  .ud-btn-primary:hover{ background-color:var(--brand-700); }
 
+  /* Secondary outline (blue) */
+  .ud-btn-secondary{ color:var(--brand-600); background-color:transparent; border:1px solid var(--brand-600); }
+  .ud-btn-secondary:hover{ background-color:var(--brand-100); }
 
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;     /* Firefox */
-}
+  /* Optional violet outline variant */
+  .ud-btn-secondary-violet{ color:var(--violet-600); background-color:transparent; border:1px solid var(--violet-600); }
+  .ud-btn-secondary-violet:hover{ background-color:var(--violet-50); }
 
-::-webkit-scrollbar-thumb {
-  background-color: #A435F0;
-  border-radius: 4px;
-}
+  /* Ghost */
+  .ud-btn-ghost,
+  .ud-btn-ghost.ud-btn-link-underline{
+    color:var(--brand-600); background-color:transparent; border-color:transparent;
+    margin-inline:-.4rem; padding-inline:.4rem;
+  }
+  .ud-btn-ghost:hover{ background-color:color-mix(in sRGB, var(--brand-600) 12%, transparent); }
+  @supports not (background-color: color-mix(in sRGB, white 10%, black)){
+    .ud-btn-ghost:hover{ background-color:var(--brand-50); }
+  }
 
-.upfricaBlack {
-  color: #0f1111 !important;
-}
+  /* Violet solid (for promos/alternates) */
+  .ud-btn-violet{ color:#fff; background-color:var(--violet-600); border-color:transparent; }
+  .ud-btn-violet:hover{ background-color:var(--violet-700); }
 
-.upfricaTextStrong-18 {
-  font-weight: 700 !important;
-  font-size: 18px !important;
-  line-height: 24px !important;
-}
+  /* Link variants */
+  .ud-btn-link,
+  .ud-btn-link-underline{
+    color:var(--brand-600); background:transparent; border:none; block-size:auto; max-inline-size:none;
+    text-align:start; vertical-align:baseline; white-space:normal; padding:0;
+  }
+  .ud-btn-link-underline,
+  .ud-link-underline,
+  .ud-text-with-links a{
+    text-decoration:underline; text-underline-offset:.4rem;
+    text-decoration-color:color-mix(in sRGB, var(--brand-600) 60%, white);
+  }
 
+  /* White on imagery */
+  .ud-btn-white-outline{ color:var(--color-knockout); background:transparent; border:1px solid var(--color-knockout); }
+  .ud-btn-white-outline:hover{ background-color:color-mix(in sRGB, var(--color-knockout) 12%, transparent); }
+  .ud-btn-white-solid{ color:#2a2b3f; background-color:var(--color-knockout); border-color:transparent; }
+  .ud-btn-white-solid:hover{ background-color:color-mix(in sRGB, var(--color-knockout) 90%, #e5e7eb); }
 
-.shadow-upfrica {
-  --tw-shadow: 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
-  --tw-shadow-colored: 0 1px 2px var(--tw-shadow-color), 0 1px 3px 1px var(--tw-shadow-color);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-}
+  /* Neutral link tone for menus */
+  .ud-link-neutral{ color:var(--ink); }
+  .ud-link-neutral:hover{ color:var(--ink); background-color:color-mix(in sRGB, var(--ink) 8%, transparent); }
 
+  /* Icon-only */
+  .ud-btn-icon{ min-inline-size:auto; }
+  .ud-btn-icon-xsmall{ inline-size:2.8rem; padding-inline:.6rem; }
+  .ud-btn-icon-small{ inline-size:3.4rem; padding-inline:.6rem; }
+  .ud-btn-icon-medium{ inline-size:4rem; padding-inline:1rem; }
+  .ud-btn-icon-large{ inline-size:4.8rem; padding-inline:1.2rem; }
+  .ud-btn-icon-round{ border-radius:100rem; }
 
+  /* Avatars */
+  .ud-avatar{ background:#16161d; color:#fff; display:inline-flex; align-items:center; justify-content:center; border-radius:100rem; object-fit:cover; }
+  .ud-avatar-image{ background:transparent; border:1px solid var(--line); }
 
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;     /* Firefox */
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;             /* Chrome, Safari, Opera */
-}
-
-  /* styles.css */
-select {
-  transition: all 0.3s ease;
-}
-
+  /* Block list links */
+  .ud-block-list .ud-block-list-item{ display:flex; align-items:flex-start; inline-size:100%; padding-block:.8rem; }
+  .ud-block-list .ud-block-list-item-tight{ padding-block:.4rem; }
+  .ud-block-list .ud-block-list-item-loose{ padding-block:1.6rem; }
+  .ud-block-list .ud-block-list-item-link{ color:var(--brand-600); }
+  .ud-block-list .ud-block-list-item-neutral{ color:var(--ink); }
 }

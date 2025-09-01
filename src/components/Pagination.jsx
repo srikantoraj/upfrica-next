@@ -1,4 +1,3 @@
-
 // 'use client';
 
 // import React, { useState, useEffect } from 'react';
@@ -109,11 +108,30 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   };
 
   const getPageNumbers = () => {
-    if (isMobile) return totalPages <= 2 ? [1, ...(totalPages === 2 ? [2] : [])] : [1, 2, '...'];
+    if (isMobile)
+      return totalPages <= 2
+        ? [1, ...(totalPages === 2 ? [2] : [])]
+        : [1, 2, "..."];
     if (totalPages <= 5) return [...Array(totalPages).keys()].map((i) => i + 1);
-    if (currentPage <= 3) return [1, 2, 3, 4, '...', totalPages];
-    if (currentPage >= totalPages - 2) return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-    return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+    if (currentPage <= 3) return [1, 2, 3, 4, "...", totalPages];
+    if (currentPage >= totalPages - 2)
+      return [
+        1,
+        "...",
+        totalPages - 3,
+        totalPages - 2,
+        totalPages - 1,
+        totalPages,
+      ];
+    return [
+      1,
+      "...",
+      currentPage - 1,
+      currentPage,
+      currentPage + 1,
+      "...",
+      totalPages,
+    ];
   };
 
   return (
@@ -133,14 +151,18 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
               key={i}
               onClick={() => handlePageClick(page)}
               className={`px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 ${
-                page === currentPage ? "bg-violet-700 text-white font-semibold" : ""
+                page === currentPage
+                  ? "bg-violet-700 text-white font-semibold"
+                  : ""
               }`}
             >
               {page}
             </button>
           ) : (
-            <span key={i} className="px-3 py-1 text-gray-500">…</span>
-          )
+            <span key={i} className="px-3 py-1 text-gray-500">
+              …
+            </span>
+          ),
         )}
         <button
           onClick={() => handlePageClick(currentPage + 1)}
@@ -156,4 +178,3 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 };
 
 export default Pagination;
-

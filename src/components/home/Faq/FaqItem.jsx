@@ -1,8 +1,8 @@
 // components/home/Questions/QuestionItem.tsx
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
+import React, { useState } from "react";
+import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 
 const FaqItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,7 +21,7 @@ const FaqItem = ({ question, answer }) => {
         role="button"
         tabIndex={0}
         onKeyPress={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             toggleOpen();
           }
         }}
@@ -29,15 +29,21 @@ const FaqItem = ({ question, answer }) => {
         <span className="text-base md:text-xl">{question}</span>
         <span>
           {isOpen ? (
-            <IoIosArrowUp className="text-2xl text-gray-500" aria-hidden="true" />
+            <IoIosArrowUp
+              className="text-2xl text-gray-500"
+              aria-hidden="true"
+            />
           ) : (
-            <IoIosArrowDown className="text-2xl text-gray-500" aria-hidden="true" />
+            <IoIosArrowDown
+              className="text-2xl text-gray-500"
+              aria-hidden="true"
+            />
           )}
         </span>
       </div>
       <div
         className={`transition-max-height duration-500 ease-in-out overflow-hidden ${
-          isOpen ? 'max-h-96' : 'max-h-0'
+          isOpen ? "max-h-96" : "max-h-0"
         }`}
       >
         <div className="mt-4 text-lg">{answer}</div>

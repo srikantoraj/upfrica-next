@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useState } from "react";
 import VariantGroup from "./VariantGroup";
 
@@ -78,10 +78,15 @@ const ProductVariantForm = () => {
       </button>
 
       <div className="mt-8 pt-4 border-t flex justify-between">
-        <button type="submit" className="btn btn-primary px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        <button
+          type="submit"
+          className="btn btn-primary px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
           Submit
         </button>
-        <a href="/products" className="text-gray-600 hover:underline">Back</a>
+        <a href="/products" className="text-gray-600 hover:underline">
+          Back
+        </a>
       </div>
     </form>
   );
