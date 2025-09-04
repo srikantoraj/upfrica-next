@@ -17,18 +17,48 @@ import { SITE_BASE_URL, BASE_API_URL, API_BASE, COUNTRY_ALIAS } from "@/app/cons
 export const revalidate = 300;
 export const dynamic = "force-static";
 
+/* ---------- helpers to map ISO <-> slug (GB <-> uk) ---------- */
+const isoToSlug = (iso) => (String(iso).toUpperCase() === "GB" ? "uk" : String(iso || "").toLowerCase());
+const slugToIso = (slug) => (String(slug).toLowerCase() === "uk" ? "GB" : String(slug || "").toUpperCase());
+
+/* ---------- build static params from backend-supported countries ---------- */
 export async function generateStaticParams() {
-  return ["gh", "ng", "uk"].map((cc) => ({ cc }));
+  try {
+    const res = await fetch(`${API_BASE}/i18n/init/`, { next: { revalidate: 3600 } });
+    if (!res.ok) throw new Error(`init ${res.status}`);
+    const data = await res.json();
+    const supported = (data?.supported?.countries || [])
+      .map((c) => isoToSlug(c.code))
+      .filter(Boolean);
+    const uniq = Array.from(new Set(supported));
+    return (uniq.length ? uniq : ["gh", "ng", "uk"]).map((cc) => ({ cc }));
+  } catch {
+    // Safe fallback for build
+    return ["gh", "ng", "uk"].map((cc) => ({ cc }));
+  }
 }
 
 export async function generateMetadata({ params }) {
   const cc = (params?.cc || "gh").toLowerCase();
   const meta = COUNTRY_META[cc] || COUNTRY_META.gh;
+
+  // Try to get a good country name from API; fall back to COUNTRY_META
+  let countryName = meta.name;
+  try {
+    const res = await fetch(`${API_BASE}/i18n/init/?country=${encodeURIComponent(cc)}`, { next: { revalidate: 3600 } });
+    if (res.ok) {
+      const j = await res.json();
+      const iso = slugToIso(cc);
+      const hit = (j?.supported?.countries || []).find((c) => String(c.code).toUpperCase() === iso);
+      if (hit?.name) countryName = hit.name;
+    }
+  } catch {}
+
   const baseUrl = SITE_BASE_URL || "https://www.upfrica.com";
   const url = `${baseUrl}/${cc}`;
 
   return {
-    title: `${meta.name} • Upfrica Marketplace — Fast Delivery, Local Sellers`,
+    title: `${countryName} • Upfrica Marketplace — Fast Delivery, Local Sellers`,
     description: meta.lcpTagline,
     alternates: {
       canonical: url,
@@ -40,17 +70,17 @@ export async function generateMetadata({ params }) {
       },
     },
     openGraph: {
-      title: `Upfrica ${meta.name}`,
+      title: `Upfrica ${countryName}`,
       description: meta.lcpTagline,
       url,
       siteName: "Upfrica",
       type: "website",
-      images: [{ url: `${baseUrl}/og/upfrica-${cc}.png`, width: 1200, height: 630, alt: `Upfrica ${meta.name}` }],
+      images: [{ url: `${baseUrl}/og/upfrica-${cc}.png`, width: 1200, height: 630, alt: `Upfrica ${countryName}` }],
       locale: "en",
     },
     twitter: {
       card: "summary_large_image",
-      title: `Upfrica ${meta.name}`,
+      title: `Upfrica ${countryName}`,
       description: meta.lcpTagline,
       images: [`${baseUrl}/og/upfrica-${cc}.png`],
     },
@@ -92,10 +122,8 @@ async function fetchHomeRails(cc, deliverTo) {
       console.warn("[home-rails] Non-OK response", res.status);
       return [];
     }
-    // debug hint if your API emits the header
     const srcHdr = res.headers?.get?.("X-Rails-Source-CC");
     if (srcHdr) console.log("[home-rails] source cc:", srcHdr);
-
     const data = await res.json();
     return Array.isArray(data?.rails) ? data.rails : [];
   } catch (err) {
@@ -133,17 +161,13 @@ function cardImageFromCMS(card, section, fallback) {
 }
 
 /* ---------------------- mappers ---------------------- */
-// -> props for <HeroCurved/>
 function heroCurvedFromCMS(section, cc, meta) {
   const cfg = section?.config || {};
-
-  // Prefer CMS-provided cities, fall back to COUNTRY_META
   const cityList = Array.isArray(cfg.cities) && cfg.cities.length > 0
     ? cfg.cities
     : (COUNTRY_META[cc]?.cities || ["Your City"]);
   const city = cityList[0];
 
-  // Normalize hrefs like "/gh/*" -> "/{cc}/*"
   const normalizeHref = (href) => {
     if (!href || typeof href !== "string" || !href.startsWith("/")) return href;
     return href.replace(/^\/(gh|ng|uk)(?=\/|$)/i, `/${cc}`);
@@ -155,7 +179,6 @@ function heroCurvedFromCMS(section, cc, meta) {
     { title: "Wholesale & Bulk",    href: `/${cc}/wholesale` },
   ];
 
-  // Mini cards: allow CMS override (title, href, image or image_name)
   const rawCards = Array.isArray(cfg.mini_cards) ? cfg.mini_cards.slice(0, 3) : [];
   const miniCards = Array.from({ length: 3 }).map((_, i) => {
     const raw = rawCards[i] || {};
@@ -172,7 +195,6 @@ function heroCurvedFromCMS(section, cc, meta) {
     };
   });
 
-  // Choose main hero image: respect config.image_slot if present
   const mainImage =
     (cfg.image_slot && (section?.images_by_name?.[cfg.image_slot] ||
                         section?.images?.find?.(i => i.name === cfg.image_slot)?.url)) ||
@@ -223,7 +245,6 @@ export default async function CountryHome({ params }) {
   const cc = (params?.cc || "gh").toLowerCase();
   const meta = COUNTRY_META[cc] || COUNTRY_META.gh;
 
-  // Read Deliver-To from cookies (set by your UI). Fallback to first city.
   const ck = cookies();
   const cookieDeliver =
     ck.get(`deliver_to_${cc}`)?.value ||
@@ -233,11 +254,10 @@ export default async function CountryHome({ params }) {
 
   const [cms, railsFromApi, categories] = await Promise.all([
     fetchCountryHome(cc),
-    fetchHomeRails(cc, cookieDeliver), // only send param if user chose a specific city/zone
+    fetchHomeRails(cc, cookieDeliver),
     fetchCategories(cc).catch(() => []),
   ]);
 
-  // If server rails are empty (e.g., no frontpage-ready matches), safely fall back
   const rails = (Array.isArray(railsFromApi) && railsFromApi.length)
     ? railsFromApi
     : await getHomeRails(cc);
@@ -257,15 +277,12 @@ export default async function CountryHome({ params }) {
 
   return (
     <>
-      {/* LCP helpers */}
       <Head>
         <meta httpEquiv="x-dns-prefetch-control" content="on" />
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="" />
         <link rel="preconnect" href={cdnHost} />
         <link rel="preconnect" href={BASE_API_URL} />
-        {heroProps?.image && (
-          <link rel="preload" as="image" href={heroProps.image} />
-        )}
+        {heroProps?.image && <link rel="preload" as="image" href={heroProps.image} />}
       </Head>
 
       <Header
@@ -278,7 +295,6 @@ export default async function CountryHome({ params }) {
       <TopBar cc={cc} country={meta.name} />
 
       <main className="bg-[#f1f2f4] text-[var(--ink)]">
-        {/* 🔑 pass the whole section so HeroCurved can use images_by_name/primary_image */}
         <HeroCurved section={heroSec} cc={cc} {...heroProps} />
 
         {banners.length > 0 && <HeroCarousel banners={banners} />}
@@ -293,7 +309,7 @@ export default async function CountryHome({ params }) {
             cc={cc}
             title={rail.title}
             subtitle={rail.subtitle}
-            items={rail.items} 
+            items={rail.items}
             currency={meta.currency}
             currencySymbol={meta.currencySymbol}
           />

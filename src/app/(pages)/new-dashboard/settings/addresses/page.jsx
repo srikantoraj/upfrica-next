@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';            // ⬅️ NEW
 import { motion, AnimatePresence } from 'framer-motion';
 import AddressForm from '@/components/addresses/AddressForm';
 import { BASE_API_URL } from '@/app/constants';
@@ -23,7 +24,6 @@ const safelyExtractArray = (payload) => {
   if (Array.isArray(payload.results)) return payload.results;
   if (Array.isArray(payload.data?.results)) return payload.data.results;
   if (Array.isArray(payload.data)) return payload.data;
-  // generic one-level scan
   for (const v of Object.values(payload)) {
     if (Array.isArray(v)) return v;
     if (v && typeof v === 'object' && Array.isArray(v.results)) return v.results;
@@ -35,6 +35,27 @@ const codeToFlag = (code) => {
   if (!code) return '';
   const cc = String(code).slice(0, 2).toUpperCase();
   return String.fromCodePoint(...[...cc].map((c) => 0x1f1e6 + (c.charCodeAt() - 65)));
+};
+
+// Copy/labels per kind
+const KIND_META = {
+  delivery: {
+    title: 'Delivery addresses',
+    subtitle: 'Used at checkout. You can set one primary address.',
+    add: 'Add address',
+    primary: 'Primary delivery address',
+    list: 'Delivery addresses',
+    empty: 'You don’t have any delivery addresses yet.',
+  },
+  return: {
+    title: 'Return addresses',
+    subtitle: 'Where buyers should send returns for your items.',
+    add: 'Add return address',
+    primary: 'Primary return address',
+    list: 'Return addresses',
+    empty: 'You don’t have any return addresses yet.',
+  },
+  // (dispatch/collection can be added later)
 };
 
 /* ------------------------- UI piece -------------------------- */
@@ -129,6 +150,12 @@ const AddressCard = ({
 
 export default function AddressPage() {
   const cleanToken = getCleanToken();
+  const searchParams = useSearchParams();                          // ⬅️ NEW
+  const router = useRouter();                                      // ⬅️ NEW
+
+  // "delivery" | "return"
+  const initialKind = (searchParams.get('kind') || 'delivery').toLowerCase();
+  const [kind, setKind] = useState(['delivery', 'return'].includes(initialKind) ? initialKind : 'delivery');
 
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -141,6 +168,8 @@ export default function AddressPage() {
   // in-flight UX guards
   const [pendingPrimaryId, setPendingPrimaryId] = useState(null);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
+
+  const meta = KIND_META[kind] || KIND_META.delivery;
 
   /* -------------------- loaders -------------------- */
 
@@ -177,12 +206,12 @@ export default function AddressPage() {
   };
 
   const fetchAddresses = async (userId = null) => {
-    // 1) primary list (scoped to request.user by backend)
-    let list = await fetchAllPages(API('addresses/'));
+    // 1) primary list (scoped to request.user by backend), filtered by kind
+    let list = await fetchAllPages(API(`addresses/?kind=${encodeURIComponent(kind)}`));
 
-    // 2) optional fallback if list is empty and your backend still supports owner params
+    // 2) optional fallback if list is empty and legacy owner params exist
     if (!list.length && userId) {
-      list = await fetchAllPages(API(`addresses/?owner_type=User&owner_id=${userId}`));
+      list = await fetchAllPages(API(`addresses/?owner_type=User&owner_id=${userId}&kind=${encodeURIComponent(kind)}`));
     }
 
     return (list || [])
@@ -196,16 +225,22 @@ export default function AddressPage() {
       const me = await getMe();
       const list = await fetchAddresses(me?.id ?? null);
       setAddresses(list);
-      console.log('📫 addresses (ids/default):', list.map(a => ({ id: a.id, default: a.default })));
+      console.log(`[${kind}] 📫 addresses (ids/default):`, list.map(a => ({ id: a.id, d: a.default })));
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cleanToken]);
+  useEffect(() => { refresh(); /* eslint-disable-next-line */ }, [cleanToken, kind]);
+
+  // keep URL query in sync when switching tabs
+  const switchKind = (k) => {
+    const next = (k || 'delivery').toLowerCase();
+    setKind(next);
+    const url = new URL(window.location.href);
+    url.searchParams.set('kind', next);
+    router.replace(url.pathname + '?' + url.searchParams.toString());
+  };
 
   /* -------------------- actions -------------------- */
 
@@ -215,6 +250,7 @@ export default function AddressPage() {
     const d = addr.address_data || {};
     setEditingAddress({
       id: addr.id,
+      kind: addr.kind || kind,                     // ⬅️ keep kind with the edit
       full_name: addr.full_name,
       phone_number: addr.phone_number || d.phone_number || '',
       address_line_1: addr.address_line_1 || d.address_line_1 || '',
@@ -268,23 +304,37 @@ export default function AddressPage() {
   const others  = useMemo(() => addresses.filter((a) => !a.default), [addresses]);
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-0 py-6 text-gray-900 dark:text-gray-100">
-<div className="mb-5 sm:mb-6 grid gap-3 sm:flex sm:items-center sm:justify-between">
-  <div>
-    <h1 className="text-2xl font-bold dark:text-gray-100">Delivery addresses</h1>
-    <p className="text-sm text-gray-600 dark:text-gray-400">
-      Used at checkout. You can set one primary address.
-    </p>
-  </div>
+    <div className="mx-auto w/full max-w-5xl px-0 py-6 text-gray-900 dark:text-gray-100">
+      {/* Kind tabs */}
+      <div className="mb-4 flex gap-2">
+        {['delivery','return'].map((k) => (
+          <button
+            key={k}
+            onClick={() => switchKind(k)}
+            className={`rounded-full px-4 py-2 text-sm font-medium border
+              ${kind === k
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+          >
+            {KIND_META[k].title}
+          </button>
+        ))}
+      </div>
 
-  <button
-    onClick={openAdd}
-    className="w-full sm:w-auto inline-flex items-center justify-center rounded-full
-               bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-  >
-    Add address
-  </button>
-</div>
+      <div className="mb-5 sm:mb-6 grid gap-3 sm:flex sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold dark:text-gray-100">{meta.title}</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{meta.subtitle}</p>
+        </div>
+
+        <button
+          onClick={openAdd}
+          className="w-full sm:w-auto inline-flex items-center justify-center rounded-full
+                     bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+        >
+          {meta.add}
+        </button>
+      </div>
 
       {/* loading state */}
       {loading && (
@@ -298,13 +348,13 @@ export default function AddressPage() {
       {!loading && addresses.length === 0 && (
         <div className="rounded-2xl border border-dashed border-gray-300 p-8 text-center dark:border-gray-700">
           <p className="mb-3 text-gray-700 dark:text-gray-300">
-            You don’t have any saved addresses yet.
+            {meta.empty}
           </p>
           <button
             onClick={openAdd}
             className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
           >
-            Add your first address
+            {meta.add}
           </button>
         </div>
       )}
@@ -314,7 +364,7 @@ export default function AddressPage() {
           {primary ? (
             <>
               <h2 className="mb-2 mt-4 text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Primary delivery address
+                {meta.primary}
               </h2>
               <AddressCard
                 addr={primary}
@@ -328,7 +378,7 @@ export default function AddressPage() {
               {others.length > 0 && (
                 <>
                   <h2 className="mb-2 mt-6 text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                    Other delivery addresses
+                    Other {meta.list.toLowerCase()}
                   </h2>
                   <div className="grid gap-4 md:grid-cols-2">
                     {others.map((a) => (
@@ -347,10 +397,9 @@ export default function AddressPage() {
               )}
             </>
           ) : (
-            // No primary yet → show a single list without the “Other” heading
             <>
               <h2 className="mb-2 mt-4 text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Delivery addresses
+                {meta.list}
               </h2>
               <div className="grid gap-4 md:grid-cols-2">
                 {addresses.map((a) => (
@@ -384,7 +433,7 @@ export default function AddressPage() {
             />
             {/* sheet */}
             <motion.div
-              className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-auto rounded-t-3xl
+              className="fixed inset-x-0 bottom-0 z-50 max-h[85vh] overflow-auto rounded-t-3xl
                          bg-white p-4 shadow-2xl dark:bg-gray-900 md:inset-y-10 md:mx-auto md:max-w-2xl md:rounded-2xl"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
@@ -394,7 +443,7 @@ export default function AddressPage() {
               <div className="mx-auto w-full max-w-xl">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-lg font-semibold">
-                    {editingAddress ? 'Edit address' : 'Add new address'}
+                    {editingAddress ? 'Edit address' : `Add ${kind} address`}
                   </h3>
                   <button
                     onClick={closeSheet}
@@ -406,6 +455,7 @@ export default function AddressPage() {
 
                 <AddressForm
                   token={cleanToken}
+                  kind={kind}                               // ⬅️ NEW
                   onSave={handleSaved}
                   initialData={editingAddress}
                   editId={editingAddress?.id || null}

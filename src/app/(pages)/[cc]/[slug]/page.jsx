@@ -2,7 +2,7 @@
 import { notFound, redirect } from "next/navigation";
 import { BASE_API_URL } from "@/app/constants";
 import Footer from "@/components/common/footer/Footer";
-import Header from "@/components/common/header/Header";
+import Header from "@/components/home/Header";
 import RelatedProducts from "@/components/home/ProductList/RealtedProduct";
 import ProductDetailSection from "@/components/ProductDetailSection/ProductDetailSection";
 
@@ -146,8 +146,9 @@ export default async function ProductPage({ params: { region, slug } }) {
 
   return (
     <>
+    <Header />
       
-      <main className="w-full max-w-[1380px] mx-auto py-8 px-4 sm:px-5 lg:px-8 xl:px-[4rem] 2xl:px-[5rem]">
+      <main className="w-full max-w-[1380px] mx-auto py-8 px-4 sm:px-5 lg:px-8 xl:px-[4rem] 2xl:px-[5rem] ">
         <ProductDetailSection
           product={product}
           relatedProducts={relatedProducts}

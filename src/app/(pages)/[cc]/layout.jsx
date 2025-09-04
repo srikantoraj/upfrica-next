@@ -27,7 +27,7 @@ export const dynamicParams = true;
 
 export default function CountryLayout({ children, params: { cc } }) {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen">
       {/*<Header />*/}
       {children}
       <Footer />

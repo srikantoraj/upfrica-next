@@ -14,9 +14,11 @@ export default function AddressForm({
   initialData = null,
   editId = null,
   onCancel,
-  defaultCountry = 'GH', // <-- NEW: prefer page’s defaultCountry
+  defaultCountry = 'GH', // prefer page’s defaultCountry
+  kind = 'delivery',     // ⬅️ NEW: address kind ('delivery' | 'return' | 'dispatch' etc.)
 }) {
   const [formData, setFormData] = useState({
+    kind,                 // ⬅️ NEW
     full_name: '',
     address_line_1: '',
     address_line_2: '',
@@ -42,10 +44,6 @@ export default function AddressForm({
 
   const fullNamePrefilledRef = useRef(false);
   const priorityOrder = ['GB', 'GH', 'NG'];
-
-
-
-
 
   /* ---------------- helpers ---------------- */
   const toIso2 = (val) => {
@@ -88,14 +86,18 @@ export default function AddressForm({
       const iso = toIso2(
         initialData.country || initialData.country_code || initialData.country_fk?.code
       );
-      setFormData((prev) => ({ ...prev, ...initialData, country: iso }));
+      setFormData((prev) => ({
+        ...prev,
+        ...initialData,
+        country: iso,
+        kind: initialData.kind || prev.kind || kind, // ⬅️ preserve instance kind
+      }));
 
       // seed phone fields
       const pn = (initialData.phone_number || initialData.phone_e164 || '').toString().trim();
       if (pn) {
         const guessedIso = guessIsoFromE164(pn) || iso || toIso2(defaultCountry) || 'GH';
         setPhoneIso(guessedIso);
-        // let the PhoneInput display raw value; we pass pn to validate later
         setPhoneVal(pn);
       }
       return;
@@ -123,6 +125,7 @@ export default function AddressForm({
 
         setFormData((prev) => ({
           ...prev,
+          kind, // ⬅️ ensure current tab kind
           country: code || prev.country,
           full_name: !fullNamePrefilledRef.current ? (fullName || prev.full_name) : prev.full_name,
         }));
@@ -138,7 +141,7 @@ export default function AddressForm({
       } catch {}
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, initialData, countries.length, defaultCountry]);
+  }, [token, initialData, countries.length, defaultCountry, kind]);
 
   /* --------- load countries + sensible defaults --------- */
   useEffect(() => {
@@ -193,23 +196,22 @@ export default function AddressForm({
   }, [countries]);
 
   // Feed <PhoneInput> a non-empty list (maps API shape → component shape)
-const phoneCountries = useMemo(() => {
-  if (sortedCountries.length) {
-    return sortedCountries.map(c => ({
-      code: toIso2(c.code),
-      name: c.name,
-      flag_emoji: c.flag_emoji || '',
-    }));
-  }
-  // Fallback so the dropdown isn't blank before /api/countries loads
-  return [
-    { code: 'GH', name: 'Ghana',          flag_emoji: '🇬🇭' },
-    { code: 'NG', name: 'Nigeria',        flag_emoji: '🇳🇬' },
-    { code: 'GB', name: 'United Kingdom', flag_emoji: '🇬🇧' },
-    { code: 'US', name: 'United States',  flag_emoji: '🇺🇸' },
-  ];
-}, [sortedCountries]);
-
+  const phoneCountries = useMemo(() => {
+    if (sortedCountries.length) {
+      return sortedCountries.map(c => ({
+        code: toIso2(c.code),
+        name: c.name,
+        flag_emoji: c.flag_emoji || '',
+      }));
+    }
+    // Fallback so the dropdown isn't blank before /api/countries loads
+    return [
+      { code: 'GH', name: 'Ghana',          flag_emoji: '🇬🇭' },
+      { code: 'NG', name: 'Nigeria',        flag_emoji: '🇳🇬' },
+      { code: 'GB', name: 'United Kingdom', flag_emoji: '🇬🇧' },
+      { code: 'US', name: 'United States',  flag_emoji: '🇺🇸' },
+    ];
+  }, [sortedCountries]);
 
   const inputClass = (field) =>
     `w-full p-2 rounded border ${
@@ -369,11 +371,12 @@ const phoneCountries = useMemo(() => {
       const method = editId ? 'PATCH' : 'POST';
       const url = editId
         ? `${BASE_API_URL}/api/addresses/${editId}/`
-        : `${BASE_API_URL}/api/addresses/`;
+        : `${BASE_API_URL}/api/addresses/?kind=${encodeURIComponent(formData.kind || kind)}`; // ⬅️ include kind in query (optional)
 
-      // Send country_code for address + phone_number (E.164) + phone_region (ISO-2)
+      // Send kind + country_code + phone_number (E.164) + phone_region (ISO-2)
       const payload = {
         ...formData,
+        kind: formData.kind || kind, // ⬅️ ensure backend receives kind in body too
         country_code: formData.country,
         phone_number: e164,
         phone_region: toIso2(phoneIso || formData.country || defaultCountry || 'GH'),
@@ -390,8 +393,9 @@ const phoneCountries = useMemo(() => {
 
       if (!res.ok) throw new Error('Failed to save address');
 
-      // reset
+      // reset (preserve current tab kind)
       setFormData({
+        kind: formData.kind || kind,
         full_name: '',
         address_line_1: '',
         address_line_2: '',
@@ -525,31 +529,31 @@ const phoneCountries = useMemo(() => {
         {errors.full_name && <p className="text-red-500 text-sm">{errors.full_name}</p>}
 
         {/* Phone (international) */}
-<PhoneInput
-  countries={phoneCountries}
-  selectedCountry={phoneIso || formData.country || defaultCountry || 'GH'}
-  value={phoneVal}
-  onCountryChange={(iso) => {
-    phoneIsoTouchedRef.current = true;
-    setPhoneIso(toIso2(iso));
-    setTouched(false);
-    setSubmitted(false);
-  }}
-  onChange={(val) => {
-    setPhoneVal(val);
-    setTouched(false);
-    setSubmitted(false);
-  }}
-  onFocus={() => {
-    setHasFocus(true);
-    setTouched(false);
-  }}
-  onBlur={() => {
-    setHasFocus(false);
-    setTouched(true);
-  }}
-  invalid={!!showError}
-/>
+        <PhoneInput
+          countries={phoneCountries}
+          selectedCountry={phoneIso || formData.country || defaultCountry || 'GH'}
+          value={phoneVal}
+          onCountryChange={(iso) => {
+            phoneIsoTouchedRef.current = true;
+            setPhoneIso(toIso2(iso));
+            setTouched(false);
+            setSubmitted(false);
+          }}
+          onChange={(val) => {
+            setPhoneVal(val);
+            setTouched(false);
+            setSubmitted(false);
+          }}
+          onFocus={() => {
+            setHasFocus(true);
+            setTouched(false);
+          }}
+          onBlur={() => {
+            setHasFocus(false);
+            setTouched(true);
+          }}
+          invalid={!!showError}
+        />
         {showError ? (
           <p className="text-xs text-red-700 dark:text-red-400" aria-live="polite">
             Number doesn’t look valid for this country.

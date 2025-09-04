@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "scan": "node scripts/scan.mjs > scan.txt 2>&1 && echo '✅ Wrote scan.txt'"
   },
   "dependencies": {
     "@babel/runtime": "^7.27.0",

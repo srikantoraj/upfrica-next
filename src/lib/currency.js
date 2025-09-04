@@ -1,20 +1,36 @@
-import { api } from "./api";
+// src/lib/currency.js
+import { getRates } from "./fx";
 
-const CC_TO_CUR = { gh: "GHS", ng: "NGN", uk: "GBP" };
+const CC_TO_CUR = {
+  gh: "GHS",
+  ng: "NGN",
+  uk: "GBP",
+  us: "USD",
+  za: "ZAR",
+  ke: "KES",
+  ca: "CAD",
+  eu: "EUR",
+};
 
 export function currencyForCc(cc) {
-  return CC_TO_CUR[cc] || "USD";
+  return CC_TO_CUR[String(cc || "").toLowerCase()] || "USD";
 }
+
 export function formatMoney(amount, currency) {
   try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: currency.toUpperCase(),
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 2,
+    }).format(Number(amount));
   } catch {
-    return `${amount}`;
+    return `${currency.toUpperCase()} ${Number(amount || 0).toLocaleString()}`;
   }
 }
 
-// Optional: cache exchange rates via ISR
-export async function getFx(revalidate = 3600) {
-  const data = await api(`/api/exchange-rates/`, { next: { revalidate, tags: ["fx"] } }).catch(() => null);
-  return data || {};
+// Fetch (and ISR-cache) the latest FX rates (map shape)
+export async function getFx(revalidate = 3600, { base = "USD", currencies } = {}) {
+  const { rates, asOf } = await getRates({ base, currencies, revalidate });
+  return { base, asOf, rates };
 }

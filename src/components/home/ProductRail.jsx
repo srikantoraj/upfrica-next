@@ -49,18 +49,36 @@ function compareAtFromRaw(r) {
   return Number.isFinite(num) ? num : null;
 }
 
+/* ------------------------------ currency ------------------------------ */
+
+const CC_CURRENCY = { gh: "GHS", ng: "NGN", uk: "GBP", gb: "GBP" };
+
+function currencyForCc(cc) {
+  return CC_CURRENCY[String(cc || "").toLowerCase()] || "USD";
+}
+
+function currencyFromRaw(r, cc) {
+  const guesses = [
+    r?.currency,
+    r?.price_currency,
+    r?.sale_price_currency,
+    r?.list_currency,
+    r?.compare_at_currency,
+    r?.ccy,
+  ].filter(truthyStr);
+  return (guesses[0] || currencyForCc(cc)).toUpperCase();
+}
+
+/* ----------------------------- href/city ------------------------------ */
+
 function normalizeCountryPath(path, cc) {
   if (!path) return null;
-  // strip scheme+host
   let p = path.replace(/^https?:\/\/[^/]+/i, "");
-  // ensure leading slash
   if (!p.startsWith("/")) p = `/${p}`;
-  // normalize country prefix; accept gh/ng/uk/gb and swap to current cc
   return p.replace(/^\/(gh|ng|uk|gb)(?=\/|$)/i, `/${cc}`);
 }
 
 function hrefFromRaw(r, cc) {
-  // Prefer server-provided href, then other URL candidates
   const candidate = [r?.href, r?.frontend_url, r?.seo_url, r?.canonical_url].find(truthyStr);
   const normalized = normalizeCountryPath(candidate || "", cc);
   if (normalized) return normalized;
@@ -69,7 +87,6 @@ function hrefFromRaw(r, cc) {
 }
 
 function cityFromRaw(r) {
-  // Prefer the server-provided city; otherwise try known fallbacks
   return (
     r?.city ||
     r?.seller_city ||
@@ -81,13 +98,20 @@ function cityFromRaw(r) {
   );
 }
 
+/* ------------------------------ normalize ----------------------------- */
+
 function normalizeItem(item, cc) {
-  // Already mapped? still normalize href & city to be safe
+  // Already mapped? still normalize href & city; also attach sourceCurrency
   if (truthyStr(item?.title) && (truthyStr(item?.image) || "image" in item) && (Number.isFinite(item?.price) || "price" in item)) {
     const href = hrefFromRaw(item, cc);
     const city = cityFromRaw(item);
-    return { ...item, href, city, _raw: item._raw ?? null };
+    const sourceCurrency =
+      item.sourceCurrency ||
+      item.currency ||
+      currencyFromRaw(item._raw || {}, cc);
+    return { ...item, href, city, sourceCurrency, _raw: item._raw ?? null };
   }
+
   // Treat as raw serializer object
   const img = pickRawImage(item);
   const price = priceFromRaw(item);
@@ -101,17 +125,19 @@ function normalizeItem(item, cc) {
     rating: null,
     reviews: null,
     href: hrefFromRaw(item, cc),
+    sourceCurrency: currencyFromRaw(item, cc), // ← key for conversion
     _raw: item,
   };
 }
 
 /* ---------------- strict frontpage-ready gate (toggleable) -------------- */
+
 const STRICT = {
   requireTitle:     false,
   requireImage:     false,
   requirePrice:     false,
-  requireCondition: false,  // future
-  requireCategory:  false,  // future
+  requireCondition: false,
+  requireCategory:  false,
 };
 
 function hasCategoryRaw(r) {
@@ -159,11 +185,11 @@ function frontpageReady(n) {
 function defaultParamsForRail(railKey) {
   switch (railKey) {
     case "trending_near_you":
-      return { ordering: "-created_at", page_size: "18" }; // swap to your real "trending" when ready
+      return { ordering: "-created_at", page_size: "18" };
     case "for_you":
       return { ordering: "-created_at", page_size: "18" };
     case "verified_sellers":
-      return { page_size: "18" }; // add seller_verified=1 when API supports
+      return { page_size: "18" };
     default:
       return { page_size: "18" };
   }
@@ -178,6 +204,7 @@ export default async function ProductRail({
   subtitle,
   items,       // preferred: pass items from /home/<cc>/rails
   params = {}, // fallback: fetch if items not provided or empty
+  // kept for backward-compat; client card should ignore these and use context instead
   currency,
   currencySymbol,
 }) {
@@ -221,6 +248,11 @@ export default async function ProductRail({
               key={p.id}
               cc={cc}
               item={p}
+              // NOTE:
+              // RailCard should call useLocalization():
+              //   const { price, format } = useLocalization();
+              //   const display = format(price(item.price, item.sourceCurrency));
+              // These two props remain only as legacy fallbacks.
               currency={currency}
               currencySymbol={currencySymbol}
             />
