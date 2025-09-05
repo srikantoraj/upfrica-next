@@ -53,7 +53,7 @@ export default function AgentSidebar({
     <aside
       ref={sidebarRef}
       className={clsx(
-        "fixed md:static z-40 w-64 h-screen flex flex-col border-r shadow-lg transition-transform duration-300 bg-white dark:bg-[#111827]",
+        "fixed md:static w-64 h-screen flex flex-col border-r shadow-lg transition-transform duration-300 bg-white dark:bg-[#111827]",
         {
           "translate-x-0": mobileOpen,
           "-translate-x-full": !mobileOpen,

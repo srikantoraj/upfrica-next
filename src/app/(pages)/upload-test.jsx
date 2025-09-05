@@ -5,7 +5,7 @@ export default function UploadTestPage() {
   return (
     <main style={{ padding: 24 }}>
       <h1>Upload test</h1>
-      <UploadTester />
+      <UploazdTester />
     </main>
   );
 }

@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { BASE_API_URL } from "@/app/constants";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BASE_API_URL } from "@/app/constants";
-import { getCardImage } from "@/app/constants";
-import { getCleanToken } from "@/lib/getCleanToken";
 import {
   Eye,
   CheckCircle,
@@ -18,42 +17,9 @@ import {
   Plus,
 } from "lucide-react";
 
-/* helpers */
-const toMajor = (cents = 0, exp = 2) =>
-  (Number(cents || 0) / Math.pow(10, exp)).toFixed(exp);
-const statusLabel = (s) =>
-  s === 1 ? "Published" : s === 0 ? "Draft" : s === 2 ? "Under review" : "—";
-
-function authHeaders() {
-  const t = getCleanToken?.();
-  return t ? { Authorization: `Token ${t}` } : {};
-}
-
-function viewHref(p) {
-  // strongest → weakest
-  if (p.frontend_url_full) return p.frontend_url_full;
-  if (p.frontend_url) return p.frontend_url;
-  if (p.canonical_url) return p.canonical_url;
-  if (p.slug) {
-    const cc = (p.listing_country_code || p.seller_country || "gh").toLowerCase();
-    return `/${cc}/${p.slug}`;
-  }
-  return "#";
-}
-
-function thumbOf(p) {
-  return (
-    getCardImage?.(p) ||
-    p.thumbnail ||
-    p.image_objects?.[0]?.image_url ||
-    p.image_objects?.[0]?.url ||
-    "/placeholder.png"
-  );
-}
-
 export default function ProductListTable() {
   const router = useRouter();
-
+  const { token } = useAuth();
   const [products, setProducts] = useState([]);
   const [expandedRows, setExpandedRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -62,18 +28,21 @@ export default function ProductListTable() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  async function fetchProducts(pageNum = 1) {
-    const headers = { "Content-Type": "application/json", ...authHeaders() };
-    if (!headers.Authorization || !hasMore) return;
+  const authHeaders = token
+    ? { Authorization: `Token ${String(token).replace(/^Token\s+/i, "")}` }
+    : {};
+
+  const fetchProducts = async (pageNum = 1) => {
+    if (!token || !hasMore) return;
     setLoading(true);
     try {
       const res = await fetch(
         `${BASE_API_URL}/api/products/mine/?page=${pageNum}`,
-        { headers, credentials: "include", cache: "no-store" }
+        { headers: { "Content-Type": "application/json", ...authHeaders } }
       );
       if (!res.ok) throw new Error("Failed to fetch products");
       const data = await res.json();
-      setProducts((prev) => [...prev, ...data.results]);
+      setProducts((prev) => [...prev, ...(data.results || [])]);
       setHasMore(Boolean(data.next));
     } catch (err) {
       console.error(err);
@@ -81,81 +50,57 @@ export default function ProductListTable() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    // initial load
-    fetchProducts(1);
+    setProducts([]); // reset when token flips
+    setPage(1);
+    setHasMore(true);
+    if (token) fetchProducts(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [token]);
 
-  function handleLoadMore() {
+  const handleLoadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
     fetchProducts(nextPage);
-  }
+  };
 
-  function toggleRow(id) {
+  const toggleRow = (id) => {
     setExpandedRows((prev) =>
       prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]
     );
-  }
+  };
 
-  /* Option A: go to dedicated create page */
-  function handleAddProduct() {
-    router.push("/new-dashboard/products/new");
-  }
-
-  /* Option B: one-click create draft then jump to editor (keep if you prefer)
-  async function handleAddProduct() {
-    if (creating) return;
-    const headers = { "Content-Type": "application/json", ...authHeaders() };
-    if (!headers.Authorization) return;
+  // ★ Create Draft + go to editor
+  const handleAddProduct = async () => {
+    if (!token) {
+      setError("You must be signed in to add a product.");
+      return;
+    }
     setCreating(true);
     try {
-      // If your backend supports seller POST endpoint, use that:
-      // const url = `${BASE_API_URL}/api/seller/products/`;
-      const url = `${BASE_API_URL}/api/products/`;
-      const res = await fetch(url, {
+      const res = await fetch(`${BASE_API_URL}/api/products/`, {
         method: "POST",
-        headers,
-        credentials: "include",
+        headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({ title: "Untitled product" }),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || JSON.stringify(err) || "Failed to create draft");
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j?.detail || `Create failed (${res.status})`);
       }
       const draft = await res.json();
+      // Navigate to your editor; update path if different:
       router.push(`/new-dashboard/products/editor?id=${draft.id}`);
     } catch (e) {
-      alert(e.message || "Could not create a product draft.");
+      console.error(e);
+      setError(e.message || "Failed to create product.");
     } finally {
       setCreating(false);
     }
-  }
-  */
+  };
 
-  /* archive/delete */
-  async function handleDelete(id) {
-    const headers = { "Content-Type": "application/json", ...authHeaders() };
-    if (!headers.Authorization) return;
-    const ok = confirm("Archive this product?");
-    if (!ok) return;
-    try {
-      const res = await fetch(`${BASE_API_URL}/api/products/${id}/`, {
-        method: "PATCH",
-        headers,
-        credentials: "include",
-        body: JSON.stringify({ status: 5 }), // archive
-      });
-      if (!res.ok) throw new Error("Failed to archive product");
-      setProducts((prev) => prev.filter((p) => p.id !== id));
-    } catch (e) {
-      console.error(e);
-      alert("Archive failed.");
-    }
-  }
+  if (error) return <p className="text-center text-red-500">{error}</p>;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow p-6">
@@ -166,14 +111,12 @@ export default function ProductListTable() {
         <button
           onClick={handleAddProduct}
           disabled={creating}
-          className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition inline-flex items-center gap-2 disabled:opacity-60"
+          className="inline-flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition disabled:opacity-70"
         >
           {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-          Add Product
+          {creating ? "Creating…" : "+ Add Product"}
         </button>
       </div>
-
-      {error && <p className="text-center text-red-500 mb-3">{error}</p>}
 
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm text-left text-gray-700 dark:text-gray-200">
@@ -191,15 +134,26 @@ export default function ProductListTable() {
           </thead>
           <tbody>
             {products.map((p) => {
-              const img = thumbOf(p);
-              const price = toMajor(p.price_cents, 2);
-              const ccy = (p.price_currency || "").toUpperCase();
-              const href = viewHref(p);
+              const img =
+                p.thumbnail ||
+                p.product_image_url ||
+                p.image_objects?.[0]?.url ||
+                "/placeholder.png";
+
+              const price =
+                // Prefer server-provided major if present (MoneyInMajorMixin adds it)
+                p.price_major ??
+                (typeof p.price_cents === "number"
+                  ? (p.price_cents / 100).toFixed(2)
+                  : "0.00");
+
+              const currency = (p.price_currency || "").toUpperCase() || "GHS";
+
               return (
                 <React.Fragment key={p.id}>
                   <tr className="border-t border-gray-200 dark:border-gray-700">
                     <td className="p-3">
-                      <Link href={href} className="block w-fit" target="_blank">
+                      <Link href={p.frontend_url || `/product/${p.slug}`} className="block w-fit">
                         <Image
                           src={img}
                           alt={p.title || "Product"}
@@ -210,47 +164,47 @@ export default function ProductListTable() {
                       </Link>
                     </td>
                     <td className="p-3 font-medium text-gray-800 dark:text-white">
-                      <Link href={href} target="_blank" className="hover:underline">
-                        {p.title || "—"}
+                      <Link href={p.frontend_url || `/product/${p.slug}`}>
+                        <span className="hover:underline">{p.title}</span>
                       </Link>
                     </td>
                     <td className="p-3">
-                      <span className={`flex items-center gap-1 ${p.status === 1 ? "text-green-600" : "text-gray-500"}`}>
+                      <span className="flex items-center gap-1 text-green-600 font-semibold">
                         <CheckCircle className="w-4 h-4" />
-                        {statusLabel(p.status)}
+                        {p.status === 1 ? "Published" : p.status === 0 ? "Draft" : p.status ?? "—"}
                       </span>
                     </td>
                     <td className="p-3">
                       <span className="flex items-center gap-1 text-green-600">
                         <Eye className="w-4 h-4" />
-                        {p.status === 1 ? "Published" : "Hidden"}
+                        {p.frontend_url ? "Visible" : "Hidden"}
                       </span>
                     </td>
                     <td className="p-3 text-green-600 font-semibold whitespace-nowrap">
-                      In Stock ({p.product_quantity ?? 1})
+                      In Stock ({p.product_quantity ?? 0})
                     </td>
                     <td className="p-3 font-bold text-black dark:text-white whitespace-nowrap">
-                      {ccy ? `${ccy} ${price}` : price}
+                      {currency} {price}
                     </td>
                     <td className="p-3 text-center">
                       <span className="flex items-center gap-1">
                         <Eye className="w-4 h-4" />
-                        {p.views ?? p.impressions_count ?? 0}
+                        {p.review_count ?? 0}
                       </span>
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => router.push(`/new-dashboard/products/editor?id=${p.id}`)}
+                          onClick={() => router.push(`/dashboard/products/editor?id=${p.id}`)}
                           className="p-1 rounded border hover:bg-gray-100 dark:hover:bg-gray-700"
                           title="Edit"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(p.id)}
                           className="p-1 rounded border hover:bg-red-100 dark:hover:bg-red-800"
-                          title="Archive"
+                          title="Delete"
+                          // TODO: hook delete endpoint
                         >
                           <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
                         </button>
@@ -266,16 +220,11 @@ export default function ProductListTable() {
                   </tr>
                   {expandedRows.includes(p.id) && (
                     <tr className="bg-gray-50 dark:bg-gray-900 text-xs text-gray-500 dark:text-gray-400">
-                      <td colSpan={8} className="p-3 space-x-6">
-                        <span className="font-semibold text-gray-700 dark:text-gray-300">Date Added:</span> {p.created_at || "—"}
-                        <span className="font-semibold text-gray-700 dark:text-gray-300">Last Updated:</span> {p.updated_at || "—"}
-                        <span className="font-semibold text-gray-700 dark:text-gray-300">Product ID:</span> #{p.id}
-                        {p.slug && (
-                          <>
-                            <span className="font-semibold text-gray-700 dark:text-gray-300">URL:</span>{" "}
-                            <code>/{(p.listing_country_code || "gh")}/{p.slug}</code>
-                          </>
-                        )}
+                      <td colSpan="8" className="p-3 space-x-6">
+                        <span className="font-semibold text-gray-700 dark:text-gray-300">Slug:</span>{" "}
+                        {p.slug || "—"}
+                        <span className="font-semibold text-gray-700 dark:text-gray-300">Product ID:</span>{" "}
+                        #{p.id}
                       </td>
                     </tr>
                   )}
@@ -288,8 +237,7 @@ export default function ProductListTable() {
 
       {loading && (
         <p className="text-center mt-4 text-gray-400 dark:text-gray-500">
-          <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />
-          Loading…
+          Loading more products...
         </p>
       )}
 

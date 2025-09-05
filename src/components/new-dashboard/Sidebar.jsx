@@ -20,7 +20,7 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Sidebar */}
       <aside
         className={clsx(
-          "fixed top-0 left-0 z-40 h-full w-64 border-r shadow-lg transition-transform duration-300 bg-white dark:bg-[#111827]",
+          "fixed top-0 left-0 h-full w-64 border-r shadow-lg transition-transform duration-300 bg-white dark:bg-[#111827]",
           {
             "translate-x-0": isOpen,
             "-translate-x-full": !isOpen,

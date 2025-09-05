@@ -52,7 +52,7 @@ function Layout({ children }) {
   }, [mobileOpen]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[#0a0f0f] transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
       <TopBar
         toggleMobileSidebar={() => setMobileOpen((p) => !p)}
         toggleDesktopSidebar={() => setSidebarVisible((p) => !p)}
@@ -66,8 +66,8 @@ function Layout({ children }) {
           toggleMobile={setMobileOpen}
           sidebarRef={sidebarRef}
         />
-        <main className="flex-1 flex flex-col min-h-[calc(100vh-64px)] w-full overflow-hidden">
-          <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-12 py-6 flex-1 overflow-y-auto bg-gray-50 dark:bg-[#0a0f0f] text-black dark:text-white transition-colors duration-300">
+        <main className="flex-1 flex flex-col min-h-[calc(100vh-64px)] w-full overflow-hidden dark:bg-gray-950">
+          <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-12 py-6 flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950 text-black dark:text-white transition-colors duration-300">
             {children}
           </div>
           <Footer />
