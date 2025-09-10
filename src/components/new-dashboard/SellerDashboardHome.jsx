@@ -1,30 +1,33 @@
-  // src/components/new-dashboard/SellerDashboardHome.jsx
-  "use client";
+// src/components/new-dashboard/SellerDashboardHome.jsx
+"use client";
 
-  import React, { useEffect, useState, useRef } from "react";
- import { parsePhoneNumberFromString, getCountryCallingCode } from "libphonenumber-js/min";
-  import Link from "next/link";
-  import { useRouter, usePathname, useSearchParams } from "next/navigation";
-  import toast from "react-hot-toast";
+import React, { useEffect, useState, useRef } from "react";
+import { parsePhoneNumberFromString, getCountryCallingCode } from "libphonenumber-js/min";
+import Link from "next/link";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import toast from "react-hot-toast";
 
-  import { useAuth } from "@/contexts/AuthContext";
-  import useEntitlements from "@/hooks/useEntitlements";
+import { useAuth } from "@/contexts/AuthContext";
+import useEntitlements from "@/hooks/useEntitlements";
 
-  // NEW imports
-  import { X, Loader2, BadgeCheck, Star } from "lucide-react";
-  import PhoneInput from "@/components/input/phoneInput";
+import { X, Loader2, BadgeCheck, Star } from "lucide-react";
+import PhoneInput from "@/components/input/phoneInput";
 
-  import {
-    ShoppingCart, BarChart2, Eye, Package, Clock, AlertCircle,
-    TrendingUp, CircleCheck, Info,
-  } from "lucide-react";
-  import SellerReviewsSummaryCard from "@/components/new-dashboard/SellerReviewsSummaryCard";
-  import PlanComparisonModal from "@/components/ui/PlanComparisonModal";
-  import { BASE_API_URL } from "@/app/constants";
+import {
+  ShoppingCart,
+  BarChart2,
+  Eye,
+  Package,
+  Clock,
+  AlertCircle,
+  TrendingUp,
+  CircleCheck,
+  Info,
+} from "lucide-react";
+import SellerReviewsSummaryCard from "@/components/new-dashboard/SellerReviewsSummaryCard";
+import PlanComparisonModal from "@/components/ui/PlanComparisonModal";
 
-
-
-  // --- friendly labels for `uses` (module scope so all components can use) ---
+// --- friendly labels for `uses` (module scope so all components can use) ---
 const USE_LABELS = {
   shop_public: "Shop contact",
   whatsapp: "WhatsApp",
@@ -43,826 +46,741 @@ export const humanizeUses = (uses) => {
   const arr = Array.isArray(uses)
     ? uses
     : typeof uses === "string"
-      ? uses.split(",").map((x) => x.trim()).filter(Boolean)
-      : [];
+    ? uses
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean)
+    : [];
 
   if (arr.length === 0) return "";
-  const sorted = [...arr].sort(
-    (a, b) => (USE_ORDER[a] ?? 99) - (USE_ORDER[b] ?? 99)
-  );
+  const sorted = [...arr].sort((a, b) => (USE_ORDER[a] ?? 99) - (USE_ORDER[b] ?? 99));
   return [...new Set(sorted.map((u) => USE_LABELS[u] ?? startCase(u)))].join(", ");
 };
 
+const DEBUG = false;
+const isSellerRole = (r) => r === "seller" || r === "seller_private" || r === "seller_business";
 
+export default function SellerDashboardHome() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const search = useSearchParams();
 
-  const DEBUG = false;
-  const isSellerRole = (r) =>
-    r === "seller" || r === "seller_private" || r === "seller_business";
-
-  export default function SellerDashboardHome() {
-    const router = useRouter();
-    const pathname = usePathname();
-    const search = useSearchParams();
-
-    // 🔐 Entitlements (feature flags) — used to gate UI actions
-  const { has, stateOf, whyLocked, loading: entLoading, error: entError } = useEntitlements();
+  // 🔐 Entitlements (feature flags) — used to gate UI actions
+  const { stateOf, whyLocked, loading: entLoading } = useEntitlements();
 
   const contactState = stateOf("allow_display_seller_contact");
-  const contactWhy   = whyLocked("allow_display_seller_contact");
-
+  const contactWhy = whyLocked("allow_display_seller_contact");
 
   // NEW: bottom sheet + phones state
-const [phoneSheetOpen, setPhoneSheetOpen] = useState(false);
-const [hasPrimaryContact, setHasPrimaryContact] = useState(false);
+  const [phoneSheetOpen, setPhoneSheetOpen] = useState(false);
+  const [hasPrimaryContact, setHasPrimaryContact] = useState(false);
 
+  // Cookie-first auth (no token in context)
+  const { user, hydrated } = useAuth();
 
+  const [dashboard, setDashboard] = useState(null);
+  const [shop, setShop] = useState(null);
+  const [loadingDash, setLoadingDash] = useState(true);
+  const [loadingShop, setLoadingShop] = useState(true);
+  const [errorDash, setErrorDash] = useState(null);
+  const [errorShop, setErrorShop] = useState(null);
+  const [planRequired, setPlanRequired] = useState(null); // { message, next }
 
-    const { user, token, hydrated } = useAuth();
+  // upgrade modal + subscribe state
+  const [showPlans, setShowPlans] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
+  const [plansOpen, setPlansOpen] = useState(false);
 
-    const [dashboard, setDashboard] = useState(null);
-    const [shop, setShop] = useState(null);
-    const [loadingDash, setLoadingDash] = useState(true);
-    const [loadingShop, setLoadingShop] = useState(true);
-    const [errorDash, setErrorDash] = useState(null);
-    const [errorShop, setErrorShop] = useState(null);
-    const [planRequired, setPlanRequired] = useState(null); // { message, next }
+  // --- roles ---
+  const roles = Array.isArray(user?.account_type)
+    ? user.account_type
+    : user?.account_type
+    ? [user.account_type]
+    : [];
+  const isSeller = roles.some(isSellerRole);
 
-    // upgrade modal + subscribe state
-    const [showPlans, setShowPlans] = useState(false);
-    const [subscribing, setSubscribing] = useState(false);
-    const [plansOpen, setPlansOpen] = useState(false);
+  // --- plan presence (from /me and/or dashboard once loaded) ---
+  const userHasPlan = !!(user?.seller_plan && (user?.seller_plan.id ?? user?.seller_plan));
+  const dashHasPlan = !!(dashboard?.seller_plan && (dashboard?.seller_plan.id ?? dashboard?.seller_plan));
+  const hasPlan = userHasPlan || dashHasPlan;
 
-    // --- roles ---
-    const roles = Array.isArray(user?.account_type)
-      ? user.account_type
-      : user?.account_type
-      ? [user.account_type]
-      : [];
-    const isSeller = roles.some(isSellerRole);
+  useEffect(() => {
+    if (!DEBUG) return;
+    console.log("🧭 Auth state:", {
+      hydrated,
+      roles,
+      isSeller,
+      userHasPlan,
+      dashHasPlan,
+      hasPlan,
+    });
+  }, [hydrated, user, dashboard]); // eslint-disable-line
 
-    // --- plan presence (from /me and/or dashboard once loaded) ---
-    const userHasPlan = !!(user?.seller_plan && (user?.seller_plan.id ?? user?.seller_plan));
-    const dashHasPlan = !!(dashboard?.seller_plan && (dashboard?.seller_plan.id ?? dashboard?.seller_plan));
-    const hasPlan = userHasPlan || dashHasPlan;
+  // 🛒 Fetch dashboard — let backend enforce plan/role.
+  useEffect(() => {
+    if (!hydrated) return;
 
-    useEffect(() => {
-      if (!DEBUG) return;
-      console.log("🧭 Auth state:", {
-        hydrated,
-        token,
-        roles,
-        isSeller,
-        userHasPlan,
-        dashHasPlan,
-        hasPlan,
-      });
-    }, [hydrated, token, user, dashboard]); // eslint-disable-line
+    const controller = new AbortController();
+    const run = async () => {
+      setLoadingDash(true);
+      setErrorDash(null);
+      setPlanRequired(null);
 
-    // 🛒 Fetch dashboard — let backend enforce plan/role.
-    useEffect(() => {
-      if (!hydrated || !token) return;
+      try {
+        const res = await fetch(`/api/b/api/users/me/dashboard/`, {
+          signal: controller.signal,
+          cache: "no-store",
+          credentials: "include",
+          headers: { Accept: "application/json" },
+        });
 
-      const controller = new AbortController();
-      const run = async () => {
-        setLoadingDash(true);
-        setErrorDash(null);
-        setPlanRequired(null);
-
-        try {
-          const authToken = token?.replace(/^"|"$/g, "");
-          const res = await fetch(`${BASE_API_URL}/api/users/me/dashboard/`, {
-            headers: {
-              Authorization: `Token ${authToken}`,
-              Accept: "application/json",
-            },
-            signal: controller.signal,
-            cache: "no-store",
-          });
-
-          if (!res.ok) {
-            // Try JSON, fall back to text
-            let body = null,
-              text = "";
+        if (!res.ok) {
+          // Try JSON, fall back to text
+          let body = null,
+            text = "";
+          try {
+            body = await res.clone().json();
+          } catch {}
+          if (!body) {
             try {
-              body = await res.clone().json();
+              text = await res.text();
             } catch {}
-            if (!body) {
-              try {
-                text = await res.text();
-              } catch {}
-            }
+          }
 
-            if (res.status === 401) {
-              setErrorDash("Session expired. Please log in again.");
+          if (res.status === 401) {
+            setErrorDash("Session expired. Please log in again.");
+            return;
+          }
+
+          if (res.status === 403) {
+            const detail = body?.detail || body?.code || body?.error || text?.toLowerCase();
+            if (detail && String(detail).includes("seller_plan_required")) {
+              setPlanRequired({
+                message:
+                  body?.message || "You need an active seller plan to access the seller dashboard.",
+                next: "/onboarding/account-type",
+              });
               return;
             }
-
-            if (res.status === 403) {
-              const detail =
-                body?.detail || body?.code || body?.error || text?.toLowerCase();
-              if (detail && String(detail).includes("seller_plan_required")) {
-                setPlanRequired({
-                  message:
-                    body?.message ||
-                    "You need an active seller plan to access the seller dashboard.",
-                  next: "/onboarding/account-type",
-                });
-                return;
-              }
-            }
-
-            const compact = body
-              ? JSON.stringify(body).slice(0, 300)
-              : (text || "").slice(0, 300);
-            setErrorDash(
-              `${res.status} ${res.statusText}${compact ? ` — ${compact}` : ""}`,
-            );
-            if (DEBUG)
-              console.error("❌ Dashboard fetch failed:", res.status, body || text);
-            return;
           }
 
-          const data = await res.json();
-          setDashboard(data);
-          if (DEBUG) console.log("✅ Dashboard data:", data);
-        } catch (err) {
-          if (err.name !== "AbortError") {
-            setErrorDash(err.message || "Network error");
-            if (DEBUG) console.error("💥 Dashboard error:", err);
-          }
-        } finally {
-          setLoadingDash(false);
+          const compact = body ? JSON.stringify(body).slice(0, 300) : (text || "").slice(0, 300);
+          setErrorDash(`${res.status} ${res.statusText}${compact ? ` — ${compact}` : ""}`);
+          if (DEBUG) console.error("❌ Dashboard fetch failed:", res.status, body || text);
+          return;
         }
-      };
 
-      run();
-      return () => controller.abort();
-    }, [hydrated, token]);
-
-    // 🔁 Payment success: clear the query param and refresh lightweight state
-    useEffect(() => {
-      const paid = search?.get("payment");
-      if (paid !== "success") return;
-
-      toast.success("Payment confirmed. Updating your plan…");
-
-      const params = new URLSearchParams(search);
-      params.delete("payment");
-
-      router.replace(`${pathname}${params.toString() ? `?${params}` : ""}`, {
-        scroll: false,
-      });
-
-      // Optional light refresh to prompt re-fetch (backend should reflect new plan)
-      setTimeout(() => setLoadingDash(true), 250);
-    }, [search, pathname, router]);
-
-    // ✅ Prefer backend role when it's present on the dashboard payload
-    const backendIsSeller = Array.isArray(dashboard?.account_type)
-      ? dashboard.account_type.some(isSellerRole)
-      : undefined;
-    const effectiveIsSeller =
-      backendIsSeller === undefined ? isSeller : backendIsSeller;
-
-    // 🏪 Fetch shop — only if seller and NOT plan-gated and has a plan
-    useEffect(() => {
-      if (!hydrated || !token || !effectiveIsSeller || planRequired || !hasPlan)
-        return;
-
-      const controller = new AbortController();
-      const run = async () => {
-        setLoadingShop(true);
-        setErrorShop(null);
-        try {
-          const authToken = token?.replace(/^"|"$/g, "");
-          const res = await fetch(`${BASE_API_URL}/api/shops/me/`, {
-            headers: { Authorization: `Token ${authToken}` },
-            signal: controller.signal,
-            cache: "no-store",
-          });
-
-          if (!res.ok) {
-            // 404/204 means no shop yet—treat as null
-            if (res.status !== 404 && res.status !== 204) {
-              if (res.status === 401)
-                setErrorShop("Session expired. Please log in again.");
-              else if (res.status === 403)
-                setErrorShop("You don’t have permission to view shop data.");
-              else {
-                const text = await res.text();
-                setErrorShop(
-                  `${res.status} ${res.statusText} — ${text}`.slice(0, 300),
-                );
-                if (DEBUG)
-                  console.warn("⚠️ Shop fetch failed:", res.status, text);
-              }
-            }
-            setShop(null);
-            return;
-          }
-
-          const data = await res.json();
-          setShop(data || null);
-          if (DEBUG) console.log("✅ Shop data:", data);
-        } catch (err) {
-          if (err.name !== "AbortError") {
-            setErrorShop(err.message || "Network error");
-            if (DEBUG) console.error("💥 Shop error:", err);
-          }
-        } finally {
-          setLoadingShop(false);
+        const data = await res.json();
+        setDashboard(data);
+        if (DEBUG) console.log("✅ Dashboard data:", data);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          setErrorDash(err.message || "Network error");
+          if (DEBUG) console.error("💥 Dashboard error:", err);
         }
-      };
+      } finally {
+        setLoadingDash(false);
+      }
+    };
 
-      run();
-      return () => controller.abort();
-    }, [hydrated, token, effectiveIsSeller, planRequired, hasPlan]);
+    run();
+    return () => controller.abort();
+  }, [hydrated]);
 
+  // 🔁 Payment success: clear the query param and refresh lightweight state
+  useEffect(() => {
+    const paid = search?.get("payment");
+    if (paid !== "success") return;
+
+    toast.success("Payment confirmed. Updating your plan…");
+
+    const params = new URLSearchParams(search);
+    params.delete("payment");
+
+    router.replace(`${pathname}${params.toString() ? `?${params}` : ""}`, {
+      scroll: false,
+    });
+
+    // Optional light refresh to prompt re-fetch (backend should reflect new plan)
+    setTimeout(() => setLoadingDash(true), 250);
+  }, [search, pathname, router]);
+
+  // ✅ Prefer backend role when it's present on the dashboard payload
+  const backendIsSeller = Array.isArray(dashboard?.account_type)
+    ? dashboard.account_type.some(isSellerRole)
+    : undefined;
+  const effectiveIsSeller = backendIsSeller === undefined ? isSeller : backendIsSeller;
+
+  // 🏪 Fetch shop — only if seller and NOT plan-gated and has a plan
+  useEffect(() => {
+    if (!hydrated || !effectiveIsSeller || planRequired || !hasPlan) return;
+
+    const controller = new AbortController();
+    const run = async () => {
+      setLoadingShop(true);
+      setErrorShop(null);
+      try {
+        const res = await fetch(`/api/b/api/shops/me/`, {
+          signal: controller.signal,
+          cache: "no-store",
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          // 404/204 means no shop yet—treat as null
+          if (res.status !== 404 && res.status !== 204) {
+            if (res.status === 401) setErrorShop("Session expired. Please log in again.");
+            else if (res.status === 403) setErrorShop("You don’t have permission to view shop data.");
+            else {
+              const text = await res.text();
+              setErrorShop(`${res.status} ${res.statusText} — ${text}`.slice(0, 300));
+              if (DEBUG) console.warn("⚠️ Shop fetch failed:", res.status, text);
+            }
+          }
+          setShop(null);
+          return;
+        }
+
+        const data = await res.json();
+        setShop(data || null);
+        if (DEBUG) console.log("✅ Shop data:", data);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          setErrorShop(err.message || "Network error");
+          if (DEBUG) console.error("💥 Shop error:", err);
+        }
+      } finally {
+        setLoadingShop(false);
+      }
+    };
+
+    run();
+    return () => controller.abort();
+  }, [hydrated, effectiveIsSeller, planRequired, hasPlan]);
 
   // ----------- Shop gating helpers -----------
   const storefrontState = stateOf("storefront_unlock"); // 'active' | 'included_locked' | 'available'
 
   // Important: while entitlements are loading, DON'T assume locked
   const storefrontLocked = !entLoading && storefrontState === "available";
-  const storefrontKyc    = !entLoading && storefrontState === "included_locked";
+  const storefrontKyc = !entLoading && storefrontState === "included_locked";
 
   // Interpret shop status safely (treat unknown/missing as ACTIVE)
   const shopStatus = String(shop?.status ?? "").toLowerCase();
-  const subStatus  = String(
-    shop?.subscription?.status ??
-    shop?.subscription_status ??
-    shop?.plan_status ??
-    ""
+  const subStatus = String(
+    shop?.subscription?.status ?? shop?.subscription_status ?? shop?.plan_status ?? ""
   ).toLowerCase();
 
   const isExplicitInactive =
-    shop?.is_enabled === false ||           // <-- add this
+    shop?.is_enabled === false ||
     shop?.is_active === false ||
     shop?.suspended === true ||
-    ["inactive", "paused", "suspended", "disabled", "closed", "archived"].includes(shopStatus) ||
+    ["inactive", "paused", "suspended", "disabled", "closed", "archived"].includes(
+      shopStatus
+    ) ||
     Boolean(shop?.deleted_at);
 
-  const isSubscriptionInactive =
-    ["canceled", "past_due", "unpaid"].includes(subStatus);
+  const isSubscriptionInactive = ["canceled", "past_due", "unpaid"].includes(subStatus);
 
   // Only mark inactive when we KNOW it’s inactive
   const shopInactive = isExplicitInactive || isSubscriptionInactive;
 
+  // 🧮 Plan/Data (compute defensively)
+  const planLabel = dashboard?.seller_plan?.label ?? "Unknown";
+  const maxProductsNum = Number(dashboard?.seller_plan?.max_products ?? 0);
+  const activeListingsNum = Number(dashboard?.active_listings ?? 0);
+  const awaitingApproval = Number(dashboard?.awaiting_approval_listings ?? 0);
+  const inactiveBySeller = Number(dashboard?.inactive_listings ?? 0);
+  const slotsLeft = maxProductsNum > 0 ? Math.max(maxProductsNum - activeListingsNum, 0) : "—";
+  const usagePercent =
+    maxProductsNum > 0
+      ? Math.min(Math.round((activeListingsNum / maxProductsNum) * 100), 100)
+      : 0;
 
+  // 🔔 subscribe handler (used by PlanComparisonModal)
+  const handlePickPlan = async (planId) => {
+    try {
+      setSubscribing(true);
+      const res = await fetch(`/api/b/api/seller/subscribe/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ plan_id: planId, billing_cycle: "monthly" }),
+      });
 
+      const data = await res.json().catch(() => ({}));
 
-
-    // 🧮 Plan/Data (compute defensively)
-    const planLabel = dashboard?.seller_plan?.label ?? "Unknown";
-    const maxProductsNum = Number(dashboard?.seller_plan?.max_products ?? 0);
-    const activeListingsNum = Number(dashboard?.active_listings ?? 0);
-    const awaitingApproval = Number(dashboard?.awaiting_approval_listings ?? 0);
-    const inactiveBySeller = Number(dashboard?.inactive_listings ?? 0);
-    const slotsLeft =
-      maxProductsNum > 0 ? Math.max(maxProductsNum - activeListingsNum, 0) : "—";
-    const usagePercent =
-      maxProductsNum > 0
-        ? Math.min(Math.round((activeListingsNum / maxProductsNum) * 100), 100)
-        : 0;
-
-    // 🔔 subscribe handler (used by PlanComparisonModal)
-    const handlePickPlan = async (planId) => {
-      if (!token) return toast.error("Please log in again.");
-      try {
-        setSubscribing(true);
-        const authToken = token?.replace(/^"|"$/g, "");
-        const res = await fetch(`${BASE_API_URL}/api/seller/subscribe/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Token ${authToken}`,
-          },
-          body: JSON.stringify({ plan_id: planId, billing_cycle: "monthly" }),
-        });
-
-        const data = await res.json().catch(() => ({}));
-
-
-
-
-
-
-
-
-        if (!res.ok) {
-          const msg = data?.error || data?.detail || "Subscription failed.";
-          toast.error(`❌ ${msg}`);
-          return;
-        }
-
-        
-
-        // Free plan → message + redirect
-        if (data?.message && !data?.checkout_url) {
-          toast.success("✅ Free plan activated!");
-          router.push("/new-dashboard/seller");
-          return;
-        }
-
-        // Paid → Stripe
-        if (data?.checkout_url) {
-          window.location.href = data.checkout_url;
-          return;
-        }
-
-        toast.success("✅ Plan updated.");
-        router.push("/new-dashboard/seller");
-      } catch (e) {
-        console.error(e);
-        toast.error("❌ Something went wrong starting checkout.");
-      } finally {
-        setSubscribing(false);
-        setShowPlans(false);
+      if (!res.ok) {
+        const msg = data?.error || data?.detail || "Subscription failed.";
+        toast.error(`❌ ${msg}`);
+        return;
       }
-    };
 
+      // Free plan → message + redirect
+      if (data?.message && !data?.checkout_url) {
+        toast.success("✅ Free plan activated!");
+        router.push("/new-dashboard/seller");
+        return;
+      }
 
+      // Paid → Stripe
+      if (data?.checkout_url) {
+        window.location.href = data.checkout_url;
+        return;
+      }
 
+      toast.success("✅ Plan updated.");
+      router.push("/new-dashboard/seller");
+    } catch (e) {
+      console.error(e);
+      toast.error("❌ Something went wrong starting checkout.");
+    } finally {
+      setSubscribing(false);
+      setShowPlans(false);
+    }
+  };
 
+  return (
+    <div className="max-w-7xl mx-auto p-4 text-gray-800 dark:text-white transition">
+      <h1 className="text-2xl font-semibold dark:text-gray-300 mb-3">
+        Welcome back, {user?.username || user?.email || "Seller"}!
+      </h1>
 
+      {(errorDash || errorShop) && (
+        <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-200">
+          {errorDash && <div>Dashboard: {errorDash}</div>}
+          {errorShop && <div>Shop: {errorShop}</div>}
+        </div>
+      )}
 
-    return (
-      <div className="max-w-7xl mx-auto p-4 text-gray-800 dark:text-white transition">
-        <h1 className="text-2xl font-semibold dark:text-gray-300 mb-3">
-          Welcome back, {user?.username || user?.email || "Seller"}!
-        </h1>
+      {/* Seller Actions (chips) */}
+      <div className="flex gap-2 mb-4 overflow-x-auto flex-nowrap [-webkit-overflow-scrolling:touch]">
+        <button
+          className="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700"
+          onClick={() => setPlansOpen(true)}
+        >
+          Upgrade Plan
+        </button>
 
-        {(errorDash || errorShop) && (
-          <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-200">
-            {errorDash && <div>Dashboard: {errorDash}</div>}
-            {errorShop && <div>Shop: {errorShop}</div>}
-          </div>
-        )}
+        <button className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+          Run Ad Boost
+        </button>
 
-        {/* Seller Actions (chips) */}
+        <button className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+          Auto-Fix Listings
+        </button>
 
-  {/* Seller Actions (chips) */}
-  <div className="flex gap-2 mb-4 overflow-x-auto flex-nowrap [-webkit-overflow-scrolling:touch]">
-    <button
-      className="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700"
-      onClick={() => setPlansOpen(true)}
-    >
-      Upgrade Plan
-    </button>
-
-    <button className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-      Run Ad Boost
-    </button>
-
-    <button className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-      Auto-Fix Listings
-    </button>
-
- 
-{/* Gate: Add/Manage Seller Contact */}
-{contactState === "active" && (
-  <button
-    className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800
+        {/* Gate: Add/Manage Seller Contact */}
+        {contactState === "active" && (
+          <button
+            className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800
                text-slate-900 dark:text-slate-100 border-gray-200 dark:border-gray-700
                hover:bg-gray-50 dark:hover:bg-gray-700"
-    onClick={() => setPhoneSheetOpen(true)}
-  >
-    {hasPrimaryContact ? "Manage Contacts" : "Add Seller Contact"}
-  </button>
-)}
+            onClick={() => setPhoneSheetOpen(true)}
+          >
+            {hasPrimaryContact ? "Manage Contacts" : "Add Seller Contact"}
+          </button>
+        )}
 
-{contactState === "included_locked" && (
-  <button
-    onClick={() => {
-      toast("KYC verification required to unlock this feature.", { icon: "🔒" });
-      router.push(`/settings/verify?redirect=${encodeURIComponent(pathname)}`);
-    }}
-    title={contactWhy || "KYC required"}
-    className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800
+        {contactState === "included_locked" && (
+          <button
+            onClick={() => {
+              toast("KYC verification required to unlock this feature.", { icon: "🔒" });
+              router.push(`/settings/verify?redirect=${encodeURIComponent(pathname)}`);
+            }}
+            title={contactWhy || "KYC required"}
+            className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800
                text-gray-400 border-gray-200 dark:border-gray-700
                hover:bg-gray-50 dark:hover:bg-gray-700"
-  >
-    🔒 {hasPrimaryContact ? "Manage Contacts" : "Add Seller Contact"}
-  </button>
-)}
-
-{contactState === "available" && (
-  <button
-    onClick={() => setPlansOpen(true)}
-    title="Upgrade your plan to enable seller contact"
-    className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800
-               text-slate-900 dark:text-slate-100 border-gray-200 dark:border-gray-700
-               hover:bg-gray-50 dark:hover:bg-gray-700"
-  >
-    🔒 {hasPrimaryContact ? "Manage Contacts" : "Add Seller Contact"}
-  </button>
-)}
-
-
-
-    <button className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-      Update Stock
-    </button>
-  </div>
-
-
-
-
-        {/* Near-limit upgrade hint */}
-        {maxProductsNum > 0 && usagePercent >= 80 && (
-          <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
-            You’ve used {usagePercent}% of your listing slots.{" "}
-            <button
-              className="underline font-medium"
-              onClick={() => setPlansOpen(true)}
-            >
-              Upgrade your plan
-            </button>{" "}
-            to add more products.
-          </div>
+          >
+            🔒 {hasPrimaryContact ? "Manage Contacts" : "Add Seller Contact"}
+          </button>
         )}
 
-
-
-
-
-
-
-
-
-
-
-  {/* Shop controls (view/create/reactivate) */}
-  {!loadingShop && (
-    <>
-      {shop ? (
-        // User has a shop
-        entLoading ? (
-          <button
-            disabled
-            className="inline-block mb-4 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm cursor-not-allowed"
-            title="Checking your plan…"
-          >
-            🛍️ View Your Shop
-          </button>
-        ) : storefrontLocked ? (
-          // Plan doesn’t include storefront
+        {contactState === "available" && (
           <button
             onClick={() => setPlansOpen(true)}
-            className="inline-block mb-4 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-200"
-            title="Upgrade your plan to unlock your storefront"
+            title="Upgrade your plan to enable seller contact"
+            className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800
+               text-slate-900 dark:text-slate-100 border-gray-200 dark:border-gray-700
+               hover:bg-gray-50 dark:hover:bg-gray-700"
           >
-            🔒 View Your Shop
+            🔒 {hasPrimaryContact ? "Manage Contacts" : "Add Seller Contact"}
           </button>
-        ) : storefrontKyc ? (
-          // Storefront requires KYC
-          <button
-            onClick={() => router.push(`/settings/verify?redirect=${encodeURIComponent(pathname)}`)}
-            className="inline-block mb-4 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-200"
-            title="KYC verification required"
-          >
-            🔒 View Your Shop
-          </button>
-        ) : shopInactive ? (
-          // Shop exists but is paused/disabled
-          <div className="flex gap-2 mb-4">
-            <button
-              disabled
-              className="inline-block bg-gray-300 text-gray-600 px-4 py-2 rounded-md text-sm cursor-not-allowed"
-              title="Your shop is paused. Reactivate to make it visible."
-            >
-              🔒 View Your Shop
-            </button>
-            <button
-              onClick={() => router.push("/billing/reactivate")} // TODO: set your real path
-              className="inline-block bg-red-600 text-white px-4 py-2 rounded-md text-sm hover:bg-red-700"
-            >
-              Reactivate
-            </button>
-          </div>
-        ) : (
-          // All good → show the live shop link
-          <Link
-            href={`/shops/${shop.slug}`}
-            className="inline-block mb-4 bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700 transition"
-          >
-            🛍️ View Your Shop
-          </Link>
-        )
-      ) : (
-        // No shop yet → creation is gated by its own entitlement
-        (() => {
-          const createState = stateOf("allow_shop_creation"); // 'active'|'included_locked'|'available'
-          const createLocked = !entLoading && createState === "available";
-          const createKyc    = !entLoading && createState === "included_locked";
+        )}
 
-          if (entLoading) {
-            return (
+        <button className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+          Update Stock
+        </button>
+      </div>
+
+      {/* Near-limit upgrade hint */}
+      {maxProductsNum > 0 && usagePercent >= 80 && (
+        <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
+          You’ve used {usagePercent}% of your listing slots.{" "}
+          <button className="underline font-medium" onClick={() => setPlansOpen(true)}>
+            Upgrade your plan
+          </button>{" "}
+          to add more products.
+        </div>
+      )}
+
+      {/* Shop controls (view/create/reactivate) */}
+      {!loadingShop && (
+        <>
+          {shop ? (
+            // User has a shop
+            entLoading ? (
               <button
                 disabled
                 className="inline-block mb-4 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm cursor-not-allowed"
                 title="Checking your plan…"
               >
-                🛍️ Create Your Shop
+                🛍️ View Your Shop
               </button>
-            );
-          }
-          if (createKyc) {
-            return (
-              <button
-                onClick={() => router.push(`/settings/verify?redirect=${encodeURIComponent(pathname)}`)}
-                className="inline-block mb-4 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-200"
-                title="KYC verification required"
-              >
-                🔒 Create Your Shop
-              </button>
-            );
-          }
-          if (createLocked) {
-            return (
+            ) : storefrontLocked ? (
+              // Plan doesn’t include storefront
               <button
                 onClick={() => setPlansOpen(true)}
                 className="inline-block mb-4 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-200"
-                title="Upgrade your plan to create a shop"
+                title="Upgrade your plan to unlock your storefront"
               >
-                🔒 Create Your Shop
+                🔒 View Your Shop
               </button>
-            );
-          }
-          return (
-            <Link
-              href="/shops/new"
-              className="inline-block mb-4 bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700 transition"
-            >
-              🛍️ Create Your Shop
-            </Link>
-          );
-        })()
-      )}
-    </>
-  )}
-
-
-
-
-        {contactState === "included_locked" && (
-    <div className="mt-3 rounded-lg border border-sky-300 bg-sky-50 px-4 py-2 text-sm text-sky-900 dark:border-sky-700 dark:bg-sky-900/30 dark:text-sky-200">
-      {contactWhy || "KYC verification is required to enable “Add Seller Contact”."}
-      <button
-        onClick={() => router.push(`/settings/verify?redirect=${encodeURIComponent(pathname)}`)}
-        className="ml-2 inline-flex items-center rounded-md bg-sky-600 px-2.5 py-1 text-white hover:bg-sky-700"
-      >
-        Start KYC
-      </button>
-    </div>
-  )}
-
-
-  {/* Bottom Sheet: Add/Manage Seller Contacts */}
-<AddSellerContactSheet
-  open={phoneSheetOpen}
-  onClose={() => setPhoneSheetOpen(false)}
-  token={token}
-  onHasPrimaryChange={setHasPrimaryContact}
-/>
-
-
-
-        {/* Plan Stats / Usage */}
-        {loadingDash ? (
-          <div className="mb-6 h-6 w-2/3 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
-        ) : (
-          <>
-            <div className="text-gray-600 dark:text-gray-300 mb-2 text-sm">
-              Plan: <span className="font-bold text-purple-600">{planLabel}</span> · Active{" "}
-              <strong>{activeListingsNum}</strong> / <strong>{maxProductsNum || "—"}</strong> · Slots Left{" "}
-              <strong>{slotsLeft}</strong> · Usage <strong>{usagePercent}%</strong> · 🕒 Awaiting Approval{" "}
-              <strong>{awaitingApproval}</strong> · 💤 Inactive <strong>{inactiveBySeller}</strong>
-            </div>
-
-            <div
-              className="relative w-full h-2 bg-gray-200 dark:bg-gray-700 rounded mb-6"
-              role="progressbar"
-              aria-valuenow={usagePercent}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <div
-                className="h-full rounded bg-purple-600 dark:bg-purple-400"
-                style={{ width: `${usagePercent}%` }}
-              />
-            </div>
-          </>
-        )}
-
-        {/* Dashboard Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <MetricBox icon={<Package />} label="Awaiting Dispatch" value="5" />
-          <MetricBox icon={<ShoppingCart />} label="Orders This Month" value="22" />
-          <MetricBox icon={<BarChart2 />} label="Total Pending Value" value="₵1,200" />
-          <SellerRatingBox />
-          <MetricBox icon={<ShoppingCart />} label="Orders" value="12" />
-          <MetricBox icon={<BarChart2 />} label="Revenue" value="₵4,200" />
-          <MetricBox icon={<Clock />} label="Avg Fulfilment Time" value="1.5 days" hint="Last 30 days" />
-          <MetricBox icon={<Eye />} label="Response Time" value="1.2 hrs" hint="Buyer response time" />
-          <MetricBox icon={<CircleCheck />} label="On-Time Dispatch" value={<span className="font-bold">98%</span>} />
-          <MetricBox icon={<AlertCircle />} label="Defect Rate" value={<span className="font-bold">1.5%</span>} hint="Target &lt; 2%" />
-          <MetricBox icon={<TrendingUp />} label="Listing Quality" value="7 / 10" />
-        </div>
-
-        {/* Reviews */}
-        <SellerReviewsSummaryCard />
-
-        {/* Pricing / Compare Modal */}
-  <PlanComparisonModal
-    open={plansOpen}
-    onOpenChange={setPlansOpen}
-    hideTrigger
-    onPick={handlePickPlan}   // your existing subscribe -> redirect logic
-  />
-        {/* We control it externally by toggling its `open` prop via wrapping if needed.
-            Current PlanComparisonModal shows a button internally. To "force" open from here,
-            you can expose an `open` prop in that component and wire it. For now, we
-            trigger via our "Upgrade Plan" which opens the modal's own UI button.
-        */}
-        {showPlans && (
-          <div className="fixed inset-0 z-[60]" onClick={() => setShowPlans(false)}>
-            {/* Overlay click closes, but we still show the modal trigger button */}
-            <div className="absolute inset-0 bg-black/40" />
-            <div className="absolute inset-x-0 bottom-6 flex justify-center pointer-events-none">
-              <div className="pointer-events-auto">
-                <PlanComparisonModal onPick={handlePickPlan} />
+            ) : storefrontKyc ? (
+              // Storefront requires KYC
+              <button
+                onClick={() =>
+                  router.push(`/settings/verify?redirect=${encodeURIComponent(pathname)}`)
+                }
+                className="inline-block mb-4 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-200"
+                title="KYC verification required"
+              >
+                🔒 View Your Shop
+              </button>
+            ) : shopInactive ? (
+              // Shop exists but is paused/disabled
+              <div className="flex gap-2 mb-4">
+                <button
+                  disabled
+                  className="inline-block bg-gray-300 text-gray-600 px-4 py-2 rounded-md text-sm cursor-not-allowed"
+                  title="Your shop is paused. Reactivate to make it visible."
+                >
+                  🔒 View Your Shop
+                </button>
+                <button
+                  onClick={() => router.push("/billing/reactivate")}
+                  className="inline-block bg-red-600 text-white px-4 py-2 rounded-md text-sm hover:bg-red-700"
+                >
+                  Reactivate
+                </button>
               </div>
+            ) : (
+              // All good → show the live shop link
+              <Link
+                href={`/shops/${shop.slug}`}
+                className="inline-block mb-4 bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700 transition"
+              >
+                🛍️ View Your Shop
+              </Link>
+            )
+          ) : (
+            // No shop yet → creation is gated by its own entitlement
+            (() => {
+              const createState = stateOf("allow_shop_creation"); // 'active'|'included_locked'|'available'
+              const createLocked = !entLoading && createState === "available";
+              const createKyc = !entLoading && createState === "included_locked";
+
+              if (entLoading) {
+                return (
+                  <button
+                    disabled
+                    className="inline-block mb-4 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm cursor-not-allowed"
+                    title="Checking your plan…"
+                  >
+                    🛍️ Create Your Shop
+                  </button>
+                );
+              }
+              if (createKyc) {
+                return (
+                  <button
+                    onClick={() =>
+                      router.push(`/settings/verify?redirect=${encodeURIComponent(pathname)}`)
+                    }
+                    className="inline-block mb-4 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-200"
+                    title="KYC verification required"
+                  >
+                    🔒 Create Your Shop
+                  </button>
+                );
+              }
+              if (createLocked) {
+                return (
+                  <button
+                    onClick={() => setPlansOpen(true)}
+                    className="inline-block mb-4 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-200"
+                    title="Upgrade your plan to create a shop"
+                  >
+                    🔒 Create Your Shop
+                  </button>
+                );
+              }
+              return (
+                <Link
+                  href="/shops/new"
+                  className="inline-block mb-4 bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700 transition"
+                >
+                  🛍️ Create Your Shop
+                </Link>
+              );
+            })()
+          )}
+        </>
+      )}
+
+      {contactState === "included_locked" && (
+        <div className="mt-3 rounded-lg border border-sky-300 bg-sky-50 px-4 py-2 text-sm text-sky-900 dark:border-sky-700 dark:bg-sky-900/30 dark:text-sky-200">
+          {contactWhy || "KYC verification is required to enable “Add Seller Contact”."}
+          <button
+            onClick={() =>
+              router.push(`/settings/verify?redirect=${encodeURIComponent(pathname)}`)
+            }
+            className="ml-2 inline-flex items-center rounded-md bg-sky-600 px-2.5 py-1 text-white hover:bg-sky-700"
+          >
+            Start KYC
+          </button>
+        </div>
+      )}
+
+      {/* Bottom Sheet: Add/Manage Seller Contacts */}
+      <AddSellerContactSheet
+        open={phoneSheetOpen}
+        onClose={() => setPhoneSheetOpen(false)}
+        onHasPrimaryChange={setHasPrimaryContact}
+      />
+
+      {/* Plan Stats / Usage */}
+      {loadingDash ? (
+        <div className="mb-6 h-6 w-2/3 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+      ) : (
+        <>
+          <div className="text-gray-600 dark:text-gray-300 mb-2 text-sm">
+            Plan: <span className="font-bold text-purple-600">{planLabel}</span> · Active{" "}
+            <strong>{activeListingsNum}</strong> / <strong>{maxProductsNum || "—"}</strong> ·
+            Slots Left <strong>{slotsLeft}</strong> · Usage <strong>{usagePercent}%</strong> · 🕒
+            Awaiting Approval <strong>{awaitingApproval}</strong> · 💤 Inactive{" "}
+            <strong>{inactiveBySeller}</strong>
+          </div>
+
+          <div
+            className="relative w-full h-2 bg-gray-200 dark:bg-gray-700 rounded mb-6"
+            role="progressbar"
+            aria-valuenow={usagePercent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <div className="h-full rounded bg-purple-600 dark:bg-purple-400" style={{ width: `${usagePercent}%` }} />
+          </div>
+        </>
+      )}
+
+      {/* Dashboard Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <MetricBox icon={<Package />} label="Awaiting Dispatch" value="5" />
+        <MetricBox icon={<ShoppingCart />} label="Orders This Month" value="22" />
+        <MetricBox icon={<BarChart2 />} label="Total Pending Value" value="₵1,200" />
+        <SellerRatingBox />
+        <MetricBox icon={<ShoppingCart />} label="Orders" value="12" />
+        <MetricBox icon={<BarChart2 />} label="Revenue" value="₵4,200" />
+        <MetricBox icon={<Clock />} label="Avg Fulfilment Time" value="1.5 days" hint="Last 30 days" />
+        <MetricBox icon={<Eye />} label="Response Time" value="1.2 hrs" hint="Buyer response time" />
+        <MetricBox icon={<CircleCheck />} label="On-Time Dispatch" value={<span className="font-bold">98%</span>} />
+        <MetricBox
+          icon={<AlertCircle />}
+          label="Defect Rate"
+          value={<span className="font-bold">1.5%</span>}
+          hint="Target &lt; 2%"
+        />
+        <MetricBox icon={<TrendingUp />} label="Listing Quality" value="7 / 10" />
+      </div>
+
+      {/* Reviews */}
+      <SellerReviewsSummaryCard />
+
+      {/* Pricing / Compare Modal */}
+      <PlanComparisonModal
+        open={plansOpen}
+        onOpenChange={setPlansOpen}
+        hideTrigger
+        onPick={handlePickPlan} // subscribe -> redirect logic
+      />
+
+      {showPlans && (
+        <div className="fixed inset-0 z-[60]" onClick={() => setShowPlans(false)}>
+          {/* Overlay click closes, but we still show the modal trigger button */}
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-x-0 bottom-6 flex justify-center pointer-events-none">
+            <div className="pointer-events-auto">
+              <PlanComparisonModal onPick={handlePickPlan} />
             </div>
           </div>
-        )}
-      </div>
-    );
-  }
+        </div>
+      )}
+    </div>
+  );
+}
 
-  function MetricBox({ icon, label, value, hint, trend }) {
-    return (
+function MetricBox({ icon, label, value, hint, trend }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 hover:ring hover:scale-[1.01] transition w-full text-left"
+    >
+      <div className="flex items-center justify-between mb-2 pr-1">
+        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 flex items-center gap-1">
+          {label} {hint && <Info className="w-3 h-3" title={hint} />}
+        </span>
+        {icon && React.cloneElement(icon, { className: "w-5 h-5 text-gray-400 dark:text-gray-300 ml-1" })}
+      </div>
+      <div className="text-2xl font-bold leading-7">{value}</div>
+      {!!trend && (
+        <div className={`mt-1 text-xs ${trend >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+          {trend >= 0 ? "▲" : "▼"} {Math.abs(trend)}% vs last month
+        </div>
+      )}
+    </button>
+  );
+}
+
+function SellerRatingBox() {
+  return (
+    <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 hover:ring hover:scale-[1.01] transition">
+      <h2 className="text-sm font-bold mb-2">Seller Rating</h2>
+      <p className="text-4xl font-bold mb-2">92</p>
+      <div className="flex justify-between text-xs mb-1 text-gray-500 dark:text-gray-400">
+        <span>Progress</span>
+        <span>92%</span>
+      </div>
+      <div className="h-2 w-full bg-gray-300 rounded">
+        <div className="h-2 bg-blue-600 rounded" style={{ width: "92%" }} />
+      </div>
+      <ul className="mt-3 text-xs space-y-1">
+        <li>✅ On-Time Dispatch Excellent</li>
+        <li>✅ Response Time Good</li>
+        <li>⚠️ Defect Rate Improve ~1.5% (target &lt; 2%)</li>
+        <li>❌ Listing Quality: 7 listings incomplete</li>
+      </ul>
+    </div>
+  );
+}
+
+// -----------------------------------------------------------
+// BottomSheet — mobile-first, safe-area, swipe-to-close
+// -----------------------------------------------------------
+function BottomSheet({ open, onClose, title, children, footer }) {
+  const sheetRef = React.useRef(null);
+  const [dragY, setDragY] = useState(0);
+  const startY = React.useRef(null);
+
+  // lock body scroll when open
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  // focus the sheet for keyboard/ESC
+  useEffect(() => {
+    if (open) sheetRef.current?.focus();
+  }, [open]);
+
+  if (!open) return null;
+
+  const onTouchStart = (e) => {
+    startY.current = e.touches[0].clientY;
+  };
+  const onTouchMove = (e) => {
+    if (startY.current == null) return;
+    const delta = e.touches[0].clientY - startY.current;
+    setDragY(Math.max(0, delta)); // only pull down
+  };
+  const onTouchEnd = () => {
+    if (dragY > 80) onClose?.();
+    setDragY(0);
+    startY.current = null;
+  };
+
+  return (
+    <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true">
+      {/* overlay */}
       <button
-        type="button"
-        aria-label={label}
-        className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 hover:ring hover:scale-[1.01] transition w-full text-left"
-      >
-        <div className="flex items-center justify-between mb-2 pr-1">
-          <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 flex items-center gap-1">
-            {label} {hint && <Info className="w-3 h-3" title={hint} />}
-          </span>
-          {icon && React.cloneElement(icon, { className: "w-5 h-5 text-gray-400 dark:text-gray-300 ml-1" })}
-        </div>
-        <div className="text-2xl font-bold leading-7">{value}</div>
-        {!!trend && (
-          <div className={`mt-1 text-xs ${trend >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-            {trend >= 0 ? "▲" : "▼"} {Math.abs(trend)}% vs last month
-          </div>
-        )}
-      </button>
-    );
-  }
+        aria-label="Close"
+        onClick={onClose}
+        className="absolute inset-0 bg-black/40 dark:bg-black/60"
+      />
 
-  function SellerRatingBox() {
-    return (
-      <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 hover:ring hover:scale-[1.01] transition">
-        <h2 className="text-sm font-bold mb-2">Seller Rating</h2>
-        <p className="text-4xl font-bold mb-2">92</p>
-        <div className="flex justify-between text-xs mb-1 text-gray-500 dark:text-gray-400">
-          <span>Progress</span>
-          <span>92%</span>
-        </div>
-        <div className="h-2 w-full bg-gray-300 rounded">
-          <div className="h-2 bg-blue-600 rounded" style={{ width: "92%" }} />
-        </div>
-        <ul className="mt-3 text-xs space-y-1">
-          <li>✅ On-Time Dispatch Excellent</li>
-          <li>✅ Response Time Good</li>
-          <li>⚠️ Defect Rate Improve ~1.5% (target &lt; 2%)</li>
-          <li>❌ Listing Quality: 7 listings incomplete</li>
-        </ul>
-      </div>
-    );
-  }
-
-
-
-
-
-
-
-
-  // -----------------------------------------------------------
-  // BottomSheet — mobile-first, safe-area, swipe-to-close
-  // -----------------------------------------------------------
-  function BottomSheet({ open, onClose, title, children, footer }) {
-    const sheetRef = React.useRef(null);
-    const [dragY, setDragY] = useState(0);
-    const startY = React.useRef(null);
-
-    // lock body scroll when open
-    useEffect(() => {
-      if (!open) return;
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-      return () => { document.body.style.overflow = prev; };
-    }, [open]);
-
-    // focus the sheet for keyboard/ESC
-    useEffect(() => {
-      if (open) sheetRef.current?.focus();
-    }, [open]);
-
-    if (!open) return null;
-
-    const onTouchStart = (e) => {
-      startY.current = e.touches[0].clientY;
-    };
-    const onTouchMove = (e) => {
-      if (startY.current == null) return;
-      const delta = e.touches[0].clientY - startY.current;
-      setDragY(Math.max(0, delta)); // only pull down
-    };
-    const onTouchEnd = () => {
-      if (dragY > 80) onClose?.();
-      setDragY(0);
-      startY.current = null;
-    };
-
-    return (
-      <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true">
-        {/* overlay */}
-        <button
-          aria-label="Close"
-          onClick={onClose}
-          className="absolute inset-0 bg-black/40 dark:bg-black/60"
-        />
-
-        {/* sheet container (centered & narrower on desktop) */}
-        <div
-          ref={sheetRef}
-          tabIndex={-1}
-          onKeyDown={(e) => e.key === "Escape" && onClose?.()}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-          className="absolute inset-x-0 bottom-0 w-full sm:max-w-xl sm:mx-auto
+      {/* sheet container (centered & narrower on desktop) */}
+      <div
+        ref={sheetRef}
+        tabIndex={-1}
+        onKeyDown={(e) => e.key === "Escape" && onClose?.()}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        className="absolute inset-x-0 bottom-0 w-full sm:max-w-xl sm:mx-auto
                     rounded-t-2xl bg-white dark:bg-gray-900 shadow-2xl
                     border-t border-gray-200 dark:border-gray-800
                     overflow-hidden focus:outline-none
-                    max-h-[88svh]" /* svh = better on iOS */
-          style={{ transform: `translateY(${dragY}px)` }}
-        >
-          {/* grabber */}
-          <div className="flex items-center justify-center py-3">
-            <div className="h-1.5 w-12 rounded-full bg-gray-300 dark:bg-gray-700" />
-          </div>
-
-          {/* header */}
-          <div className="px-4 sm:px-6 pb-3 flex items-center justify-between">
-            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* body */}
-          <div className="px-4 sm:px-6 pb-24 overflow-y-auto">
-            {children}
-          </div>
-
-          {/* footer (sticky, safe-area aware) */}
-          {footer && (
-            <div
-              className="absolute bottom-0 inset-x-0 p-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur
-                        border-t border-gray-200 dark:border-gray-800"
-              style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
-            >
-              {footer}
-            </div>
-          )}
+                    max-h-[88svh]"
+        style={{ transform: `translateY(${dragY}px)` }}
+      >
+        {/* grabber */}
+        <div className="flex items-center justify-center py-3">
+          <div className="h-1.5 w-12 rounded-full bg-gray-300 dark:bg-gray-700" />
         </div>
+
+        {/* header */}
+        <div className="px-4 sm:px-6 pb-3 flex items-center justify-between">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
+          <button onClick={onClose} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Close">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* body */}
+        <div className="px-4 sm:px-6 pb-24 overflow-y-auto">{children}</div>
+
+        {/* footer (sticky, safe-area aware) */}
+        {footer && (
+          <div
+            className="absolute bottom-0 inset-x-0 p-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur
+                        border-t border-gray-200 dark:border-gray-800"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
+          >
+            {footer}
+          </div>
+        )}
       </div>
-    );
-  }
+    </div>
+  );
+}
 
 // -----------------------------------------------------------
 // AddSellerContactSheet — libphonenumber validation + dedupe + delete
 // -----------------------------------------------------------
-function AddSellerContactSheet({ open, onClose, token, onHasPrimaryChange }) {
-  const authToken = (token || "").replace(/^"|"$/g, "");
-
+function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
   // list + errors
   const [loading, setLoading] = useState(false);
   const [phones, setPhones] = useState([]);
   const [error, setError] = useState(null);
 
   // form
-  const [countries, setCountries] = useState([]);
+  const [countries] = useState([]); // reserved for future country list
   const [countryIso, setCountryIso] = useState("GH");
   const [phoneVal, setPhoneVal] = useState("");
   const [touched, setTouched] = useState(false);
@@ -931,27 +849,25 @@ function AddSellerContactSheet({ open, onClose, token, onHasPrimaryChange }) {
   const minLen = SOFT_MIN_DIGITS[countryIso] ?? 7;
 
   // UI states
-  const showError =
-    !hasFocus && (touched || submitted) && digits.length >= minLen && v.state === "invalid";
+  const showError = !hasFocus && (touched || submitted) && digits.length >= minLen && v.state === "invalid";
   const showHint = hasFocus && digits.length > 0 && digits.length < minLen;
   const canSave = v.state === "valid" && !saving;
 
-
-    useEffect(() => {
-    onHasPrimaryChange?.(phones.some(p => p.is_primary));
+  useEffect(() => {
+    onHasPrimaryChange?.(phones.some((p) => p.is_primary));
   }, [phones, onHasPrimaryChange]);
 
   // Fetch phones when opened
   useEffect(() => {
-    if (!open || !authToken) return;
+    if (!open) return;
     let alive = true;
     (async () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`${BASE_API_URL}/api/users/me/phones/`, {
-          headers: { Authorization: `Token ${authToken}` },
+        const res = await fetch(`/api/b/api/users/me/phones/`, {
           cache: "no-store",
+          credentials: "include",
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
@@ -965,15 +881,15 @@ function AddSellerContactSheet({ open, onClose, token, onHasPrimaryChange }) {
     return () => {
       alive = false;
     };
-  }, [open, authToken]);
+  }, [open]);
 
   // Re-fetch helper with race guard
   const refresh = async () => {
     const my = ++reqSeq.current;
     try {
-      const res = await fetch(`${BASE_API_URL}/api/users/me/phones/`, {
-        headers: { Authorization: `Token ${authToken}` },
+      const res = await fetch(`/api/b/api/users/me/phones/`, {
         cache: "no-store",
+        credentials: "include",
       });
       const data = await res.json().catch(() => ({}));
       if (reqSeq.current !== my) return null; // stale
@@ -995,64 +911,61 @@ function AddSellerContactSheet({ open, onClose, token, onHasPrimaryChange }) {
     if (asDelivery) uses.push("delivery");
 
     // 🔎 duplicate protection (normalize to digits only)
-// 🔎 duplicate protection (normalize to digits only)
-const newNorm = normDigits(v.e164 || phoneVal);
-const existing = phones.find((p) => normDigits(p.e164 || p.number) === newNorm);
+    const newNorm = normDigits(v.e164 || phoneVal);
+    const existing = phones.find((p) => normDigits(p.e164 || p.number) === newNorm);
 
-if (existing) {
-  // merge uses if user ticked new ones
-  const want = new Set(["shop_public", asWhatsapp && "whatsapp", asDelivery && "delivery"].filter(Boolean));
-  const have = new Set(Array.isArray(existing.uses) ? existing.uses : []);
-  const needsUpdate = [...want].some(u => !have.has(u));
+    if (existing) {
+      // merge uses if user ticked new ones
+      const want = new Set(
+        ["shop_public", asWhatsapp && "whatsapp", asDelivery && "delivery"].filter(Boolean)
+      );
+      const have = new Set(Array.isArray(existing.uses) ? existing.uses : []);
+      const needsUpdate = [...want].some((u) => !have.has(u));
 
-  if (needsUpdate) {
-    try {
-      await fetch(`${BASE_API_URL}/api/users/me/phones/${existing.id}/`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${authToken}`,
-        },
-        body: JSON.stringify({ uses: [...new Set([...have, ...want])] }),
-      });
-    } catch {}
-  }
+      if (needsUpdate) {
+        try {
+          await fetch(`/api/b/api/users/me/phones/${existing.id}/`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ uses: [...new Set([...have, ...want])] }),
+          });
+        } catch {}
+      }
 
-  // ensure primary if requested
-  if (asPrimary && !existing.is_primary) {
-    try {
-      await fetch(`${BASE_API_URL}/api/users/me/phones/${existing.id}/set_primary/`, {
-        method: "POST",
-        headers: { Authorization: `Token ${authToken}` },
-      });
-      toast.success("Primary updated for that existing contact.");
-    } catch {
-      toast.error("Couldn’t set primary. Please try again.");
+      // ensure primary if requested
+      if (asPrimary && !existing.is_primary) {
+        try {
+          await fetch(`/api/b/api/users/me/phones/${existing.id}/set_primary/`, {
+            method: "POST",
+            credentials: "include",
+          });
+          toast.success("Primary updated for that existing contact.");
+        } catch {
+          toast.error("Couldn’t set primary. Please try again.");
+        }
+      } else if (!needsUpdate) {
+        toast("That number is already in your contacts.", { icon: "ℹ️" });
+      }
+
+      await refresh();
+
+      // reset form
+      setPhoneVal("");
+      setTouched(false);
+      setSubmitted(false);
+      setAsWhatsapp(false);
+      setAsDelivery(false);
+      setAsPrimary(!phones.some((p) => p.is_primary));
+      return;
     }
-  } else if (!needsUpdate) {
-    toast("That number is already in your contacts.", { icon: "ℹ️" });
-  }
-
-  await refresh();
-
-  // reset form
-  setPhoneVal("");
-  setTouched(false);
-  setSubmitted(false);
-  setAsWhatsapp(false);
-  setAsDelivery(false);
-  setAsPrimary(!phones.some(p => p.is_primary));
-  return;
-}
 
     try {
       setSaving(true);
-      const res = await fetch(`${BASE_API_URL}/api/users/me/phones/`, {
+      const res = await fetch(`/api/b/api/users/me/phones/`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${authToken}`,
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           number: v.e164 || phoneVal,
           region: countryIso,
@@ -1074,9 +987,9 @@ if (existing) {
 
       // ensure single primary if requested
       if (asPrimary && data?.id) {
-        await fetch(`${BASE_API_URL}/api/users/me/phones/${data.id}/set_primary/`, {
+        await fetch(`/api/b/api/users/me/phones/${data.id}/set_primary/`, {
           method: "POST",
-          headers: { Authorization: `Token ${authToken}` },
+          credentials: "include",
         }).catch(() => {});
       }
 
@@ -1110,9 +1023,9 @@ if (existing) {
   const setPrimary = async (id) => {
     setPhones((prev) => prev.map((p) => ({ ...p, is_primary: p.id === id })));
     try {
-      const res = await fetch(`${BASE_API_URL}/api/users/me/phones/${id}/set_primary/`, {
+      const res = await fetch(`/api/b/api/users/me/phones/${id}/set_primary/`, {
         method: "POST",
-        headers: { Authorization: `Token ${authToken}` },
+        credentials: "include",
       });
       if (!res.ok) throw new Error();
       await refresh();
@@ -1139,9 +1052,9 @@ if (existing) {
     setPhones(remaining);
 
     try {
-      const res = await fetch(`${BASE_API_URL}/api/users/me/phones/${id}/`, {
+      const res = await fetch(`/api/b/api/users/me/phones/${id}/`, {
         method: "DELETE",
-        headers: { Authorization: `Token ${authToken}` },
+        credentials: "include",
       });
       if (!res.ok) throw new Error();
 
@@ -1153,9 +1066,9 @@ if (existing) {
           // optimistic promote
           setPhones((prev) => prev.map((p) => ({ ...p, is_primary: p.id === promoteId })));
           try {
-            await fetch(`${BASE_API_URL}/api/users/me/phones/${promoteId}/set_primary/`, {
+            await fetch(`/api/b/api/users/me/phones/${promoteId}/set_primary/`, {
               method: "POST",
-              headers: { Authorization: `Token ${authToken}` },
+              credentials: "include",
             });
             toast("Primary moved to the next contact.", { icon: "⭐" });
           } catch {}
@@ -1190,8 +1103,8 @@ if (existing) {
         onClick={handleSave}
         disabled={!canSave}
         aria-busy={saving || undefined}
-className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-3 md:py-2 rounded-md bg-green-600 dark:bg-green-600 text-white hover:bg-green-700 disabled:opacity-60
-focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60 transition-colors"
+        className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-3 md:py-2 rounded-md bg-green-600 dark:bg-green-600 text-white hover:bg-green-700 disabled:opacity-60
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60 transition-colors"
       >
         {saving && <Loader2 className="w-4 h-4 animate-spin" />}
         Save Contact
@@ -1205,7 +1118,9 @@ focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60
     <BottomSheet open={open} onClose={onClose} title="Add Seller Contact" footer={footer}>
       {/* Existing contacts */}
       <section className="mb-4">
-        <h4 className="text-sm font-semibold mb-2 text-neutral-800 dark:text-neutral-200">Your Contacts</h4>
+        <h4 className="text-sm font-semibold mb-2 text-neutral-800 dark:text-neutral-200">
+          Your Contacts
+        </h4>
 
         {loading ? (
           <div className="space-y-2">
@@ -1238,8 +1153,10 @@ focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60
                   )}
 
                   {p.is_primary ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full
-                                      bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                    <span
+                      className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full
+                                      bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                    >
                       <Star className="w-3 h-3" /> Primary
                     </span>
                   ) : (
@@ -1279,8 +1196,8 @@ focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60
 
         <form onSubmit={handleSave} className="space-y-2">
           <PhoneInput
-    selectedCountry={countryIso}
-    value={phoneVal}
+            selectedCountry={countryIso}
+            value={phoneVal}
             onCountryChange={(iso) => {
               setCountryIso(iso);
               setTouched(false);
@@ -1343,7 +1260,8 @@ focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60
           </div>
 
           <p className="text-xs leading-5 text-neutral-500 dark:text-neutral-400">
-            We’ll store your number in E.164 and show it in local format. You can verify and manage contacts later.
+            We’ll store your number in E.164 and show it in local format. You can verify and manage
+            contacts later.
           </p>
 
           {/* Hidden submit for mobile “Go/Done” */}

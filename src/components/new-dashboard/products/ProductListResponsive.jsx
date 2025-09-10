@@ -1,29 +1,22 @@
-// src/components/new-dashboard/products/ProductListResponsive.jsx
 "use client";
 
 import { useEffect, useState } from "react";
 import ProductListTable from "./ProductListTable";
 import ProductListCards from "./ProductListCards";
 
-export default function ProductListResponsive() {
+export default function ProductListResponsive({ summaryKey }) {
   const [isMobile, setIsMobile] = useState(false);
-  const [manualOverride, setManualOverride] = useState(null); // null, 'table', or 'card'
-
-  const handleResize = () => {
-    setIsMobile(window.innerWidth <= 768);
-  };
+  const [manualOverride, setManualOverride] = useState(null);
 
   useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const showTableView = manualOverride ? manualOverride === "table" : !isMobile;
-
-  const toggleView = () => {
-    setManualOverride((prev) => (prev === "table" ? "card" : "table"));
-  };
+  const toggleView = () => setManualOverride((prev) => (prev === "table" ? "card" : "table"));
 
   return (
     <div className="space-y-6">
@@ -35,7 +28,12 @@ export default function ProductListResponsive() {
           {showTableView ? "🔁 Switch to Card View" : "🔁 Switch to Table View"}
         </button>
       </div>
-      {showTableView ? <ProductListTable /> : <ProductListCards />}
+
+      {showTableView ? (
+        <ProductListTable summaryKey={summaryKey} />
+      ) : (
+        <ProductListCards summaryKey={summaryKey} />
+      )}
     </div>
   );
 }

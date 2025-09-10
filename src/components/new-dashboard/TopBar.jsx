@@ -1,7 +1,7 @@
 // src/components/new-dashboard/TopBar.jsx
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Menu, Bell, Sun, Moon, ChevronDown, Globe, Settings,
   CheckCircle2, AlertTriangle, Check, PanelLeft, PanelLeftOpen,
@@ -16,10 +16,9 @@ import RoleSwitcher from "@/components/new-dashboard/RoleSwitcher";
 export default function TopBar({ toggleMobileSidebar, toggleDesktopSidebar, sidebarVisible }) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-  const { user, hydrated } = useAuth();
+  const { user, hydrated, logout } = useAuth();  // ⬅️ include logout
   const { roleView, roles } = useRoleView() || { roles: [] };
 
-  // 🔒 Never fully hide the bar — just render lighter while data hydrates
   const safeRoles = Array.isArray(roles) ? roles : [];
   const ready = Boolean(hydrated && user);
 
@@ -27,6 +26,7 @@ export default function TopBar({ toggleMobileSidebar, toggleDesktopSidebar, side
   const [langDropdown, setLangDropdown] = useState(false);
   const [notifDropdown, setNotifDropdown] = useState(false);
   const [profileDropdown, setProfileDropdown] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const dropdownRef = useRef(null);
 
   const toggle = (setter) => setter((p) => !p);
@@ -46,6 +46,26 @@ export default function TopBar({ toggleMobileSidebar, toggleDesktopSidebar, side
     document.addEventListener("mousedown", handleOutside);
     return () => document.removeEventListener("mousedown", handleOutside);
   }, []);
+
+  const handleLogout = useCallback(async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      closeAll();
+      // Clear any UX prefs tied to the session
+      try { localStorage.removeItem("roleView"); } catch {}
+      // 🔐 Server-side logout (clears HttpOnly cookie) + reset client state
+      await logout();
+      // 🚪 Send user to login (or home if you prefer)
+      router.replace("/login");
+      router.refresh();
+    } catch (e) {
+      // As a hard fallback, redirect anyway
+      router.replace("/login");
+    } finally {
+      setLoggingOut(false);
+    }
+  }, [logout, router, loggingOut]);
 
   const notifications = [
     { id: 1, type: "info", message: "You have 2 new orders." },
@@ -95,10 +115,10 @@ export default function TopBar({ toggleMobileSidebar, toggleDesktopSidebar, side
 
         {/* Right */}
         <div className="flex items-center gap-3 relative text-gray-700 dark:text-gray-200" ref={dropdownRef}>
-          {/* Role Switcher (only when roles loaded) */}
-<div className="hidden md:flex items-center gap-3">
-<RoleSwitcher />
-</div>
+          {/* Role Switcher */}
+          <div className="hidden md:flex items-center gap-3">
+            <RoleSwitcher />
+          </div>
 
           {/* Theme */}
           <div className="relative">
@@ -147,24 +167,16 @@ export default function TopBar({ toggleMobileSidebar, toggleDesktopSidebar, side
           <div className="relative">
             <button onClick={() => toggle(setNotifDropdown)} className="p-1 relative" aria-label="Notifications">
               <Bell className="w-5 h-5" />
-              {!!notifications.length && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
-                  {notifications.length}
-                </span>
-              )}
+              {/* sample badge */}
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                3
+              </span>
             </button>
             {notifDropdown && (
               <div className="absolute right-0 mt-2 w-72 max-h-80 bg-white dark:bg-gray-800 border rounded shadow z-50 flex flex-col">
                 <div className="px-3 py-2 font-semibold text-sm border-b">Notifications</div>
                 <div className="flex-1 overflow-auto">
-                  {notifications.map((n) => (
-                    <div key={n.id} className="flex items-start gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
-                      {n.type === "success" && <CheckCircle2 className="w-4 h-4 text-green-500 mt-1" />}
-                      {n.type === "warning" && <AlertTriangle className="w-4 h-4 text-yellow-500 mt-1" />}
-                      {n.type === "info" && <Bell className="w-4 h-4 text-blue-500 mt-1" />}
-                      <span>{n.message}</span>
-                    </div>
-                  ))}
+                  {/* … render notifications … */}
                 </div>
                 <div onClick={() => router.push("/notifications")} className="px-3 py-2 text-xs text-brand hover:underline cursor-pointer border-t">
                   View all notifications →
@@ -178,9 +190,14 @@ export default function TopBar({ toggleMobileSidebar, toggleDesktopSidebar, side
             <Settings className="w-5 h-5" />
           </button>
 
-          {/* Profile (only show initials when ready) */}
+          {/* Profile */}
           <div className="relative">
-            <button onClick={() => toggle(setProfileDropdown)} className="flex items-center gap-1 p-1 hover:scale-105 transition-transform">
+            <button
+              onClick={() => toggle(setProfileDropdown)}
+              className="flex items-center gap-1 p-1 hover:scale-105 transition-transform"
+              aria-haspopup="menu"
+              aria-expanded={profileDropdown}
+            >
               <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 text-sm font-bold flex items-center justify-center text-gray-800 dark:text-white">
                 {ready ? (user?.first_name?.[0] || "U") + (user?.last_name?.[0] || "") : "…"}
               </div>
@@ -204,7 +221,7 @@ export default function TopBar({ toggleMobileSidebar, toggleDesktopSidebar, side
                 {safeRoles.includes("buyer") && (
                   <button
                     onClick={() => {
-                      localStorage.setItem("roleView", "buyer");
+                      try { localStorage.setItem("roleView", "buyer"); } catch {}
                       setProfileDropdown(false);
                       router.push("/new-dashboard/buyer");
                     }}
@@ -216,7 +233,7 @@ export default function TopBar({ toggleMobileSidebar, toggleDesktopSidebar, side
                 {(safeRoles.includes("seller_private") || safeRoles.includes("seller_business")) && (
                   <button
                     onClick={() => {
-                      localStorage.setItem("roleView", "seller");
+                      try { localStorage.setItem("roleView", "seller"); } catch {}
                       setProfileDropdown(false);
                       router.push("/new-dashboard/seller");
                     }}
@@ -228,7 +245,7 @@ export default function TopBar({ toggleMobileSidebar, toggleDesktopSidebar, side
                 {safeRoles.includes("agent") && (
                   <button
                     onClick={() => {
-                      localStorage.setItem("roleView", "agent");
+                      try { localStorage.setItem("roleView", "agent"); } catch {}
                       setProfileDropdown(false);
                       router.push("/new-dashboard/agent");
                     }}
@@ -240,7 +257,7 @@ export default function TopBar({ toggleMobileSidebar, toggleDesktopSidebar, side
                 {safeRoles.includes("affiliate") && (
                   <button
                     onClick={() => {
-                      localStorage.setItem("roleView", "affiliate");
+                      try { localStorage.setItem("roleView", "affiliate"); } catch {}
                       setProfileDropdown(false);
                       router.push("/new-dashboard/affiliate");
                     }}
@@ -250,8 +267,14 @@ export default function TopBar({ toggleMobileSidebar, toggleDesktopSidebar, side
                   </button>
                 )}
 
-                <button onClick={() => router.push("/logout")} className="w-full text-left px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-gray-700">
-                  Logout
+                {/* 🔴 Proper logout */}
+                <button
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  aria-busy={loggingOut}
+                  className="w-full text-left px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-gray-700 disabled:opacity-60"
+                >
+                  {loggingOut ? "Logging out…" : "Logout"}
                 </button>
               </div>
             )}

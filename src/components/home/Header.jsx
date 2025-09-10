@@ -1,31 +1,53 @@
 // src/components/home/Header.jsx
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Script from "next/script";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useLocalization } from "@/contexts/LocalizationProvider";
+import { useAuth } from "@/contexts/AuthContext";
 import { fetchI18nInit } from "@/lib/i18n";
 import { withCountryPrefix } from "@/lib/locale-routing"; // .ts or .js, both work
+import SearchAutosuggest from "@/components/search/SearchAutosuggest";
 
 /* utils */
 const isoToSlug = (iso) =>
   (String(iso).toUpperCase() === "GB" ? "uk" : String(iso || "").toLowerCase());
 const slugToIso = (slug) =>
   (String(slug).toLowerCase() === "uk" ? "GB" : String(slug || "").toUpperCase());
+const normalizeCc = (cc) => {
+  const v = String(cc || "").toLowerCase();
+  return v === "gb" ? "uk" : v || "uk";
+};
 
 /* ---------------------------------------------------------------------- */
 /* Header                                                                 */
 /* ---------------------------------------------------------------------- */
 export default function Header({
-  cc,
-  countryCode,
+  cc,               // prefer: pass route param cc here (gh/ng/uk)
+  countryCode,      // optional legacy display-only (may differ on client)
   searchPlaceholder,
   categories = [],
   deliverCity, // optional hint
 }) {
   const { country: ctxCountry } = useLocalization();
-  const ccSafe = (cc || ctxCountry || "uk").toLowerCase();
+  const { user, hydrated, logout } = useAuth();
+  const router = useRouter();
+
+  // Stable server-side cc for links + initial render
+  const ccInitial = normalizeCc(cc || "uk");
+  // Visual cc that can update after mount from context/user prefs
+  const [viewCc, setViewCc] = useState(ccInitial);
+
+  // after mount, allow UI label to reflect localization context
+  useEffect(() => {
+    if (ctxCountry) setViewCc(normalizeCc(ctxCountry));
+  }, [ctxCountry]);
+
+  // brand link must be stable for SSR to avoid hydration mismatch
+  const brandHref = useMemo(() => withCountryPrefix(ccInitial, "/"), [ccInitial]);
 
   // location sheet control (desktop pill + mobile row share this)
   const [locOpen, setLocOpen] = useState(false);
@@ -47,11 +69,13 @@ export default function Header({
 
   useEffect(() => {
     if (!locOpen && openerRef.current) {
-      try {
-        openerRef.current.focus();
-      } catch {}
+      try { openerRef.current.focus(); } catch {}
     }
   }, [locOpen]);
+
+  const handleLogout = useCallback(async () => {
+    try { await logout(); } finally { router.push("/"); router.refresh(); }
+  }, [logout, router]);
 
   const hotSearches = [
     "Phones under GH₵500",
@@ -62,7 +86,8 @@ export default function Header({
     "Shea Butter",
   ];
 
-  const brandHref = useMemo(() => withCountryPrefix(ccSafe, "/"), [ccSafe]);
+  // Display cc (text only) — use optional countryCode if provided, else viewCc.
+  const displayCc = normalizeCc(countryCode || viewCc);
 
   return (
     <header className="sticky top-0 z-[70] bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-b border-[var(--line)]">
@@ -90,7 +115,12 @@ export default function Header({
 
       {/* hidden control for hamburger drawer */}
       <input id="nav-drawer" type="checkbox" className="peer hidden" aria-hidden="true" />
-      <MobileSidebar cc={ccSafe} categories={categories} />
+      <MobileSidebar
+        cc={ccInitial}     
+        categories={categories}
+        authed={!!user}
+        onLogout={handleLogout}
+      />
 
       {/* Top row */}
       <div className="mx-auto max-w-8xl px-4 py-2 flex items-center gap-2 sm:gap-3 text-[var(--ink)] min-w-0">
@@ -114,59 +144,75 @@ export default function Header({
         </label>
 
         {/* Brand (keeps current country prefix) */}
-        <a href={brandHref} className="text-[22px] sm:text-2xl font-black tracking-tight shrink-0">
-          Upfrica
-          <span className="text-[var(--brand-600)]">
-            .{String(countryCode || ccSafe).toLowerCase()}
-          </span>
-        </a>
+<a
+  href={withCountryPrefix(cc || 'gh', '/')}
+  className="uf-logo"
+  data-country={(String(cc || 'gh')).slice(0, 2).toLowerCase()}
+  aria-label={`Upfrica ${String(cc || 'gh').slice(0, 2).toUpperCase()}`}
+>
+  <span className="uf-logo__brand">Upfrica</span>
+  <span className="uf-logo__badge" aria-hidden="true">
+    {String(cc || 'gh').slice(0, 2).toUpperCase()}
+  </span>
+  <span className="sr-only">
+    Upfrica {String(cc || 'gh').slice(0, 2).toUpperCase()}
+  </span>
+</a>
 
         {/* i18n pill (desktop) */}
         <div className="hidden md:block">
           <LocalePill
-            onClick={(e) => {
-              openerRef.current = e.currentTarget;
-              setOpen(true);
-            }}
+            onClick={(e) => { openerRef.current = e.currentTarget; setOpen(true); }}
           />
         </div>
 
         {/* Desktop search + categories */}
-        <div className="flex-1 hidden md:flex items-stretch gap-2 min-w-0">
-          <AllCategoriesMenu cc={ccSafe} categories={categories} />
-          <form action={`/${ccSafe}/search`} className="flex-1 flex min-w-0" role="search" aria-label="Site">
-            <label htmlFor="q" className="sr-only">
-              Search
-            </label>
-            <input
-              id="q"
-              name="q"
-              type="search"
-              placeholder={searchPlaceholder}
-              className="w-full h-11 rounded-l-xl border border-[var(--line)] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-600)]"
-              autoComplete="off"
-              list="hot-searches"
-            />
-            <button className="h-11 rounded-r-xl bg-[var(--brand-600)] px-4 text-white text-sm font-medium hover:bg-[var(--brand-700)]">
-              Search
-            </button>
-          </form>
-        </div>
+<div className="flex-1 hidden md:flex items-stretch gap-2 min-w-0" role="search">
+  <AllCategoriesMenu cc={ccInitial} categories={categories} />
+  <SearchAutosuggest
+    key={`sa-${ccInitial}`}
+    cc={ccInitial}
+    deliverTo={viewCc}                         // <— pass destination (defaults to cc inside)
+    placeholder={searchPlaceholder || "Search products, brands, shops…"}
+  />
+</div>
 
         {/* Right controls */}
         <div className="ml-auto flex items-center gap-1 sm:gap-3 shrink-0">
           <span className="hidden md:block">
-            <EarnDropdown cc={ccSafe} />
+            <EarnDropdown cc={ccInitial} /> 
           </span>
+
+          {/* Auth-aware actions */}
+          {hydrated && user ? (
+            <>
+              <Link href="/new-dashboard" className="px-2 py-2 rounded-lg hover:bg-[var(--alt-surface)]">
+                <span className="hidden sm:inline">Account</span>
+                <span className="sm:hidden">👤</span>
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="px-3 py-2 rounded-lg hover:bg-[var(--alt-surface)] text-[var(--ink)]"
+                aria-label="Log out"
+              >
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="px-3 py-2 rounded-lg hover:bg-[var(--alt-surface)]">
+                Log in
+              </Link>
+              <Link href="/signup" className="px-3 py-2 rounded-lg bg-[var(--brand-600)] text-white hover:bg-[var(--brand-700)]">
+                Sign up
+              </Link>
+            </>
+          )}
+
+          {/* Cart */}
           <a
-            href={`/${ccSafe}/account`}
-            className="px-2 py-2 rounded-lg hover:bg-[var(--alt-surface)]"
-          >
-            <span className="hidden sm:inline">Account</span>
-            <span className="sm:hidden">👤</span>
-          </a>
-          <a
-            href={`/${ccSafe}/cart`}
+            href={`/${ccInitial}/cart`}   
             className="px-1 py-1 rounded-lg hover:bg-[var(--alt-surface)]"
             aria-label="Cart"
           >
@@ -178,44 +224,28 @@ export default function Header({
       </div>
 
       {/* Mobile search + compact pill */}
-      <div className="md:hidden px-4 pb-2 pt-1 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70">
-        <form
-          action={`/${ccSafe}/search`}
-          role="search"
-          aria-label="Mobile Site Search"
-          className="flex"
-        >
-          <input
-            name="q"
-            type="search"
-            placeholder={searchPlaceholder}
-            className="w-full h-11 rounded-l-xl border border-[var(--line)] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-600)]"
-            list="hot-searches"
-          />
-          <button
-            className="h-11 px-3 rounded-r-xl bg-[var(--brand-600)] text-white text-sm font-medium"
-            aria-label="Search"
-          >
-            🔎
-          </button>
-        </form>
+<div className="md:hidden px-4 pb-2 pt-1 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70" role="search">
+  <SearchAutosuggest
+    key={`sa-m-${ccInitial}`}
+    cc={ccInitial}
+    deliverTo={viewCc}                         // <— pass destination
+    placeholder={searchPlaceholder || "Search products…"}
+    className="mt-0"
+    inputClassName="rounded-l-xl"
+    buttonClassName=""
+  />
 
         <div className="mt-2">
           <LocalePill
             compact
-            onClick={(e) => {
-              openerRef.current = e.currentTarget;
-              setOpen(true);
-            }}
+            onClick={(e) => { openerRef.current = e.currentTarget; setOpen(true); }}
           />
         </div>
       </div>
 
       {/* shared datalist */}
       <datalist id="hot-searches">
-        {hotSearches.map((s) => (
-          <option key={s} value={s} />
-        ))}
+        {hotSearches.map((s) => <option key={s} value={s} />)}
       </datalist>
 
       {/* Locale Sheet (portal) */}
@@ -229,6 +259,7 @@ export default function Header({
 function LocalePill({ onClick, compact = false }) {
   const { loading, country, currency, resolvedLanguage, langLabel } = useLocalization();
 
+  // Render a stable skeleton during SSR/first paint
   if (loading) {
     return (
       <button
@@ -238,17 +269,15 @@ function LocalePill({ onClick, compact = false }) {
         aria-haspopup="dialog"
         aria-expanded="false"
       >
-        Set location · —
+        <span suppressHydrationWarning>Deliver to 🌐</span>
+        {!compact && <span className="text-[var(--ink-2)]" suppressHydrationWarning>—</span>}
+        <span suppressHydrationWarning>—</span>
       </button>
     );
   }
 
   const flag = { gh: "🇬🇭", ng: "🇳🇬", uk: "🇬🇧" }[country] || "🌐";
   const langText = langLabel(resolvedLanguage);
-
-  const parts = compact
-    ? [`Deliver to ${flag}`, currency]
-    : [`Deliver to ${flag}`, langText, currency];
 
   return (
     <button
@@ -258,7 +287,9 @@ function LocalePill({ onClick, compact = false }) {
       aria-haspopup="dialog"
       aria-expanded="false"
     >
-      {parts.join(" · ")}
+      <span suppressHydrationWarning>{`Deliver to ${flag}`}</span>
+      {!compact && <span suppressHydrationWarning>{langText}</span>}
+      <span suppressHydrationWarning>{currency}</span>
     </button>
   );
 }
@@ -284,23 +315,16 @@ function AllCategoriesMenu({ cc, categories = [] }) {
                 href={c.href}
                 className="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-[var(--alt-surface)]"
               >
-                <span className="text-lg" aria-hidden>
-                  {categoryIcon(c.icon)}
-                </span>
+                <span className="text-lg" aria-hidden>{categoryIcon(c.icon)}</span>
                 <span className="text-sm">{c.label}</span>
               </a>
             ))}
           </div>
           <div className="mt-2 flex items-center justify-between">
-            <a
-              href={`${prefix}/categories`}
-              className="text-sm text-[var(--violet-500,#A435F0)] hover:underline"
-            >
+            <a href={`${prefix}/categories`} className="text-sm text-[var(--violet-500,#A435F0)] hover:underline">
               View all categories →
             </a>
-            <div className="text-xs text-[var(--ink-2)]">
-              Tip: use the chips below the hero to jump quickly.
-            </div>
+            <div className="text-xs text-[var(--ink-2)]">Tip: use the chips below the hero to jump quickly.</div>
           </div>
         </div>
       </details>
@@ -334,9 +358,7 @@ function EarnDropdown({ cc }) {
               className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[var(--alt-surface)] text-sm"
             >
               <span>{label}</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full border border-[var(--line)]">
-                {tag}
-              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full border border-[var(--line)]">{tag}</span>
             </a>
           ))}
         </div>
@@ -346,7 +368,7 @@ function EarnDropdown({ cc }) {
 }
 
 /* ---------------------------------------------------------------------- */
-/* Unified Locale Sheet (Country + Language + Currency)                    */
+/* Unified Locale Sheet (Country + Language + Currency)                   */
 /* ---------------------------------------------------------------------- */
 function LocaleSheet({ open, onClose }) {
   const {
@@ -396,7 +418,6 @@ function LocaleSheet({ open, onClose }) {
   useEffect(() => {
     let cancelled = false;
     async function run() {
-      // if same as current page country, just use base options
       if (!open || !ccDraft || ccDraft === country) {
         setOpts({ countries: baseCountries, languages: baseLanguages, currencies: baseCurrencies });
         return;
@@ -410,7 +431,6 @@ function LocaleSheet({ open, onClose }) {
           languages: init?.supported?.languages  || baseLanguages,
           currencies: init?.supported?.currencies || baseCurrencies,
         });
-        // nudge chips back to "auto" so the user sees that country’s defaults
         setLngDraft("auto");
         setCurDraft("auto");
       } catch {
@@ -457,7 +477,6 @@ function LocaleSheet({ open, onClose }) {
     typeof c === "string" ? c : (c?.code || "")
   ).filter(Boolean);
 
-  // helpers
   const setCookie = (k, v, days = 180) => {
     try {
       const d = new Date(); d.setTime(d.getTime() + days*24*60*60*1000);
@@ -473,7 +492,6 @@ function LocaleSheet({ open, onClose }) {
       return;
     }
 
-    // allow Auto choices to persist
     if (curDraft) setCurrency(curDraft === "auto" ? "AUTO" : curDraft);
     if (lngDraft) setLanguage(lngDraft); // can be "auto"
 
@@ -562,11 +580,7 @@ function LocaleSheet({ open, onClose }) {
           <section className="mt-4">
             <h3 className="text-sm font-semibold">Language</h3>
             <div className="mt-2 flex flex-wrap gap-2">
-              <RadioChip
-                label="Auto (recommended)"
-                checked={lngDraft === "auto"}
-                onChange={() => setLngDraft("auto")}
-              />
+              <RadioChip label="Auto (recommended)" checked={lngDraft === "auto"} onChange={() => setLngDraft("auto")} />
               {(allLanguages.length ? allLanguages : [{ code: language || "en-GB", label: language || "en-GB" }]).map((lng) => (
                 <RadioChip
                   key={lng.code}
@@ -582,18 +596,9 @@ function LocaleSheet({ open, onClose }) {
           <section className="mt-4">
             <h3 className="text-sm font-semibold">Currency</h3>
             <div className="mt-2 flex flex-wrap gap-2">
-              <RadioChip
-                label="Auto (recommended)"
-                checked={curDraft === "auto"}
-                onChange={() => setCurDraft("auto")}
-              />
+              <RadioChip label="Auto (recommended)" checked={curDraft === "auto"} onChange={() => setCurDraft("auto")} />
               {((allCurrencies && allCurrencies.length) ? allCurrencies : ["GHS","NGN","GBP","USD","EUR","ZAR","CAD"]).map((ccy) => (
-                <RadioChip
-                  key={ccy}
-                  label={ccy}
-                  checked={curDraft === ccy}
-                  onChange={() => setCurDraft(ccy)}
-                />
+                <RadioChip key={ccy} label={ccy} checked={curDraft === ccy} onChange={() => setCurDraft(ccy)} />
               ))}
             </div>
             <p className="mt-2 text-xs text-[var(--ink-2)]">
@@ -649,7 +654,7 @@ function RadioChip({ label, checked, onChange }) {
 /* ---------------------------------------------------------------------- */
 /* Mobile drawer (portal-driven)                                          */
 /* ---------------------------------------------------------------------- */
-function MobileSidebar({ cc, categories = [] }) {
+function MobileSidebar({ cc, categories = [], authed, onLogout }) {
   const prefix = `/${cc}`;
   const quick = [
     ["🔥 Today’s Deals", `${prefix}/deals`],
@@ -670,11 +675,7 @@ function MobileSidebar({ cc, categories = [] }) {
     el.id = "drawer-portal";
     document.body.appendChild(el);
     bodyEl.current = el;
-    return () => {
-      try {
-        document.body.removeChild(el);
-      } catch {}
-    };
+    return () => { try { document.body.removeChild(el); } catch {} };
   }, []);
 
   useEffect(() => {
@@ -701,10 +702,7 @@ function MobileSidebar({ cc, categories = [] }) {
 
   const close = () => {
     const cb = cbRef.current;
-    if (cb) {
-      cb.checked = false;
-      setOpen(false);
-    }
+    if (cb) { cb.checked = false; setOpen(false); }
   };
 
   if (!mounted || !bodyEl.current) return null;
@@ -721,24 +719,44 @@ function MobileSidebar({ cc, categories = [] }) {
       />
       {/* Panel */}
       <aside
+        id="mobile-menu"
         role="dialog"
         aria-modal="true"
         aria-labelledby="mobile-menu-title"
-        className={`fixed left-0 top-0 z-[1101] h-[100dvh] w-[88%] max-w-[420px] bg-white shadow-2xl rounded-r-2xl border-r border-[var(--line)] overflow-y-auto transition-transform duration-300 ${
+        className={`fixed left-0 top-0 z[1101] h-[100dvh] w-[88%] max-w-[420px] bg-white shadow-2xl rounded-r-2xl border-r border-[var(--line)] overflow-y-auto transition-transform duration-300 ${
           open ? "translate-x-0" : "-translate-x-full"
         } [padding-bottom:env(safe-area-inset-bottom)]`}
       >
         <div className="p-4 border-b border-[var(--line)] flex items-center justify-between">
-          <h2 id="mobile-menu-title" className="text-lg font-black">
-            Menu
-          </h2>
-          <button
-            onClick={close}
-            className="p-3 rounded-xl hover:bg-[var(--alt-surface)]"
-            aria-label="Close menu"
-          >
-            ✕
-          </button>
+          <h2 id="mobile-menu-title" className="text-lg font-black">Menu</h2>
+          <button onClick={close} className="p-3 rounded-xl hover:bg-[var(--alt-surface)]" aria-label="Close menu">✕</button>
+        </div>
+
+        {/* Auth block */}
+        <div className="px-4 py-3 border-b border-[var(--line)]">
+          {authed ? (
+            <div className="flex gap-2">
+              <Link href="/new-dashboard" onClick={close} className="flex-1 inline-flex items-center justify-center rounded-lg border px-3 py-2 text-sm hover:bg-[var(--alt-surface)]">
+                Account
+              </Link>
+              <button
+                type="button"
+                onClick={() => { onLogout?.(); close(); }}
+                className="flex-1 inline-flex items-center justify-center rounded-lg border px-3 py-2 text-sm hover:bg-[var(--alt-surface)]"
+              >
+                Log out
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Link href="/login" onClick={close} className="flex-1 inline-flex items-center justify-center rounded-lg border px-3 py-2 text-sm hover:bg-[var(--alt-surface)]">
+                Log in
+              </Link>
+              <Link href="/signup" onClick={close} className="flex-1 inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm bg-[var(--brand-600)] text-white hover:bg-[var(--brand-700)]">
+                Sign up
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Categories scroller */}
@@ -767,7 +785,13 @@ function MobileSidebar({ cc, categories = [] }) {
             Quick links
           </div>
           <ul className="space-y-1">
-            {quick.map(([label, href]) => (
+            {[
+              ["🔥 Today’s Deals", `${prefix}/deals`],
+              ["⚡ Same-Day Near Me", `${prefix}/search?delivery=same-day`],
+              ["✅ Verified Sellers", `${prefix}/search?seller=verified`],
+              ["📦 Wholesale & Bulk", `${prefix}/wholesale`],
+              ["🧭 Explore", `${prefix}/search?sort=trending&near=me`],
+            ].map(([label, href]) => (
               <li key={label}>
                 <a
                   href={href}

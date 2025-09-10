@@ -1,3 +1,4 @@
+//src/lib/pricing.js
 // Canonical product pricing logic for PDP + basket
 // - Prefer product *_cents; accept pricing.*_cents as fallback
 // - Seller currency: product.price_currency -> product.currency -> pricing.currency -> "USD"

@@ -209,7 +209,7 @@ src/app/upload-test/page.jsx
 === PAGES ROUTES (pages dir) ===
 
 === I18N INIT CHECK ===
-Expect endpoint: http://127.0.0.1:8000/api/i18n/init/ ?country={gh|ng|uk}
+Expect endpoint: /api/i18n/init/ ?country={gh|ng|uk}
 
 === GIT (optional) ===
 charles-main

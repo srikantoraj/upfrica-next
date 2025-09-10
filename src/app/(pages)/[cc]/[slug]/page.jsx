@@ -1,12 +1,15 @@
-// ✅ app/(pages)/[cc]/[slug]/page.jsx for product detail page
+// app/(pages)/[cc]/[slug]/page.jsx
 import { notFound, redirect } from "next/navigation";
-import { BASE_API_URL } from "@/app/constants";
-import Footer from "@/components/common/footer/Footer";
+import { headers } from "next/headers";
 import Header from "@/components/home/Header";
-import RelatedProducts from "@/components/home/ProductList/RealtedProduct";
+import Footer from "@/components/common/footer/Footer";
 import ProductDetailSection from "@/components/ProductDetailSection/ProductDetailSection";
+import RelatedProducts from "@/components/home/ProductList/RealtedProduct";
 
-// Frontend-only route prefixes that should NOT be treated as product regions
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+/* ---------------- constants ---------------- */
 const FRONTEND_PREFIXES = new Set([
   "onboarding",
   "new-dashboard",
@@ -20,124 +23,178 @@ const FRONTEND_PREFIXES = new Set([
   "password",
 ]);
 
-// Map region → human country name (fallback used only if product/user don’t provide one)
-const REGION_TO_COUNTRY = {
-  gh: "Ghana",
-  ng: "Nigeria",
-  uk: "United Kingdom",
-};
+const REGION_TO_COUNTRY = { gh: "Ghana", ng: "Nigeria", uk: "United Kingdom" };
 
-/**
- * Fetch product data by slug + region
- */
-export async function getProductData(country, slug) {
-  if (!slug) throw new Error("❌ No product slug provided");
+/* ---------------- helpers ---------------- */
+// Build absolute origin for server-side fetches
+function getOrigin() {
+  const h = headers();
+  const proto =
+    h.get("x-forwarded-proto") ||
+    (process.env.NODE_ENV === "production" ? "https" : "http");
+  const host = h.get("x-forwarded-host") || h.get("host");
+  if (host) return `${proto}://${host}`;
+  if (process.env.NEXT_PUBLIC_SITE_URL)
+    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/+$/, "");
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+}
 
-  // 🚫 Safety: never try to fetch frontend routes as products
-  if (FRONTEND_PREFIXES.has(country)) {
-    return null;
-  }
-
-  const url = `${BASE_API_URL}/api/${country}/${slug}`;
-  const res = await fetch(url, { cache: "no-store" });
-
-  console.log(`🌍 Fetching: ${url}`);
-  console.log(`🔢 Status: ${res.status}`);
-
-  if (res.status === 301 || res.status === 302) {
-    let data = {};
-    try {
-      data = await res.json();
-    } catch {
-      // ignore
-    }
-    if (data.redirect) {
-      const canonicalPath = data.redirect.replace("/api/", "/");
-      redirect(canonicalPath);
-    } else {
-      throw new Error(`❌ Redirect status but no redirect key in body`);
-    }
-  }
-
-  if (res.status === 404) {
-    console.warn(`❌ Product not found: ${country}/${slug}`);
-    return null;
-  }
-
-  if (!res.ok) {
-    throw new Error(`❌ Failed to fetch product data (${res.status})`);
-  }
-
-  const product = await res.json();
-  console.log("✅ Product fetched:", {
-    slug: product.slug,
-    condition: product.condition?.slug,
-    town: product.user?.town,
+async function tryJson(url) {
+  const res = await fetch(url, {
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    redirect: "manual",
   });
-  return product;
-}
-
-/**
- * Fetch related products
- */
-async function getRelatedProducts(country, slug) {
+  const body = await res.text();
+  let data = null;
   try {
-    if (FRONTEND_PREFIXES.has(country)) return [];
-    const res = await fetch(`${BASE_API_URL}/api/${country}/${slug}/related/`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.results || [];
-  } catch {
-    return [];
-  }
+    data = body ? JSON.parse(body) : null;
+  } catch {}
+  return { ok: res.ok, status: res.status, url, data };
+}
+
+function looksLikeProduct(d) {
+  if (!d) return false;
+  if (Array.isArray(d?.results) && d.results.length)
+    return looksLikeProduct(d.results[0]);
+  return !!(d.id || d.slug || d.title);
 }
 
 /**
- * Dynamic page metadata
+ * Resolver order:
+ *  1) if ?id=… → /api/b/api/products/:id
+ *  2) /api/b/api/:cc/:slug  (proxied DRF SEO route)
+ *  + follow one JSON redirect {redirect:"/api/<cc>/<slug>"} if present
  */
-export async function generateMetadata({ params: { region, slug } }) {
-  // 🚫 Don’t try to build product metadata for frontend routes
-  if (FRONTEND_PREFIXES.has(region)) {
-    return {
-      title: "Upfrica",
-      description: "Buy and sell on Upfrica.",
-    };
+async function resolveProduct({ cc, slug, id }) {
+  const origin = getOrigin();
+  const tried = [];
+
+  const candidates = [];
+  if (id) candidates.push(`${origin}/api/b/api/products/${encodeURIComponent(id)}`);
+  candidates.push(`${origin}/api/b/api/${cc}/${slug}`);
+
+  for (const firstUrl of candidates) {
+    let r = await tryJson(firstUrl);
+    tried.push({ url: firstUrl, status: r.status, ok: r.ok });
+
+    if ((r.status === 200 || r.status === 301 || r.status === 302) && r.data?.redirect) {
+      const redirectedPath = r.data.redirect; // e.g. "/api/gh/canonical-slug"
+      const viaProxy = `${origin}/api/b${redirectedPath.startsWith("/") ? "" : "/"}${redirectedPath}`;
+      const r2 = await tryJson(viaProxy);
+      tried.push({ url: viaProxy, status: r2.status, ok: r2.ok });
+      if (r2.ok && looksLikeProduct(r2.data)) {
+        return { product: Array.isArray(r2.data?.results) ? r2.data.results[0] : r2.data, tried };
+      }
+    }
+
+    if (r.ok && looksLikeProduct(r.data)) {
+      return { product: Array.isArray(r.data?.results) ? r.data.results[0] : r.data, tried };
+    }
   }
 
-  const product = await getProductData(region, slug);
+  return { product: null, tried };
+}
+
+/** Fetch related products (same JSON-redirect behavior) */
+async function getRelatedProducts(cc, slug) {
+  const origin = getOrigin();
+  const first = `${origin}/api/b/api/${cc}/${slug}/related`;
+  const r = await tryJson(first);
+
+  if ((r.status === 200 || r.status === 301 || r.status === 302) && r.data?.redirect) {
+    const redirectedPath = r.data.redirect; // "/api/gh/canonical-slug/related"
+    const viaProxy = `${origin}/api/b${redirectedPath.startsWith("/") ? "" : "/"}${redirectedPath}`;
+    const r2 = await tryJson(viaProxy);
+    if (r2.ok && Array.isArray(r2.data?.results)) return r2.data.results;
+  }
+
+  if (r.ok && Array.isArray(r.data?.results)) return r.data.results;
+  return [];
+}
+
+/* ---------------- SEO metadata ---------------- */
+export async function generateMetadata({ params: { cc, slug }, searchParams }) {
+  if (FRONTEND_PREFIXES.has(cc)) {
+    return { title: "Upfrica", description: "Buy and sell on Upfrica." };
+  }
+
+  const forceId = searchParams?.id;
+  const { product } = await resolveProduct({ cc, slug, id: forceId });
   if (!product) return notFound();
 
-  const conditionSlug = product.condition?.slug || "brand-new";
-  const citySlug =
-    product.user?.town?.toLowerCase().replace(/\s+/g, "-") || "accra";
+  const conditionSlug =
+    (typeof product.condition === "string" && product.condition) ||
+    product.condition?.slug ||
+    "brand-new";
+
+  const cityName = product.user?.town || product.seller_town || "";
+  const citySlug = cityName ? cityName.toLowerCase().replace(/\s+/g, "-") : "accra";
+
+  const countryForTitle =
+    product.user?.country ||
+    product.seller_country ||
+    product.seller_country_code ||
+    "Upfrica";
+
+  const canonical =
+    product.canonical_url ||
+    `https://www.upfrica.com/${cc}/${product.slug}-${conditionSlug}-${citySlug}`;
 
   return {
-    title: `${product.title} – ${product.user?.country || "Upfrica"}`,
-    description: product.description?.body || "",
-    alternates: {
-      canonical: `https://www.upfrica.com/${region}/${product.slug}-${conditionSlug}-${citySlug}`,
-    },
+    title: `${product.title} – ${countryForTitle}`,
+    description:
+      (typeof product.description === "string" &&
+        product.description.replace(/<[^>]*>/g, "").slice(0, 180)) ||
+      "",
+    alternates: { canonical },
+    openGraph: { title: product.title, url: canonical },
   };
 }
 
-/**
- * Server-rendered Product Page
- */
-export default async function ProductPage({ params: { region, slug } }) {
-  // ✅ If a frontend route slips in here, bounce to its real page
-  if (FRONTEND_PREFIXES.has(region)) {
-    redirect(`/${region}/${slug}`);
+/* ---------------- Page ---------------- */
+export default async function Page({ params: { cc, slug }, searchParams }) {
+  // let non-product areas fall through to their own routes
+  if (FRONTEND_PREFIXES.has(cc)) redirect(`/${cc}/${slug}`);
+
+  const forceId = searchParams?.id; // allow /gh/<slug>?id=4345
+  const { product, tried } = await resolveProduct({ cc, slug, id: forceId });
+
+  if (!product) {
+    return (
+      <main style={{ padding: 24 }}>
+        <h1>❌ Couldn’t fetch product</h1>
+        <p>
+          cc=<code>{cc}</code>, slug=<code>{slug}</code>
+          {forceId ? (
+            <>
+              , forced id=<code>{forceId}</code>
+            </>
+          ) : null}
+        </p>
+        <h3>Tried:</h3>
+        <ol>
+          {tried.map((t, i) => (
+            <li key={i}>
+              <code>{t.url}</code> → {t.status}
+            </li>
+          ))}
+        </ol>
+        <p>
+          Tip: open <code>/{cc}/{slug}?id=4345</code> with a real ID. If that succeeds but{" "}
+          <code>/api/b/api/{cc}/{slug}</code> is 404, the issue is in your DRF
+          <em> ProductFullDetailBySlugView</em>.
+        </p>
+      </main>
+    );
   }
 
-  const product = await getProductData(region, slug);
-  if (!product) return notFound();
-
-  const relatedProducts = await getRelatedProducts(region, slug);
-
-  // 📍 Robust, non-hardcoded location for RelatedProducts
-  const regionLower = (region || "").toLowerCase();
+  const relatedProducts = await getRelatedProducts(cc, slug);
+  const regionLower = (cc || "").toLowerCase();
   const locationDisplay =
     product.seller_country ||
     product.user?.country ||
@@ -146,19 +203,23 @@ export default async function ProductPage({ params: { region, slug } }) {
 
   return (
     <>
-    <Header />
-      
-      <main className="w-full max-w-[1380px] mx-auto py-8 px-4 sm:px-5 lg:px-8 xl:px-[4rem] 2xl:px-[5rem] ">
-        <ProductDetailSection
-          product={product}
-          relatedProducts={relatedProducts}
-        />
-        <RelatedProducts
-          relatedProducts={relatedProducts}
-          productSlug={product.slug}
-          productTitle={product.title}
-          location={locationDisplay}
-        />
+      <Header />
+      <main className="w-full max-w-[1380px] mx-auto py-8 px-4 sm:px-5 lg:px-8 xl:px-[4rem] 2xl:px-[5rem]">
+        {/* PDP */}
+        <ProductDetailSection product={product} />
+        
+        {/* Related */}
+        <section id="related" aria-labelledby="related-heading" className="mt-10">
+          <h2 id="related-heading" className="sr-only">
+            Related items
+          </h2>
+          <RelatedProducts
+            relatedProducts={relatedProducts}
+            productSlug={product.slug}
+            productTitle={product.title}
+            location={locationDisplay}
+          />
+        </section>
       </main>
       <Footer />
     </>

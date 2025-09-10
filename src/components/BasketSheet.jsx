@@ -6,15 +6,19 @@ import { useRouter } from 'next/navigation';
 import { HiXMark, HiPlus, HiMinus } from 'react-icons/hi2';
 import { useSelector } from 'react-redux';
 import { selectSelectedCountry } from '@/app/store/slices/countrySlice';
+import { getCardImage } from '@/app/constants';
+import { pickProductImage, fixImageUrl, FALLBACK_IMAGE } from '@/lib/image';
 
 export default function BasketSheet({
-  isOpen = false,          // preferred
-  open = undefined,        // alias for compatibility
-  onClose,                 // () => void
-  basket = [],             // items array
-  onQuantityChange,        // (id, qty) => void
-  onRemove,                // (id) => void
-  onUndoRemove,            // optional: (item) => void
+  isOpen = false,
+  open = undefined,
+  onClose,
+  basket = [],
+  onQuantityChange,
+  onRemove,
+  onUndoRemove,
+  relatedProducts = [],
+  onAddSuggested,
 }) {
   const actuallyOpen = open ?? isOpen;
 
@@ -24,25 +28,56 @@ export default function BasketSheet({
   const scrollerRef = useRef(null);
   const activeBeforeOpenRef = useRef(null);
 
-  // currency symbol
+  /* ───────────────── image helpers (strings only, SSR-safe) ───────────────── */
+
+  const getCardImageFn = typeof getCardImage === 'function' ? getCardImage : undefined;
+
+  // Resolve a usable cart image (handles basket-shape + products)
+  const imageOfCartItem = (p) => {
+    const raw =
+      p?.__resolved_image ||
+      p?.image?.[0]?.image_url ||
+      p?.image?.[0]?.url ||
+      p?.image_url ||
+      p?.thumbnail ||
+      p?.image ||
+      getCardImageFn?.(p) ||
+      pickProductImage(p) ||
+      FALLBACK_IMAGE;
+
+    return fixImageUrl(raw);
+  };
+
+  // Resolve a usable suggested card image
+  const imageOfSuggested = (p) => {
+    const raw =
+      getCardImageFn?.(p) ||
+      p?.card_image ||
+      p?.card_image_url ||
+      p?.thumbnail ||
+      p?.image_url ||
+      p?.image ||
+      pickProductImage(p) ||
+      FALLBACK_IMAGE;
+
+    return fixImageUrl(raw);
+  };
+
+  /* ───────────────────────────────────────────────────────────────────────── */
+
   const selectedCountry = useSelector(selectSelectedCountry);
   const symbol = selectedCountry?.symbol ?? '₵';
 
-  // buttons loading
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [isViewBasketLoading, setIsViewBasketLoading] = useState(false);
 
-  // live region for SR announcements
   const [liveMsg, setLiveMsg] = useState('');
-
-  // simple remove-undo toast
   const [toast, setToast] = useState(null); // {title, item}
 
-  // scroll cue state
   const [atTop, setAtTop] = useState(true);
   const [atBottom, setAtBottom] = useState(false);
 
-  // ── scroll lock + focus restore ────────────────────────────────────────────
+  // scroll lock + focus restore
   useEffect(() => {
     if (actuallyOpen) {
       activeBeforeOpenRef.current = document.activeElement;
@@ -57,7 +92,7 @@ export default function BasketSheet({
     return () => (document.body.style.overflow = '');
   }, [actuallyOpen]);
 
-  // keep cue visibility in sync with scroll
+  // keep cues in sync
   useEffect(() => {
     if (!actuallyOpen) return;
     const el = scrollerRef.current;
@@ -81,7 +116,7 @@ export default function BasketSheet({
     return () => window.removeEventListener('keydown', onKey);
   }, [actuallyOpen, onClose]);
 
-  // Focus trap inside the dialog
+  // Focus trap
   const onKeyDownTrap = (e) => {
     if (e.key !== 'Tab' || !panelRef.current) return;
     const els = Array.from(
@@ -90,62 +125,59 @@ export default function BasketSheet({
       )
     ).filter((el) => !el.hasAttribute('disabled') && el.getAttribute('tabindex') !== '-1');
     if (!els.length) return;
-    const first = els[0];
-    const last = els[els.length - 1];
+    const firstEl = els[0];
+    const lastEl = els[els.length - 1];
     const active = document.activeElement;
 
     if (e.shiftKey) {
-      if (active === first || !panelRef.current.contains(active)) {
+      if (active === firstEl || !panelRef.current.contains(active)) {
         e.preventDefault();
-        last.focus();
+        lastEl.focus();
       }
     } else {
-      if (active === last) {
+      if (active === lastEl) {
         e.preventDefault();
-        first.focus();
+        firstEl.focus();
       }
     }
   };
 
-  // ── swipe to close (drag handle) ───────────────────────────────────────────
+  // swipe to close
   const [dragY, setDragY] = useState(0);
   const [dragging, setDragging] = useState(false);
   const startYRef = useRef(0);
   const startTRef = useRef(0);
 
-  // tuning constants
-  const DRAG_MAX_PX = 240;     // hard cap (with rubber-band past this)
-  const DRAG_CLOSE_PX = 140;   // distance to close if released
-  const VELOCITY_CLOSE = 1.0;  // px/ms → less sensitive
+  const DRAG_MAX_PX = 240;
+  const DRAG_CLOSE_PX = 140;
+  const VELOCITY_CLOSE = 1.0;
 
   const onPointerDown = (e) => {
     setDragging(true);
     startYRef.current = 'touches' in e ? e.touches[0].clientY : e.clientY;
     startTRef.current = performance.now();
   };
-
   const onPointerMove = (e) => {
     if (!dragging) return;
     const y = 'touches' in e ? e.touches[0].clientY : e.clientY;
     let delta = Math.max(0, y - startYRef.current);
     if (delta > DRAG_MAX_PX) {
       const overflow = delta - DRAG_MAX_PX;
-      delta = DRAG_MAX_PX + overflow * 0.2; // rubber-band
+      delta = DRAG_MAX_PX + overflow * 0.2;
     }
     setDragY(delta);
   };
-
   const onPointerUp = () => {
     if (!dragging) return;
     const durMs = Math.max(1, performance.now() - startTRef.current);
-    const velocity = dragY / durMs; // px/ms
+    const velocity = dragY / durMs;
     const shouldClose = dragY > DRAG_CLOSE_PX || velocity > VELOCITY_CLOSE;
     setDragging(false);
     setDragY(0);
     if (shouldClose) onClose?.();
   };
 
-  // ── actions ────────────────────────────────────────────────────────────────
+  // actions
   const Loader = (
     <span className="inline-flex items-center gap-2 h-6">
       <span className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]" />
@@ -166,7 +198,7 @@ export default function BasketSheet({
   const computeUnitPrice = (p) => {
     const now = new Date();
     const saleEnd = p.sale_end_date ? new Date(p.sale_end_date) : null;
-    const isOnSale = saleEnd && saleEnd > now && p.sale_price_cents > 0;
+    const isOnSale = p.sale_price_cents > 0 && (!saleEnd || saleEnd > now);
     const cents = isOnSale ? p.sale_price_cents : p.price_cents;
     return (cents || 0) / 100;
   };
@@ -187,30 +219,55 @@ export default function BasketSheet({
     if (e.target === e.currentTarget) onClose?.();
   };
 
-const inc = (p) => {
-  navigator.vibrate?.(10);
-  onQuantityChange?.(p.id, p.sku, (p.quantity || 1) + 1);
-  setLiveMsg(`Increased quantity of ${p.title}`);
-};
+  const inc = (p) => {
+    navigator.vibrate?.(10);
+    onQuantityChange?.(p.id, p.sku, (p.quantity || 1) + 1);
+    setLiveMsg(`Increased quantity of ${p.title}`);
+  };
 
-const dec = (p) => {
-  if ((p.quantity || 1) <= 1) return;
-  navigator.vibrate?.(10);
-  onQuantityChange?.(p.id, p.sku, (p.quantity || 1) - 1);
-  setLiveMsg(`Decreased quantity of ${p.title}`);
-};
+  const dec = (p) => {
+    if ((p.quantity || 1) <= 1) return;
+    navigator.vibrate?.(10);
+    onQuantityChange?.(p.id, p.sku, (p.quantity || 1) - 1);
+    setLiveMsg(`Decreased quantity of ${p.title}`);
+  };
 
-const doRemove = (p) => {
-  onRemove?.({ id: p.id, sku: p.sku });
-  setToast({ title: p.title, item: p });
-  setLiveMsg(`Removed ${p.title} from basket`);
-  setTimeout(() => setToast(null), 5000);
-};
+  const doRemove = (p) => {
+    onRemove?.({ id: p.id, sku: p.sku });
+    setToast({ title: p.title, item: p });
+    setLiveMsg(`Removed ${p.title} from basket`);
+    setTimeout(() => setToast(null), 5000);
+  };
 
-const undoRemove = () => {
-  if (toast?.item && onUndoRemove) onUndoRemove(toast.item);
-  setToast(null);
-};
+  const undoRemove = () => {
+    if (toast?.item && onUndoRemove) onUndoRemove(toast.item);
+    setToast(null);
+  };
+
+  const priceCentsOf = (item) =>
+    Number(
+      item?.sale_price_cents ??
+        item?.price_cents ??
+        (typeof item?.price_major === 'number' ? Math.round(item.price_major * 100) : 0)
+    );
+
+  const viewSuggested = (item) => {
+    const slug = item?.seo_slug || item?.slug;
+    if (slug) router.push(`/${slug}`);
+  };
+  const addSuggested = (item) => {
+    if (onAddSuggested) {
+      const img = imageOfSuggested(item);
+      onAddSuggested({
+        ...item,
+        __resolved_image: img,             // give parent a ready-to-use URL
+        image: [{ image_url: img }],       // matches what the basket reads
+      });
+      setLiveMsg(`Added ${item?.title ?? 'item'} to basket`);
+    } else {
+      viewSuggested(item);
+    }
+  };
 
   return (
     <div
@@ -252,9 +309,7 @@ const undoRemove = () => {
             'border-t border-neutral-200 dark:border-neutral-800',
             'transition-transform duration-200 will-change-transform',
           ].join(' ')}
-          style={{
-            transform: actuallyOpen ? `translateY(${dragY}px)` : 'translateY(110%)',
-          }}
+          style={{ transform: actuallyOpen ? `translateY(${dragY}px)` : 'translateY(110%)' }}
         >
           {/* Grab handle */}
           <div
@@ -279,7 +334,7 @@ const undoRemove = () => {
             </button>
           </div>
 
-          {/* Items */}
+          {/* Items + Suggestions scroller */}
           <div
             ref={scrollerRef}
             className="relative px-4 sm:px-6 max-h-[70vh] md:max-h-[72vh] overflow-y-auto pb-4 overscroll-contain"
@@ -298,12 +353,7 @@ const undoRemove = () => {
                 {basket.map((product) => {
                   const unitPrice = computeUnitPrice(product);
                   const lineTotal = (unitPrice * (product.quantity || 1)).toFixed(2);
-                  const img =
-                    product.image?.[0]?.image_url ||
-                    product.image?.[0]?.url ||
-                    product.image_url ||
-                    product.thumbnail ||
-                    '/placeholder.png';
+                  const img = imageOfCartItem(product);
 
                   return (
                     <li
@@ -317,11 +367,14 @@ const undoRemove = () => {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={img}
-                          alt=""
+                          alt={product.title || 'Product'}
                           width={96}
                           height={96}
                           loading="lazy"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
                           className="h-full w-full object-cover rounded-lg bg-neutral-100 dark:bg-neutral-800"
+                          onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
                           draggable={false}
                         />
                       </div>
@@ -388,6 +441,66 @@ const undoRemove = () => {
               </div>
             )}
 
+            {/* Suggestions */}
+            {relatedProducts?.length > 0 && (
+              <div className="mt-5">
+                <p className="text-sm font-semibold mb-2">You might also need</p>
+
+                <div className="-mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto">
+                  <div className="flex gap-3 pb-1">
+                    {relatedProducts.slice(0, 12).map((item) => {
+                      const img = imageOfSuggested(item);
+                      const cents = priceCentsOf(item);
+                      const showPrice = Number.isFinite(cents) && cents > 0;
+
+                      return (
+                        <div
+                          key={item.id ?? item.seo_slug ?? item.slug}
+                          className="flex-shrink-0 w-[160px] select-none"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => viewSuggested(item)}
+                            className="block text-left"
+                            aria-label={item.title}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={img}
+                              onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
+                              alt={item.title ?? 'Product image'}
+                              className="w-[160px] h-[120px] object-cover rounded-lg border bg-neutral-50 dark:bg-neutral-800"
+                              loading="lazy"
+                              decoding="async"
+                              referrerPolicy="no-referrer"
+                              draggable={false}
+                            />
+                            <div className="mt-1 text-[13px] font-medium line-clamp-2">
+                              {item.title}
+                            </div>
+                          </button>
+
+                          <div className="mt-1 flex items-center justify-between">
+                            <div className="text-[12px] font-semibold">
+                              {showPrice ? `${symbol}${(cents / 100).toFixed(2)}` : 'Ask'}
+                            </div>
+                            <button
+                              type="button"
+                              aria-label={`Add ${item.title} to basket`}
+                              onClick={() => addSuggested(item)}
+                              className="h-7 w-7 grid place-items-center rounded-full border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                            >
+                              <HiPlus className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* bottom scroll cue */}
             <div
               aria-hidden="true"
@@ -445,31 +558,31 @@ const undoRemove = () => {
         </div>
       </div>
 
-  {/* Undo toast */}
-  {toast && (
-    <div className="pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-[max(1rem,env(safe-area-inset-bottom))] z-[95]">
-      <div className="pointer-events-auto rounded-full bg-neutral-900 text-white px-4 py-2 text-sm shadow-lg flex items-center gap-3">
-        <span className="line-clamp-1">Removed “{toast.title}”</span>
-        {onUndoRemove && (
-          <button
-            type="button"
-            onClick={undoRemove}
-            className="font-semibold underline underline-offset-2"
-          >
-            Undo
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => setToast(null)}
-          className="opacity-70 hover:opacity-100 ml-1"
-          aria-label="Dismiss"
-        >
-          <HiXMark className="h-4 w-4" />
-        </button>
-      </div>
+      {/* Undo toast */}
+      {toast && (
+        <div className="pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-[max(1rem,env(safe-area-inset-bottom))] z-[95]">
+          <div className="pointer-events-auto rounded-full bg-neutral-900 text-white px-4 py-2 text-sm shadow-lg flex items-center gap-3">
+            <span className="line-clamp-1">Removed “{toast.title}”</span>
+            {onUndoRemove && (
+              <button
+                type="button"
+                onClick={undoRemove}
+                className="font-semibold underline underline-offset-2"
+              >
+                Undo
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setToast(null)}
+              className="opacity-70 hover:opacity-100 ml-1"
+              aria-label="Dismiss"
+            >
+              <HiXMark className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
-  )}
-</div>
   );
 }

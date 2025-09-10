@@ -6,6 +6,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter, usePathname } from 'next/navigation';
+import { useSaleCountdown } from '@/hooks/useSaleCountdown';
+
+import axios from '@/lib/axiosInstance';
+import { b } from '@/lib/api-path';
+
+import { pickProductImage } from '@/lib/image';
 
 import {
   FaHeart, FaRegHeart, FaEdit, FaTrash, FaEnvelope, FaWhatsapp, FaEyeSlash, FaMapMarkerAlt,
@@ -28,24 +34,16 @@ import StickyPriceBar from './StickyPriceBar';
 import Breadcrumbs from './Breadcrumbs';
 import ContactSellerCard from '../ContactSellerCard';
 
-/** 💸 Simple price/delivery block (receives final, pre-formatted values) */
 import SimplePrice from '@/components/SimplePrice';
 
 import {
   fetchReviewsStart, fetchReviewsSuccess, fetchReviewsFailure,
 } from '@/app/store/slices/reviewsSlice';
-import { BASE_API_URL } from '@/app/constants';
 import { getCleanToken } from '@/lib/getCleanToken';
 import { canDisplaySellerContact, pickShopPhone, whatsappUrl } from '@/lib/seller-contact';
 import { fixImageUrl, FALLBACK_IMAGE } from '@/lib/image';
-
-/** i18n / FX */
 import { useLocalization } from '@/contexts/LocalizationProvider';
-
-/** Minimal, one-shot pricing (prevents double FX) */
 import { buildPricing as buildPricingMini, symbolFor } from '@/lib/pricing-mini';
-
-/** Keep links under the current market */
 import { withCountryPrefix } from '@/lib/locale-routing';
 
 const DEBUG =
@@ -73,14 +71,18 @@ function contactReasonText(reason, allowed) {
 }
 
 /* ---------------- tiny helpers ---------------- */
+// simple cookie reader (no regex)
 function readCookie(name) {
   try {
-    const m = document.cookie.match(
-      new RegExp('(?:^|; )' + name.replace(/[-.$?*|{}()[\]\\/+^]/g, '\\$&') + '=([^;]*)')
-    );
-    return m ? decodeURIComponent(m[1]) : null;
+    if (typeof document === 'undefined') return '';
+    const parts = document.cookie ? document.cookie.split('; ') : [];
+    for (const part of parts) {
+      const [k, ...rest] = part.split('=');
+      if (k === name) return decodeURIComponent(rest.join('='));
+    }
+    return '';
   } catch {
-    return null;
+    return '';
   }
 }
 
@@ -222,6 +224,7 @@ function RelatedThumb({ item, alt }) {
   );
 }
 
+
 /* ---------------- phones helpers ---------------- */
 function normalizeShopPhones(shop) {
   if (!shop) return [];
@@ -332,7 +335,7 @@ function getOrCreateSessionId() {
   }
 }
 async function postContactClick(slug, source = 'pdp') {
-  const url = `${BASE_API_URL}/api/products/${slug}/event/`;
+  const url = b(`products/${slug}/event/`);
   const payload = JSON.stringify({ event: 'contact_click', session_id: getOrCreateSessionId(), source });
   try {
     if (navigator.sendBeacon) {
@@ -344,7 +347,8 @@ async function postContactClick(slug, source = 'pdp') {
   try {
     await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       keepalive: true,
       body: payload,
     });
@@ -506,13 +510,20 @@ export default function ProductDetailSection({ product }) {
     } catch {}
   }, [rawDisplay, telDigits, fireContactOnce]);
 
-  /* Related products (uses uiCountry) */
+  /* ---------------- related + reviews state ---------------- */
   const [relatedProducts, setRelatedProducts] = useState([]);
+   const [reviewStats, setReviewStats] = useState({
+   average_rating: 0,
+   review_count: 0,
+   rating_percent: {},
+ });
+
+  /* ---------------- Related products (proxied) ---------------- */
   useEffect(() => {
     if (!product?.slug || !uiCountry) return;
 
     const parseSlug = (slug) => {
-      const parts = slug.split('-');
+      const parts = String(slug).split('-');
       if (parts.length < 3) return { base_slug: slug, condition: '', city: '' };
       const city = parts.slice(-2).join('-');
       const condition = parts[parts.length - 3];
@@ -521,75 +532,95 @@ export default function ProductDetailSection({ product }) {
     };
 
     const { base_slug, condition: cond, city } = parseSlug(product.slug);
-    const countryCode = uiCountry || 'gh';
+    const countryCode = (uiCountry || 'gh').toLowerCase();
     const finalSlug = `${base_slug}-${cond}-${city}`;
-    const apiUrl = `${BASE_API_URL}/api/${countryCode}/${finalSlug}/related/`;
 
     (async () => {
       try {
-        const t = getCleanToken();
-        const res = await fetch(apiUrl, {
-          headers: t ? { Authorization: `Token ${t}` } : {},
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        setRelatedProducts(data.results || []);
+        const { data, status } = await axios.get(
+          b([countryCode, finalSlug, 'related']),
+          {
+            withCredentials: true,
+            validateStatus: () => true,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          }
+        );
+        if (status >= 200 && status < 300) {
+          setRelatedProducts(Array.isArray(data?.results) ? data.results : (data || []));
+        }
       } catch {}
     })();
   }, [product?.slug, uiCountry]);
 
-  /* Reviews summary */
-  const [reviewStats, setReviewStats] = useState({
-    average_rating: 0,
-    review_count: 0,
-  });
-  useEffect(() => {
-    if (!product?.id) return;
-    const t = getCleanToken();
-    fetch(`${BASE_API_URL}/api/product/${product.id}/reviews/`, {
-      headers: t ? { Authorization: `Token ${t}` } : {},
-    })
-      .then(async (r) => (r.ok ? r.json() : null))
-      .then(
-        (d) =>
-          d &&
-          setReviewStats({
-            average_rating: d.average_rating || 0,
-            review_count: d.review_count || 0,
-          })
-      )
-      .catch(() => {});
-  }, [product?.id]);
+  /* ---------------- Reviews (single effect via proxy) ---------------- */
+useEffect(() => {
+  if (!id) return;
 
-  useEffect(() => {
-    if (!id) return;
-    dispatch(fetchReviewsStart());
-    const url = `${BASE_API_URL}/api/product/${id}/reviews/`;
-    let cancelled = false;
-    fetch(url)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((d) => {
-        if (cancelled) return;
-        const results = d.results ?? d.reviews ?? [];
-        dispatch(
-          fetchReviewsSuccess({
-            results,
-            average_rating: d.average_rating ?? 0,
-            review_count: d.review_count ?? results.length,
-            rating_percent: d.rating_percent ?? {},
-          })
-        );
-      })
-      .catch((err) => {
-        if (!cancelled) dispatch(fetchReviewsFailure(err.message || String(err)));
+  let cancelled = false;
+  dispatch(fetchReviewsStart());
+
+  (async () => {
+    try {
+      const { data, status } = await axios.get(b(['product', id, 'reviews']), {
+        withCredentials: true,
+        validateStatus: () => true,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [dispatch, id]);
+
+      if (cancelled) return;
+      if (status < 200 || status >= 300) throw new Error(`HTTP ${status}`);
+
+      const results = data.results ?? data.reviews ?? [];
+
+      // Derive rating distribution if API didn't include percentages
+      const countsFromApi =
+        data.rating_counts ?? data.rating_count ?? data.counts ?? null; // {5:n,4:n,...}
+      let ratingPercent = data.rating_percent ?? data.rating_distribution ?? null;
+
+      if (!ratingPercent) {
+        const counts =
+          countsFromApi ??
+          results.reduce((acc, r) => {
+            const s = Math.max(1, Math.min(5, Math.round(Number(r?.rating) || 0)));
+            acc[s] = (acc[s] || 0) + 1;
+            return acc;
+          }, {});
+        const total = Object.values(counts || {}).reduce((a, b) => a + b, 0);
+        const pct = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        if (total > 0) {
+          for (let s = 1; s <= 5; s++) {
+            const c = Number(counts?.[s] || 0);
+            pct[s] = Math.round((c / total) * 100);
+          }
+        }
+        ratingPercent = pct;
+      }
+
+      dispatch(
+        fetchReviewsSuccess({
+          results,
+          average_rating: data.average_rating ?? 0,
+          review_count: data.review_count ?? results.length,
+          rating_percent: ratingPercent ?? {},
+        })
+      );
+
+      setReviewStats({
+        average_rating: data.average_rating ?? 0,
+        review_count: data.review_count ?? results.length,
+        rating_percent: ratingPercent ?? {},
+      });
+    } catch (err) {
+      if (!cancelled) {
+        dispatch(fetchReviewsFailure(err?.message || String(err)));
+      }
+    }
+  })();
+
+  return () => {
+    cancelled = true;
+  };
+}, [dispatch, id]);
 
   /* Variants selection */
   const [selectedVariants, setSelectedVariants] = useState({});
@@ -618,7 +649,7 @@ export default function ProductDetailSection({ product }) {
   const activePrice = pricing.display.activeAmountOnly;
   const originalPrice = pricing.display.originalAmountOnly;
 
-  // ---- Shipping preview (min fee + availability) ----
+  // ---- Shipping preview (min fee + availability, proxied) ----
   const [shipPreview, setShipPreview] = useState({
     available: null, // true | false | null (unknown)
     minFeeCents: null, // number | null (seller cents)
@@ -635,26 +666,32 @@ export default function ProductDetailSection({ product }) {
       const cc = uiCountry || 'gh';
       const city = typeof document !== 'undefined' ? readCookie(`deliver_to_${cc}`) || '' : '';
 
-      const urls = [
-        `${BASE_API_URL}/api/products/${product.id}/shipping/preview/?cc=${encodeURIComponent(
-          cc
-        )}&city=${encodeURIComponent(city)}`,
-        shop?.slug
-          ? `${BASE_API_URL}/api/shops/${shop.slug}/shipping/preview/?cc=${encodeURIComponent(
-              cc
-            )}&city=${encodeURIComponent(city)}`
-          : null,
-      ].filter(Boolean);
+      // try plural and singular endpoints for both product and shop
+      const paths = [
+        `products/${product.id}/shipping/preview/?cc=${encodeURIComponent(cc)}&city=${encodeURIComponent(city)}`,
+        `product/${product.id}/shipping/preview/?cc=${encodeURIComponent(cc)}&city=${encodeURIComponent(city)}`,
+      ];
+      if (shop?.slug) {
+        paths.push(
+          `shops/${shop.slug}/shipping/preview/?cc=${encodeURIComponent(cc)}&city=${encodeURIComponent(city)}`,
+          `shop/${shop.slug}/shipping/preview/?cc=${encodeURIComponent(cc)}&city=${encodeURIComponent(city)}`
+        );
+      }
 
       let ok = false;
-      for (const u of urls) {
+      for (const path of paths) {
         try {
           const t = getCleanToken();
-          const res = await fetch(u, { headers: t ? { Authorization: `Token ${t}` } : {} });
+          const res = await fetch(b(path), {
+            credentials: 'include',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              ...(t ? { Authorization: `Token ${t}` } : {}),
+            },
+          });
           if (!res.ok) continue;
           const d = await res.json();
 
-          // expected: { available:boolean, currency:"GHS", options:[{enabled:true, method, fee_cents}] }
           const opts = Array.isArray(d.options) ? d.options.filter((o) => o && o.enabled !== false) : [];
           const min = opts.reduce((best, cur) => (best && best.fee_cents <= cur.fee_cents ? best : cur), null);
 
@@ -669,7 +706,7 @@ export default function ProductDetailSection({ product }) {
           ok = true;
           break;
         } catch {
-          /* try next url */
+          /* try next path */
         }
       }
 
@@ -697,48 +734,47 @@ export default function ProductDetailSection({ product }) {
 
   const shipBlocked = shipPreview.available === false;
 
-  // Optional countdown (uses product.sale_end_date)
-  const [timeRemaining, setTimeRemaining] = useState(null);
-  useEffect(() => {
-    if (!sale_end_date || !saleActive) {
-      setTimeRemaining(null);
-      return;
-    }
-    const end = new Date(sale_end_date);
-    const tick = () => {
-      const diff = end.getTime() - Date.now();
-      if (diff <= 0) {
-        setTimeRemaining({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        return;
-      }
-      setTimeRemaining({
-        days: Math.floor(diff / 86400000),
-        hours: Math.floor((diff % 86400000) / 3600000),
-        minutes: Math.floor((diff % 3600000) / 60000),
-        seconds: Math.floor((diff % 60000) / 1000),
-      });
-    };
-    tick();
-    const iv = setInterval(tick, 1000);
-    return () => clearInterval(iv);
-  }, [sale_end_date, saleActive]);
+  // -------- Sale countdown (hook) --------
+  const { timeRemaining, progressPct: saleProgressPct /* 0-100 */, urgency } =
+    useSaleCountdown(product?.sale_start_date, product?.sale_end_date);
 
-  /* Wishlist */
+  const parseMoney = (s) =>
+    typeof s === 'string' ? Number(s.replace(/[^0-9.]/g, '')) : Number(s || 0);
+
+  const discountPct = (() => {
+    const orig = parseMoney(originalPrice);
+    const act = parseMoney(activePrice);
+    return orig > 0 && Number.isFinite(act) ? Math.round(((orig - act) / orig) * 100) : null;
+  })();
+
+  const showCountdown = Boolean(saleActive && product?.sale_end_date);
+
+  /* Wishlist (proxied) */
   const handleToggleWishlist = async () => {
-    if (!token) {
-      router.push(`/signin?next=${encodeURIComponent(currentPath)}`);
+    const authed = await verifyAuth();
+    if (!authed) {
+      router.push(`/login?next=${encodeURIComponent(currentPath)}`);
       return;
     }
     setLoading(true);
-    const url = `${BASE_API_URL}/api/wishlist/${id}/`;
+    const url = b(`wishlist/${id}/`);
     try {
       if (isWishlisted) {
-        await fetch(url, { method: 'DELETE', headers: { Authorization: `Token ${token}` } });
+        await fetch(url, {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: { 'X-Requested-With': 'XMLHttpRequest', ...(token ? { Authorization: `Token ${token}` } : {}) },
+        });
         setIsWishlisted(false);
       } else {
-        await fetch(`${BASE_API_URL}/api/wishlist/`, {
+        await fetch(b('wishlist/'), {
           method: 'POST',
-          headers: { Authorization: `Token ${token}`, 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            ...(token ? { Authorization: `Token ${token}` } : {}),
+          },
           body: JSON.stringify({ product_id: id, note: '' }),
         });
         setIsWishlisted(true);
@@ -748,19 +784,25 @@ export default function ProductDetailSection({ product }) {
     }
   };
 
-  /* Admin actions */
+  /* Admin actions (proxied) */
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this product?')) return;
-    await fetch(`${BASE_API_URL}/api/products/${id}/`, {
+    await fetch(b(`products/${id}/`), {
       method: 'DELETE',
-      headers: { Authorization: `Token ${token}` },
+      credentials: 'include',
+      headers: { 'X-Requested-With': 'XMLHttpRequest', ...(token ? { Authorization: `Token ${token}` } : {}) },
     });
     router.back();
   };
   const handleUnpublish = async () => {
-    await fetch(`${BASE_API_URL}/api/products/${id}/unpublish/`, {
+    await fetch(b(`products/${id}/unpublish/`), {
       method: 'POST',
-      headers: { Authorization: `Token ${token}`, 'Content-Type': 'application/json' },
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        ...(token ? { Authorization: `Token ${token}` } : {}),
+      },
     });
     router.refresh?.();
   };
@@ -771,6 +813,14 @@ export default function ProductDetailSection({ product }) {
       Object.values(selectedVariants).reduce((s, v) => s + (v.additional_price_cents || 0), 0),
     [selectedVariants]
   );
+
+// inside ProductDetailSection component
+React.useEffect(() => {
+  const open = () => setIsModalVisible(true);
+  window.addEventListener("open-basket-sheet", open);
+  return () => window.removeEventListener("open-basket-sheet", open);
+}, []);
+
 
   /* Basket */
   const handleAddToBasket = () => {
@@ -814,115 +864,42 @@ export default function ProductDetailSection({ product }) {
     setSelectedMultiBuyTier((prev) => (prev?.minQuantity === tier.minQuantity ? prev : tier));
   }, []);
 
-  /* Addresses */
-  const [addresses, setAddresses] = useState([]);
-  const [selectedAddressId, setSelectedAddressId] = useState(null);
-  const [isAddressLoading, setIsAddressLoading] = useState(true);
-  useEffect(() => {
-    let cancelled = false;
-    const asList = (payload) =>
-      Array.isArray(payload)
-        ? payload
-        : Array.isArray(payload?.results)
-        ? payload.results
-        : Array.isArray(payload?.items)
-        ? payload.items
-        : [];
-    (async () => {
-      setIsAddressLoading(true);
-      try {
-        const t = getCleanToken();
-        if (!t) {
-          setAddresses([]);
-          return;
-        }
-        const res = await fetch(`${BASE_API_URL}/api/addresses/`, {
-          headers: { Authorization: `Token ${t}` },
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const rows = asList(data).filter((a) => !a.is_deleted);
-        const opts = rows.map((a) => ({
-          id: a.id,
-          value:
-            a.display_address ||
-            [
-              a.address_line_1 ?? a.address_data?.address_line_1,
-              a.address_line_2 ?? a.address_data?.address_line_2,
-              a.local_area ?? a.address_data?.local_area,
-              a.town ?? a.address_data?.town,
-              a.state_or_region ?? a.address_data?.state_or_region,
-              a.postcode ?? a.address_data?.postcode,
-              a.country ?? a.country_code ?? a.address_data?.country,
-            ]
-              .filter(Boolean)
-              .join(', '),
-        }));
-        if (cancelled) return;
-        setAddresses(opts);
-        const defaultRow = rows.find((r) => r.default);
-        setSelectedAddressId(defaultRow?.id ?? opts[0]?.id ?? null);
-      } catch {
-        if (!cancelled) {
-          setAddresses([]);
-          setSelectedAddressId(null);
-        }
-      } finally {
-        if (!cancelled) setIsAddressLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [token]);
-
-  const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
+  // tiny auth probe (through proxy) for wishlist/direct-buy
+  const verifyAuth = useCallback(async () => {
     try {
-      const res = await fetch(`${BASE_API_URL}/api/addresses/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Token ${token}`,
-        },
-        body: JSON.stringify({
-          owner_id: currentUser.id,
-          owner_type: 'USER',
-          default: false,
-          full_name: vals.full_name,
-          address_data: {
-            street: vals.street,
-            city: vals.city,
-            state: vals.state,
-            zip_code: vals.zip_code,
-            country: vals.country,
-          },
-        }),
+      const r = await fetch(b('users/me'), {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       });
-      const json = await res.json();
-      setAddresses((prev) => [
-        ...prev,
-        {
-          id: json.id,
-          value: `${json.address_data.street}, ${json.address_data.city}, ${json.address_data.country}`,
-        },
-      ]);
-      setSelectedAddressId(json.id);
-      resetForm();
-      setShowNewModal(false);
-      setIsDirectBuyPopupVisible(true);
-    } catch {} finally {
-      setSubmitting(false);
+      if (!r.ok) return false;
+      const j = await r.json().catch(() => ({}));
+      return Boolean(j?.id || j?.email || j?.username || j?.is_authenticated);
+    } catch {
+      return false;
     }
-  };
+  }, []);
 
-  const handleDirectBuyNow = () => {
-    if (!token) {
-      router.push(`/signin?next=${encodeURIComponent(currentPath)}`);
+  const handleDirectBuyNow = async () => {
+    if (shipBlocked) return;
+
+    const authed = await verifyAuth();
+    if (!authed) {
+      const next =
+        typeof window !== 'undefined'
+          ? location.pathname + location.search + location.hash
+          : '/';
+      router.push(`/login?next=${encodeURIComponent(next)}`);
       return;
     }
-    if (isAddressLoading || shipBlocked) return;
-    if (addresses.length > 0) setIsDirectBuyPopupVisible(true);
-    else setShowNewModal(true);
+
+    // Always open the bottom sheet; it will disable Confirm until an address is chosen
+    setIsDirectBuyPopupVisible(true);
+
+    // If the user has no addresses, also pop the “Add address” modal
+    if (!isAddressLoading && (!addresses || addresses.length === 0)) {
+      setShowNewModal(true);
+    }
   };
 
   const descriptionHtml = useMemo(() => {
@@ -962,7 +939,139 @@ export default function ProductDetailSection({ product }) {
     [uiCountry]
   );
 
-  /* Render */
+  /* ---------------- Addresses (proxied via axiosInstance) ---------------- */
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [isAddressLoading, setIsAddressLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const asList = (payload) =>
+      Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.results)
+        ? payload.results
+        : Array.isArray(payload?.items)
+        ? payload.items
+        : [];
+
+    (async () => {
+      setIsAddressLoading(true);
+      try {
+        const { data, status } = await axios.get(b('addresses'), {
+          withCredentials: true,
+          validateStatus: () => true,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        });
+
+        if (cancelled) return;
+
+        if (status === 401 || status === 403) {
+          setAddresses([]);
+          setSelectedAddressId(null);
+          return;
+        }
+        if (status < 200 || status >= 300) {
+          setAddresses([]);
+          setSelectedAddressId(null);
+          return;
+        }
+
+        const rows = asList(data).filter((a) => !a.is_deleted);
+        const opts = rows.map((a) => ({
+          id: a.id,
+          value:
+            a.display_address ||
+            [
+              a.address_line_1 ?? a.address_data?.address_line_1,
+              a.address_line_2 ?? a.address_data?.address_line_2,
+              a.local_area ?? a.address_data?.local_area,
+              a.town ?? a.address_data?.town,
+              a.state_or_region ?? a.address_data?.state_or_region,
+              a.postcode ?? a.address_data?.postcode,
+              a.country ?? a.country_code ?? a.address_data?.country,
+            ]
+              .filter(Boolean)
+              .join(', '),
+        }));
+
+        setAddresses(opts);
+        const def = rows.find((r) => r.default);
+        setSelectedAddressId(def?.id ?? opts[0]?.id ?? null);
+      } catch {
+        if (!cancelled) {
+          setAddresses([]);
+          setSelectedAddressId(null);
+        }
+      } finally {
+        if (!cancelled) setIsAddressLoading(false);
+      }
+    })();
+
+  return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        ...(token
+          ? { Authorization: `Token ${token}` }
+          : (() => {
+              const csrftoken = readCookie('csrftoken');
+              return csrftoken ? { 'X-CSRFToken': csrftoken } : {};
+            })()),
+      };
+
+      const payload = {
+        owner_id: currentUser.id,
+        owner_type: 'USER',
+        default: false,
+        full_name: vals.full_name,
+        address_data: {
+          street: vals.street,
+          city: vals.city,
+          state: vals.state,
+          zip_code: vals.zip_code,
+          country: vals.country,
+        },
+      };
+
+      const { data, status } = await axios.post(b('addresses'), payload, {
+        withCredentials: true,
+        validateStatus: () => true,
+        headers,
+      });
+
+      if (status === 401 || status === 403) {
+        setShowNewModal(false);
+        return;
+      }
+      if (status < 200 || status >= 300) {
+        return;
+      }
+
+      setAddresses((prev) => [
+        ...prev,
+        {
+          id: data.id,
+          value: `${data.address_data.street}, ${data.address_data.city}, ${data.address_data.country}`,
+        },
+      ]);
+      setSelectedAddressId(data.id);
+      resetForm();
+      setShowNewModal(false);
+      setIsDirectBuyPopupVisible(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  /* ---------------- Render ---------------- */
   return (
     <section className="pt-6 md:pt-8 lg:pt-10 text-gray-900 dark:text-gray-100 bg-transparent">
       <RecentlyViewed product={product} />
@@ -997,15 +1106,53 @@ export default function ProductDetailSection({ product }) {
               </div>
 
               <div className="rounded-xl p-4 border border-violet-100 dark:border-violet-900/40 bg-white dark:bg-neutral-900">
-                {/* Sale countdown chip */}
-                {saleActive && timeRemaining && (
-                  <div
-                    className="mb-2 inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-200"
-                    aria-live="polite"
+                {/* Limited-time deal card + progress */}
+                {showCountdown && (
+                  <section
+                    className="mb-3 rounded-xl border border-orange-200/70 bg-gradient-to-r from-orange-50 to-amber-50
+                               dark:from-orange-900/20 dark:to-amber-900/10 ring-1 ring-orange-200/60 dark:ring-orange-800/40 p-3"
+                    aria-label="Limited-time deal"
                   >
-                    ⏳ Sale ends in {timeRemaining.days}d {timeRemaining.hours}h {timeRemaining.minutes}m {timeRemaining.seconds}s
-                  </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="inline-flex items-center gap-2 text-xs font-semibold text-orange-900 dark:text-orange-100">
+                        <span className="relative inline-flex h-5 w-5 items-center justify-center rounded-full
+                                        bg-orange-100 dark:bg-orange-900/40">
+                          <span className="absolute inline-flex h-full w-full rounded-full animate-ping
+                                           opacity-20 bg-orange-300 dark:bg-orange-600
+                                           motion-reduce:hidden" />
+                          ⏳
+                        </span>
+                        Limited-time deal
+                      </span>
+
+                      <time
+                        dateTime={product?.sale_end_date}
+                        className="font-mono tabular-nums text-xs font-extrabold text-orange-900 dark:text-orange-50"
+                        aria-live="off"
+                      >
+                        {timeRemaining.days}d {timeRemaining.hours}h {timeRemaining.minutes}m {timeRemaining.seconds}s
+                      </time>
+                    </div>
+
+                    {product?.sale_start_date && product?.sale_end_date && (
+                      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-orange-100 dark:bg-orange-950/40">
+                        <div
+                          role="progressbar"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={Math.round(Math.min(100, Math.max(0, saleProgressPct)))}
+                          className="h-full bg-orange-400 dark:bg-orange-500 transition-[width] duration-1000"
+                          style={{ width: `${Math.min(100, Math.max(0, saleProgressPct))}%` }}
+                        />
+                      </div>
+                    )}
+
+                    <span className="sr-only" aria-live="polite">
+                      Sale ends in {timeRemaining.days} days and {timeRemaining.hours} hours
+                    </span>
+                  </section>
                 )}
+
                 <SimplePrice
                   symbol={pricing.display.symbol}
                   activeAmountOnly={activePrice}
@@ -1016,6 +1163,14 @@ export default function ProductDetailSection({ product }) {
                   postageSymbol={postageSymbol}
                   shipAvailable={shipPreview.available}
                 />
+
+                {saleActive && originalPrice && (
+                  <div className="mt-1 text-xs text-green-700 dark:text-green-300">
+                    You save <strong>{pricing.display.symbol}{(parseMoney(originalPrice) - parseMoney(activePrice)).toLocaleString()}</strong>
+                    {typeof discountPct === 'number' && !Number.isNaN(discountPct) ? ` (${discountPct}% off)` : null}
+                  </div>
+                )}
+
                 {/* Cheapest method label + change location */}
                 <div className="mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
                   <span>
@@ -1084,6 +1239,9 @@ export default function ProductDetailSection({ product }) {
                   copied={copied}
                   onWhatsApp={fireContactOnce}
                   onCall={fireContactOnce}
+                  isLoggedIn={!!token}
+                  signinUrl="/login"
+                  onBuySafely={handleDirectBuyNow}
                 />
               )}
 
@@ -1106,50 +1264,22 @@ export default function ProductDetailSection({ product }) {
                 </>
               }
               descriptionHtml={descriptionHtml}
-              reviewsNode={<DisplayReviews product={product} />}
-              reviewMeta={{ review_count: product?.secondary_data?.reviews_count }}
             />
 
-            {relatedProducts.length > 0 && (
-              <section className="mt-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">
-                    Items related to this {title}
-                  </h2>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {relatedProducts.map((p) => {
-                    const relPricing = buildPricingMini(p, {
-                      uiCurrency,
-                      locale: resolvedLanguage || 'en',
-                      conv: convSafe,
-                    });
-                    const relSymbol = relPricing.display.symbol;
-                    const relActive = relPricing.display.activeAmountOnly;
-                    return (
-                      <Link
-                        key={p.id}
-                        href={relatedHref(p.seo_slug)}
-                        className="block border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow hover:shadow-lg transition bg-white dark:bg-slate-900"
-                      >
-                        <RelatedThumb item={p} alt={p.title} />
-                        <div className="p-2">
-                          <h3 className="text-sm font-semibold line-clamp-2">{p.title}</h3>
-                          {relActive ? (
-                            <span className="text-green-700 dark:text-green-400 font-bold">
-                              {relSymbol}
-                              {relActive}
-                            </span>
-                          ) : (
-                            <span className="text-gray-500">Ask for price</span>
-                          )}
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
+
+
+{/* Reviews (standalone) */}
+{reviewStats?.review_count > 0 && (
+<section id="reviews" className="mt-8">
+  <h2 className="sr-only">Customer reviews</h2>
+  <DisplayReviews product={product} />
+</section>
+)}
+
+
+
+
+            
           </div>
 
           {/* RIGHT (sticky) */}
@@ -1212,7 +1342,7 @@ export default function ProductDetailSection({ product }) {
                 <ContactSellerCard
                   canShowPhone={canShowPhone}
                   unavailableText={contactReasonText(gate?.reason, gate?.allowed)}
-                  verified={!!phoneToShow?.is_verified}
+                  verified={isVerifiedSeller}
                   rawDisplay={rawDisplay}
                   telDigits={telDigits}
                   waLink={waLink}
@@ -1226,19 +1356,56 @@ export default function ProductDetailSection({ product }) {
                   copied={copied}
                   onWhatsApp={fireContactOnce}
                   onCall={fireContactOnce}
+                  isLoggedIn={!!token}
+                  signinUrl="/login"
+                  onBuySafely={handleDirectBuyNow}
                 />
               )}
 
               <div className="rounded-xl p-4 border border-violet-100 dark:border-violet-900/40 bg-white dark:bg-slate-900">
-                {/* Sale countdown chip (desktop) */}
-                {saleActive && timeRemaining && (
-                  <div
-                    className="mb-2 inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-200"
-                    aria-live="polite"
+                {/* Desktop: same rich countdown card */}
+                {showCountdown && (
+                  <section
+                    className="mb-3 rounded-xl border border-orange-200/70 bg-gradient-to-r from-orange-50 to-amber-50
+                               dark:from-orange-900/20 dark:to-amber-900/10 ring-1 ring-orange-200/60 dark:ring-orange-800/40 p-3"
+                    aria-label="Limited-time deal"
                   >
-                    ⏳ Sale ends in {timeRemaining.days}d {timeRemaining.hours}h {timeRemaining.minutes}m {timeRemaining.seconds}s
-                  </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="inline-flex items-center gap-2 text-xs font-semibold text-orange-900 dark:text-orange-100">
+                        <span className="relative inline-flex h-5 w-5 items-center justify-center rounded-full
+                                        bg-orange-100 dark:bg-orange-900/40">
+                          <span className="absolute inline-flex h-full w-full rounded-full animate-ping
+                                           opacity-20 bg-orange-300 dark:bg-orange-600
+                                           motion-reduce:hidden" />
+                          ⏳
+                        </span>
+                        Limited-time deal
+                      </span>
+
+                      <time
+                        dateTime={product?.sale_end_date}
+                        className="font-mono tabular-nums text-xs font-extrabold text-orange-900 dark:text-orange-50"
+                        aria-live="off"
+                      >
+                        {timeRemaining.days}d {timeRemaining.hours}h {timeRemaining.minutes}m {timeRemaining.seconds}s
+                      </time>
+                    </div>
+
+                    {product?.sale_start_date && product?.sale_end_date && (
+                      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-orange-100 dark:bg-orange-950/40">
+                        <div
+                          role="progressbar"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={Math.round(Math.min(100, Math.max(0, saleProgressPct)))}
+                          className="h-full bg-orange-400 dark:bg-orange-500 transition-[width] duration-1000"
+                          style={{ width: `${Math.min(100, Math.max(0, saleProgressPct))}%` }}
+                        />
+                      </div>
+                    )}
+                  </section>
                 )}
+
                 {variants?.map((variant) =>
                   variant.values?.length ? (
                     <div key={variant.id} className="mb-3">
@@ -1338,7 +1505,7 @@ export default function ProductDetailSection({ product }) {
                   onClick={handleDirectBuyNow}
                   disabled={shipBlocked}
                 >
-                  Buy Now
+                  Buy Now (SafePay)
                 </button>
 
                 <button
@@ -1389,6 +1556,39 @@ export default function ProductDetailSection({ product }) {
             onQuantityChange={handleQuantityChange}
             onRemove={handleRemoveProduct}
             onUndoRemove={(item) => dispatch({ type: 'basket/addToBasket', payload: item })}
+            relatedProducts={relatedProducts}
+            onAddSuggested={(item) => {
+              // choose best raw url from many shapes, then normalize to absolute
+              const raw =
+                item.__resolved_image ||
+                item.image_url ||
+                item.image?.[0]?.image_url ||
+                item.image_objects?.[0]?.url ||
+                item.thumbnail ||
+                pickProductImage(item);
+
+              const img = fixImageUrl(raw);
+
+              const price_cents =
+                typeof item.sale_price_cents === 'number'
+                  ? item.sale_price_cents
+                  : typeof item.price_cents === 'number'
+                  ? item.price_cents
+                  : Math.round(Number(item.price_major || 0) * 100);
+
+              dispatch({
+                type: 'basket/addToBasket',
+                payload: {
+                  id: item.id,
+                  title: item.title,
+                  price_cents,
+                  quantity: 1,
+                  sku: item.sku,
+                  __resolved_image: img,        // ← BasketSheet reads this first
+                  image: [{ image_url: img }],  // ← legacy basket shape still supported
+                },
+              });
+            }}
           />
         </div>
       </div>
@@ -1474,13 +1674,12 @@ export default function ProductDetailSection({ product }) {
       )}
 
       {/* Direct Buy */}
-      {isDirectBuyPopupVisible && addresses.length > 0 && (
+      {isDirectBuyPopupVisible && (
         <DirectBuyPopup
           selectedAddressId={selectedAddressId}
           setSelectedAddressId={setSelectedAddressId}
           isAddressLoading={isAddressLoading}
           addresses={addresses}
-          relatedProducts={relatedProducts}
           quantity={quantity}
           product={product}
           isVisible={isDirectBuyPopupVisible}

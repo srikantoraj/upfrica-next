@@ -1,7 +1,8 @@
 // app/(pages)/new-dashboard/Page.jsx
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleView } from "@/contexts/RoleViewContext";
 
@@ -21,23 +22,45 @@ function normalizeRole(v) {
   return "";
 }
 
+function arrayifyAccountType(account_type) {
+  if (!account_type) return [];
+  if (Array.isArray(account_type)) return account_type;
+  return [String(account_type)];
+}
+
 export default function Page() {
+  const router = useRouter();
+  const search = useSearchParams();
   const { hydrated, user } = useAuth();
   const { roleView } = useRoleView() || {};
+  const [redirecting, setRedirecting] = useState(false);
+
+  // If the user has no account_type yet, send them to onboarding.
+  useEffect(() => {
+    if (!hydrated || !user) return;
+    const roles = arrayifyAccountType(user.account_type);
+    if (roles.length === 0) {
+      setRedirecting(true);
+      // Preserve a redirect back to the dashboard after onboarding
+      const redirectTarget =
+        search?.get("redirect") || (typeof window !== "undefined" ? window.location.pathname : "/new-dashboard");
+      router.replace(`/onboarding/account-type?redirect=${encodeURIComponent(redirectTarget)}`);
+    }
+  }, [hydrated, user, search, router]);
 
   const effectiveRole = useMemo(() => {
-    // 1) context value
+    // 1) explicit context value
     const n = normalizeRole(roleView);
     if (n) return n;
 
-    // 2) last chosen role
+    // 2) last chosen role (client-only)
     if (typeof window !== "undefined") {
       const fromLS = normalizeRole(localStorage.getItem("roleView"));
       if (fromLS) return fromLS;
     }
 
     // 3) infer from user account_type
-    const roles = Array.isArray(user?.account_type) ? user.account_type : [];
+    const roles = arrayifyAccountType(user?.account_type);
     if (roles.includes("seller_private") || roles.includes("seller_business")) return "seller";
     if (roles.includes("agent")) return "agent";
     if (roles.includes("affiliate")) return "affiliate";
@@ -47,7 +70,7 @@ export default function Page() {
     return "buyer";
   }, [roleView, user?.account_type]);
 
-  if (!hydrated || !user) {
+  if (!hydrated || !user || redirecting) {
     return (
       <div className="w-full p-6 text-center text-gray-600 dark:text-gray-300">
         ⏳ Loading dashboard...
@@ -56,10 +79,8 @@ export default function Page() {
   }
 
   return (
-    <div className="p-6 text-white ">
+    <div className="p-6 text-white">
       <CompleteSetupBanner />
-
-
 
       {effectiveRole === "seller" && <SellerDashboardHome />}
       {effectiveRole === "buyer" && <BuyerDashboardHome />}

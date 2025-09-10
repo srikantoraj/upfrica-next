@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "scan": "node scripts/scan.mjs > scan.txt 2>&1 && echo '✅ Wrote scan.txt'"
+    "scan": "node scripts/scan.mjs > scan.txt 2>&1 && echo '✅ Wrote scan.txt'",
+    "tree": "node scripts/gen-structure.mjs",
+    "tree:out": "node scripts/gen-structure.mjs --out STRUCTURE.md",
+    "tree:watch": "node scripts/gen-structure.mjs --out STRUCTURE.md --watch",
+    "tree:stdout": "node scripts/gen-structure.mjs --stdout"
   },
   "dependencies": {
     "@babel/runtime": "^7.27.0",

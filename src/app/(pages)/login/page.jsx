@@ -1,55 +1,44 @@
-// app/login/page.tsx
+// app/(pages)/login/page.jsx  (rename from .tsx if you use JSX)
 "use client";
 
-import React, { useEffect } from "react";
-import LoginForm from "@/components/auth/LoginForm";
+import { useEffect } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/public/images/logo.png";
 import signinImage from "../../image/signin.svg";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
-import LocalStorageComponent from "@/components/LocalStorageComponent";
 
-const LoginPage = () => {
-  const { user, hydrated, refreshUser } = useAuth();
+// Render LoginForm only on the client to avoid SSR/CSR mismatches
+const LoginForm = dynamic(() => import("@/components/auth/LoginForm"), {
+  ssr: false,
+});
+
+export default function LoginPage() {
+  const { user, hydrated } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-  // 🧪 DEBUG: Show token on initial load
-  useEffect(() => {
-    if (token) {
-      console.log("🧪 Token in localStorage:", token);
-    }
-  }, [token]);
-
-  // ✅ Automatically refresh user if token exists but no user is loaded yet
-  useEffect(() => {
-    if (token && !user && hydrated) {
-      console.log("🔄 Token found but no user. Attempting to refresh...");
-      refreshUser();
-    }
-  }, [token, user, hydrated, refreshUser]);
-
-  // ✅ Redirect if already logged in and hydrated
+  // If already authenticated, redirect away from the login screen
   useEffect(() => {
     if (hydrated && user) {
-      console.log("✅ Authenticated, redirecting to /new-dashboard...");
-      router.push("/new-dashboard"); // 🧭 Destination after login
+      const next = searchParams.get("next");
+      router.replace(next || "/new-dashboard");
     }
-  }, [hydrated, user, router]);
+  }, [hydrated, user, router, searchParams]);
 
-  // ⏳ Optionally hide page while redirecting
+  // Hide the page while redirecting to prevent flash
   if (hydrated && user) return null;
 
   return (
-    <div className="max-w-screen-2xl flex justify-center items-center mx-auto lg:p-10 min-h-screen">
+    <main
+      className="max-w-screen-2xl flex justify-center items-center mx-auto lg:p-10 min-h-screen"
+      suppressHydrationWarning
+    >
       <div className="bg-white container grid lg:grid-cols-2 py-10 lg:px-20 shadow-xl border rounded-md">
-        {/* Image Column */}
+        {/* Illustration */}
         <div className="col-span-1 order-2 lg:order-1 flex justify-center items-center p-2 lg:p-4">
-          <LocalStorageComponent />
           <Image
             className="h-80 sm:h-full"
             src={signinImage}
@@ -58,18 +47,11 @@ const LoginPage = () => {
             height={500}
             priority
           />
-
-          {token && (
-            <div className="text-xs text-green-600 mt-2">
-              🔐 Token exists in localStorage
-            </div>
-          )}
         </div>
 
-        {/* Form Column */}
+        {/* Form */}
         <div className="col-span-1 order-1 lg:order-2 lg:p-4">
           <div className="text-center space-y-4">
-            {/* Logo */}
             <div className="flex justify-center">
               <Image
                 className="h-10 lg:h-14 mx-auto"
@@ -81,28 +63,21 @@ const LoginPage = () => {
               />
             </div>
 
-            {/* Sign-up link */}
             <p className="text-base">
               Don’t have an account?{" "}
-              <Link href="/register">
-                <span className="text-purple-500 hover:underline">
-                  Sign up here
-                </span>
+              <Link href="/signup" className="text-purple-500 hover:underline">
+                Sign up here
               </Link>
             </p>
 
-            {/* Login Form */}
             <LoginForm />
 
-            {/* Footer */}
             <p className="text-gray-500 text-sm mt-4">
               © {new Date().getFullYear()} Upfrica. All rights reserved.
             </p>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
-};
-
-export default LoginPage;
+}

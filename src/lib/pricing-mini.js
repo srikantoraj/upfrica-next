@@ -1,3 +1,4 @@
+//src/lib/pricing-mini.js
 // Minimal canonical pricing (no images, no extras)
 // Prefers *_cents; uses pricing.*_cents only if currency matches seller.
 // One-shot FX; postage always shown in seller currency. Includes tracer.

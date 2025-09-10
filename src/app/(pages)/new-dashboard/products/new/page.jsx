@@ -1,3 +1,4 @@
+// src/app/(pages)/new-dashboard/products/new/page.jsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -11,6 +12,10 @@ function authHeaders() {
   return t ? { Authorization: `Token ${t}` } : {};
 }
 
+// localStorage keys so a browser refresh resumes the SAME draft
+const DRAFT_META_KEY = "upfrica:newProductDraftMeta";
+const DRAFT_FORM_KEY = "upfrica:newProductDraftForm";
+
 export default function NewProductPage() {
   const router = useRouter();
 
@@ -19,16 +24,62 @@ export default function NewProductPage() {
   const [currency, setCurrency] = useState("GHS");
   const [quantity, setQuantity] = useState(1);
 
-  const [conditions, setConditions] = useState([]); // ← plain JS
-  const [condition, setCondition] = useState("");   // id as string; cast when sending
-  const [draftId, setDraftId] = useState(null);     // number | null, but untyped
+  const [conditions, setConditions] = useState([]);
+  const [condition, setCondition] = useState("");
+  const [draftId, setDraftId] = useState(null); // numeric id only
+  const [uPid, setUPid] = useState(null);       // optional, never used in URL
 
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
   const [error, setError] = useState("");
 
-  // lock to prevent duplicate draft creation (e.g., multiple uploads race)
+  // lock to prevent duplicate draft creation (e.g., uploads racing)
   const ensureDraftPromiseRef = useRef(null);
+
+  // ---------- bootstrap from localStorage (refresh-safe) ----------
+  useEffect(() => {
+    try {
+      const meta = JSON.parse(localStorage.getItem(DRAFT_META_KEY) || "null");
+      if (meta?.id) setDraftId(Number(meta.id));
+      if (meta?.uPid) setUPid(String(meta.uPid));
+
+      const form = JSON.parse(localStorage.getItem(DRAFT_FORM_KEY) || "null");
+      if (form) {
+        if (typeof form.title === "string") setTitle(form.title);
+        if ("priceMajor" in form) setPriceMajor(form.priceMajor ?? "");
+        if ("quantity" in form) setQuantity(Number(form.quantity ?? 1));
+        if (typeof form.condition !== "undefined") setCondition(String(form.condition ?? ""));
+        if (typeof form.currency === "string") setCurrency(form.currency || "GHS");
+        if (form.lastSaved) setLastSaved(new Date(form.lastSaved));
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // persist meta + form to localStorage so refresh restores UI/state
+  useEffect(() => {
+    if (draftId) {
+      localStorage.setItem(
+        DRAFT_META_KEY,
+        JSON.stringify({ id: draftId, uPid })
+      );
+    }
+  }, [draftId, uPid]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      DRAFT_FORM_KEY,
+      JSON.stringify({
+        title,
+        priceMajor,
+        quantity,
+        condition,
+        currency,
+        lastSaved,
+      })
+    );
+  }, [title, priceMajor, quantity, condition, currency, lastSaved]);
 
   // Load conditions
   useEffect(() => {
@@ -40,83 +91,102 @@ export default function NewProductPage() {
         const data = await res.json();
         const items = Array.isArray(data) ? data : data.results || [];
         setConditions(items);
-        if (items.length) setCondition(String(items[0].id));
+        if (!condition && items.length) setCondition(String(items[0].id));
       } catch (e) {
         console.error("Failed to fetch conditions", e);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Create or update draft (returns product or null)
-async function createOrUpdate(auto = false) {
-  if (!title) return null; // skip empty autosaves
-  setSaving(true);
-  setError("");
-  try {
-    const form = new FormData();
-    form.append("title", title);
-    form.append("price_major", String(priceMajor || ""));
-    form.append("price_currency", currency);
-    form.append("condition", String(condition || ""));
-    form.append("product_quantity", String(quantity || 1));
+  // ---------------- helpers ----------------
+  function buildFormData(auto = false) {
+    const fd = new FormData();
+    // if autosaving without a title, create a placeholder so uploads can start first
+    const titleToUse = (title || "").trim() || (auto ? "Draft" : "");
+    if (!titleToUse) throw new Error("Title required");
+    fd.append("title", titleToUse);
+    fd.append("price_major", String(priceMajor ?? ""));
+    fd.append("price_currency", currency);
+    fd.append(
+      "condition",
+      String(condition || (Array.isArray(conditions) && conditions[0]?.id) || "")
+    );
+    fd.append("product_quantity", String(quantity || 1));
+    return fd;
+  }
 
-    const isUpdate = Boolean(draftId);
+  async function createDraft(auto = false) {
+    const res = await fetch(`${BASE_API_URL}/api/seller/products/`, {
+      method: "POST",
+      headers: { ...authHeaders() }, // allow browser to set multipart boundary
+      credentials: "include",
+      body: buildFormData(auto),
+    });
+    if (!res.ok) throw new Error(`create failed ${res.status}`);
+    const product = await res.json();
+    if (product?.id != null) setDraftId(Number(product.id));
+    if (product?.u_pid) setUPid(String(product.u_pid));
+    return product;
+  }
 
-    async function doFetch(url, method) {
-      const res = await fetch(url, {
-        method,
-        headers: { ...authHeaders() }, // let browser set multipart boundary
-        credentials: "include",
-        body: form,
-      });
-      return res;
-    }
+  async function patchDraft(auto = false) {
+    if (!draftId) throw new Error("no draft id");
+    const url = `${BASE_API_URL}/api/seller/products/${draftId}/`; // numeric id only
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: { ...authHeaders() }, // multipart
+      credentials: "include",
+      body: buildFormData(auto),
+    });
+    if (!res.ok) throw new Error(`update failed ${res.status}`);
+    return await res.json();
+  }
 
-    let res, product;
+  function clearPersisted() {
+    localStorage.removeItem(DRAFT_META_KEY);
+    localStorage.removeItem(DRAFT_FORM_KEY);
+  }
 
-    if (!isUpdate) {
-      // CREATE
-      res = await doFetch(`${BASE_API_URL}/api/seller/products/`, "POST");
-      if (!res.ok) throw new Error(`create failed ${res.status}`);
-      product = await res.json();
-    } else {
-      // UPDATE via seller detail
-      res = await doFetch(`${BASE_API_URL}/api/seller/products/${draftId}/`, "PATCH");
-
-      if (res.status === 404) {
-        // fallback to owner-safe public detail endpoint
-        const alt = await doFetch(`${BASE_API_URL}/api/products/${draftId}/`, "PATCH");
-        if (alt.ok) {
-          res = alt;
-        } else if (alt.status === 404) {
-          // if somehow lost, recreate as new draft (prevents “Save failed” loop)
-          const re = await doFetch(`${BASE_API_URL}/api/seller/products/`, "POST");
-          if (!re.ok) throw new Error(`recreate failed ${re.status}`);
-          res = re;
-        } else {
-          throw new Error(`patch fallback failed ${alt.status}`);
+  // ---------------- main save path ----------------
+  async function createOrUpdate(auto = false) {
+    setSaving(true);
+    setError("");
+    try {
+      let product;
+      if (!draftId) {
+        product = await createDraft(auto);
+      } else {
+        try {
+          product = await patchDraft(auto);
+        } catch (err) {
+          // if somehow the draft disappeared, re-create once
+          if (String(err?.message || "").includes("update failed 404")) {
+            product = await createDraft(auto);
+          } else {
+            throw err;
+          }
         }
       }
 
-      if (!res.ok) throw new Error(`update failed ${res.status}`);
-      product = await res.json();
+      setLastSaved(new Date());
+
+      // Keep user on /new for autosaves & "Save Draft"
+      if (!auto) {
+        router.push(`/new-dashboard/products/editor?id=${product.id}`);
+        clearPersisted(); // leave clean state when moving to full editor
+      }
+      return product;
+    } catch (err) {
+      console.error(err);
+      if (!auto) setError("Save failed");
+      return null;
+    } finally {
+      setSaving(false);
     }
-
-    if (!draftId) setDraftId(product.id);
-    if (!auto) router.push(`/new-dashboard/products/editor?id=${product.id}`);
-
-    setLastSaved(new Date());
-    return product;
-  } catch (err) {
-    console.error(err);
-    setError("Save failed");
-    return null;
-  } finally {
-    setSaving(false);
   }
-}
 
-  // Used by uploader to ensure a valid id exists (with a simple lock)
+  // Used by the uploader to ensure a valid product id exists (with a lock)
   async function ensureDraftId() {
     if (draftId) return draftId;
 
@@ -129,6 +199,7 @@ async function createOrUpdate(auto = false) {
       if (created && created.id != null) {
         const idNum = Number(created.id);
         setDraftId(idNum);
+        if (created.u_pid) setUPid(String(created.u_pid));
         return idNum;
       }
       throw new Error("Could not create draft");
@@ -141,6 +212,7 @@ async function createOrUpdate(auto = false) {
     }
   }
 
+  // ---------------- UI ----------------
   return (
     <main className="p-4 md:p-8 max-w-3xl mx-auto bg-gray-50 dark:bg-gray-950 min-h-screen">
       {/* Autosave badge */}
@@ -212,6 +284,7 @@ async function createOrUpdate(auto = false) {
               onBlur={() => createOrUpdate(true)}
               inputMode="numeric"
               placeholder="1"
+              min={0}
             />
           </div>
           <div className="md:col-span-2">

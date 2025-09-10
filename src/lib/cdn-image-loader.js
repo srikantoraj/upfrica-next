@@ -1,55 +1,65 @@
-/* eslint-disable no-console */
-const RAW_CDN = process.env.NEXT_PUBLIC_CDN_HOST || 'cdn.upfrica.com';
-// hostname only, lowercased
-const CDN_HOST = RAW_CDN.replace(/^https?:\/\//, '').replace(/\/.*/, '').toLowerCase();
+// Custom loader for next/image.
+// Rewrites S3 & /media/* URLs to your CDN host, and leaves other absolute URLs intact.
 
-const OUR_HOSTS = new Set([
-  CDN_HOST,
-  'd3q0odwafjkyv1.cloudfront.net',
-  'd26ukeum83vx3b.cloudfront.net',
-]);
+const CDN_HOST = (process.env.NEXT_PUBLIC_CDN_HOST || 'cdn.upfrica.com')
+  .replace(/^https?:\/\//, '')
+  .replace(/\/+$/, ''); // hostname only
 
-function normalizeSrc(src) {
-  if (!src) return '';
+const API_ORIGIN = (process.env.NEXT_PUBLIC_SITE_ORIGIN || process.env.NEXT_PUBLIC_BASE_URL || '')
+  .replace(/\/+$/, ''); // optional, used for non-media relative paths
 
-  let s = String(src).trim();
-
-  // Leave data/blob URLs untouched
-  if (/^(data|blob):/i.test(s)) return s;
-
-  // Fix: "https://cdn.upfrica.com<key>" (missing slash after host)
-  s = s.replace(/^(https?:\/\/cdn\.upfrica\.com)(?!\/)/i, '$1/');
-
-  // If it's already absolute, collapse duplicate slashes after host,
-  // collapse any '//' in the path (not protocol), and drop trailing slash.
-  if (/^https?:\/\//i.test(s)) {
-    s = s.replace(/(https?:\/\/[^/]+)\/+/, '$1/');
-    s = s.replace(/([^:])\/{2,}/g, '$1/');
-    return s.replace(/\/+$/, '');
-  }
-
-  // Scheme-relative
-  if (/^\/\//.test(s)) return ('https:' + s).replace(/\/+$/, '');
-
-  // Bare key -> prefix CDN
-  s = s.replace(/^\/+/, ''); // no leading slashes in key
-  s = `https://${CDN_HOST}/${s}`;
-  return s.replace(/\/+$/, '');
+function isAbs(u) { return /^https?:\/\//i.test(u); }
+function isData(u) { return /^data:/i.test(u); }
+function join(...parts) {
+  return parts
+    .filter(Boolean)
+    .join('/')
+    .replace(/(^|\b)https?:\/+/, (m) => m.replace(/\/+$/, '/') ) // keep protocol
+    .replace(/([^:]\/)\/+/g, '$1'); // collapse //
 }
 
-module.exports = function cdnImageLoader({ src, width, quality }) {
-  const url = normalizeSrc(src);
-  if (!url) return '';
+/**
+ * Next will call this with { src, width, quality }.
+ * If your CDN supports resizing via query params, you can append `?w=${width}&q=${quality||75}`.
+ * If not, just return the canonical URL without params (as below).
+ */
+export default function cdnImageLoader({ src, width, quality }) {
+  if (!src) return '';
 
-  // Add width/quality hints for caching (safe even if origin ignores them)
-  const u = new URL(url);
-  if (OUR_HOSTS.has(u.hostname.toLowerCase())) {
-    if (width) u.searchParams.set('w', String(width));
-    if (typeof quality === 'number') u.searchParams.set('q', String(quality));
+  // 1) Data URIs pass through
+  if (isData(src)) return src;
+
+  // 2) Absolute URLs
+  if (isAbs(src)) {
+    try {
+      const u = new URL(src);
+
+      // S3 → CDN (keep path)
+      if (/\.s3[.-][a-z0-9-]+\.amazonaws\.com$/i.test(u.hostname)) {
+        return `https://${CDN_HOST}${u.pathname}`;
+      }
+
+      // Already on CDN_HOST → return as-is
+      if (u.hostname === CDN_HOST) return u.toString();
+
+      // Any other absolute host → return as-is
+      return u.toString();
+    } catch {
+      // If URL parsing fails, fall through to treat as relative
+    }
   }
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.debug('[img-loader ↻]', { in: src, out: u.toString() });
+  // 3) Relative paths
+  if (src.startsWith('/media/')) {
+    // Django media → serve via CDN
+    return join(`https://${CDN_HOST}`, src);
   }
-  return u.toString();
-};
+
+  // If you have other relative assets that should come from site origin:
+  if (API_ORIGIN) {
+    return join(API_ORIGIN, src);
+  }
+
+  // Fallback to current origin (dev)
+  return src;
+}

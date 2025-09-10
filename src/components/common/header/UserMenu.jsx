@@ -1,6 +1,7 @@
+// src/components/common/header/UserMenu.jsx
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { FaRegUser, FaShoppingBag, FaHeart, FaStore } from "react-icons/fa";
 import { AiOutlineDashboard } from "react-icons/ai";
 import { FiSettings } from "react-icons/fi";
@@ -8,7 +9,8 @@ import { CiPower } from "react-icons/ci";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
-import { clearUser } from "../../../app/store/slices/userSlice";
+import { clearUser } from "@/app/store/slices/userSlice";
+import { useAuth } from "@/contexts/AuthContext";
 import UserEmail from "./UserEmail";
 
 export default function UserMenu() {
@@ -17,6 +19,7 @@ export default function UserMenu() {
   const triggerRef = useRef(null);
   const router = useRouter();
   const dispatch = useDispatch();
+  const { logout } = useAuth();
 
   const toggleModal = () => setIsModalOpen((prev) => !prev);
 
@@ -37,13 +40,17 @@ export default function UserMenu() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isModalOpen]);
 
-  const logOut = () => {
-    dispatch(clearUser());
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("user");
+  const logOut = useCallback(async () => {
+    try {
+      await logout();              // 🍪 clears HttpOnly cookie server-side
+    } catch (e) {
+      // no-op; we'll still clear client state
     }
+    dispatch(clearUser());         // keep Redux in sync for legacy consumers
+    setIsModalOpen(false);
     router.push("/");
-  };
+    router.refresh();
+  }, [dispatch, logout, router]);
 
   return (
     <div onClick={toggleModal}>
@@ -64,11 +71,13 @@ export default function UserMenu() {
           role="dialog"
           aria-modal="true"
           id="user-menu"
+          onClick={() => setIsModalOpen(false)} // click outside to close
         >
           <div
             className="bg-white w-64 2xl:w-80 p-4 shadow-2xl mt-12 lg:mt-16 mr-4 rounded-md border text-base lg:text-lg"
             ref={modalRef}
             tabIndex={-1}
+            onClick={(e) => e.stopPropagation()} // keep clicks inside
           >
             {/* User Info */}
             <UserEmail />
@@ -115,13 +124,14 @@ export default function UserMenu() {
             <hr className="my-2" />
 
             {/* Sign Out */}
-            <div
-              className="flex items-center py-2 px-2 hover:bg-gray-100 rounded cursor-pointer"
+            <button
+              type="button"
+              className="w-full text-left flex items-center py-2 px-2 hover:bg-gray-100 rounded cursor-pointer"
               onClick={logOut}
             >
               <CiPower className="h-5 w-5 text-red-500" />
               <span className="ml-2 text-red-500">Sign Out</span>
-            </div>
+            </button>
           </div>
         </div>
       )}

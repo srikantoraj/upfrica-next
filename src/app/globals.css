@@ -3,31 +3,29 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  transition: background-color 0.3s, color 0.3s;
-}
+html { transition: background-color .3s, color .3s; }
 
 /* Base font styles */
-body {
+body{
   @apply text-base text-gray-800 leading-relaxed;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  background-color: #fff;
+  font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing:antialiased;
+  background-color:#fff;
 }
 
 /* Headings */
-h1, h2, h3, h4, h5, h6 {
+h1,h2,h3,h4,h5,h6{
   @apply font-semibold text-gray-900 leading-tight;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
 }
-
-/* Add responsive heading styles */
-h1 { @apply text-2xl md:text-3xl lg:text-4xl; }
-h2 { @apply text-xl md:text-2xl; }
-h3 { @apply text-lg md:text-xl; }
+/* Responsive sizes */
+h1{@apply text-2xl md:text-3xl lg:text-4xl;}
+h2{@apply text-xl md:text-2xl;}
+h3{@apply text-lg md:text-xl;}
 
 /* === Upfrica design tokens ================================================= */
 :root{
-  /* ==== PRIMARY BRAND: BLUE (AA/AAA on white) ============================ */
+  /* ---- Brand (Blue) ------------------------------------------------------ */
   --brand-700:#1246CA;  /* AAA on white; pressed */
   --brand-600:#1E5BFF;  /* Primary */
   --brand-500:#3B7BFF;
@@ -37,19 +35,19 @@ h3 { @apply text-lg md:text-xl; }
   --brand-100:#E6EFFF;
   --brand-50:#F3F7FF;
 
-  /* ==== SUPPORT: VIOLET / PURPLE (independent from brand-blue) =========== */
-  --violet-800:#5022C3; /* deep */
+  /* ---- Support Violet/Purple -------------------------------------------- */
+  --violet-800:#5022C3;
   --violet-700:#6D28D2;
   --violet-600:#7C3AED;
   --violet-550:#892DE1; /* hover */
-  --violet-500:#A435F0; /* purple */
+  --violet-500:#A435F0;
   --violet-400:#A78BFA;
   --violet-300:#C4B5FD;
   --violet-200:#DDD6FE;
   --violet-100:#EDE9FE;
   --violet-50:#F5F3FF;
 
-  /* Legacy purple aliases (kept so old CSS keeps working) */
+  /* Legacy purple aliases (back-compat) */
   --brand-purple-700: var(--violet-700);
   --brand-purple-600: var(--violet-600);
   --brand-purple-500: var(--violet-550);
@@ -59,33 +57,57 @@ h3 { @apply text-lg md:text-xl; }
   --brand-purple-100: var(--violet-100);
   --brand-purple-50:  var(--violet-50);
 
-
-  --success-50:#ecfdf5;
-  --success-200:#a7f3d0;
-  --success-400:#34d399;
+  /* ---- Success (greens) -------------------------------------------------- */
+  --success-50:#ECFDF5;
+  --success-200:#A7F3D0;
+  --success-400:#34D399;
+  --success-500:#10B981;   /* emerald-500 */
+  --success-600:#16A34A;   /* main success */
   --success-700:#047857;
-  --success:#10b981;
+  --success:var(--success-600);
 
-  /* Neutrals */
+  /* ---- Neutrals ---------------------------------------------------------- */
   --ink:#0F172A; --ink-2:#334155; --line:#E5E7EB;
   --surface:#FFFFFF; --alt-surface:#F8FAFC;
 
-  /* Status */
-  --success:#16A34A; --warning:#F59E0B; --danger:#DC2626; --info:#2563EB;
+  /* ---- Status hues ------------------------------------------------------- */
+  --warning-500:#F59E0B;
+  --danger-600:#DC2626;
+  --info-600:#2563EB;
 
-  /* Commerce */
+  /* ---- Commerce ---------------------------------------------------------- */
   --commerce-600:#10B981;
 
-  /* Country accent (dynamic via [data-country]) */
+  /* ---- Country accent (set via [data-country]) -------------------------- */
   --accent:#F59E0B;
   --accent-100:#FFF7E6;
 
-  /* Controls/focus tokens used by ud-* utilities */
+  /* ---- Controls/focus ---------------------------------------------------- */
   --ud-btn-radius:.75rem;
   --ud-btn-min-inline:8rem;
   --ud-focus-ring:2px solid var(--brand-600);
   --ud-focus-offset:2px;
   --color-knockout:#fff;
+
+  /* ==== SALE / DEAL palette (semantic) =================================== */
+  --deal-surface:#FFF7ED;     /* orange-50 */
+  --deal-border:#FED7AA;      /* orange-200 */
+  --deal-ink:#7C2D12;         /* orange-900 */
+  --deal-bar-low:#FB923C;     /* orange-400 */
+  --deal-bar-medium:#F97316;  /* orange-500 */
+  --deal-bar-high:#D97706;    /* amber-600 */
+  --deal-bar-critical:#DC2626;/* red-600 */
+}
+
+/* Dark-mode token overrides (Tailwind's .dark strategy) */
+.dark{
+  --deal-surface:rgba(124,45,18,.12);   /* orange-900/12 */
+  --deal-border:rgba(124,45,18,.40);    /* orange-900/40 */
+  --deal-ink:#FFEDD5;                   /* orange-100 */
+  --deal-bar-low:#F59E0B;
+  --deal-bar-medium:#F59E0B;
+  --deal-bar-high:#F59E0B;
+  --deal-bar-critical:#EF4444;
 }
 
 /* Country tints */
@@ -97,109 +119,115 @@ h3 { @apply text-lg md:text-xl; }
 .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
 
 /* ================= Utilities & component-style utilities ================== */
-@layer utilities {
-  .text-balance { text-wrap: balance; }
+@layer utilities{
+  .text-balance{ text-wrap:balance; }
 
   /* Font sizing */
-  .text-body   { @apply text-sm md:text-base text-gray-700 leading-relaxed; }
+  .text-body{ @apply text-sm md:text-base text-gray-700 leading-relaxed; }
   .text-caption{ @apply text-xs text-gray-500; }
 
-  .heading-lg  { @apply text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight; }
-  .heading-md  { @apply text-xl font-medium text-gray-800; }
-  .heading-sm  { @apply text-lg font-medium text-gray-700; }
+  .heading-lg{ @apply text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight; }
+  .heading-md{ @apply text-xl font-medium text-gray-800; }
+  .heading-sm{ @apply text-lg font-medium text-gray-700; }
 
-  .btn-base { @apply text-sm md:text-base font-medium tracking-wide rounded-3xl py-2 px-4; }
+  .btn-base{ @apply text-sm md:text-base font-medium tracking-wide rounded-3xl py-2 px-4; }
 
   /* Primary (blue) */
-  .btn-primary { background-color: var(--brand-600); color:#fff; }
-  .btn-primary:hover { background-color: var(--brand-700); }
+  .btn-primary{ background-color:var(--brand-600); color:#fff; }
+  .btn-primary:hover{ background-color:var(--brand-700); }
 
   /* Optional violet CTA variant */
-  .btn-primary--violet { background-color: var(--violet-600); color:#fff; }
-  .btn-primary--violet:hover { background-color: var(--violet-700); }
+  .btn-primary--violet{ background-color:var(--violet-600); color:#fff; }
+  .btn-primary--violet:hover{ background-color:var(--violet-700); }
 
-  .btn-outline {
-    @apply border text-gray-800;
-    border-color: var(--accent);
-  }
-  .btn-outline:hover { background-color: var(--accent); color:#111827; }
+  .btn-outline{ @apply border text-gray-800; border-color:var(--accent); }
+  .btn-outline:hover{ background-color:var(--accent); color:#111827; }
 
-  .btn-ghost { @apply border border-gray-300 text-gray-600 hover:bg-gray-100; }
+  .btn-ghost{ @apply border border-gray-300 text-gray-600 hover:bg-gray-100; }
 
   /* Back-compat utilities (tokenized) */
-  .upfrica-btn-primary-outline-sm {
+  .upfrica-btn-primary-outline-sm{
     @apply rounded-full border py-1 px-4 text-sm whitespace-nowrap;
-    border-color: var(--violet-500, #A435F0); color: var(--violet-600, #7C3AED);
+    border-color:var(--violet-500,#A435F0); color:var(--violet-600,#7C3AED);
   }
-  .upfrica-btn-black-outline-sm { @apply rounded-full border border-black py-1 px-4 text-sm whitespace-nowrap; }
-  .upfrica-btn-primary-sm {
+  .upfrica-btn-black-outline-sm{ @apply rounded-full border border-black py-1 px-4 text-sm whitespace-nowrap; }
+  .upfrica-btn-primary-sm{
     @apply rounded-full border py-1 px-4 text-sm whitespace-nowrap;
-    background-color: var(--violet-500, #A435F0);
-    border-color: var(--violet-500, #A435F0);
+    background-color:var(--violet-500,#A435F0);
+    border-color:var(--violet-500,#A435F0);
     color:#fff;
   }
 
-  .scrollbar-hide { -ms-overflow-style:none; scrollbar-width:none; }
-  .scrollbar-hide::-webkit-scrollbar { display:none; }
+  .scrollbar-hide{ -ms-overflow-style:none; scrollbar-width:none; }
+  .scrollbar-hide::-webkit-scrollbar{ display:none; }
+  ::-webkit-scrollbar-thumb{ background-color:var(--violet-500,#a435f0); border-radius:4px; }
 
-  ::-webkit-scrollbar-thumb { background-color: var(--violet-500, #a435f0); border-radius: 4px; }
-
-  .upfricaBlack { color:#0f1111 !important; }
-  .upfricaTextStrong-18 { font-weight:700 !important; font-size:18px !important; line-height:24px !important; }
+  .upfricaBlack{ color:#0f1111 !important; }
+  .upfricaTextStrong-18{ font-weight:700 !important; font-size:18px !important; line-height:24px !important; }
 
   .shadow-upfrica{
-    --tw-shadow:0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+    --tw-shadow:0 1px 2px rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
     --tw-shadow-colored:0 1px 2px var(--tw-shadow-color), 0 1px 3px 1px var(--tw-shadow-color);
     box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow);
   }
 
-
-
-
-
   /* Select niceties */
-  select { transition: all .3s ease; }
-  .no-native-arrow { -webkit-appearance:none; -moz-appearance:none; appearance:none; background-image:none !important; }
-  .no-native-arrow::-ms-expand { display:none; }
+  select{ transition:all .3s ease; }
+  .no-native-arrow{ -webkit-appearance:none; -moz-appearance:none; appearance:none; background-image:none !important; }
+  .no-native-arrow::-ms-expand{ display:none; }
 
-  /* Blue ↔ violet gradient helper for ribbons/top bars */
+  /* Blue ↔ violet gradient helper */
   .bg-brand-mix{
     background-image:linear-gradient(90deg, var(--brand-700), var(--violet-600), var(--brand-600));
   }
 
-
-
   /* Edge fade helpers for horizontal scrollers */
-.scroll-fade       { --fade: 32px;
-  -webkit-mask-image: linear-gradient(to right,
-      transparent 0, #000 var(--fade),
-      #000 calc(100% - var(--fade)), transparent 100%);
-          mask-image: linear-gradient(to right,
-      transparent 0, #000 var(--fade),
-      #000 calc(100% - var(--fade)), transparent 100%);
-  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
-  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
-}
+  .scroll-fade{
+    --fade:32px;
+    -webkit-mask-image:linear-gradient(to right, transparent 0, #000 var(--fade), #000 calc(100% - var(--fade)), transparent 100%);
+            mask-image:linear-gradient(to right, transparent 0, #000 var(--fade), #000 calc(100% - var(--fade)), transparent 100%);
+    -webkit-mask-size:100% 100%; mask-size:100% 100%;
+    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+  }
+  .scroll-fade-right{
+    --fade:32px;
+    -webkit-mask-image:linear-gradient(to right, #000 0, #000 calc(100% - var(--fade)), transparent 100%);
+            mask-image:linear-gradient(to right, #000 0, #000 calc(100% - var(--fade)), transparent 100%);
+    -webkit-mask-size:100% 100%; mask-size:100% 100%;
+    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+  }
+  .scroll-fade-left{
+    --fade:32px;
+    -webkit-mask-image:linear-gradient(to right, transparent 0, #000 var(--fade), #000 100%);
+            mask-image:linear-gradient(to right, transparent 0, #000 var(--fade), #000 100%);
+    -webkit-mask-size:100% 100%; mask-size:100% 100%;
+    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+  }
 
-.scroll-fade-right { --fade: 32px;
-  -webkit-mask-image: linear-gradient(to right,
-      #000 0, #000 calc(100% - var(--fade)), transparent 100%);
-          mask-image: linear-gradient(to right,
-      #000 0, #000 calc(100% - var(--fade)), transparent 100%);
-  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
-  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
-}
+  /* --- Logo (wordmark + market badge) ----------------------------------- */
+  .uf-logo{ display:inline-flex; align-items:center; gap:.5rem; line-height:1; }
+  .uf-logo__brand{ font-weight:800; font-size:24px; letter-spacing:-.25px; color:var(--ink); }
+  .uf-logo__badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    height:18px; padding:0 10px; border-radius:999px;
+    font-size:12px; font-weight:700; line-height:1;
+    color:var(--brand-700); background:var(--brand-100); border:1px solid var(--brand-200);
+    box-shadow:0 1px 0 rgba(17,24,39,.04);
+  }
+  @media (max-width:768px){
+    .uf-logo__brand{ font-size:22px; }
+    .uf-logo__badge{ height:16px; padding:0 8px; font-size:11px; }
+  }
+  a.uf-logo:focus-visible{ outline:var(--ud-focus-ring); outline-offset:var(--ud-focus-offset); border-radius:.5rem; }
+  a.uf-logo:hover{ background:var(--brand-50); }
+  .dark .uf-logo__brand{ color:#fff; }
+  .dark .uf-logo__badge{
+    color:var(--brand-200);
+    background:color-mix(in sRGB, var(--brand-700) 18%, transparent);
+    border-color:color-mix(in sRGB, var(--brand-700) 35%, transparent);
+  }
 
-.scroll-fade-left  { --fade: 32px;
-  -webkit-mask-image: linear-gradient(to right,
-      transparent 0, #000 var(--fade), #000 100%);
-          mask-image: linear-gradient(to right,
-      transparent 0, #000 var(--fade), #000 100%);
-  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
-  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
-}
-
-  /* === Upfrica button system (tokenized) ================================ */
+  /* === Upfrica button system (tokenized) ================================= */
   .ud-btn{
     position:relative; display:inline-flex; align-items:center; justify-content:center; gap:.4rem;
     max-inline-size:100%; min-inline-size:var(--ud-btn-min-inline); padding-inline:1.2rem;
@@ -209,27 +237,23 @@ h3 { @apply text-lg md:text-xl; }
     transition:background-color .15s ease, border-color .15s ease, color .15s ease;
   }
   .ud-btn-xsmall{ inline-size:auto; block-size:2.8rem; padding-inline:.8rem; }
-  .ud-btn-small { inline-size:auto; block-size:3.4rem; }
+  .ud-btn-small{  inline-size:auto; block-size:3.4rem; }
   .ud-btn-medium{ inline-size:auto; block-size:4rem; }
-  .ud-btn-large { inline-size:auto; block-size:4.8rem; }
-  .ud-btn-round { --ud-btn-radius:100rem; min-inline-size:4rem; }
+  .ud-btn-large{  inline-size:auto; block-size:4.8rem; }
+  .ud-btn-round{ --ud-btn-radius:100rem; min-inline-size:4rem; }
   .ud-btn-round-xsmall{ padding-inline:1rem; }
   .ud-btn:focus-visible{ outline:var(--ud-focus-ring); outline-offset:var(--ud-focus-offset); }
-  .ud-btn.ud-btn-disabled, .ud-btn[disabled]{ opacity:.55; cursor:not-allowed; }
+  .ud-btn.ud-btn-disabled,.ud-btn[disabled]{ opacity:.55; cursor:not-allowed; }
 
-  /* Solid brand (blue) */
   .ud-btn-primary{ color:#fff; background-color:var(--brand-600); border-color:transparent; }
   .ud-btn-primary:hover{ background-color:var(--brand-700); }
 
-  /* Secondary outline (blue) */
   .ud-btn-secondary{ color:var(--brand-600); background-color:transparent; border:1px solid var(--brand-600); }
   .ud-btn-secondary:hover{ background-color:var(--brand-100); }
 
-  /* Optional violet outline variant */
   .ud-btn-secondary-violet{ color:var(--violet-600); background-color:transparent; border:1px solid var(--violet-600); }
   .ud-btn-secondary-violet:hover{ background-color:var(--violet-50); }
 
-  /* Ghost */
   .ud-btn-ghost,
   .ud-btn-ghost.ud-btn-link-underline{
     color:var(--brand-600); background-color:transparent; border-color:transparent;
@@ -240,11 +264,9 @@ h3 { @apply text-lg md:text-xl; }
     .ud-btn-ghost:hover{ background-color:var(--brand-50); }
   }
 
-  /* Violet solid (for promos/alternates) */
   .ud-btn-violet{ color:#fff; background-color:var(--violet-600); border-color:transparent; }
   .ud-btn-violet:hover{ background-color:var(--violet-700); }
 
-  /* Link variants */
   .ud-btn-link,
   .ud-btn-link-underline{
     color:var(--brand-600); background:transparent; border:none; block-size:auto; max-inline-size:none;
@@ -285,4 +307,42 @@ h3 { @apply text-lg md:text-xl; }
   .ud-block-list .ud-block-list-item-loose{ padding-block:1.6rem; }
   .ud-block-list .ud-block-list-item-link{ color:var(--brand-600); }
   .ud-block-list .ud-block-list-item-neutral{ color:var(--ink); }
+
+  /* ======= Deal / Countdown utilities =================================== */
+  .ud-deal-card{
+    background-color:var(--deal-surface);
+    border:1px solid var(--deal-border);
+    border-radius:.875rem;
+    padding:.75rem .875rem;
+    box-shadow:0 0 0 1px color-mix(in sRGB, var(--deal-border) 35%, transparent);
+  }
+  .ud-deal-chip{
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:.35rem .6rem; border-radius:9999px;
+    font-size:.75rem; font-weight:600; letter-spacing:.01em;
+    color:var(--deal-ink);
+    background-color:color-mix(in sRGB, var(--deal-surface) 85%, white);
+  }
+  .ud-deal-time{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; font-weight:800; }
+  .ud-deal-progress{
+    height:.375rem; border-radius:9999px; overflow:hidden;
+    background-color:color-mix(in sRGB, var(--deal-border) 40%, transparent);
+  }
+  .ud-deal-progress__bar{
+    height:100%; width:0; transition:width .9s ease;
+    background-color:var(--deal-bar-low);
+  }
+  /* Urgency ramp */
+  .ud-deal-progress[data-urgency="medium"]  .ud-deal-progress__bar{ background-color:var(--deal-bar-medium); }
+  .ud-deal-progress[data-urgency="high"]    .ud-deal-progress__bar{ background-color:var(--deal-bar-high); }
+  .ud-deal-progress[data-urgency="critical"] .ud-deal-progress__bar{
+    background-color:var(--deal-bar-critical);
+    animation:udPulseWidth 1.2s ease-in-out infinite;
+  }
+  @keyframes udPulseWidth{ 0%,100%{opacity:.95} 50%{opacity:.65} }
+
+  /* Respect motion preferences */
+  @media (prefers-reduced-motion:reduce){
+    .ud-deal-progress__bar{ transition:none; animation:none; }
+  }
 }

@@ -1,146 +1,192 @@
+// src/components/home/ProductList/RelatedProduct.jsx
 "use client";
+
 import React from "react";
+import Link from "next/link";
 import RelatedProductCard from "./RelatedProductCard";
 import RelatedProductCardSkeleton from "./RelatedProductCardSkeleton";
+import { withCountryPrefix } from "@/lib/locale-routing";
+import { useLocalization } from "@/contexts/LocalizationProvider";
 
-// const RealtedProduct = ({ productSlug, productTitle,relatedProducts, location = "Ghana" }) => {
-//   const [products, setProducts] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-//   console.log("related product component data",relatedProducts);
-
-//   // Truncate product title for SEO heading
-//   const truncateTitle = (str, max = 50) => {
-//     if (!str || typeof str !== "string") return "";
-//     if (str.length <= max) return str;
-//     const truncated = str.slice(0, max);
-//     return truncated.slice(0, truncated.lastIndexOf(" ")) + "…";
-//   };
-
-//   const seoTitle = truncateTitle(productTitle);
-
-//   useEffect(() => {
-//     const url = `https://media.upfrica.com/api/products/${productSlug}/related/`;
-//     console.log(url);
-
-//     const requestOptions = {
-//       method: "GET",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//     };
-
-//     fetch(url, requestOptions)
-//       .then((response) => {
-//         if (!response.ok) {
-//           throw new Error(`HTTP error! Status: ${response.status}`);
-//         }
-//         return response.json();
-//       })
-//       .then((result) => {
-//         // console.log("data related product",result?.results);
-//         setProducts(result?.results || []);
-//         setLoading(false);
-//       })
-//       .catch((error) => {
-//         console.error("Error fetching product data:", error);
-//         setError(error);
-//         setLoading(false);
-//       });
-//   }, [productSlug]);
-
-//   if (loading) {
-//     return (
-//       <div className="grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 py-10 gap-4">
-//         {Array.from({ length: 4 }).map((_, index) => (
-//           <RelatedProductCardSkeleton key={index} />
-//         ))}
-//       </div>
-//     );
-//   }
-
-//   if (error) {
-//     return <p>Error fetching product details: {error.message}</p>;
-//   }
-
-//   if (!products.length) {
-//     return <p>No related items found.</p>;
-//   }
-
-//   // console.log('products',products);
-
-//   return (
-//     <div className="py-10">
-//       <h3 className="text-lg md:text-lg lg:text-xl font-medium border-b pb-2 mb-4">
-//         Items related to this {seoTitle} and their Price in {location} –{" "}
-//         <a href="#" className="text-blue-600 underline hover:text-blue-800">
-//           See more
-//         </a>
-//       </h3>
-//       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6  gap-3 lg:gap-5">
-//         {products.map((product) => (
-//           <RelatedProductCard key={product.id} product={product} />
-//           // <ProductCard key={product.id} product={product} />
-//         ))}
-//       </div>
-//     </div>
-//   );
-// };
-
-const RealtedProduct = ({
+function RelatedProducts({
   productSlug,
   productTitle,
   relatedProducts,
   location = "Ghana",
-}) => {
-  // 1. SEO Title
-  const truncateTitle = (str, max = 50) => {
+}) {
+  const { country: uiCountry } = useLocalization() || {};
+  const cc = String(uiCountry || "gh").toLowerCase();
+
+  // —— helpers
+  const truncateTitle = React.useCallback((str, max = 64) => {
     if (!str || typeof str !== "string") return "";
     if (str.length <= max) return str;
-    const truncated = str.slice(0, max);
-    return truncated.slice(0, truncated.lastIndexOf(" ")) + "…";
-  };
+    const slice = str.slice(0, max);
+    const at = slice.lastIndexOf(" ");
+    return (at > 28 ? slice.slice(0, at) : slice) + "…";
+  }, []);
 
-  const seoTitle = truncateTitle(productTitle);
+  const seoTitle = React.useMemo(() => truncateTitle(productTitle), [productTitle, truncateTitle]);
 
-  // 2. Loading state
+  const seeMoreHref = React.useMemo(
+    () =>
+      withCountryPrefix(
+        cc,
+        `/search?q=${encodeURIComponent(seoTitle || "")}&related=${encodeURIComponent(
+          productSlug || ""
+        )}`
+      ),
+    [cc, seoTitle, productSlug]
+  );
+
+  // —— states
   if (relatedProducts === undefined) {
     return (
-      <div className="grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 py-10 gap-4">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <RelatedProductCardSkeleton key={index} />
-        ))}
-      </div>
+      <section aria-label="Related items" className="py-8 md:py-10" id="related-items">
+        <div className="flex items-baseline justify-between mb-4">
+          <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Items related to this {seoTitle || "product"}
+          </h3>
+          <span className="text-sm text-gray-500">Loading…</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <RelatedProductCardSkeleton key={i} />
+          ))}
+        </div>
+      </section>
     );
   }
 
-  // 3. Error state
   if (relatedProducts === null) {
-    return <p className="text-red-500">❌ Error loading related products.</p>;
+    return (
+      <section className="py-8" aria-live="polite">
+        <p className="text-red-600">❌ Error loading related products.</p>
+      </section>
+    );
   }
 
-  // 4. Empty state
-  if (!relatedProducts.length) {
-    return <p className="text-gray-500">No related items found.</p>;
+  if (!Array.isArray(relatedProducts) || relatedProducts.length === 0) {
+    return null; // stay quiet if nothing to show
   }
 
-  // 5. Success state
+  // —— mobile scroller with smart chevrons
+  const rowRef = React.useRef(null);
+  const [canLeft, setCanLeft] = React.useState(false);
+  const [canRight, setCanRight] = React.useState(false);
+
+  const updateArrows = React.useCallback(() => {
+    const el = rowRef.current;
+    if (!el) return;
+    const pad = 6; // small tolerance
+    setCanLeft(el.scrollLeft > pad);
+    setCanRight(el.scrollWidth - el.clientWidth - el.scrollLeft > pad);
+  }, []);
+
+  const scrollBy = React.useCallback((dir = 1) => {
+    const el = rowRef.current;
+    if (!el) return;
+    const item = el.querySelector("[data-card]")?.clientWidth || 240;
+    el.scrollBy({ left: dir * (item + 12), behavior: "smooth" });
+  }, []);
+
+  React.useEffect(() => {
+    const el = rowRef.current;
+    if (!el) return;
+    updateArrows();
+    const onScroll = () => updateArrows();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    const onResize = () => updateArrows();
+    window.addEventListener("resize", onResize);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [updateArrows]);
+
+  const onKeyScroll = (e) => {
+    if (e.key === "ArrowRight") { e.preventDefault(); scrollBy(1); }
+    if (e.key === "ArrowLeft")  { e.preventDefault(); scrollBy(-1); }
+  };
+
   return (
-    <div className="py-10">
-      <h3 className="text-lg md:text-lg lg:text-xl font-medium border-b pb-2 mb-4">
-        Items related to this {seoTitle} and their Price in {location} –{" "}
-        <a href="#" className="text-blue-600 underline hover:text-blue-800">
-          See more
-        </a>
-      </h3>
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6 gap-3 lg:gap-5">
-        {relatedProducts.map((product) => (
-          <RelatedProductCard key={product.id} product={product} />
+    <section className="py-8 md:py-10" id="related-items" aria-label="Related items">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">
+          Items related to {seoTitle} <span className="hidden md:inline">— Price in {location}</span>
+        </h3>
+
+        <Link
+          href={seeMoreHref}
+          className="ud-btn ud-btn-ghost ud-btn-link-underline text-sm"
+          aria-label={`See more items related to ${seoTitle}`}
+        >
+          See more →
+        </Link>
+      </div>
+
+      {/* Mobile: horizontal scroll (edge fade) */}
+      <div className="relative md:hidden">
+        <div
+          ref={rowRef}
+          className="scroll-fade no-scrollbar -mx-1.5 px-1.5 flex gap-3 overflow-x-auto snap-x snap-mandatory"
+          role="list"
+          aria-label="Related products"
+          tabIndex={0}
+          onKeyDown={onKeyScroll}
+        >
+          {relatedProducts.map((p) => (
+            <div
+              key={p.id}
+              data-card
+              role="listitem"
+              className="snap-start basis-[66%] xs:basis-[58%] sm:basis-[46%] shrink-0"
+            >
+              <RelatedProductCard product={p} />
+            </div>
+          ))}
+        </div>
+
+        {/* Chevrons (only when overflow) */}
+        {canLeft && (
+          <button
+            type="button"
+            onClick={() => scrollBy(-1)}
+            aria-label="Scroll left"
+            className="absolute left-0 top-1/2 -translate-y-1/2 translate-x-[-6px]
+                       rounded-full bg-white/80 dark:bg-black/40 border border-gray-200 dark:border-gray-700
+                       shadow-upfrica w-8 h-8 grid place-items-center"
+          >
+            ‹
+          </button>
+        )}
+        {canRight && (
+          <button
+            type="button"
+            onClick={() => scrollBy(1)}
+            aria-label="Scroll right"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-[6px]
+                       rounded-full bg-white/80 dark:bg-black/40 border border-gray-200 dark:border-gray-700
+                       shadow-upfrica w-8 h-8 grid place-items-center"
+          >
+            ›
+          </button>
+        )}
+      </div>
+
+      {/* Desktop: grid */}
+      <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 lg:gap-5">
+        {relatedProducts.map((p) => (
+          <div key={p.id}>
+            <RelatedProductCard product={p} />
+          </div>
         ))}
       </div>
-    </div>
+    </section>
   );
-};
+}
 
-export default RealtedProduct;
+export default RelatedProducts;
+// Back-compat export so existing imports with the typo won’t break:
+export const RealtedProduct = RelatedProducts;

@@ -18,40 +18,26 @@ function authHeaders() {
   return t ? { Authorization: `Token ${t}` } : {};
 }
 
-/**
- * PhotosSection
- * Props:
- *  - productId?: number
- *  - ensureProductId?: () => Promise<number>
- */
+// Helpers
+const isRealId = (v) => Number.isFinite(Number(v)) && Number(v) > 0;
+const normalizeFromApi = (it) => ({
+  id: Number(it.id),
+  url: it.image_url || it.image || "",
+  primary: !!it.is_main,
+});
+
 export default function PhotosSection({ productId, ensureProductId }) {
   // Each item: { id: number, url: string, primary: boolean }
   const [images, setImages] = useState([]);
   const [pid, setPid] = useState(productId ?? null);
   const hasProduct = useMemo(() => pid != null, [pid]);
 
-  // Resolve a product id once (if we weren't given one)
+  // Only mirror a provided productId → local pid (no auto-creation here)
   useEffect(() => {
-    let cancelled = false;
+    if (productId != null) setPid(productId);
+  }, [productId]);
 
-    async function ensurePidOnce() {
-      if (productId != null) {
-        setPid(productId);
-        return;
-      }
-      if (typeof ensureProductId === "function") {
-        const id = await ensureProductId();
-        if (!cancelled) setPid(id);
-      }
-    }
-    if (pid == null) ensurePidOnce();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [productId, ensureProductId, pid]);
-
-  // Load existing images
+  // Load existing images when we have a product
   useEffect(() => {
     if (!hasProduct) return;
     let cancelled = false;
@@ -65,17 +51,10 @@ export default function PhotosSection({ productId, ensureProductId }) {
         if (!r.ok) return;
         const data = await r.json();
         const list = Array.isArray(data) ? data : data.results || [];
-        const mapped = list
-          .map((it) => ({
-            id: it.id,
-            url: it.image_url || it.image || "",
-            primary: !!it.is_main,
-          }))
-          .filter((it) => it.url);
+        const mapped = list.map(normalizeFromApi).filter((it) => it.url);
         if (!cancelled) setImages(mapped);
-      } catch (e) {
-        // swallow; UI can stay empty
-        // console.warn("load images failed", e);
+      } catch {
+        /* ignore; UI can stay empty */
       }
     })();
 
@@ -84,33 +63,56 @@ export default function PhotosSection({ productId, ensureProductId }) {
     };
   }, [hasProduct, pid]);
 
-  // When a new upload succeeds we receive the saved ProductImage object
+  // When a new upload succeeds we receive the saved ProductImage object OR a temp URL
   const handleUploaded = useCallback((imgObjOrUrl) => {
-    // Accept either a full object or a naked URL
+    // Saved object returned by backend
     if (imgObjOrUrl && typeof imgObjOrUrl === "object") {
       const url =
         imgObjOrUrl.image_url || imgObjOrUrl.image || imgObjOrUrl.url || "";
       if (!url) return;
+
+      const realId = Number(imgObjOrUrl.id);
+
+      setImages((imgs) => {
+        // If we previously inserted a temp entry for this URL, replace its id
+        const idx = imgs.findIndex((i) => i.url === url && !isRealId(i.id));
+        if (idx !== -1) {
+          const next = imgs.slice();
+          next[idx] = {
+            ...next[idx],
+            id: realId,
+            primary: !!imgObjOrUrl.is_main || next[idx].primary,
+          };
+          return next;
+        }
+        // Otherwise append
+        return [
+          ...imgs,
+          {
+            id: realId,
+            url,
+            primary: !!imgObjOrUrl.is_main,
+          },
+        ];
+      });
+      return;
+    }
+
+    // Plain URL (temp preview before server responds with an ID)
+    if (typeof imgObjOrUrl === "string" && imgObjOrUrl) {
       setImages((imgs) => [
         ...imgs,
         {
-          id: imgObjOrUrl.id,
-          url,
-          primary: !!imgObjOrUrl.is_main,
+          id: Date.now(), // temp id (will be replaced when real object arrives)
+          url: imgObjOrUrl,
+          primary: imgs.length === 0,
         },
-      ]);
-    } else if (typeof imgObjOrUrl === "string" && imgObjOrUrl) {
-      // No ID available — append a temp client id so the preview works
-      setImages((imgs) => [
-        ...imgs,
-        { id: Date.now(), url: imgObjOrUrl, primary: imgs.length === 0 },
       ]);
     }
   }, []);
 
-  // Toggle primary using the server action
+  // Toggle primary using the server action (optimistic + rollback)
   async function handleSetPrimary(id) {
-    // Optimistic
     const prev = images.find((i) => i.primary);
     setImages((imgs) => imgs.map((i) => ({ ...i, primary: i.id === id })));
 
@@ -125,7 +127,6 @@ export default function PhotosSection({ productId, ensureProductId }) {
       );
       if (!r.ok) throw new Error("set_primary failed");
     } catch {
-      // Roll back on error
       setImages((imgs) =>
         imgs.map((i) => ({ ...i, primary: !!prev && i.id === prev.id }))
       );
@@ -141,7 +142,7 @@ export default function PhotosSection({ productId, ensureProductId }) {
         credentials: "include",
       });
     } catch {
-      // ignore
+      /* ignore */
     }
     setImages((imgs) => imgs.filter((i) => i.id !== id));
   }
@@ -157,29 +158,45 @@ export default function PhotosSection({ productId, ensureProductId }) {
       const oldIndex = imgs.findIndex((i) => i.id === active.id);
       const newIndex = imgs.findIndex((i) => i.id === over.id);
       const moved = arrayMove(imgs, oldIndex, newIndex);
-      newOrder = moved.map((i) => i.id);
+      // Only include real DB IDs; coerce to integers
+      newOrder = moved
+        .map((i) => Number(i.id))
+        .filter((n) => Number.isFinite(n) && n > 0);
       return moved;
     });
 
-    // 2) persist order
+    // 2) persist order (send multiple compatible keys)
     try {
       const productIdToUse =
-        pid != null ? pid : typeof ensureProductId === "function"
+        pid != null
+          ? pid
+          : typeof ensureProductId === "function"
           ? await ensureProductId()
           : null;
-      if (productIdToUse == null) return;
+      if (productIdToUse == null || newOrder.length === 0) return;
 
-      await fetch(`${BASE_API_URL}/api/product-images/reorder/`, {
+      const res = await fetch(`${BASE_API_URL}/api/product-images/reorder/`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders() },
         credentials: "include",
         body: JSON.stringify({
+          // product id (accepts either key on server)
+          product: productIdToUse,
           product_id: productIdToUse,
+          // ordered ids (accepts any of these keys on server)
+          ordered_ids: newOrder,
           ordered_image_ids: newOrder,
+          image_ids: newOrder,
         }),
       });
-    } catch {
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        console.error("Reorder failed:", res.status, txt);
+      }
+    } catch (e) {
       // silently ignore; UI keeps new order
+      console.error("Reorder request error:", e);
     }
   }
 
@@ -189,9 +206,9 @@ export default function PhotosSection({ productId, ensureProductId }) {
         <ImageUploader
           productId={pid ?? undefined}
           ensureProductId={async () => {
-            if (pid != null) return pid;
+            if (pid != null) return pid;           // use existing id
             if (typeof ensureProductId === "function") {
-              const id = await ensureProductId();
+              const id = await ensureProductId();  // lazily create draft when needed
               setPid(id);
               return id;
             }

@@ -27,6 +27,7 @@ export function normalizeCountry(input) {
 function toArray(x) {
   return Array.isArray(x) ? x : x ? [x] : [];
 }
+
 function sanitizeInit(payload = {}) {
   const country = payload.country || {};
   const fx = payload.fx || {};
@@ -77,6 +78,10 @@ function sanitizeInit(payload = {}) {
  *
  * Works on both server and client. On the server (RSC/route handlers),
  * Next.js caching hints (revalidate/tags) are respected.
+ *
+ * NOTE: We explicitly call `/api/i18n/init/` (with the trailing slash)
+ * so Django/DRF routing never 404s. The `api()` helper will proxy this
+ * through `/api/b/...`, attach cookies, and add X-Timezone.
  */
 export async function fetchI18nInit(
   country,
@@ -98,7 +103,6 @@ export async function fetchI18nInit(
       signal: controller.signal,
       ...nextHints,
     }).catch((err) => {
-      // 404 or network → bubble up as null so callers can soft-fallback
       if (process.env.NODE_ENV !== "production") {
         // eslint-disable-next-line no-console
         console.warn("[i18n] init fetch failed:", err?.message || err);

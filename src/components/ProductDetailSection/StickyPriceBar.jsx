@@ -15,7 +15,7 @@ export default function StickyPriceBar({
         onClick={onBuyNow}
         className="px-5 py-2 rounded-full bg-violet-600 text-white font-semibold"
       >
-        Buy Now
+        Buy Now (SafePay)
       </button>
     </div>
   );

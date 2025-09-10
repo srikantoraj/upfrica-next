@@ -1,53 +1,67 @@
 // src/app/api/products.js
-import { API_BASE } from "@/app/constants";
-import { api, apiJSON, apiForm } from "@/lib/api";
+import axiosInstance from "@/lib/axiosInstance";
+
+// small helper to unwrap axios responses
+const unwrap = (p) => p.then((r) => r.data);
 
 // --- Products (CRUD/list) ---
-export const listMyProducts = (qs = "") =>
-  api(`${API_BASE}/products/mine/${qs}`);
+export const listMyProducts = (params = {}) =>
+  unwrap(axiosInstance.get("/api/products/mine/", { params }));
 
 export const createProduct = (payload) =>
-  apiJSON(`${API_BASE}/products/`, payload, { method: "POST" });
+  unwrap(axiosInstance.post("/api/products/", payload));
 
+/** Prefer PATCH for partial updates. Use replaceProduct() for full PUT. */
 export const updateProduct = (id, payload) =>
-  apiJSON(`${API_BASE}/products/${id}/`, payload, { method: "PUT" });
+  unwrap(axiosInstance.patch(`/api/products/${id}/`, payload));
+
+export const replaceProduct = (id, payload) =>
+  unwrap(axiosInstance.put(`/api/products/${id}/`, payload));
 
 export const getProductBySlug = (country, slug) =>
-  api(`${API_BASE}/${country}/${slug}`);
+  unwrap(axiosInstance.get(`/api/${country}/${slug}`)); // backend accepts without trailing slash
 
 // --- Product images ---
 export const uploadProductImages = (productId, files /* File | File[] */) => {
   const form = new FormData();
-  const arr = Array.isArray(files) ? files : [files];
-  arr.forEach((f) => form.append("image", f)); // DRF parses multiple "image"
+  (Array.isArray(files) ? files : [files]).forEach((f) =>
+    form.append("image", f) // DRF: multiple "image" fields
+  );
   form.append("product", String(productId));
-  return apiForm(`${API_BASE}/product-images/`, form);
+  return unwrap(axiosInstance.post("/api/product-images/", form));
 };
 
 // --- Properties ---
 export const bulkSetProperties = (productId, items /* [{label,value}] */) =>
-  apiJSON(`${API_BASE}/products/${productId}/properties/bulk/`, items, { method: "POST" });
+  unwrap(
+    axiosInstance.post(`/api/products/${productId}/properties/bulk/`, items)
+  );
 
+// helpful for autosuggest UI
 export const suggestProperties = (q) =>
-  api(`${API_BASE}/properties/suggest/?search=${encodeURIComponent(q)}`);
+  unwrap(
+    axiosInstance.get("/api/properties/suggest/", {
+      params: { search: q },
+    })
+  );
 
-// --- Variants (if you use them from UI) ---
-export const listCreateVariants = () =>
-  api(`${API_BASE}/variants/`);
+// --- Variants (if used) ---
+export const listCreateVariants = (params = {}) =>
+  unwrap(axiosInstance.get("/api/variants/", { params }));
 
-export const listCreateVariantValues = () =>
-  api(`${API_BASE}/variant-values/`);
+export const listCreateVariantValues = (params = {}) =>
+  unwrap(axiosInstance.get("/api/variant-values/", { params }));
 
 // --- Reviews & related ---
 export const productReviewsById = (productId) =>
-  api(`${API_BASE}/products/${productId}/reviews/`);
+  unwrap(axiosInstance.get(`/api/products/${productId}/reviews/`));
 
 export const productReviewsBySlug = (country, slug) =>
-  api(`${API_BASE}/${country}/${slug}/reviews/`);
+  unwrap(axiosInstance.get(`/api/${country}/${slug}/reviews/`));
 
 export const relatedProducts = (country, slug) =>
-  api(`${API_BASE}/${country}/${slug}/related/`);
+  unwrap(axiosInstance.get(`/api/${country}/${slug}/related/`));
 
 // --- Events (contact click etc.) ---
 export const productEvent = (slug, data) =>
-  apiJSON(`${API_BASE}/products/${slug}/event/`, data, { method: "POST" });
+  unwrap(axiosInstance.post(`/api/products/${slug}/event/`, data));
