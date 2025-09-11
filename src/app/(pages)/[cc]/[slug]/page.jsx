@@ -64,36 +64,57 @@ function looksLikeProduct(d) {
   return !!(d.id || d.slug || d.title);
 }
 
+function toApiPath(p) {
+  // Ensure paths we follow from JSON redirects go through /api/…
+  if (!p) return "";
+  if (p.startsWith("/api/")) return p;
+  return `/api${p.startsWith("/") ? "" : "/"}${p}`;
+}
+
 /**
- * Resolver order:
- *  1) if ?id=… → /api/b/api/products/:id
- *  2) /api/b/api/:cc/:slug  (proxied DRF SEO route)
- *  + follow one JSON redirect {redirect:"/api/<cc>/<slug>"} if present
+ * Resolver order (via unified /api proxy):
+ *  1) if ?id=… → /api/products/:id
+ *  2) /api/:cc/:slug  (DRF SEO route)
+ *  + follow one JSON redirect if response contains { redirect: "/api/<...>" } or "/<...>"
  */
 async function resolveProduct({ cc, slug, id }) {
   const origin = getOrigin();
   const tried = [];
 
   const candidates = [];
-  if (id) candidates.push(`${origin}/api/b/api/products/${encodeURIComponent(id)}`);
-  candidates.push(`${origin}/api/b/api/${cc}/${slug}`);
+  if (id)
+    candidates.push(
+      `${origin}/api/products/${encodeURIComponent(id)}`
+    );
+  candidates.push(`${origin}/api/${cc}/${slug}`);
 
   for (const firstUrl of candidates) {
     let r = await tryJson(firstUrl);
     tried.push({ url: firstUrl, status: r.status, ok: r.ok });
 
-    if ((r.status === 200 || r.status === 301 || r.status === 302) && r.data?.redirect) {
-      const redirectedPath = r.data.redirect; // e.g. "/api/gh/canonical-slug"
-      const viaProxy = `${origin}/api/b${redirectedPath.startsWith("/") ? "" : "/"}${redirectedPath}`;
+    if (
+      (r.status === 200 || r.status === 301 || r.status === 302) &&
+      r.data?.redirect
+    ) {
+      const redirectedPath = toApiPath(r.data.redirect);
+      const viaProxy = `${origin}${redirectedPath}`;
       const r2 = await tryJson(viaProxy);
       tried.push({ url: viaProxy, status: r2.status, ok: r2.ok });
       if (r2.ok && looksLikeProduct(r2.data)) {
-        return { product: Array.isArray(r2.data?.results) ? r2.data.results[0] : r2.data, tried };
+        return {
+          product: Array.isArray(r2.data?.results)
+            ? r2.data.results[0]
+            : r2.data,
+          tried,
+        };
       }
     }
 
     if (r.ok && looksLikeProduct(r.data)) {
-      return { product: Array.isArray(r.data?.results) ? r.data.results[0] : r.data, tried };
+      return {
+        product: Array.isArray(r.data?.results) ? r.data.results[0] : r.data,
+        tried,
+      };
     }
   }
 
@@ -103,12 +124,15 @@ async function resolveProduct({ cc, slug, id }) {
 /** Fetch related products (same JSON-redirect behavior) */
 async function getRelatedProducts(cc, slug) {
   const origin = getOrigin();
-  const first = `${origin}/api/b/api/${cc}/${slug}/related`;
+  const first = `${origin}/api/${cc}/${slug}/related`;
   const r = await tryJson(first);
 
-  if ((r.status === 200 || r.status === 301 || r.status === 302) && r.data?.redirect) {
-    const redirectedPath = r.data.redirect; // "/api/gh/canonical-slug/related"
-    const viaProxy = `${origin}/api/b${redirectedPath.startsWith("/") ? "" : "/"}${redirectedPath}`;
+  if (
+    (r.status === 200 || r.status === 301 || r.status === 302) &&
+    r.data?.redirect
+  ) {
+    const redirectedPath = toApiPath(r.data.redirect); // e.g. "/api/gh/canonical-slug/related"
+    const viaProxy = `${origin}${redirectedPath}`;
     const r2 = await tryJson(viaProxy);
     if (r2.ok && Array.isArray(r2.data?.results)) return r2.data.results;
   }
@@ -185,9 +209,9 @@ export default async function Page({ params: { cc, slug }, searchParams }) {
           ))}
         </ol>
         <p>
-          Tip: open <code>/{cc}/{slug}?id=4345</code> with a real ID. If that succeeds but{" "}
-          <code>/api/b/api/{cc}/{slug}</code> is 404, the issue is in your DRF
-          <em> ProductFullDetailBySlugView</em>.
+          Tip: open <code>/{cc}/{slug}?id=4345</code> with a real ID. If that
+          succeeds but <code>/api/{cc}/{slug}</code> is 404, the issue is in
+          your DRF <em>ProductFullDetailBySlugView</em>.
         </p>
       </main>
     );
@@ -207,7 +231,7 @@ export default async function Page({ params: { cc, slug }, searchParams }) {
       <main className="w-full max-w-[1380px] mx-auto py-8 px-4 sm:px-5 lg:px-8 xl:px-[4rem] 2xl:px-[5rem]">
         {/* PDP */}
         <ProductDetailSection product={product} />
-        
+
         {/* Related */}
         <section id="related" aria-labelledby="related-heading" className="mt-10">
           <h2 id="related-heading" className="sr-only">

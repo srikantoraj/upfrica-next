@@ -26,6 +26,11 @@ upfrica/
 │   │   │   │   │   ├── PriceBlock.jsx
 │   │   │   │   │   ├── page.jsx
 │   │   │   │   │   └── text.jsx
+│   │   │   │   ├── find-for-me/
+│   │   │   │   │   ├── layout.jsx
+│   │   │   │   │   └── page.jsx
+│   │   │   │   ├── search/
+│   │   │   │   │   └── page.jsx
 │   │   │   │   ├── shops/
 │   │   │   │   │   ├── [slug]/
 │   │   │   │   │   │   ├── DummyShopInfo.jsx
@@ -48,6 +53,12 @@ upfrica/
 │   │   │   │   │   └── [slug]/
 │   │   │   │   │       ├── ShopTypePageClient.jsx
 │   │   │   │   │       └── page.jsx
+│   │   │   │   ├── sourcing/
+│   │   │   │   │   ├── requests/
+│   │   │   │   │   │   └── [id]/
+│   │   │   │   │   │       └── page.jsx
+│   │   │   │   │   ├── layout.jsx
+│   │   │   │   │   └── page.jsx
 │   │   │   │   ├── RegionSetter.jsx
 │   │   │   │   ├── UserProfile.jsx
 │   │   │   │   ├── layout.jsx
@@ -413,6 +424,8 @@ upfrica/
 │   │   │   │   └── page.jsx
 │   │   │   ├── signup/
 │   │   │   │   └── page.jsx
+│   │   │   ├── sourcing/
+│   │   │   │   └── page.jsx
 │   │   │   ├── support/
 │   │   │   │   └── page.jsx
 │   │   │   ├── todays-deals/
@@ -438,6 +451,8 @@ upfrica/
 │   │   │   ├── page.jsx
 │   │   │   └── upload-test.jsx
 │   │   ├── api/
+│   │   │   ├── [...path]/
+│   │   │   │   └── route.js
 │   │   │   ├── auth/
 │   │   │   │   ├── login/
 │   │   │   │   │   └── route.js
@@ -449,6 +464,11 @@ upfrica/
 │   │   │   │   └── [...path]/
 │   │   │   │       └── route.js
 │   │   │   ├── revalidate/
+│   │   │   │   └── route.js
+│   │   │   ├── sourcing/
+│   │   │   │   └── config/
+│   │   │   │       └── route.js
+│   │   │   ├── suggest/
 │   │   │   │   └── route.js
 │   │   │   └── products.js
 │   │   ├── fonts/
@@ -799,12 +819,16 @@ upfrica/
 │   │   │   ├── ProductRatingLine.jsx
 │   │   │   ├── ProductReviewModal.jsx
 │   │   │   ├── ProductSummaryCard.jsx
+│   │   │   ├── RatingPopover.jsx
 │   │   │   ├── ReviewCard.jsx
 │   │   │   ├── ReviewListInfinite.jsx
 │   │   │   ├── ReviewSummaryBox.jsx
 │   │   │   ├── StarRating.jsx
 │   │   │   ├── StillInStockBanner.jsx
 │   │   │   └── SubmitReviewForm.jsx
+│   │   ├── search/
+│   │   │   ├── SearchAutosuggest.jsx
+│   │   │   └── SearchFacets.jsx
 │   │   ├── shopify/
 │   │   │   ├── CtaFooterBanner.jsx
 │   │   │   ├── DdpLabelsSection.jsx
@@ -817,6 +841,11 @@ upfrica/
 │   │   │   ├── StartBusinessCTA.jsx
 │   │   │   ├── TariffNoticeSection.jsx
 │   │   │   └── TradeUpdateSection.jsx
+│   │   ├── sourcing/
+│   │   │   ├── MyRequests.jsx
+│   │   │   ├── OfferList.jsx
+│   │   │   ├── OffersPanel.jsx
+│   │   │   └── RequestForm.jsx
 │   │   ├── support/
 │   │   │   └── MobileNav.jsx
 │   │   ├── ui/
@@ -910,10 +939,14 @@ upfrica/
 │   │   ├── useCountries.js
 │   │   ├── useEntitlements.js
 │   │   ├── useOnboardingGate.js
+│   │   ├── useSaleCountdown.js
 │   │   └── useTheme.js
 │   ├── icon/
 │   │   └── 5e77cec29a2d83c77498eed4_hero-illustration.svg
 │   ├── lib/
+│   │   ├── api/
+│   │   │   ├── search.js
+│   │   │   └── suggest.js
 │   │   ├── products/
 │   │   │   └── api.js
 │   │   ├── seo/
@@ -921,6 +954,9 @@ upfrica/
 │   │   │   └── helpers.js
 │   │   ├── set-cc/
 │   │   │   └── route.js
+│   │   ├── sourcing/
+│   │   │   ├── api.js
+│   │   │   └── hooks.js
 │   │   ├── api-path.js
 │   │   ├── api.js
 │   │   ├── axiosInstance.js
@@ -958,7 +994,7 @@ upfrica/
 ├── jsconfig.json
 ├── middleware.js
 ├── next.config.js
-├── next.config.mjs
+├── old_next.config.mjs.txt
 ├── package.json
 ├── postcss.config.mjs
 ├── scan.txt

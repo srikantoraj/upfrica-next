@@ -4,9 +4,19 @@ import { Suspense } from "react";
 import { headers } from "next/headers";
 import SearchFacets from "@/components/search/SearchFacets";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+/* ---------------- utils ---------------- */
 const qp = (obj = {}) =>
   Object.entries(obj)
-    .filter(([, v]) => v !== undefined && v !== null && v !== "" && !(Array.isArray(v) && !v.length))
+    .filter(
+      ([, v]) =>
+        v !== undefined &&
+        v !== null &&
+        v !== "" &&
+        !(Array.isArray(v) && !v.length)
+    )
     .flatMap(([k, v]) => (Array.isArray(v) ? v.map((x) => [k, x]) : [[k, v]]));
 
 const buildQS = (params) => {
@@ -16,40 +26,40 @@ const buildQS = (params) => {
 
 function absoluteUrl(path) {
   const h = headers();
-  const proto = h.get("x-forwarded-proto") || "http";
+  const proto =
+    h.get("x-forwarded-proto") ||
+    (process.env.NODE_ENV === "production" ? "https" : "http");
   const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
   return `${proto}://${host}${path}`;
 }
 
-// ---- Data fetch (server) -----------------------------------------------
-async function fetchSearch({ searchParams }) {
-  const qs = buildQS(searchParams || {});
+/* ---------------- data fetch (server) ---------------- */
+async function fetchSearch({ cc, searchParams }) {
+  // Ensure country defaults to the route’s cc
+  const params = { country: cc, ...searchParams };
+  const qs = buildQS(params);
 
-  // Try the version that includes `/api/` for upstream Django,
-  // then fall back to the raw path if your proxy already adds it.
-  const candidates = [
-    `/api/b/api/products/search${qs}`,
-    `/api/b/products/search${qs}`,
-  ];
+  // Single canonical endpoint through the unified proxy.
+  const url = absoluteUrl(`/api/products/search${qs}`);
 
-  for (const p of candidates) {
+  const res = await fetch(url, {
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  });
+
+  if (!res.ok) {
     try {
-      const url = absoluteUrl(p);
-      const res = await fetch(url, { cache: "no-store" });
-      if (res.ok) return res.json();
-      if (res.status === 404) continue; // try next candidate
-      // other errors → log & continue trying next
-      try { console.error("Search fetch error", res.status, await res.text()); } catch {}
-    } catch (e) {
-      console.error("Search fetch failed", p, e);
-    }
+      console.error("Search fetch error", res.status, await res.text());
+    } catch {}
+    return { results: [], facets: {}, error: `HTTP_${res.status}` };
   }
-
-  // graceful fallback
-  return { results: [], facets: {}, error: "unreachable_or_404" };
+  return res.json();
 }
 
-// ---- Product card -------------------------------------------------------
+/* ---------------- UI bits ---------------- */
 function ResultCard({ p }) {
   return (
     <Link
@@ -70,19 +80,25 @@ function ResultCard({ p }) {
         <div className="mt-1 font-semibold">
           {p.price_display || p.price_text || p.price || "—"}
         </div>
-        {p.brand && <div className="text-xs text-[var(--ink-2)] mt-0.5">{p.brand}</div>}
+        {p.brand && (
+          <div className="text-xs text-[var(--ink-2)] mt-0.5">{p.brand}</div>
+        )}
       </div>
     </Link>
   );
 }
 
-// ---- Toolbar ------------------------------------------------------------
 function Toolbar({ cc, q, count }) {
   return (
     <div className="flex items-center justify-between gap-2 py-2">
       <div className="text-sm">
         <span className="font-semibold">{count ?? 0}</span> results
-        {q ? <> for <span className="font-semibold">“{q}”</span></> : null}
+        {q ? (
+          <>
+            {" "}
+            for <span className="font-semibold">“{q}”</span>
+          </>
+        ) : null}
       </div>
 
       <form className="flex items-center gap-2" action={`/${cc}/search`}>
@@ -92,25 +108,32 @@ function Toolbar({ cc, q, count }) {
           placeholder="Refine search…"
           className="h-9 w-56 rounded-lg border border-[var(--line)] px-3 text-sm"
         />
-        <select name="sort" className="h-9 rounded-lg border border-[var(--line)] px-2 text-sm" defaultValue="relevance">
+        <select
+          name="sort"
+          className="h-9 rounded-lg border border-[var(--line)] px-2 text-sm"
+          defaultValue="relevance"
+        >
           <option value="relevance">Relevance</option>
           <option value="price_asc">Price: Low → High</option>
           <option value="price_desc">Price: High → Low</option>
           <option value="newest">Newest</option>
           <option value="fastest">Fastest delivery</option>
         </select>
-        <button className="h-9 px-3 rounded-lg bg-[var(--brand-600)] text-white text-sm">Apply</button>
+        <button className="h-9 px-3 rounded-lg bg-[var(--brand-600)] text-white text-sm">
+          Apply
+        </button>
       </form>
     </div>
   );
 }
 
-// ---- Empty state with “Find for me” CTA --------------------------------
 function Empty({ cc, q }) {
   return (
     <div className="text-center py-16 border border-dashed rounded-2xl">
       <div className="text-2xl">No results found</div>
-      {q ? <div className="text-[var(--ink-2)] mt-1">We couldn’t find “{q}”.</div> : null}
+      {q ? (
+        <div className="text-[var(--ink-2)] mt-1">We couldn’t find “{q}”.</div>
+      ) : null}
       <div className="mt-4 flex items-center justify-center gap-2">
         <Link
           href={`/${cc}/sourcing?intent=${encodeURIComponent(q || "")}`}
@@ -118,7 +141,10 @@ function Empty({ cc, q }) {
         >
           🔎 Find it for me
         </Link>
-        <Link href={`/${cc}/search?sort=trending`} className="px-4 py-2 rounded-lg border text-sm">
+        <Link
+          href={`/${cc}/search?sort=trending`}
+          className="px-4 py-2 rounded-lg border text-sm"
+        >
           Browse trending
         </Link>
       </div>
@@ -129,11 +155,11 @@ function Empty({ cc, q }) {
   );
 }
 
-// ---- Page ---------------------------------------------------------------
+/* ---------------- page ---------------- */
 export default async function SearchPage({ params, searchParams }) {
   const cc = params?.cc || "gh";
   const { q = "" } = searchParams || {};
-  const data = await fetchSearch({ searchParams });
+  const data = await fetchSearch({ cc, searchParams });
   const results = data?.results || [];
   const facets = data?.facets || {};
 
@@ -143,7 +169,9 @@ export default async function SearchPage({ params, searchParams }) {
 
       <div className="grid grid-cols-1 md:grid-cols-[260px,1fr] gap-4">
         <aside className="md:sticky md:top-[64px] self-start">
-          <Suspense fallback={<div className="p-3 border rounded-xl">Loading filters…</div>}>
+          <Suspense
+            fallback={<div className="p-3 border rounded-xl">Loading filters…</div>}
+          >
             <SearchFacets cc={cc} facets={facets} />
           </Suspense>
         </aside>
@@ -153,7 +181,9 @@ export default async function SearchPage({ params, searchParams }) {
             <Empty cc={cc} q={q} />
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {results.map((p) => <ResultCard key={p.id || p.slug} p={p} />)}
+              {results.map((p) => (
+                <ResultCard key={p.id || p.slug} p={p} />
+              ))}
             </div>
           )}
         </section>

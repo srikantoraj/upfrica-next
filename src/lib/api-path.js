@@ -1,7 +1,7 @@
 // src/lib/api-path.js
 
-export const API_PROXY_PREFIX = "/api/b";   // Next proxy entry
-export const API_ROOT = "api";              // Your backend's API root ("api/…")
+// Unified Next proxy entry (we killed /b)
+export const API_PROXY_PREFIX = "/api";
 
 const DIRECT_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -11,16 +11,16 @@ const DIRECT_BASE =
 const looksLikeFile = (p = "") => /\.[a-z0-9]+$/i.test(p);
 const trimSlashes = (p = "") => String(p).replace(/^\/+|\/+$/g, "");
 
-/** Remove any accidental leading proxy bits + a single leading "api/". */
+/** Remove any accidental leading proxy bits and a single leading "api/". */
 function stripLeadingPrefixes(p = "") {
   let out = String(p).replace(/^\/+/, "");
 
-  // Strip proxy-y prefixes the caller might have passed
+  // Back-compat: strip old proxy-ish prefixes callers might pass
   out = out.replace(/^api\/+b\/+/i, ""); // "api/b/..."
   out = out.replace(/^b\/+/i, "");       // "b/..."
 
-  // If the remaining path *still* begins with "api/", drop that one instance.
-  // (We'll add our own below so we never end up with "api/api/...".)
+  // If it still begins with "api/", drop that *one* instance.
+  // (We will add our own `/api/` prefix outside.)
   out = out.replace(/^api\/+/i, "");
 
   return out;
@@ -63,15 +63,14 @@ function sameBackendOrigin(absUrl) {
 }
 
 /**
- * Build a proxied URL that ALWAYS looks like: /api/b/api/<path>/?<query>
+ * Build a proxied URL that ALWAYS looks like: /api/<path>/?<query>
  *
  * Examples:
- *   b("addresses")                -> /api/b/api/addresses/
- *   b(["product", 4345, "reviews"]) -> /api/b/api/product/4345/reviews/
- *   b("gh/slug/related?limit=12",{page:2})
- *                                  -> /api/b/api/gh/slug/related/?limit=12&page=2
+ *   b("addresses")                     -> /api/addresses/
+ *   b(["product", 4345, "reviews"])    -> /api/product/4345/reviews/
+ *   b("gh/slug/related?limit=12",{p:2})-> /api/gh/slug/related/?limit=12&p=2
  *   b("http://127.0.0.1:8000/api/product/4345")
- *                                  -> /api/b/api/product/4345/
+ *                                       -> /api/product/4345/
  */
 export function b(path, query) {
   if (path instanceof URL) path = path.toString();
@@ -87,7 +86,7 @@ export function b(path, query) {
       const fromUrl = u.search ? u.search.slice(1) : "";
       const extra = toQueryString(query);
       const merged = [fromUrl, extra].filter(Boolean).join("&");
-      return `${API_PROXY_PREFIX}/${API_ROOT}/${normalized}${merged ? `?${merged}` : ""}`;
+      return `${API_PROXY_PREFIX}/${normalized}${merged ? `?${merged}` : ""}`;
     } catch {
       return raw;
     }
@@ -108,9 +107,10 @@ export function b(path, query) {
   const extra = toQueryString(query);
   const merged = [rawQuery, extra].filter(Boolean).join("&");
 
-  return `${API_PROXY_PREFIX}/${API_ROOT}/${normalized}${merged ? `?${merged}` : ""}${hash}`;
+  return `${API_PROXY_PREFIX}/${normalized}${merged ? `?${merged}` : ""}${hash}`;
 }
 
+// Friendly alias used around the codebase
 export const api = b;
 
 export function ensureSlash(path) {

@@ -9,17 +9,13 @@ import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import ProductRatingLine from '@/components/review/ProductRatingLine';
-import axiosInstance from '@/lib/axiosInstance';
-import { getCleanToken } from '@/lib/getCleanToken';
-import { b as api } from '@/lib/api-path'; // unified proxy path builder
+import { api, apiJSON } from '@/lib/api'; // ← unified helper
 
 /* ---------------- lazy modal ---------------- */
-const ProductReviewModalLazy = dynamic(() => import('./ProductReviewModal'), {
-  ssr: false,
-});
+const ProductReviewModalLazy = dynamic(() => import('./ProductReviewModal'), { ssr: false });
 
 export default function DisplayReviews({ product }) {
-  const { region } = useParams(); // kept if referenced elsewhere
+  const { region } = useParams();
   const router = useRouter();
   const { user, hydrated } = useAuth();
 
@@ -42,30 +38,26 @@ export default function DisplayReviews({ product }) {
   const [openShareId, setOpenShareId] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  /* ---------------- fetch reviews via proxy (plural → singular) ---------------- */
+  /* ---------------- fetch reviews via unified api() ---------------- */
   useEffect(() => {
     if (!product?.id || !hydrated) return;
 
     let cancelled = false;
 
     (async () => {
+      // Try plural then singular to be tolerant of backend route names
       const paths = [
-        ['products', product.id, 'reviews'], // try plural
-        ['product', product.id, 'reviews'],  // fallback
+        `products/${product.id}/reviews`,
+        `product/${product.id}/reviews`,
       ];
 
       for (const path of paths) {
         try {
-          const { data, status } = await axiosInstance.get(api(path), {
-            withCredentials: true,
-            validateStatus: () => true,
+          const data = await api(path, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
           });
 
           if (cancelled) return;
-          if (status < 200 || status >= 300) {
-            continue; // try next path shape
-          }
 
           const results =
             Array.isArray(data?.results) ? data.results :
@@ -107,7 +99,7 @@ export default function DisplayReviews({ product }) {
 
           break; // success; stop trying others
         } catch {
-          // swallow and try next
+          // try next candidate
         }
       }
     })();
@@ -117,9 +109,7 @@ export default function DisplayReviews({ product }) {
     };
   }, [product?.id, hydrated]);
 
-  /* ---------------- actions: vote/report via proxy ---------------- */
-  const tokenOrCookie = getCleanToken();
-
+  /* ---------------- helpers ---------------- */
   const redirectToLogin = () => {
     const next =
       typeof window !== 'undefined'
@@ -128,6 +118,7 @@ export default function DisplayReviews({ product }) {
     router.push(`/login?next=${encodeURIComponent(next)}`);
   };
 
+  /* ---------------- actions: vote/report via apiJSON() ---------------- */
   const handleVote = async (reviewId, voteValue) => {
     if (!user) {
       toast('Please login to vote on reviews.');
@@ -136,30 +127,7 @@ export default function DisplayReviews({ product }) {
     }
 
     try {
-      const url = api(['reviews', reviewId, 'vote']); // /api/b/reviews/:id/vote/
-      const { data, status } = await axiosInstance.post(
-        url,
-        { vote: voteValue },
-        {
-          withCredentials: true,
-          validateStatus: () => true,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            ...(tokenOrCookie ? { Authorization: `Token ${tokenOrCookie}` } : {}),
-          },
-        }
-      );
-
-      if (status === 401) {
-        redirectToLogin();
-        return;
-      }
-      if (status < 200 || status >= 300) {
-        console.error('❌ Vote error:', data);
-        toast.error('Failed to submit vote.');
-        return;
-      }
+      const data = await apiJSON(`reviews/${reviewId}/vote`, { vote: voteValue });
 
       const toastMsg =
         voteValue === 1
@@ -185,7 +153,8 @@ export default function DisplayReviews({ product }) {
         ),
       }));
     } catch (err) {
-      console.error('❌ Vote request failed:', err);
+      const msg = String(err?.message || '');
+      if (msg.startsWith('API 401')) return redirectToLogin();
       toast.error('Failed to submit vote.');
     }
   };
@@ -200,36 +169,17 @@ export default function DisplayReviews({ product }) {
 
     setSubmitting(true);
     try {
-      const url = api(['reviews', reportingReviewId, 'report']); // /api/b/reviews/:id/report/
-      const { data, status } = await axiosInstance.post(
-        url,
-        { reason: selectedReason },
-        {
-          withCredentials: true,
-          validateStatus: () => true,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            ...(tokenOrCookie ? { Authorization: `Token ${tokenOrCookie}` } : {}),
-          },
-        }
-      );
+      const data = await apiJSON(`reviews/${reportingReviewId}/report`, {
+        reason: selectedReason,
+      });
 
-      if (status === 401) {
-        redirectToLogin();
-        return;
-      }
-      if (status < 200 || status >= 300) {
-        console.error('❌ Report error:', data);
-        toast.error('Failed to report. Try again.');
-      } else {
-        toast.success(
-          data?.updated ? 'Report updated. Thanks for clarifying!' : 'Report submitted. Thank you!'
-        );
-      }
+      toast.success(
+        data?.updated ? 'Report updated. Thanks for clarifying!' : 'Report submitted. Thank you!'
+      );
     } catch (err) {
-      console.error('❌ Report request failed:', err);
-      toast.error('An error occurred.');
+      const msg = String(err?.message || '');
+      if (msg.startsWith('API 401')) return redirectToLogin();
+      toast.error('Failed to report. Try again.');
     } finally {
       setSubmitting(false);
       setReportModalOpen(false);
@@ -440,9 +390,7 @@ export default function DisplayReviews({ product }) {
                       {/* Share */}
                       <div className="relative inline-block text-left">
                         <button
-                          onClick={() =>
-                            setOpenShareId(openShareId === r.id ? null : r.id)
-                          }
+                          onClick={() => setOpenShareId(openShareId === r.id ? null : r.id)}
                           className="p-1 rounded-full hover:bg-gray-100 text-gray-600 hover:text-black"
                           title="Share review"
                         >
@@ -486,9 +434,7 @@ export default function DisplayReviews({ product }) {
                             </a>
                             <button
                               onClick={() => {
-                                navigator.clipboard.writeText(
-                                  `https://upfrica.com/review/${r.id}`
-                                );
+                                navigator.clipboard.writeText(`https://upfrica.com/review/${r.id}`);
                                 setCopiedReviewId(r.id);
                                 setTimeout(() => setCopiedReviewId(null), 2000);
                               }}
@@ -582,7 +528,7 @@ export default function DisplayReviews({ product }) {
       {/* Lightbox */}
       {lightboxOpen && (
         <div className="fixed inset-0 z-[999] bg-black bg-opacity-90 flex items-center justify-center">
-          <div className="relative max-w-full max-h-full">
+          <div className="relative max-w/full max-h/full">
             <button
               onClick={() => setLightboxOpen(false)}
               className="absolute top-3 right-3 text-white bg-black bg-opacity-60 hover:bg-opacity-80 rounded-full p-2 text-2xl shadow-lg z-[1000] transition"
@@ -601,7 +547,7 @@ export default function DisplayReviews({ product }) {
                 src={lightboxMedia[lightboxIndex].url}
                 controls
                 autoPlay
-                className="max-h-[90vh] max-w-[90vw] rounded shadow-lg"
+                className="max-h/[90vh] max-w/[90vw] rounded shadow-lg"
               />
             )}
 

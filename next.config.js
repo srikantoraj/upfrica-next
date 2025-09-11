@@ -12,6 +12,10 @@ const CLOUDFRONT_HOSTS = [
   'd26ukeum83vx3b.cloudfront.net', // legacy/static
 ];
 
+// Supported country codes for localized routes (comma- or pipe-separated)
+const CC_GROUP = (process.env.NEXT_PUBLIC_SUPPORTED_CC || 'gh,ng,ke')
+  .replace(/,\s*/g, '|'); // e.g. "gh|ng|ke"
+
 const nextConfig = {
   reactStrictMode: true,
   compress: true,
@@ -39,9 +43,9 @@ const nextConfig = {
       { protocol: 'http',  hostname: 'localhost',  port: '8000', pathname: '/media/**' },
 
       // Third-party
-      { protocol: 'https', hostname: 'images.unsplash.com',      pathname: '/**' },
-      { protocol: 'https', hostname: 'picsum.photos',            pathname: '/**' },
-      { protocol: 'https', hostname: 'storage.googleapis.com',   pathname: '/**' },
+      { protocol: 'https', hostname: 'images.unsplash.com',    pathname: '/**' },
+      { protocol: 'https', hostname: 'picsum.photos',          pathname: '/**' },
+      { protocol: 'https', hostname: 'storage.googleapis.com', pathname: '/**' },
 
       // If you sometimes bypass CloudFront and hit S3 directly, uncomment:
       // { protocol: 'https', hostname: 'upfrica-media-euw2.s3.eu-west-2.amazonaws.com', pathname: '/**' },
@@ -57,6 +61,24 @@ const nextConfig = {
           { key: 'Access-Control-Allow-Methods', value: 'GET,POST,OPTIONS' },
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
         ],
+      },
+    ];
+  },
+
+  // SEO-friendly alias redirects
+  async redirects() {
+    return [
+      // Country-scoped alias → canonical sourcing
+      {
+        source: `/:cc(${CC_GROUP})/find-for-me`,
+        destination: '/:cc/sourcing',
+        permanent: true, // 308
+      },
+      // Global alias → global sourcing landing (or adjust to your default cc)
+      {
+        source: '/find-for-me',
+        destination: '/sourcing',
+        permanent: true,
       },
     ];
   },

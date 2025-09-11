@@ -1,30 +1,18 @@
 // src/app/api/suggest/route.js
 import { NextResponse } from "next/server";
 
-/** Build absolute URL for internal proxy to Django. */
+/** Build absolute URL against current host (works on Vercel/Node runtimes). */
 function abs(req, path) {
   const proto = req.headers.get("x-forwarded-proto") || "http";
   const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
   return `${proto}://${host}${path}`;
 }
 
-/** Try multiple upstream paths (works with/without /api and with /b prefix). */
+/** Hit Django via our unified proxy (/api/...); proxy takes care of DRF slashes. */
 async function fetchUpstream(req, search) {
-  const candidates = [
-    `/b/api/products/suggest${search}`,
-    `/b/products/suggest${search}`,
-    `/api/b/api/products/suggest${search}`,
-    `/api/b/products/suggest${search}`,
-  ];
-  for (const p of candidates) {
-    try {
-      const url = abs(req, p);
-      const res = await fetch(url, { cache: "no-store" });
-      if (res.ok) return res.json();
-    } catch {
-      // try next
-    }
-  }
+  const url = abs(req, `/api/products/suggest${search || ""}`);
+  const res = await fetch(url, { cache: "no-store" });
+  if (res.ok) return res.json();
   return null;
 }
 
@@ -34,7 +22,7 @@ function normalizePayload(data) {
     return { queries: [], brands: [], categories: [], products: [] };
   }
 
-  // If the backend already returns the UI shape, just pass it through.
+  // If already in UI shape, pass through.
   if (
     ("queries" in data || "products" in data || "categories" in data || "brands" in data) &&
     !data.groups
@@ -47,11 +35,10 @@ function normalizePayload(data) {
     };
   }
 
-  // New Django view shape: { items, groups: { categories, products, brands, shortcuts } }
+  // Newer backend shape: { groups: { categories, products, brands, ... } }
   const groups = data.groups || {};
   const products = Array.isArray(groups.products) ? groups.products : [];
 
-  // Map product fields to what the UI expects.
   const mappedProducts = products.map((p) => ({
     ...p,
     title: p.title || p.label || "",
@@ -60,7 +47,7 @@ function normalizePayload(data) {
   }));
 
   return {
-    queries: data.queries || [], // usually not provided by Django; keep empty
+    queries: data.queries || [],
     brands: groups.brands || [],
     categories: groups.categories || [],
     products: mappedProducts,
@@ -71,7 +58,7 @@ export async function GET(req) {
   const url = new URL(req.url);
   const { search } = url;
 
-  // 1) Try upstream
+  // 1) Try upstream via unified proxy
   const upstream = await fetchUpstream(req, search);
   if (upstream) {
     const normalized = normalizePayload(upstream);
@@ -80,9 +67,8 @@ export async function GET(req) {
     return res;
   }
 
-  // 2) Fallbacks (no backend route or in dev)
-  const params = url.searchParams;
-  const q = (params.get("q") || "").trim().toLowerCase();
+  // 2) Fallback (dev or backend missing)
+  const q = (url.searchParams.get("q") || "").trim().toLowerCase();
 
   const fallbackTrending = [
     "phones under GH₵500",
@@ -93,14 +79,17 @@ export async function GET(req) {
     "ring light",
   ];
 
-  // When no q (e.g., type=trending), return trending terms.
   if (!q) {
-    const res = NextResponse.json({ queries: fallbackTrending, brands: [], categories: [], products: [] });
+    const res = NextResponse.json({
+      queries: fallbackTrending,
+      brands: [],
+      categories: [],
+      products: [],
+    });
     res.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
     return res;
   }
 
-  // naive suggest fallback
   const bank = [
     ...fallbackTrending,
     "iphone 12",
@@ -114,12 +103,7 @@ export async function GET(req) {
     .filter((s) => s.toLowerCase().includes(q))
     .slice(0, 6);
 
-  const res = NextResponse.json({
-    queries: bank,
-    brands: [],
-    categories: [],
-    products: [],
-  });
+  const res = NextResponse.json({ queries: bank, brands: [], categories: [], products: [] });
   res.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
   return res;
 }

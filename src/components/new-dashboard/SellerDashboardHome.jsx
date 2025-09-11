@@ -2,80 +2,52 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { parsePhoneNumberFromString, getCountryCallingCode } from "libphonenumber-js/min";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 
 import { useAuth } from "@/contexts/AuthContext";
 import useEntitlements from "@/hooks/useEntitlements";
-
-import { X, Loader2, BadgeCheck, Star } from "lucide-react";
-import PhoneInput from "@/components/input/phoneInput";
+import { api, apiJSON } from "@/lib/api";
 
 import {
-  ShoppingCart,
-  BarChart2,
-  Eye,
-  Package,
-  Clock,
-  AlertCircle,
-  TrendingUp,
-  CircleCheck,
-  Info,
+  X, Loader2, BadgeCheck, Star, ShoppingCart, BarChart2, Eye,
+  Package, Clock, AlertCircle, TrendingUp, CircleCheck, Info,
 } from "lucide-react";
+import { parsePhoneNumberFromString, getCountryCallingCode } from "libphonenumber-js/min";
+import PhoneInput from "@/components/input/phoneInput";
 import SellerReviewsSummaryCard from "@/components/new-dashboard/SellerReviewsSummaryCard";
 import PlanComparisonModal from "@/components/ui/PlanComparisonModal";
 
-// --- friendly labels for `uses` (module scope so all components can use) ---
-const USE_LABELS = {
-  shop_public: "Shop contact",
-  whatsapp: "WhatsApp",
-  delivery: "Delivery",
-};
+/* -------------------------------- labels/helpers -------------------------------- */
+const USE_LABELS = { shop_public: "Shop contact", whatsapp: "WhatsApp", delivery: "Delivery" };
 const USE_ORDER = { shop_public: 0, whatsapp: 1, delivery: 2 };
-
 const startCase = (s = "") =>
-  String(s)
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\b\w/g, (m) => m.toUpperCase());
-
+  String(s).replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim().replace(/\b\w/g, (m) => m.toUpperCase());
 export const humanizeUses = (uses) => {
   const arr = Array.isArray(uses)
     ? uses
     : typeof uses === "string"
-    ? uses
-        .split(",")
-        .map((x) => x.trim())
-        .filter(Boolean)
+    ? uses.split(",").map((x) => x.trim()).filter(Boolean)
     : [];
-
-  if (arr.length === 0) return "";
+  if (!arr.length) return "";
   const sorted = [...arr].sort((a, b) => (USE_ORDER[a] ?? 99) - (USE_ORDER[b] ?? 99));
   return [...new Set(sorted.map((u) => USE_LABELS[u] ?? startCase(u)))].join(", ");
 };
-
-const DEBUG = false;
 const isSellerRole = (r) => r === "seller" || r === "seller_private" || r === "seller_business";
 
+/* ================================================================================== */
 export default function SellerDashboardHome() {
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
-
-  // 🔐 Entitlements (feature flags) — used to gate UI actions
   const { stateOf, whyLocked, loading: entLoading } = useEntitlements();
-
   const contactState = stateOf("allow_display_seller_contact");
   const contactWhy = whyLocked("allow_display_seller_contact");
 
-  // NEW: bottom sheet + phones state
   const [phoneSheetOpen, setPhoneSheetOpen] = useState(false);
   const [hasPrimaryContact, setHasPrimaryContact] = useState(false);
 
-  // Cookie-first auth (no token in context)
   const { user, hydrated } = useAuth();
 
   const [dashboard, setDashboard] = useState(null);
@@ -85,13 +57,9 @@ export default function SellerDashboardHome() {
   const [errorDash, setErrorDash] = useState(null);
   const [errorShop, setErrorShop] = useState(null);
   const [planRequired, setPlanRequired] = useState(null); // { message, next }
-
-  // upgrade modal + subscribe state
-  const [showPlans, setShowPlans] = useState(false);
-  const [subscribing, setSubscribing] = useState(false);
   const [plansOpen, setPlansOpen] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
 
-  // --- roles ---
   const roles = Array.isArray(user?.account_type)
     ? user.account_type
     : user?.account_type
@@ -99,95 +67,49 @@ export default function SellerDashboardHome() {
     : [];
   const isSeller = roles.some(isSellerRole);
 
-  // --- plan presence (from /me and/or dashboard once loaded) ---
   const userHasPlan = !!(user?.seller_plan && (user?.seller_plan.id ?? user?.seller_plan));
   const dashHasPlan = !!(dashboard?.seller_plan && (dashboard?.seller_plan.id ?? dashboard?.seller_plan));
   const hasPlan = userHasPlan || dashHasPlan;
 
-  useEffect(() => {
-    if (!DEBUG) return;
-    console.log("🧭 Auth state:", {
-      hydrated,
-      roles,
-      isSeller,
-      userHasPlan,
-      dashHasPlan,
-      hasPlan,
-    });
-  }, [hydrated, user, dashboard]); // eslint-disable-line
-
-  // 🛒 Fetch dashboard — let backend enforce plan/role.
+  /* ---------------- dashboard ---------------- */
   useEffect(() => {
     if (!hydrated) return;
+    let alive = true;
 
-    const controller = new AbortController();
-    const run = async () => {
+    (async () => {
       setLoadingDash(true);
       setErrorDash(null);
       setPlanRequired(null);
-
       try {
-        const res = await fetch(`/api/b/api/users/me/dashboard/`, {
-          signal: controller.signal,
-          cache: "no-store",
-          credentials: "include",
-          headers: { Accept: "application/json" },
-        });
-
-        if (!res.ok) {
-          // Try JSON, fall back to text
-          let body = null,
-            text = "";
-          try {
-            body = await res.clone().json();
-          } catch {}
-          if (!body) {
-            try {
-              text = await res.text();
-            } catch {}
-          }
-
-          if (res.status === 401) {
-            setErrorDash("Session expired. Please log in again.");
-            return;
-          }
-
-          if (res.status === 403) {
-            const detail = body?.detail || body?.code || body?.error || text?.toLowerCase();
-            if (detail && String(detail).includes("seller_plan_required")) {
-              setPlanRequired({
-                message:
-                  body?.message || "You need an active seller plan to access the seller dashboard.",
-                next: "/onboarding/account-type",
-              });
-              return;
-            }
-          }
-
-          const compact = body ? JSON.stringify(body).slice(0, 300) : (text || "").slice(0, 300);
-          setErrorDash(`${res.status} ${res.statusText}${compact ? ` — ${compact}` : ""}`);
-          if (DEBUG) console.error("❌ Dashboard fetch failed:", res.status, body || text);
-          return;
-        }
-
-        const data = await res.json();
+        const data = await api("users/me/dashboard");
+        if (!alive) return;
         setDashboard(data);
-        if (DEBUG) console.log("✅ Dashboard data:", data);
       } catch (err) {
-        if (err.name !== "AbortError") {
-          setErrorDash(err.message || "Network error");
-          if (DEBUG) console.error("💥 Dashboard error:", err);
+        if (!alive) return;
+        const msg = String(err?.message || "").toLowerCase();
+        if (msg.includes("seller_plan_required")) {
+          setPlanRequired({
+            message: "You need an active seller plan to access the seller dashboard.",
+            next: "/onboarding/account-type",
+          });
+        } else if (msg.includes("401")) {
+          setErrorDash("Session expired. Please log in again.");
+        } else if (msg.includes("403")) {
+          setErrorDash("You don’t have permission to access the seller dashboard.");
+        } else {
+          setErrorDash(err?.message || "Failed to load dashboard.");
         }
       } finally {
-        setLoadingDash(false);
+        if (alive) setLoadingDash(false);
       }
-    };
+    })();
 
-    run();
-    return () => controller.abort();
+    return () => {
+      alive = false;
+    };
   }, [hydrated]);
 
-  // 🔁 Payment success: clear the query param and refresh lightweight state
+  /* ---------------- payment success param ---------------- */
   useEffect(() => {
     const paid = search?.get("payment");
     if (paid !== "success") return;
@@ -196,76 +118,57 @@ export default function SellerDashboardHome() {
 
     const params = new URLSearchParams(search);
     params.delete("payment");
+    router.replace(`${pathname}${params.toString() ? `?${params}` : ""}`, { scroll: false });
 
-    router.replace(`${pathname}${params.toString() ? `?${params}` : ""}`, {
-      scroll: false,
-    });
-
-    // Optional light refresh to prompt re-fetch (backend should reflect new plan)
+    // prompt a refresh
     setTimeout(() => setLoadingDash(true), 250);
   }, [search, pathname, router]);
 
-  // ✅ Prefer backend role when it's present on the dashboard payload
+  /* ---------------- shop ---------------- */
   const backendIsSeller = Array.isArray(dashboard?.account_type)
     ? dashboard.account_type.some(isSellerRole)
     : undefined;
   const effectiveIsSeller = backendIsSeller === undefined ? isSeller : backendIsSeller;
 
-  // 🏪 Fetch shop — only if seller and NOT plan-gated and has a plan
   useEffect(() => {
     if (!hydrated || !effectiveIsSeller || planRequired || !hasPlan) return;
+    let alive = true;
 
-    const controller = new AbortController();
-    const run = async () => {
+    (async () => {
       setLoadingShop(true);
       setErrorShop(null);
       try {
-        const res = await fetch(`/api/b/api/shops/me/`, {
-          signal: controller.signal,
-          cache: "no-store",
-          credentials: "include",
-        });
-
-        if (!res.ok) {
-          // 404/204 means no shop yet—treat as null
-          if (res.status !== 404 && res.status !== 204) {
-            if (res.status === 401) setErrorShop("Session expired. Please log in again.");
-            else if (res.status === 403) setErrorShop("You don’t have permission to view shop data.");
-            else {
-              const text = await res.text();
-              setErrorShop(`${res.status} ${res.statusText} — ${text}`.slice(0, 300));
-              if (DEBUG) console.warn("⚠️ Shop fetch failed:", res.status, text);
-            }
-          }
-          setShop(null);
-          return;
-        }
-
-        const data = await res.json();
+        const data = await api("shops/me");
+        if (!alive) return;
         setShop(data || null);
-        if (DEBUG) console.log("✅ Shop data:", data);
       } catch (err) {
-        if (err.name !== "AbortError") {
-          setErrorShop(err.message || "Network error");
-          if (DEBUG) console.error("💥 Shop error:", err);
+        if (!alive) return;
+        const msg = String(err?.message || "");
+        // 404/204 → treat as no shop
+        if (msg.startsWith("404") || msg.startsWith("204")) {
+          setShop(null);
+        } else if (msg.startsWith("401")) {
+          setErrorShop("Session expired. Please log in again.");
+        } else if (msg.startsWith("403")) {
+          setErrorShop("You don’t have permission to view shop data.");
+        } else {
+          setErrorShop(msg.slice(0, 300));
         }
       } finally {
-        setLoadingShop(false);
+        if (alive) setLoadingShop(false);
       }
-    };
+    })();
 
-    run();
-    return () => controller.abort();
+    return () => {
+      alive = false;
+    };
   }, [hydrated, effectiveIsSeller, planRequired, hasPlan]);
 
-  // ----------- Shop gating helpers -----------
+  /* ---------------- storefront gating ---------------- */
   const storefrontState = stateOf("storefront_unlock"); // 'active' | 'included_locked' | 'available'
-
-  // Important: while entitlements are loading, DON'T assume locked
   const storefrontLocked = !entLoading && storefrontState === "available";
   const storefrontKyc = !entLoading && storefrontState === "included_locked";
 
-  // Interpret shop status safely (treat unknown/missing as ACTIVE)
   const shopStatus = String(shop?.status ?? "").toLowerCase();
   const subStatus = String(
     shop?.subscription?.status ?? shop?.subscription_status ?? shop?.plan_status ?? ""
@@ -275,17 +178,13 @@ export default function SellerDashboardHome() {
     shop?.is_enabled === false ||
     shop?.is_active === false ||
     shop?.suspended === true ||
-    ["inactive", "paused", "suspended", "disabled", "closed", "archived"].includes(
-      shopStatus
-    ) ||
+    ["inactive", "paused", "suspended", "disabled", "closed", "archived"].includes(shopStatus) ||
     Boolean(shop?.deleted_at);
 
   const isSubscriptionInactive = ["canceled", "past_due", "unpaid"].includes(subStatus);
-
-  // Only mark inactive when we KNOW it’s inactive
   const shopInactive = isExplicitInactive || isSubscriptionInactive;
 
-  // 🧮 Plan/Data (compute defensively)
+  /* ---------------- plan usage ---------------- */
   const planLabel = dashboard?.seller_plan?.label ?? "Unknown";
   const maxProductsNum = Number(dashboard?.seller_plan?.max_products ?? 0);
   const activeListingsNum = Number(dashboard?.active_listings ?? 0);
@@ -293,50 +192,33 @@ export default function SellerDashboardHome() {
   const inactiveBySeller = Number(dashboard?.inactive_listings ?? 0);
   const slotsLeft = maxProductsNum > 0 ? Math.max(maxProductsNum - activeListingsNum, 0) : "—";
   const usagePercent =
-    maxProductsNum > 0
-      ? Math.min(Math.round((activeListingsNum / maxProductsNum) * 100), 100)
-      : 0;
+    maxProductsNum > 0 ? Math.min(Math.round((activeListingsNum / maxProductsNum) * 100), 100) : 0;
 
-  // 🔔 subscribe handler (used by PlanComparisonModal)
+  /* ---------------- subscribe ---------------- */
   const handlePickPlan = async (planId) => {
     try {
       setSubscribing(true);
-      const res = await fetch(`/api/b/api/seller/subscribe/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ plan_id: planId, billing_cycle: "monthly" }),
+      const data = await apiJSON("seller/subscribe", {
+        plan_id: planId,
+        billing_cycle: "monthly",
       });
 
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        const msg = data?.error || data?.detail || "Subscription failed.";
-        toast.error(`❌ ${msg}`);
-        return;
-      }
-
-      // Free plan → message + redirect
       if (data?.message && !data?.checkout_url) {
         toast.success("✅ Free plan activated!");
         router.push("/new-dashboard/seller");
         return;
       }
-
-      // Paid → Stripe
       if (data?.checkout_url) {
         window.location.href = data.checkout_url;
         return;
       }
-
       toast.success("✅ Plan updated.");
       router.push("/new-dashboard/seller");
     } catch (e) {
-      console.error(e);
-      toast.error("❌ Something went wrong starting checkout.");
+      toast.error(`❌ ${e?.message || "Subscription failed."}`);
     } finally {
       setSubscribing(false);
-      setShowPlans(false);
+      setPlansOpen(false);
     }
   };
 
@@ -353,7 +235,7 @@ export default function SellerDashboardHome() {
         </div>
       )}
 
-      {/* Seller Actions (chips) */}
+      {/* Seller actions */}
       <div className="flex gap-2 mb-4 overflow-x-auto flex-nowrap [-webkit-overflow-scrolling:touch]">
         <button
           className="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700"
@@ -370,12 +252,9 @@ export default function SellerDashboardHome() {
           Auto-Fix Listings
         </button>
 
-        {/* Gate: Add/Manage Seller Contact */}
         {contactState === "active" && (
           <button
-            className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800
-               text-slate-900 dark:text-slate-100 border-gray-200 dark:border-gray-700
-               hover:bg-gray-50 dark:hover:bg-gray-700"
+            className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800 text-slate-900 dark:text-slate-100 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
             onClick={() => setPhoneSheetOpen(true)}
           >
             {hasPrimaryContact ? "Manage Contacts" : "Add Seller Contact"}
@@ -389,9 +268,7 @@ export default function SellerDashboardHome() {
               router.push(`/settings/verify?redirect=${encodeURIComponent(pathname)}`);
             }}
             title={contactWhy || "KYC required"}
-            className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800
-               text-gray-400 border-gray-200 dark:border-gray-700
-               hover:bg-gray-50 dark:hover:bg-gray-700"
+            className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             🔒 {hasPrimaryContact ? "Manage Contacts" : "Add Seller Contact"}
           </button>
@@ -401,9 +278,7 @@ export default function SellerDashboardHome() {
           <button
             onClick={() => setPlansOpen(true)}
             title="Upgrade your plan to enable seller contact"
-            className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800
-               text-slate-900 dark:text-slate-100 border-gray-200 dark:border-gray-700
-               hover:bg-gray-50 dark:hover:bg-gray-700"
+            className="shrink-0 px-3 py-2 rounded-full text-sm border bg-white dark:bg-gray-800 text-slate-900 dark:text-slate-100 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             🔒 {hasPrimaryContact ? "Manage Contacts" : "Add Seller Contact"}
           </button>
@@ -414,7 +289,6 @@ export default function SellerDashboardHome() {
         </button>
       </div>
 
-      {/* Near-limit upgrade hint */}
       {maxProductsNum > 0 && usagePercent >= 80 && (
         <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
           You’ve used {usagePercent}% of your listing slots.{" "}
@@ -425,11 +299,11 @@ export default function SellerDashboardHome() {
         </div>
       )}
 
-      {/* Shop controls (view/create/reactivate) */}
+      {/* Shop controls */}
       {!loadingShop && (
         <>
           {shop ? (
-            // User has a shop
+            // has a shop
             entLoading ? (
               <button
                 disabled
@@ -439,7 +313,6 @@ export default function SellerDashboardHome() {
                 🛍️ View Your Shop
               </button>
             ) : storefrontLocked ? (
-              // Plan doesn’t include storefront
               <button
                 onClick={() => setPlansOpen(true)}
                 className="inline-block mb-4 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-200"
@@ -448,7 +321,6 @@ export default function SellerDashboardHome() {
                 🔒 View Your Shop
               </button>
             ) : storefrontKyc ? (
-              // Storefront requires KYC
               <button
                 onClick={() =>
                   router.push(`/settings/verify?redirect=${encodeURIComponent(pathname)}`)
@@ -459,7 +331,6 @@ export default function SellerDashboardHome() {
                 🔒 View Your Shop
               </button>
             ) : shopInactive ? (
-              // Shop exists but is paused/disabled
               <div className="flex gap-2 mb-4">
                 <button
                   disabled
@@ -476,7 +347,6 @@ export default function SellerDashboardHome() {
                 </button>
               </div>
             ) : (
-              // All good → show the live shop link
               <Link
                 href={`/shops/${shop.slug}`}
                 className="inline-block mb-4 bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700 transition"
@@ -485,9 +355,9 @@ export default function SellerDashboardHome() {
               </Link>
             )
           ) : (
-            // No shop yet → creation is gated by its own entitlement
+            // no shop yet
             (() => {
-              const createState = stateOf("allow_shop_creation"); // 'active'|'included_locked'|'available'
+              const createState = stateOf("allow_shop_creation");
               const createLocked = !entLoading && createState === "available";
               const createKyc = !entLoading && createState === "included_locked";
 
@@ -553,14 +423,14 @@ export default function SellerDashboardHome() {
         </div>
       )}
 
-      {/* Bottom Sheet: Add/Manage Seller Contacts */}
+      {/* Bottom sheet: contacts */}
       <AddSellerContactSheet
         open={phoneSheetOpen}
         onClose={() => setPhoneSheetOpen(false)}
         onHasPrimaryChange={setHasPrimaryContact}
       />
 
-      {/* Plan Stats / Usage */}
+      {/* Plan usage */}
       {loadingDash ? (
         <div className="mb-6 h-6 w-2/3 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
       ) : (
@@ -585,7 +455,7 @@ export default function SellerDashboardHome() {
         </>
       )}
 
-      {/* Dashboard Metrics */}
+      {/* Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <MetricBox icon={<Package />} label="Awaiting Dispatch" value="5" />
         <MetricBox icon={<ShoppingCart />} label="Orders This Month" value="22" />
@@ -596,41 +466,23 @@ export default function SellerDashboardHome() {
         <MetricBox icon={<Clock />} label="Avg Fulfilment Time" value="1.5 days" hint="Last 30 days" />
         <MetricBox icon={<Eye />} label="Response Time" value="1.2 hrs" hint="Buyer response time" />
         <MetricBox icon={<CircleCheck />} label="On-Time Dispatch" value={<span className="font-bold">98%</span>} />
-        <MetricBox
-          icon={<AlertCircle />}
-          label="Defect Rate"
-          value={<span className="font-bold">1.5%</span>}
-          hint="Target &lt; 2%"
-        />
+        <MetricBox icon={<AlertCircle />} label="Defect Rate" value={<span className="font-bold">1.5%</span>} hint="Target &lt; 2%" />
         <MetricBox icon={<TrendingUp />} label="Listing Quality" value="7 / 10" />
       </div>
 
-      {/* Reviews */}
       <SellerReviewsSummaryCard />
 
-      {/* Pricing / Compare Modal */}
       <PlanComparisonModal
         open={plansOpen}
         onOpenChange={setPlansOpen}
         hideTrigger
-        onPick={handlePickPlan} // subscribe -> redirect logic
+        onPick={handlePickPlan}
       />
-
-      {showPlans && (
-        <div className="fixed inset-0 z-[60]" onClick={() => setShowPlans(false)}>
-          {/* Overlay click closes, but we still show the modal trigger button */}
-          <div className="absolute inset-0 bg-black/40" />
-          <div className="absolute inset-x-0 bottom-6 flex justify-center pointer-events-none">
-            <div className="pointer-events-auto">
-              <PlanComparisonModal onPick={handlePickPlan} />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
+/* -------------------------------- small components -------------------------------- */
 function MetricBox({ icon, label, value, hint, trend }) {
   return (
     <button
@@ -676,38 +528,30 @@ function SellerRatingBox() {
   );
 }
 
-// -----------------------------------------------------------
-// BottomSheet — mobile-first, safe-area, swipe-to-close
-// -----------------------------------------------------------
+/* -------------------------------- BottomSheet -------------------------------- */
 function BottomSheet({ open, onClose, title, children, footer }) {
   const sheetRef = React.useRef(null);
   const [dragY, setDragY] = useState(0);
   const startY = React.useRef(null);
 
-  // lock body scroll when open
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
+    return () => { document.body.style.overflow = prev; };
   }, [open]);
 
-  // focus the sheet for keyboard/ESC
   useEffect(() => {
     if (open) sheetRef.current?.focus();
   }, [open]);
 
   if (!open) return null;
 
-  const onTouchStart = (e) => {
-    startY.current = e.touches[0].clientY;
-  };
+  const onTouchStart = (e) => { startY.current = e.touches[0].clientY; };
   const onTouchMove = (e) => {
     if (startY.current == null) return;
     const delta = e.touches[0].clientY - startY.current;
-    setDragY(Math.max(0, delta)); // only pull down
+    setDragY(Math.max(0, delta));
   };
   const onTouchEnd = () => {
     if (dragY > 80) onClose?.();
@@ -717,14 +561,7 @@ function BottomSheet({ open, onClose, title, children, footer }) {
 
   return (
     <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true">
-      {/* overlay */}
-      <button
-        aria-label="Close"
-        onClick={onClose}
-        className="absolute inset-0 bg-black/40 dark:bg-black/60"
-      />
-
-      {/* sheet container (centered & narrower on desktop) */}
+      <button aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/40 dark:bg-black/60" />
       <div
         ref={sheetRef}
         tabIndex={-1}
@@ -732,34 +569,22 @@ function BottomSheet({ open, onClose, title, children, footer }) {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        className="absolute inset-x-0 bottom-0 w-full sm:max-w-xl sm:mx-auto
-                    rounded-t-2xl bg-white dark:bg-gray-900 shadow-2xl
-                    border-t border-gray-200 dark:border-gray-800
-                    overflow-hidden focus:outline-none
-                    max-h-[88svh]"
+        className="absolute inset-x-0 bottom-0 w-full sm:max-w-xl sm:mx-auto rounded-t-2xl bg-white dark:bg-gray-900 shadow-2xl border-t border-gray-200 dark:border-gray-800 overflow-hidden focus:outline-none max-h-[88svh]"
         style={{ transform: `translateY(${dragY}px)` }}
       >
-        {/* grabber */}
         <div className="flex items-center justify-center py-3">
           <div className="h-1.5 w-12 rounded-full bg-gray-300 dark:bg-gray-700" />
         </div>
-
-        {/* header */}
         <div className="px-4 sm:px-6 pb-3 flex items-center justify-between">
           <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
           <button onClick={onClose} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Close">
             <X className="w-5 h-5" />
           </button>
         </div>
-
-        {/* body */}
         <div className="px-4 sm:px-6 pb-24 overflow-y-auto">{children}</div>
-
-        {/* footer (sticky, safe-area aware) */}
         {footer && (
           <div
-            className="absolute bottom-0 inset-x-0 p-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur
-                        border-t border-gray-200 dark:border-gray-800"
+            className="absolute bottom-0 inset-x-0 p-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-t border-gray-200 dark:border-gray-800"
             style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
           >
             {footer}
@@ -770,17 +595,12 @@ function BottomSheet({ open, onClose, title, children, footer }) {
   );
 }
 
-// -----------------------------------------------------------
-// AddSellerContactSheet — libphonenumber validation + dedupe + delete
-// -----------------------------------------------------------
+/* -------------------------------- Contacts sheet -------------------------------- */
 function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
-  // list + errors
   const [loading, setLoading] = useState(false);
   const [phones, setPhones] = useState([]);
   const [error, setError] = useState(null);
 
-  // form
-  const [countries] = useState([]); // reserved for future country list
   const [countryIso, setCountryIso] = useState("GH");
   const [phoneVal, setPhoneVal] = useState("");
   const [touched, setTouched] = useState(false);
@@ -791,22 +611,11 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
   const [asDelivery, setAsDelivery] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
-  const reqSeq = useRef(0); // race guard
+  const reqSeq = useRef(0);
 
-  // --- validation helpers (libphonenumber-js) ---
   const SOFT_MIN_DIGITS = { GH: 7, NG: 7, KE: 7, ZA: 7, GB: 7, US: 7 };
-
-  // normalize any list-ish API shape into an array
-  function asList(payload) {
-    if (Array.isArray(payload)) return payload;
-    if (Array.isArray(payload?.results)) return payload.results;
-    if (Array.isArray(payload?.items)) return payload.items;
-    if (payload && typeof payload === "object") {
-      const looksLikePhone = payload.id || payload.e164 || payload.number;
-      if (looksLikePhone) return [payload];
-    }
-    return [];
-  }
+  const asList = (payload) =>
+    Array.isArray(payload) ? payload : Array.isArray(payload?.results) ? payload.results : Array.isArray(payload?.items) ? payload.items : payload && typeof payload === "object" && (payload.id || payload.e164 || payload.number) ? [payload] : [];
 
   const normDigits = (s) => String(s || "").replace(/\D/g, "");
 
@@ -817,27 +626,18 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
 
     if (!digits) return { state: "empty" };
 
-    // strip duplicated country calling code if user typed it without '+'
     try {
-      const cc = getCountryCallingCode(ccISO); // e.g. "233"
-      if (!s0.startsWith("+") && digits.startsWith(cc)) {
-        digits = digits.slice(cc.length);
-      }
+      const cc = getCountryCallingCode(ccISO);
+      if (!s0.startsWith("+") && digits.startsWith(cc)) digits = digits.slice(cc.length);
     } catch {}
 
     const min = SOFT_MIN_DIGITS[ccISO] ?? 7;
     if (digits.length < min) return { state: "typing" };
 
     try {
-      const pn = parsePhoneNumberFromString(digits, ccISO); // parse as national
+      const pn = parsePhoneNumberFromString(digits, ccISO);
       if (!pn) return { state: "typing" };
-      if (pn.isValid()) {
-        return {
-          state: "valid",
-          e164: pn.format("E.164"),
-          national: pn.formatNational(),
-        };
-      }
+      if (pn.isValid()) return { state: "valid", e164: pn.format("E.164"), national: pn.formatNational() };
       return pn.isPossible() ? { state: "typing" } : { state: "invalid" };
     } catch {
       return { state: "typing" };
@@ -847,8 +647,6 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
   const v = validatePhone(phoneVal, countryIso);
   const digits = (phoneVal || "").replace(/\D/g, "");
   const minLen = SOFT_MIN_DIGITS[countryIso] ?? 7;
-
-  // UI states
   const showError = !hasFocus && (touched || submitted) && digits.length >= minLen && v.state === "invalid";
   const showHint = hasFocus && digits.length > 0 && digits.length < minLen;
   const canSave = v.state === "valid" && !saving;
@@ -857,7 +655,7 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
     onHasPrimaryChange?.(phones.some((p) => p.is_primary));
   }, [phones, onHasPrimaryChange]);
 
-  // Fetch phones when opened
+  // list
   useEffect(() => {
     if (!open) return;
     let alive = true;
@@ -865,15 +663,10 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`/api/b/api/users/me/phones/`, {
-          cache: "no-store",
-          credentials: "include",
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        const data = await api("users/me/phones");
         if (alive) setPhones(asList(data));
       } catch (e) {
-        if (alive) setError(e.message || "Failed to load phones");
+        if (alive) setError(e?.message || "Failed to load phones");
       } finally {
         if (alive) setLoading(false);
       }
@@ -883,21 +676,16 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
     };
   }, [open]);
 
-  // Re-fetch helper with race guard
   const refresh = async () => {
     const my = ++reqSeq.current;
     try {
-      const res = await fetch(`/api/b/api/users/me/phones/`, {
-        cache: "no-store",
-        credentials: "include",
-      });
-      const data = await res.json().catch(() => ({}));
-      if (reqSeq.current !== my) return null; // stale
+      const data = await api("users/me/phones");
+      if (reqSeq.current !== my) return null;
       const list = asList(data);
       setPhones(list);
       return list;
     } catch {
-      return null; // do not clear UI
+      return null;
     }
   };
 
@@ -910,124 +698,72 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
     if (asWhatsapp) uses.push("whatsapp");
     if (asDelivery) uses.push("delivery");
 
-    // 🔎 duplicate protection (normalize to digits only)
     const newNorm = normDigits(v.e164 || phoneVal);
     const existing = phones.find((p) => normDigits(p.e164 || p.number) === newNorm);
 
+    // merge with existing
     if (existing) {
-      // merge uses if user ticked new ones
-      const want = new Set(
-        ["shop_public", asWhatsapp && "whatsapp", asDelivery && "delivery"].filter(Boolean)
-      );
+      const want = new Set(["shop_public", asWhatsapp && "whatsapp", asDelivery && "delivery"].filter(Boolean));
       const have = new Set(Array.isArray(existing.uses) ? existing.uses : []);
       const needsUpdate = [...want].some((u) => !have.has(u));
 
       if (needsUpdate) {
-        try {
-          await fetch(`/api/b/api/users/me/phones/${existing.id}/`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ uses: [...new Set([...have, ...want])] }),
-          });
-        } catch {}
+        await apiJSON(`users/me/phones/${existing.id}`, { uses: [...new Set([...have, ...want])] }, { method: "PATCH" }).catch(() => {});
       }
 
-      // ensure primary if requested
       if (asPrimary && !existing.is_primary) {
-        try {
-          await fetch(`/api/b/api/users/me/phones/${existing.id}/set_primary/`, {
-            method: "POST",
-            credentials: "include",
-          });
-          toast.success("Primary updated for that existing contact.");
-        } catch {
-          toast.error("Couldn’t set primary. Please try again.");
-        }
+        await api(`users/me/phones/${existing.id}/set_primary`, { method: "POST" })
+          .then(() => toast.success("Primary updated for that existing contact."))
+          .catch(() => toast.error("Couldn’t set primary. Please try again."));
       } else if (!needsUpdate) {
         toast("That number is already in your contacts.", { icon: "ℹ️" });
       }
 
       await refresh();
-
-      // reset form
-      setPhoneVal("");
-      setTouched(false);
-      setSubmitted(false);
-      setAsWhatsapp(false);
-      setAsDelivery(false);
+      setPhoneVal(""); setTouched(false); setSubmitted(false);
+      setAsWhatsapp(false); setAsDelivery(false);
       setAsPrimary(!phones.some((p) => p.is_primary));
       return;
     }
 
+    // create
     try {
       setSaving(true);
-      const res = await fetch(`/api/b/api/users/me/phones/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          number: v.e164 || phoneVal,
-          region: countryIso,
-          uses,
-          is_primary: asPrimary,
-        }),
+      const created = await apiJSON("users/me/phones", {
+        number: v.e164 || phoneVal,
+        region: countryIso,
+        uses,
+        is_primary: asPrimary,
       });
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msg = String(data?.detail || data?.error || "").toLowerCase();
-        if (msg.includes("already") || msg.includes("exist")) {
-          toast("That number is already in your contacts.", { icon: "ℹ️" });
-        } else {
-          toast.error(data?.detail || data?.error || "Unable to save phone.");
-        }
-        return;
-      }
-
-      // ensure single primary if requested
-      if (asPrimary && data?.id) {
-        await fetch(`/api/b/api/users/me/phones/${data.id}/set_primary/`, {
-          method: "POST",
-          credentials: "include",
-        }).catch(() => {});
+      if (asPrimary && created?.id) {
+        await api(`users/me/phones/${created.id}/set_primary`, { method: "POST" }).catch(() => {});
       }
 
       toast.success("Contact added.");
 
-      // reset form
-      setPhoneVal("");
-      setTouched(false);
-      setSubmitted(false);
-      setAsWhatsapp(false);
-      setAsDelivery(false);
+      setPhoneVal(""); setTouched(false); setSubmitted(false);
+      setAsWhatsapp(false); setAsDelivery(false);
 
-      // refresh and compute default checkbox
       const list = await refresh();
       const source = Array.isArray(list) ? list : phones;
       setAsPrimary(!source.some((p) => p.is_primary));
     } catch (err) {
-      toast.error(err.message || "Network error");
+      toast.error(err?.message || "Unable to save phone.");
     } finally {
       setSaving(false);
     }
   };
 
-  // default the "Set as default contact" checkbox sensibly
   useEffect(() => {
     if (open) setAsPrimary(!phones.some((p) => p.is_primary));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, phones.length]);
 
-  // Optimistic Set Primary
   const setPrimary = async (id) => {
     setPhones((prev) => prev.map((p) => ({ ...p, is_primary: p.id === id })));
     try {
-      const res = await fetch(`/api/b/api/users/me/phones/${id}/set_primary/`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error();
+      await api(`users/me/phones/${id}/set_primary`, { method: "POST" });
       await refresh();
       toast.success("Primary updated.");
     } catch {
@@ -1036,42 +772,27 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
     }
   };
 
-  // ❌ Remove phone (auto-promote another number if needed, prefer verified)
   const removePhone = async (id) => {
     const victim = phones.find((p) => p.id === id);
     const remaining = phones.filter((p) => p.id !== id);
-
-    // don't let the last contact be removed
     if (phones.length === 1) {
       toast("You must keep at least one contact.", { icon: "ℹ️" });
       return;
     }
 
     setDeletingId(id);
-    // optimistic remove
     setPhones(remaining);
 
     try {
-      const res = await fetch(`/api/b/api/users/me/phones/${id}/`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error();
+      await api(`users/me/phones/${id}`, { method: "DELETE" });
 
-      // If we removed the primary and there are others, ensure one is primary
       if (victim?.is_primary && remaining.length > 0 && !remaining.some((p) => p.is_primary)) {
         const promoteTarget = remaining.find((p) => p.is_verified) || remaining[0];
         const promoteId = promoteTarget?.id;
         if (promoteId) {
-          // optimistic promote
           setPhones((prev) => prev.map((p) => ({ ...p, is_primary: p.id === promoteId })));
-          try {
-            await fetch(`/api/b/api/users/me/phones/${promoteId}/set_primary/`, {
-              method: "POST",
-              credentials: "include",
-            });
-            toast("Primary moved to the next contact.", { icon: "⭐" });
-          } catch {}
+          await api(`users/me/phones/${promoteId}/set_primary`, { method: "POST" }).catch(() => {});
+          toast("Primary moved to the next contact.", { icon: "⭐" });
         }
       }
 
@@ -1079,23 +800,17 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
       toast.success("Contact removed.");
     } catch {
       toast.error("Couldn’t remove contact.");
-      await refresh(); // revert to server truth
+      await refresh();
     } finally {
       setDeletingId(null);
     }
   };
 
-  // Mobile-friendly footer (stack) — brand accents & a11y
   const footer = (
     <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2">
       <button
         onClick={onClose}
-        className="w-full md:w-auto px-4 py-3 md:py-2 rounded-md border
-                   border-neutral-300 dark:border-neutral-700
-                   bg-white dark:bg-neutral-900
-                   text-neutral-900 dark:text-neutral-100
-                   hover:bg-neutral-50 dark:hover:bg-neutral-800
-                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60"
+        className="w-full md:w-auto px-4 py-3 md:py-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60"
       >
         Close
       </button>
@@ -1103,8 +818,7 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
         onClick={handleSave}
         disabled={!canSave}
         aria-busy={saving || undefined}
-        className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-3 md:py-2 rounded-md bg-green-600 dark:bg-green-600 text-white hover:bg-green-700 disabled:opacity-60
-        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60 transition-colors"
+        className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-3 md:py-2 rounded-md bg-green-600 dark:bg-green-600 text-white hover:bg-green-700 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60 transition-colors"
       >
         {saving && <Loader2 className="w-4 h-4 animate-spin" />}
         Save Contact
@@ -1116,12 +830,8 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
 
   return (
     <BottomSheet open={open} onClose={onClose} title="Add Seller Contact" footer={footer}>
-      {/* Existing contacts */}
       <section className="mb-4">
-        <h4 className="text-sm font-semibold mb-2 text-neutral-800 dark:text-neutral-200">
-          Your Contacts
-        </h4>
-
+        <h4 className="text-sm font-semibold mb-2 text-neutral-800 dark:text-neutral-200">Your Contacts</h4>
         {loading ? (
           <div className="space-y-2">
             <div className="h-10 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse" />
@@ -1148,23 +858,16 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0 pl-2">
-                  {p.is_verified && (
-                    <BadgeCheck className="w-4 h-4 text-emerald-500" title="Verified" />
-                  )}
+                  {p.is_verified && <BadgeCheck className="w-4 h-4 text-emerald-500" title="Verified" />}
 
                   {p.is_primary ? (
-                    <span
-                      className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full
-                                      bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
-                    >
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
                       <Star className="w-3 h-3" /> Primary
                     </span>
                   ) : (
                     <button
                       onClick={() => setPrimary(p.id)}
-                      className="text-[11px] px-2 py-1 rounded-full border border-neutral-200 dark:border-neutral-700
-                                 hover:bg-neutral-50 dark:hover:bg-neutral-800
-                                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60"
+                      className="text-[11px] px-2 py-1 rounded-full border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60"
                     >
                       Set Primary
                     </button>
@@ -1173,10 +876,7 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
                   <button
                     onClick={() => removePhone(p.id)}
                     disabled={deletingId === p.id || onlyOne}
-                    className="text-[11px] px-2 py-1 rounded-full border border-neutral-200 dark:border-neutral-700
-                               hover:bg-rose-50 dark:hover:bg-rose-900/20
-                               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50
-                               disabled:opacity-60"
+                    className="text-[11px] px-2 py-1 rounded-full border border-neutral-200 dark:border-neutral-700 hover:bg-rose-50 dark:hover:bg-rose-900/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50 disabled:opacity-60"
                     title={onlyOne ? "Keep at least one contact" : "Remove contact"}
                   >
                     {deletingId === p.id ? "Removing…" : "Remove"}
@@ -1188,12 +888,8 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
         )}
       </section>
 
-      {/* Add new */}
       <section className="mt-5">
-        <h4 className="text-sm font-semibold mb-2 text-neutral-800 dark:text-neutral-200">
-          Add a new contact
-        </h4>
-
+        <h4 className="text-sm font-semibold mb-2 text-neutral-800 dark:text-neutral-200">Add a new contact</h4>
         <form onSubmit={handleSave} className="space-y-2">
           <PhoneInput
             selectedCountry={countryIso}
@@ -1208,14 +904,8 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
               setTouched(false);
               setSubmitted(false);
             }}
-            onFocus={() => {
-              setHasFocus(true);
-              setTouched(false);
-            }}
-            onBlur={() => {
-              setHasFocus(false);
-              setTouched(true);
-            }}
+            onFocus={() => { setHasFocus(true); setTouched(false); }}
+            onBlur={() => { setHasFocus(false); setTouched(true); }}
             invalid={showError}
           />
 
@@ -1264,7 +954,6 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
             contacts later.
           </p>
 
-          {/* Hidden submit for mobile “Go/Done” */}
           <button type="submit" className="hidden" />
         </form>
       </section>

@@ -1,5 +1,5 @@
 // src/lib/api.js
-// Cookie-first API helper that goes through Next's proxy (/api/b/...)
+// Cookie-first API helper that goes through Next's proxy (/api/...)
 // so the server can inject Authorization from the HttpOnly `up_auth` cookie.
 
 const DIRECT_BASE =
@@ -7,7 +7,7 @@ const DIRECT_BASE =
   process.env.NEXT_PUBLIC_API_BASE ||
   "http://127.0.0.1:8000";
 
-const PROXY_PREFIX = "/api/b";
+const PROXY_PREFIX = "/api"; // ✅ no /b
 
 /** ---- tiny utils ---- */
 
@@ -23,9 +23,7 @@ function resolveTimezone() {
 function persistTzCookie(tz) {
   if (typeof document === "undefined" || !tz) return;
   try {
-    document.cookie = `tz=${encodeURIComponent(
-      tz
-    )}; path=/; max-age=31536000; samesite=lax`;
+    document.cookie = `tz=${encodeURIComponent(tz)}; path=/; max-age=31536000; samesite=lax`;
   } catch {}
 }
 
@@ -65,7 +63,6 @@ function trimSlashes(p = "") {
 }
 
 function splitUrlish(s = "") {
-  // Separate path + search + hash without requiring a base URL
   const hashIdx = s.indexOf("#");
   const beforeHash = hashIdx >= 0 ? s.slice(0, hashIdx) : s;
   const hash = hashIdx >= 0 ? s.slice(hashIdx) : "";
@@ -75,33 +72,40 @@ function splitUrlish(s = "") {
   return { pathname, search, hash };
 }
 
-function ensureDrfSlash(pathname = "") {
-  if (!pathname) return "/";
+function ensureTrailingSlash(pathname = "") {
   const clean = trimSlashes(pathname);
-  if (!clean) return "/";
-  return looksLikeFile(clean) || clean.endsWith("/") ? `/${clean}` : `/${clean}/`;
+  if (!clean) return "";
+  return looksLikeFile(clean) || clean.endsWith("/") ? clean : `${clean}/`;
 }
 
-// ✅ Consider a URL “already proxied” if it begins with /api/b/...
-function isProxyPath(pathname = "") {
-  const clean = trimSlashes(pathname).toLowerCase();
-  return clean.startsWith("api/b/");
-}
+// 🔧 Strip any accidental leading proxy bits *and* a single "api/" if present.
+function stripProxyPrefixes(p = "") {
+  let out = trimSlashes(p);
 
-// ✅ Always ensure paths are rooted under /api/... for the backend
-//    e.g. "products/1" → "api/products/1", "i18n/init" → "api/i18n/init"
-function ensureApiRoot(pathname = "") {
-  const clean = trimSlashes(pathname);
-  return clean.toLowerCase().startsWith("api/") ? clean : `api/${clean}`;
+  // collapse stray commas between segments (e.g., "product,4345,reviews")
+  out = out.replace(/,+/g, "/");
+
+  // drop our old proxy prefixes if callers still pass them
+  out = out.replace(/^api\/+b\/+/i, ""); // "api/b/..."
+  out = out.replace(/^b\/+/i, "");       // "b/..."
+
+  // if still starts with "api/", drop one copy — the proxy route already lives at /api/[...]
+  out = out.replace(/^api\/+/i, "");
+
+  // collapse duplicate slashes
+  out = out.replace(/\/{2,}/g, "/");
+
+  return out;
 }
 
 function sameOriginAsDirectBase(absUrl) {
   try {
     const u = new URL(absUrl);
     const b = new URL(DIRECT_BASE);
+    const low = (x) => String(x || "").toLowerCase();
     return (
-      u.protocol === b.protocol &&
-      u.hostname === b.hostname &&
+      low(u.protocol) === low(b.protocol) &&
+      low(u.hostname) === low(b.hostname) &&
       String(u.port || "") === String(b.port || "")
     );
   } catch {
@@ -112,10 +116,11 @@ function sameOriginAsDirectBase(absUrl) {
 /** ---- core fetcher ---- */
 /**
  * api(path, opts)
- * - Pass *clean* API paths (with or without leading/trailing slash).
- * - You may accidentally pass '/api/...', '/i18n/init', '/fx/latest?base=USD', etc. — all handled.
- * - Absolute URLs that start with NEXT_PUBLIC_API_BASE_URL are rewritten to go
- *   through the proxy so cookies work; other absolutes are fetched directly.
+ * - Pass clean API paths (with/without leading/trailing slash), e.g.:
+ *     "addresses", "/addresses", "product/4345/reviews"
+ * - If you pass "/api/..." or "api/..." (or even "api/b/..."), we normalize it.
+ * - Absolute URLs that match DIRECT_BASE are rewritten to /api/<path>/ so cookies work.
+ * - Other absolute URLs are fetched directly (not proxied).
  */
 export async function api(path, opts = {}) {
   const tz = resolveTimezone();
@@ -139,39 +144,30 @@ export async function api(path, opts = {}) {
 
   let url = String(path || "");
 
-  // 1) Absolute URL? If it matches DIRECT_BASE, route through proxy.
+  // 1) Absolute URL? If it's your backend, route via proxy. Else fetch direct.
   if (/^https?:\/\//i.test(url)) {
     if (sameOriginAsDirectBase(url)) {
       const u = new URL(url);
       const qs = u.search || "";
       const hash = u.hash || "";
-      const rooted = ensureApiRoot(u.pathname);          // <-- guarantee /api/…
-      const drfPath = ensureDrfSlash(rooted);
-      url = `${PROXY_PREFIX}${drfPath}${qs}${hash}`;
+      const bodyPath = stripProxyPrefixes(u.pathname);    // drop any leading /api[/b]/...
+      const normalized = ensureTrailingSlash(bodyPath);   // add slash unless looks like file
+      url = `${PROXY_PREFIX}/${normalized}${qs}${hash}`;  // → /api/<path>/
     } else {
-      // Non-backend absolute URL: fetch directly.
       url = withTZ(url, tz);
     }
   } else {
     // 2) Relative URL: clean up and route through proxy.
     const { pathname, search, hash } = splitUrlish(url);
-
-    if (isProxyPath(pathname)) {
-      // Already /api/b/... → respect as-is (just ensure it starts with "/")
-      const prefixed = pathname.startsWith("/") ? pathname : `/${pathname}`;
-      url = `${prefixed}${search}${hash}`;
-    } else {
-      // Normalize to backend /api/... and let the proxy forward it.
-      const rooted = ensureApiRoot(pathname);            // <-- guarantee /api/…
-      const drfPath = ensureDrfSlash(rooted);
-      url = `${PROXY_PREFIX}${drfPath}${search}${hash}`;
-    }
+    const bodyPath = stripProxyPrefixes(pathname);        // drop /api[/b]/ if caller passed
+    const normalized = ensureTrailingSlash(bodyPath);
+    url = `${PROXY_PREFIX}/${normalized}${search}${hash}`; // → /api/<path>/
   }
 
   const fetchInit = {
     ...opts,
     headers,
-    credentials: "include", // keep cookies flowing to /api/*
+    credentials: "include",
   };
 
   const res = await fetch(withTZ(url, tz), fetchInit);

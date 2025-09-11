@@ -15,7 +15,7 @@ export function slugToIso(slug) {
 export function normalizeCountry(input) {
   if (!input) return null;
   const s = String(input).trim();
-  // Accept either ISO (“GH”, “NG”, “GB”) or our slugs (“gh”, “ng”, “uk”)
+  // Accept ISO (“GH”, “NG”, “GB”) or slugs (“gh”, “ng”, “uk”, “ke”)
   if (/^[A-Z]{2}$/.test(s)) return isoToSlug(s);
   if (/^[a-z]{2}$/.test(s)) return s === "gb" ? "uk" : s;
   return null;
@@ -76,12 +76,11 @@ function sanitizeInit(payload = {}) {
 /**
  * Fetch the bootstrap/init payload for localization.
  *
- * Works on both server and client. On the server (RSC/route handlers),
- * Next.js caching hints (revalidate/tags) are respected.
- *
- * NOTE: We explicitly call `/api/i18n/init/` (with the trailing slash)
- * so Django/DRF routing never 404s. The `api()` helper will proxy this
- * through `/api/b/...`, attach cookies, and add X-Timezone.
+ * Uses the unified proxy via `api('i18n/init?...')`. The helper will:
+ * - root the path under `/api/…`
+ * - ensure a trailing slash for DRF
+ * - include cookies and X-Timezone header
+ * - work on both server and client
  */
 export async function fetchI18nInit(
   country,
@@ -92,14 +91,15 @@ export async function fetchI18nInit(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
 
-  // Only add Next.js caching hints when we’re on the server.
+  // Only add Next.js caching hints on the server.
   const nextHints =
     typeof window === "undefined"
       ? { next: { revalidate, tags: [`i18n-init-${cc}`] } }
       : {};
 
   try {
-    const data = await api(`/api/i18n/init/?country=${encodeURIComponent(cc)}`, {
+    // Pass a clean path; the api() helper will turn this into `/api/i18n/init/?country=…`
+    const data = await api(`i18n/init?country=${encodeURIComponent(cc)}`, {
       signal: controller.signal,
       ...nextHints,
     }).catch((err) => {
@@ -126,5 +126,5 @@ export function slugFromPath(pathname = "/") {
     .split("/")
     .filter(Boolean)[0];
   const slug = (first || "").toLowerCase();
-  return ["gh", "ng", "uk"].includes(slug) ? slug : null;
+  return ["gh", "ng", "ke", "uk"].includes(slug) ? slug : null;
 }
