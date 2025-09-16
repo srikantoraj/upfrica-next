@@ -1,16 +1,10 @@
+// src/app/(pages)/new-dashboard/products/editor/page.jsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { BASE_API_URL } from "@/app/constants";
-import { getCleanToken } from "@/lib/getCleanToken";
 import useAutosave from "@/components/useAutosave";
-import ImageUploader from "@/components/ImageUploader";
-
-function authHeaders() {
-  const t = getCleanToken?.();
-  return t ? { Authorization: `Token ${t}` } : {};
-}
+import PhotosSection from "@/components/PhotosSection";
 
 const SECTIONS = [
   "Basics",
@@ -24,13 +18,11 @@ const SECTIONS = [
 ];
 
 function scoreProduct(p) {
-  // super simple placeholder
   let s = 0;
   if (p?.title) s += 20;
   if (p?.image_objects?.length) s += 20;
   if (p?.price_cents > 0 || p?.price_major) s += 20;
   if (p?.seo_title || p?.seo_description) s += 10;
-  // room to grow…
   return Math.min(100, s);
 }
 
@@ -44,35 +36,48 @@ export default function ProductEditorPage() {
   const [product, setProduct] = useState(null);
   const [section, setSection] = useState("Basics");
 
-  // form state (Basics + SEO to start)
+  // Basics + SEO local state
   const [title, setTitle] = useState("");
   const [priceMajor, setPriceMajor] = useState("");
   const [currency, setCurrency] = useState("GHS");
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDesc, setSeoDesc] = useState("");
 
-  // autosave hook points to product endpoint
+  // Use the unified /api proxy (cookies → Authorization); keep same-origin
   const { save, saving, lastSavedAt, error: autosaveError } = useAutosave({
     url: id ? `/api/products/${id}/` : "",
     method: "PATCH",
     delay: 600,
+    // ensure cookies go with the request
+    fetchOptions: { credentials: "include", headers: { "Content-Type": "application/json", Accept: "application/json" } },
   });
 
-  // LOAD once
+  // LOAD once (same-origin fetch via Next proxy, no explicit Authorization)
   useEffect(() => {
-    if (!id) { setError("Missing product id."); setLoading(false); return; }
+    if (!id) {
+      setError("Missing product id.");
+      setLoading(false);
+      return;
+    }
     let alive = true;
     (async () => {
-      setLoading(true); setError("");
+      setLoading(true);
+      setError("");
       try {
-        const res = await fetch(`${BASE_API_URL}/api/products/${id}/`, {
-          headers: { "Content-Type": "application/json", ...authHeaders() },
+        const res = await fetch(`/api/products/${id}/`, {
+          headers: { Accept: "application/json" },
           credentials: "include",
           cache: "no-store",
         });
         if (!res.ok) {
-          let detail = ""; try { detail = JSON.stringify(await res.json()); }
-          catch { try { detail = await res.text(); } catch {} }
+          let detail = "";
+          try {
+            detail = JSON.stringify(await res.json());
+          } catch {
+            try {
+              detail = await res.text();
+            } catch {}
+          }
           throw new Error(`GET failed: ${res.status} ${detail}`);
         }
         const data = await res.json();
@@ -89,7 +94,9 @@ export default function ProductEditorPage() {
         if (alive) setLoading(false);
       }
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [id]);
 
   // autosave on change (Basics)
@@ -109,13 +116,23 @@ export default function ProductEditorPage() {
   async function publish() {
     if (!id) return;
     try {
-      const res = await fetch(`${BASE_API_URL}/api/products/${id}/`, {
+      const res = await fetch(`/api/products/${id}/`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", ...authHeaders() },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
         credentials: "include",
         body: JSON.stringify({ status: 1 }), // publish
       });
-      if (!res.ok) throw new Error(`Publish failed ${res.status}`);
+      if (!res.ok) {
+        let detail = "";
+        try {
+          detail = JSON.stringify(await res.json());
+        } catch {
+          try {
+            detail = await res.text();
+          } catch {}
+        }
+        throw new Error(`Publish failed ${res.status} ${detail}`);
+      }
       const updated = await res.json();
       setProduct(updated);
     } catch (e) {
@@ -129,17 +146,21 @@ export default function ProductEditorPage() {
     if (!lastSavedAt) return "—";
     const secs = Math.max(1, Math.round((Date.now() - lastSavedAt) / 1000));
     return `Saved · ${secs}s ago`;
-    }
+  }
 
   if (!id) return <main className="p-8">Missing ?id</main>;
   if (loading) return <main className="p-8">Loading…</main>;
 
-  const score = scoreProduct(product || { title, price_major: priceMajor, seo_title: seoTitle, seo_description: seoDesc });
+  const score = scoreProduct(
+    product || { title, price_major: priceMajor, seo_title: seoTitle, seo_description: seoDesc }
+  );
 
   return (
     <main className="p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <button onClick={() => router.back()} className="text-sm underline">← Back</button>
+        <button onClick={() => router.back()} className="text-sm underline">
+          ← Back
+        </button>
         <div className="text-sm text-gray-500 dark:text-gray-400">{savedLabel()}</div>
       </div>
 
@@ -147,7 +168,9 @@ export default function ProductEditorPage() {
         {/* Stepper */}
         <aside className="w-56 shrink-0">
           <div className="mb-4">
-            <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Quality Score</div>
+            <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              Quality Score
+            </div>
             <div className="mt-1 h-2 rounded bg-gray-200 dark:bg-gray-800">
               <div className="h-2 rounded bg-blue-500" style={{ width: `${score}%` }} />
             </div>
@@ -157,7 +180,11 @@ export default function ProductEditorPage() {
             {SECTIONS.map((s) => (
               <li key={s}>
                 <button
-                  className={`w-full text-left px-3 py-2 rounded-md ${section === s ? "bg-gray-200 dark:bg-gray-800 font-medium" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}
+                  className={`w-full text-left px-3 py-2 rounded-md ${
+                    section === s
+                      ? "bg-gray-200 dark:bg-gray-800 font-medium"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
                   onClick={() => setSection(s)}
                 >
                   {s}
@@ -220,26 +247,11 @@ export default function ProductEditorPage() {
           {section === "Media" && (
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold">Media</h2>
-              <ImageUploader
+              {/* Use the same uploader flow as /new (presign + attach + reorder) */}
+              <PhotosSection
                 productId={Number(id)}
-                onUploaded={(url) => {
-                  // optimistic append
-                  setProduct((p) => ({
-                    ...(p || {}),
-                    image_objects: [{ image_url: url }, ...((p?.image_objects) || [])],
-                  }));
-                }}
+                ensureProductId={async () => Number(id)}
               />
-              <div className="flex flex-wrap gap-3">
-                {(product?.image_objects || []).map((img, i) => (
-                  <img
-                    key={`${img.image_url || img.url}-${i}`}
-                    src={img.image_url || img.url}
-                    alt={`image-${i}`}
-                    className="h-24 w-24 object-cover rounded border"
-                  />
-                ))}
-              </div>
             </div>
           )}
 
@@ -265,7 +277,8 @@ export default function ProductEditorPage() {
               </div>
               {product?.slug && (
                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Preview URL: <code>/{(product.listing_country_code || "gh")}/{product.slug}</code>
+                  Preview URL:{" "}
+                  <code>/{(product.listing_country_code || "gh")}/{product.slug}</code>
                 </div>
               )}
             </div>
@@ -273,9 +286,7 @@ export default function ProductEditorPage() {
 
           {/* Stubs for remaining sections */}
           {section !== "Basics" && section !== "Media" && section !== "SEO & Visibility" && (
-            <div className="text-gray-500 dark:text-gray-400">
-              This section UI is coming next.
-            </div>
+            <div className="text-gray-500 dark:text-gray-400">This section UI is coming next.</div>
           )}
 
           {error && <p className="mt-6 text-red-600 whitespace-pre-wrap">{error}</p>}

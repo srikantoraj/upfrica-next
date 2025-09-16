@@ -9,6 +9,9 @@ import BasketSheetGlobal from "@/components/BasketSheetGlobal";
 import LocalizationProvider from "@/contexts/LocalizationProvider";
 import LangDomSync from "@/components/common/LangDomSync";
 
+// ⬇️ New: global bottom-sheet auth UI
+import { AuthSheetProvider } from "@/components/auth/AuthSheetProvider";
+
 const SITE =
   (process.env.NEXT_PUBLIC_SITE_BASE_URL || "https://upfrica.com").replace(/\/$/, "");
 
@@ -83,29 +86,33 @@ export default function RootLayout({ children }) {
           {/* Keep <html lang> in sync with user’s language */}
           <LangDomSync />
 
+          {/* Your existing app-wide providers (Redux/theme/etc.) */}
           <Providers>
-            {children}
+            {/* ⬇️ New: makes openAuth() and the login/signup bottom sheet globally available */}
+            <AuthSheetProvider>
+              {children}
 
-            {/* Global basket sheet lives here (renders into #portal-root) */}
-            <BasketSheetGlobal />
+              {/* Global basket sheet lives here (renders into #portal-root) */}
+              <BasketSheetGlobal />
 
-            {/* Toasts */}
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  padding: "12px 16px",
-                  fontSize: "14px",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                },
-                success: { style: { background: "#d1fae5", color: "#065f46" } },
-                error: { style: { background: "#fee2e2", color: "#991b1b" } },
-                info: { style: { background: "#e0f2fe", color: "#075985" } },
-                loading: { style: { background: "#fef3c7", color: "#92400e" } },
-              }}
-            />
+              {/* Toasts */}
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    padding: "12px 16px",
+                    fontSize: "14px",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                  },
+                  success: { style: { background: "#d1fae5", color: "#065f46" } },
+                  error: { style: { background: "#fee2e2", color: "#991b1b" } },
+                  info: { style: { background: "#e0f2fe", color: "#075985" } },
+                  loading: { style: { background: "#fef3c7", color: "#92400e" } },
+                }}
+              />
+            </AuthSheetProvider>
           </Providers>
         </LocalizationProvider>
 

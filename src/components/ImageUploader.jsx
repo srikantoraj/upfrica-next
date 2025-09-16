@@ -1,5 +1,8 @@
+//src/components/ImageUploader.jsx
 "use client";
+
 import { useRef, useState } from "react";
+import { uploadFile } from "@/lib/upload";
 import { BASE_API_URL } from "@/app/constants";
 import { getCleanToken } from "@/lib/getCleanToken";
 
@@ -8,130 +11,104 @@ function authHeaders() {
   return t ? { Authorization: `Token ${t}` } : {};
 }
 
+/**
+ * Props:
+ *  - productId?: number
+ *  - ensureProductId: () => Promise<number>   // will be called if no productId yet
+ *  - onUploaded: (savedObjOrUrl: any) => void // called twice: temp URL, then saved object
+ *  - multiple?: boolean
+ */
 export default function ImageUploader({
   productId,
   ensureProductId,
   onUploaded,
   multiple = true,
 }) {
+  const inputRef = useRef(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const inputRef = useRef(null);
 
-  async function resolveProductId() {
-    if (productId) return productId;
-    if (typeof ensureProductId === "function") {
-      return await ensureProductId();
-    }
-    return null;
+  async function choose() {
+    inputRef.current?.click();
   }
 
-  // Normalize presign payload into a standard shape
-  function normalizePresign(json) {
-    const uploadUrl = json?.upload?.url ?? json?.url ?? "";
-    const fields = json?.upload?.fields ?? json?.fields ?? {};
-    const publicUrl =
-      json?.cdnUrl ??
-      json?.cdn_url ??
-      json?.publicUrl ??
-      json?.public_url ??
-      json?.publicURL ??
-      json?.public ??
-      "";
-    return { url: uploadUrl, fields, publicUrl };
-  }
+  async function onChange(e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
 
-  async function presignOne(file, pid) {
-    const res = await fetch(`${BASE_API_URL}/api/uploads/presign`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
-      credentials: "include",
-      body: JSON.stringify({
-        kind: "product",
-        product_id: Number(pid),
-        filename: file.name,
-        contentType: file.type || "application/octet-stream",
-      }),
-    });
-    if (!res.ok) {
-      let detail = "";
-      try { detail = JSON.stringify(await res.json()); }
-      catch { try { detail = await res.text(); } catch {} }
-      throw new Error(`presign failed ${res.status} ${detail}`);
-    }
-    const json = await res.json();
-    const { url, fields, publicUrl } = normalizePresign(json);
-    if (!url || !fields) throw new Error("Unexpected presign response");
-    return { url, fields, publicUrl };
-  }
-
-  async function handleFiles(files) {
-    if (!files?.length) return;
-    setBusy(true);
     setErr("");
+    setBusy(true);
     try {
-      const pid = await resolveProductId();
-      if (pid == null) throw new Error("Please create the product first, then upload photos.");
+      // 1) we need a product id (may create a draft)
+      const pid =
+        productId ?? (typeof ensureProductId === "function"
+          ? await ensureProductId()
+          : null);
+      if (!pid) throw new Error("No product id available");
 
+      // 2) upload files to S3 → get CDN URLs
       for (const file of files) {
-        // 1) presign
-        const { url, fields, publicUrl } = await presignOne(file, pid);
+        // show temp card immediately
+        // (PhotosSection will swap the temp item when the DB object arrives)
+        const temp = URL.createObjectURL(file);
+        onUploaded?.(temp);
 
-        // 2) actual upload to storage
-        const form = new FormData();
-        Object.entries(fields).forEach(([k, v]) => form.append(k, v));
-        form.append("file", file);
-        const up = await fetch(url, { method: "POST", body: form });
-        if (!up.ok) throw new Error("Upload failed");
+        const { cdnUrl } = await uploadFile({
+          file,
+          kind: "product",
+          refId: String(pid),
+        });
 
-        // 3) register with backend
-        const imgRes = await fetch(`${BASE_API_URL}/api/product-images/`, {
+        // 3) persist a ProductImage row pointing at the CDN URL
+        //    (send multiple compatible keys; backend can pick any)
+        const res = await fetch(`${BASE_API_URL}/api/product-images/`, {
           method: "POST",
           headers: { "Content-Type": "application/json", ...authHeaders() },
           credentials: "include",
           body: JSON.stringify({
-            product: Number(pid),
-            external_url: publicUrl || undefined, // backend resolves to CDN/AS
-            // is_main omitted — backend will set first image primary if needed
-            alt_text: file.name || "",
+            product: pid,
+            product_id: pid,
+            image_url: cdnUrl, // preferred
+            image: cdnUrl,     // back-compat name
+            url: cdnUrl,       // extra alias if you support it
           }),
         });
 
-        if (!imgRes.ok) {
-          let detail = "";
-          try { detail = JSON.stringify(await imgRes.json()); }
-          catch { try { detail = await imgRes.text(); } catch {} }
-          throw new Error(`Image register failed: ${imgRes.status} ${detail}`);
+        if (!res.ok) {
+          const msg = await res.text().catch(() => "");
+          throw new Error(`Save image failed: ${res.status} ${msg}`);
         }
 
-        // Send the full object to the parent (id, is_main, image_url, etc.)
-        const saved = await imgRes.json();
-        onUploaded?.(saved);
+        const saved = await res.json();
+        onUploaded?.(saved); // replace the temp card w/ real DB object
       }
-
-      if (inputRef.current) inputRef.current.value = "";
     } catch (e) {
-      setErr(e.message || "Upload error");
+      setErr(e.message || String(e));
     } finally {
       setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
     }
   }
 
   return (
-    <div className="space-y-2">
-      <label className="inline-flex items-center px-3 py-2 rounded-md border cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          multiple={multiple}
-          className="hidden"
-          onChange={(e) => handleFiles([...e.target.files])}
-          disabled={busy}
-        />
+    <div className="flex items-center gap-3">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple={multiple}
+        className="hidden"
+        onChange={onChange}
+      />
+      <button
+        type="button"
+        onClick={choose}
+        disabled={busy}
+        className="px-3 py-2 rounded-md border bg-white dark:bg-gray-800"
+      >
         {busy ? "Uploading…" : "Upload images"}
-      </label>
-      {err ? <p className="text-xs text-red-500">{err}</p> : null}
+      </button>
+      {err && <span className="text-sm text-red-500">{err}</span>}
     </div>
   );
 }

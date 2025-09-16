@@ -1,4 +1,4 @@
-// app/(pages)/login/page.jsx  (rename from .tsx if you use JSX)
+// app/(pages)/login/page.jsx
 "use client";
 
 import { useEffect } from "react";
@@ -11,9 +11,20 @@ import logo from "@/public/images/logo.png";
 import signinImage from "../../image/signin.svg";
 
 // Render LoginForm only on the client to avoid SSR/CSR mismatches
-const LoginForm = dynamic(() => import("@/components/auth/LoginForm"), {
-  ssr: false,
-});
+const LoginForm = dynamic(() => import("@/components/auth/LoginForm"), { ssr: false });
+
+// Decode & safely constrain `next` to same-origin paths only
+function decodeSafeNext(raw) {
+  if (!raw) return "";
+  try {
+    const dec = decodeURIComponent(raw);
+    // allow only internal paths (starts with single slash, not //)
+    if (dec.startsWith("/") && !dec.startsWith("//")) return dec;
+    return "";
+  } catch {
+    return "";
+  }
+}
 
 export default function LoginPage() {
   const { user, hydrated } = useAuth();
@@ -22,10 +33,9 @@ export default function LoginPage() {
 
   // If already authenticated, redirect away from the login screen
   useEffect(() => {
-    if (hydrated && user) {
-      const next = searchParams.get("next");
-      router.replace(next || "/new-dashboard");
-    }
+    if (!hydrated || !user) return;
+    const next = decodeSafeNext(searchParams.get("next"));
+    router.replace(next || "/new-dashboard");
   }, [hydrated, user, router, searchParams]);
 
   // Hide the page while redirecting to prevent flash

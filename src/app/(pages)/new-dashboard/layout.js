@@ -1,4 +1,4 @@
-//app/(pages)/new-dashboard/layout.js
+// app/(pages)/new-dashboard/layout.js
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
@@ -9,6 +9,7 @@ import { RoleViewProvider } from "@/contexts/RoleViewContext";
 import DynamicSidebarLayout from "@/components/new-dashboard/DynamicSidebarLayout";
 import { useOnboardingGate } from "@/hooks/useOnboardingGate";
 import { deriveRawRoles } from "@/app/utils/roles";
+import ActiveAnnouncements from "@/components/common/announcements/ActiveAnnouncements";
 
 export default function LayoutWrapper({ children }) {
   return (
@@ -22,7 +23,6 @@ function EnsureHydrated({ children }) {
   const { hydrated, user } = useAuth();
   useOnboardingGate();
 
-  // <- 🔑 derive defensively from the actual /me payload
   const roles = useMemo(() => deriveRawRoles(user), [user]);
 
   if (!hydrated) {
@@ -37,10 +37,31 @@ function EnsureHydrated({ children }) {
 }
 
 function Layout({ children }) {
-  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const PREF_KEY = "nd.sidebarVisible.v1";
+  const { hydrated } = useAuth();
+
+  // ⬇️ Collapsed by default, then hydrate from localStorage
+  const [sidebarVisible, setSidebarVisible] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const sidebarRef = useRef(null);
 
+  // Read saved preference after mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(PREF_KEY);
+      if (saved !== null) setSidebarVisible(saved === "1");
+      // else keep default (collapsed)
+    } catch {}
+  }, []);
+
+  // Persist preference
+  useEffect(() => {
+    try {
+      localStorage.setItem(PREF_KEY, sidebarVisible ? "1" : "0");
+    } catch {}
+  }, [sidebarVisible]);
+
+  // Click-away closes mobile drawer
   useEffect(() => {
     const onDown = (e) => {
       if (mobileOpen && sidebarRef.current && !sidebarRef.current.contains(e.target)) {
@@ -68,6 +89,8 @@ function Layout({ children }) {
         />
         <main className="flex-1 flex flex-col min-h-[calc(100vh-64px)] w-full overflow-hidden dark:bg-gray-950">
           <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-12 py-6 flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950 text-black dark:text-white transition-colors duration-300">
+            {/* 👉 Announcements sit above page content */}
+            {hydrated && <ActiveAnnouncements className="mb-4" />}
             {children}
           </div>
           <Footer />

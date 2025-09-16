@@ -29,6 +29,9 @@ upfrica/
 │   │   │   │   ├── find-for-me/
 │   │   │   │   │   ├── layout.jsx
 │   │   │   │   │   └── page.jsx
+│   │   │   │   ├── requests/
+│   │   │   │   │   ├── opengraph-image.jsx
+│   │   │   │   │   └── page.jsx
 │   │   │   │   ├── search/
 │   │   │   │   │   └── page.jsx
 │   │   │   │   ├── shops/
@@ -191,6 +194,8 @@ upfrica/
 │   │   │   │   │   │   └── page.jsx
 │   │   │   │   │   └── page.jsx
 │   │   │   │   ├── agent/
+│   │   │   │   │   ├── requests/
+│   │   │   │   │   │   └── page.jsx
 │   │   │   │   │   └── page.jsx
 │   │   │   │   ├── all-orders/
 │   │   │   │   │   ├── [id]/
@@ -216,6 +221,8 @@ upfrica/
 │   │   │   │   ├── blog-categories/
 │   │   │   │   │   └── page.jsx
 │   │   │   │   ├── buyer/
+│   │   │   │   │   ├── requests/
+│   │   │   │   │   │   └── page.jsx
 │   │   │   │   │   └── page.jsx
 │   │   │   │   ├── cancelled-orders/
 │   │   │   │   │   └── page.jsx
@@ -313,6 +320,10 @@ upfrica/
 │   │   │   │   │   └── page.jsx
 │   │   │   │   ├── quick-actions/
 │   │   │   │   │   └── page.jsx
+│   │   │   │   ├── requests/
+│   │   │   │   │   ├── [id]/
+│   │   │   │   │   │   └── page.jsx
+│   │   │   │   │   └── page.jsx
 │   │   │   │   ├── reviews/
 │   │   │   │   │   └── page.jsx
 │   │   │   │   ├── sales/
@@ -349,6 +360,8 @@ upfrica/
 │   │   │   │   │   │   └── page.jsx
 │   │   │   │   │   └── page.jsx
 │   │   │   │   ├── shipped-orders/
+│   │   │   │   │   └── page.jsx
+│   │   │   │   ├── sourcing/
 │   │   │   │   │   └── page.jsx
 │   │   │   │   ├── temp/
 │   │   │   │   │   └── page.jsx
@@ -450,6 +463,12 @@ upfrica/
 │   │   │   │   └── page.jsx
 │   │   │   ├── page.jsx
 │   │   │   └── upload-test.jsx
+│   │   ├── agent/
+│   │   │   ├── requests/
+│   │   │   │   ├── [id]/
+│   │   │   │   │   └── page.jsx
+│   │   │   │   └── page.jsx
+│   │   │   └── layout.jsx
 │   │   ├── api/
 │   │   │   ├── [...path]/
 │   │   │   │   └── route.js
@@ -599,6 +618,7 @@ upfrica/
 │   │   │   └── useBrands.js
 │   │   ├── auth/
 │   │   │   ├── AccessDeniedScreen.jsx
+│   │   │   ├── AuthSheetProvider.jsx
 │   │   │   ├── LoginForm.jsx
 │   │   │   └── RoleGuard.jsx
 │   │   ├── badges/
@@ -636,6 +656,8 @@ upfrica/
 │   │   │   │   ├── UserEmail.jsx
 │   │   │   │   ├── UserMenu.jsx
 │   │   │   │   └── UserName.jsx
+│   │   │   ├── nav/
+│   │   │   │   └── NotificationsBell.jsx
 │   │   │   ├── AccessDeniedScreen.jsx
 │   │   │   ├── AccountTypeBadge.jsx
 │   │   │   ├── ConfirmModal.jsx
@@ -660,6 +682,8 @@ upfrica/
 │   │   │   │   └── ProductsPage.jsx
 │   │   │   └── products-list/
 │   │   │       └── ProductList.jsx
+│   │   ├── form/
+│   │   │   └── DateTimeField.jsx
 │   │   ├── help/
 │   │   │   ├── HelpCenterPage.jsx
 │   │   │   ├── MainArticle.jsx
@@ -737,9 +761,20 @@ upfrica/
 │   │   │   │   ├── PayoutSettings.jsx
 │   │   │   │   ├── ShopDetailsForm.jsx
 │   │   │   │   └── ShopDetailsSettings.jsx
+│   │   │   ├── sourcing/
+│   │   │   │   ├── tables/
+│   │   │   │   │   ├── BrowseRequestsTable.jsx
+│   │   │   │   │   ├── MyOffersTable.jsx
+│   │   │   │   │   └── MySourcingOrders.jsx
+│   │   │   │   ├── MyRequests.jsx
+│   │   │   │   ├── OfferComposeModal.jsx
+│   │   │   │   ├── RequestDetails.jsx
+│   │   │   │   ├── SourcingWorkbench.jsx
+│   │   │   │   └── page.jsx
 │   │   │   ├── AffiliateDashboardHome.jsx
 │   │   │   ├── AffiliateSidebar.jsx
 │   │   │   ├── AgentDashboardHome.jsx
+│   │   │   ├── AgentShell.jsx
 │   │   │   ├── AgentSidebar.jsx
 │   │   │   ├── Buyer-theme.jsx
 │   │   │   ├── BuyerDashboardHome.jsx
@@ -845,6 +880,7 @@ upfrica/
 │   │   │   ├── MyRequests.jsx
 │   │   │   ├── OfferList.jsx
 │   │   │   ├── OffersPanel.jsx
+│   │   │   ├── PublicBrowseRequests.jsx
 │   │   │   └── RequestForm.jsx
 │   │   ├── support/
 │   │   │   └── MobileNav.jsx
@@ -972,6 +1008,7 @@ upfrica/
 │   │   ├── init.js
 │   │   ├── locale-routing.js
 │   │   ├── money.js
+│   │   ├── notifications.js
 │   │   ├── pricing-mini.js
 │   │   ├── pricing.js
 │   │   ├── rails.js
@@ -993,6 +1030,7 @@ upfrica/
 ├── frontend_scan.json
 ├── jsconfig.json
 ├── middleware.js
+├── next-env.d.ts
 ├── next.config.js
 ├── old_next.config.mjs.txt
 ├── package.json
@@ -1000,7 +1038,8 @@ upfrica/
 ├── scan.txt
 ├── scan_frontend.py
 ├── struct.txt
-└── tailwind.config.js
+├── tailwind.config.js
+└── tsconfig.json
 ```
 
 ## App routes (focus)

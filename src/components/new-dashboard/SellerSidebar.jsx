@@ -24,11 +24,15 @@ import {
   HelpCircle,
   Settings,
   X,
+  Handshake,
+  ClipboardList,
 } from "lucide-react";
 import { useRoleView } from "@/contexts/RoleViewContext";
 
 const sellerItems = [
-  { label: "Seller Dashboard", href: "/new-dashboard", icon: LayoutDashboard },
+  { label: "Seller Dashboard", href: "/new-dashboard/seller", icon: LayoutDashboard },
+  { label: "Find-for-me Queue", href: "/agent/requests", icon: Handshake },
+  { label: "Sourcing / Gigs", href: "/new-dashboard/sourcing", icon: ClipboardList },
   { label: "My Products", href: "/new-dashboard/products", icon: Package },
   { label: "My Sales", href: "/new-dashboard/sales", icon: ShoppingCart },
   { label: "Shipping Zones", href: "/shipping/zones", icon: Truck },
@@ -40,10 +44,10 @@ const sellerItems = [
 ];
 
 const buyerItems = [
-  { label: "Buyer Orders", href: "/orders", icon: ShoppingCart },
+  { label: "Buyer Orders", href: "/new-dashboard/orders", icon: ShoppingCart },
   { label: "Saved Items", href: "/wishlist", icon: Heart },
-  { label: "BNPL Orders", href: "/bnpl", icon: CreditCard },
-  { label: "Profile Settings", href: "/settings/profile", icon: User },
+  { label: "BNPL Orders", href: "/bnpl/orders", icon: CreditCard },
+  { label: "Profile Settings", href: "/new-dashboard/settings/profile", icon: User },
   { label: "Help Center", href: "/help", icon: HelpCircle },
 ];
 
@@ -73,7 +77,7 @@ export default function SellerSidebar({
     <aside
       ref={sidebarRef}
       className={clsx(
-        `fixed md:static w-64 h-screen flex flex-col border-r shadow-lg transition-transform duration-300 bg-white dark:bg-[#111827]`,
+        "fixed md:static w-64 h-screen flex flex-col border-r shadow-lg transition-transform duration-300 bg-white dark:bg-[#111827]",
         {
           "translate-x-0": mobileOpen,
           "-translate-x-full": !mobileOpen,
@@ -104,8 +108,7 @@ export default function SellerSidebar({
 
           <nav className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
             {navItems.map(({ label, href, icon: Icon }) => {
-              const isActive =
-                pathname === href || pathname.startsWith(href + "/");
+              const isActive = pathname === href || pathname.startsWith(href + "/");
               return (
                 <Link
                   key={href}

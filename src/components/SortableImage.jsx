@@ -1,12 +1,17 @@
 //src/components/SortableImage.jsx ✅
-// (draggable wrapper with “Set as primary” and “Delete”).
 "use client";
 
+import Image from "next/image";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { X, Star } from "lucide-react";
 
-export default function SortableImage({ id, url, isPrimary, onSetPrimary, onDelete }) {
+export default function SortableImage({
+  id,
+  url,
+  isPrimary = false,
+  onSetPrimary,
+  onDelete,
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id });
 
@@ -20,42 +25,53 @@ export default function SortableImage({ id, url, isPrimary, onSetPrimary, onDele
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className="relative group rounded-md border overflow-hidden bg-gray-50 dark:bg-gray-800 touch-pan-y"
+      className="relative rounded-lg overflow-hidden border bg-white dark:bg-gray-900"
     >
-      <img
-        src={url}
-        alt="product"
-        className="h-24 w-24 sm:h-28 sm:w-28 object-cover select-none pointer-events-none"
-        draggable={false}
-      />
-
-      {isPrimary && (
-        <div className="absolute top-1 left-1 bg-yellow-400 text-[10px] px-1.5 py-0.5 rounded shadow">
-          Primary
-        </div>
-      )}
-
-      <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 bg-black/40 transition">
-        {!isPrimary && (
-          <button
-            type="button"
-            onClick={() => onSetPrimary(id)}
-            className="px-2 py-1 bg-white text-xs rounded shadow flex items-center gap-1"
-          >
-            <Star size={14} />
-            Primary
-          </button>
-        )}
+      {/* Top-right controls */}
+      <div className="absolute right-2 top-2 z-10 flex gap-2">
         <button
-          type="button"
-          onClick={() => onDelete(id)}
-          className="px-2 py-1 bg-red-600 text-white text-xs rounded shadow flex items-center gap-1"
+          title="Drag"
+          {...attributes}
+          {...listeners}
+          className="rounded bg-white/80 dark:bg-gray-800/70 px-2 py-1 text-xs shadow"
         >
-          <X size={14} />
-          Delete
+          ⠿
         </button>
+        <button
+          title={isPrimary ? "Primary" : "Set primary"}
+          onClick={() => onSetPrimary?.(id)}
+          className={`rounded px-2 py-1 text-xs shadow ${
+            isPrimary
+              ? "bg-yellow-400/90 text-black"
+              : "bg-white/80 dark:bg-gray-800/70"
+          }`}
+        >
+          ★
+        </button>
+        <button
+          title="Delete"
+          onClick={() => onDelete?.(id)}
+          className="rounded bg-white/80 dark:bg-gray-800/70 px-2 py-1 text-xs shadow"
+        >
+          🗑
+        </button>
+      </div>
+
+      {/* Image */}
+      <div className="aspect-square relative">
+        <Image
+          src={url}
+          alt=""
+          fill
+          sizes="240px"
+          className="object-cover"
+          priority={false}
+        />
+      </div>
+
+      {/* Footer */}
+      <div className="p-2 text-[11px] text-gray-600 dark:text-gray-400">
+        <span className="truncate block">{isPrimary ? "Primary" : "\u00A0"}</span>
       </div>
     </div>
   );

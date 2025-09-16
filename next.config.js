@@ -1,5 +1,6 @@
 // next.config.js
 /** @type {import('next').NextConfig} */
+const path = require('path');
 
 // Prefer env so you can swap per env (staging/prod)
 const CDN_HOST = (process.env.NEXT_PUBLIC_CDN_HOST || 'cdn.upfrica.com')
@@ -20,6 +21,15 @@ const nextConfig = {
   reactStrictMode: true,
   compress: true,
   output: 'standalone',
+
+  // Make "@/..." map to ./src/ uniformly (server & client)
+  webpack(config) {
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      '@': path.resolve(__dirname, 'src'),
+    };
+    return config;
+  },
 
   images: {
     loader: 'custom',
@@ -46,35 +56,18 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com',    pathname: '/**' },
       { protocol: 'https', hostname: 'picsum.photos',          pathname: '/**' },
       { protocol: 'https', hostname: 'storage.googleapis.com', pathname: '/**' },
-
-      // If you sometimes bypass CloudFront and hit S3 directly, uncomment:
       // { protocol: 'https', hostname: 'upfrica-media-euw2.s3.eu-west-2.amazonaws.com', pathname: '/**' },
     ],
-  },
-
-  async headers() {
-    return [
-      {
-        source: '/api/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Origin',  value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,POST,OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
-        ],
-      },
-    ];
   },
 
   // SEO-friendly alias redirects
   async redirects() {
     return [
-      // Country-scoped alias → canonical sourcing
       {
         source: `/:cc(${CC_GROUP})/find-for-me`,
         destination: '/:cc/sourcing',
         permanent: true, // 308
       },
-      // Global alias → global sourcing landing (or adjust to your default cc)
       {
         source: '/find-for-me',
         destination: '/sourcing',

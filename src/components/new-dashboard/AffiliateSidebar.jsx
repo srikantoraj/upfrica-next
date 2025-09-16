@@ -11,26 +11,26 @@ import RoleSwitcher from "@/components/new-dashboard/RoleSwitcher";
 import {
   X,
   LayoutDashboard,
-  Users,
   ShoppingBag,
-  DollarSign,
+  Truck,
   Mail,
-  HelpCircle,
+  DollarSign,
   User,
+  HelpCircle,
   Settings,
+  Handshake,
+  ClipboardList,
 } from "lucide-react";
 
 const navItems = [
-  {
-    label: "Affiliate Dashboard",
-    href: "/new-dashboard/affiliate",
-    icon: LayoutDashboard,
-  },
-  { label: "My Referrals", href: "/affiliate/referrals", icon: Users },
-  { label: "Earnings", href: "/affiliate/earnings", icon: DollarSign },
-  { label: "Promotions", href: "/affiliate/promotions", icon: ShoppingBag },
-  { label: "Messages", href: "/affiliate/messages", icon: Mail },
-  { label: "Profile Settings", href: "/settings/profile", icon: User },
+  { label: "Agent Dashboard", href: "/new-dashboard/agent", icon: LayoutDashboard },
+  { label: "Find-for-me Queue", href: "/agent/requests", icon: Handshake },
+  { label: "Sourcing / Gigs", href: "/new-dashboard/sourcing", icon: ClipboardList },
+  { label: "My Orders", href: "/orders", icon: ShoppingBag },
+  { label: "Pickup Tasks", href: "/agent/pickups", icon: Truck },
+  { label: "Messages", href: "/agent/messages", icon: Mail },
+  { label: "My Commissions", href: "/agent/earnings", icon: DollarSign },
+  { label: "Profile Settings", href: "/new-dashboard/settings/profile", icon: User },
   { label: "Help Center", href: "/help", icon: HelpCircle },
 ];
 
@@ -89,7 +89,7 @@ export default function AffiliateSidebar({
 
           <nav className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
             {navItems.map(({ label, href, icon: Icon }) => {
-              const isActive = pathname === href;
+              const isActive = pathname === href || pathname.startsWith(href + "/");
               return (
                 <Link
                   key={href}

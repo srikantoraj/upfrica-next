@@ -1,7 +1,5 @@
 // src/lib/products/api.js
 
-// src/lib/products/api.js
-
 import { BASE_API_URL } from "@/app/constants";
 
 // 🔹 Get product details by region and slug

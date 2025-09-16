@@ -17,14 +17,18 @@ import {
   User,
   HelpCircle,
   Settings,
+  ClipboardList,
 } from "lucide-react";
 
 const navItems = [
   { label: "Dashboard", href: "/new-dashboard/buyer", icon: Home },
   { label: "My Orders", href: "/new-dashboard/orders", icon: ShoppingBag },
-  { label: "Saved Items", href: "/saved", icon: Bookmark },
   { label: "BNPL Orders", href: "/bnpl/orders", icon: CreditCard },
-  { label: "Profile Settings", href: "/settings/profile", icon: User },
+  { label: "Request Sourcing", href: "/new-dashboard/sourcing", icon: ClipboardList },
+  { label: "My Requests", href: "/new-dashboard/requests", icon: ClipboardList },
+  { label: "My Offers", href: "/new-dashboard/offers", icon: ClipboardList },
+  { label: "Saved Items", href: "/wishlist", icon: Bookmark },            // keep URL consistent app-wide
+  { label: "Profile Settings", href: "/new-dashboard/settings/profile", icon: User },
   { label: "Help Center", href: "/help", icon: HelpCircle },
 ];
 
@@ -51,7 +55,7 @@ export default function BuyerSidebar({
     <aside
       ref={sidebarRef}
       className={clsx(
-        `fixed md:static w-64 h-screen flex flex-col border-r shadow-lg transition-transform duration-300 bg-white dark:bg-[#111827]`,
+        "fixed md:static w-64 h-screen flex flex-col border-r shadow-lg transition-transform duration-300 bg-white dark:bg-[#111827]",
         {
           "translate-x-0": mobileOpen,
           "-translate-x-full": !mobileOpen,
@@ -69,9 +73,8 @@ export default function BuyerSidebar({
         </button>
       </div>
 
-      {/* ✅ Sidebar Content with footer pinned */}
+      {/* Sidebar content with pinned footer */}
       <div className="flex flex-col justify-between h-[70%]">
-        {/* Top Scrollable Area */}
         <div className="flex-1 overflow-y-auto px-4">
           <div className="font-semibold mb-4 hidden md:block text-gray-800 dark:text-white">
             Sidebar
@@ -84,9 +87,9 @@ export default function BuyerSidebar({
           <nav className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
             {navItems.map(({ label, href, icon: Icon }) => {
               const isActive =
-                pathname.startsWith(href) ||
-                (href === "/new-dashboard/buyer" &&
-                  pathname === "/new-dashboard");
+                pathname === href ||
+                pathname.startsWith(href + "/") ||
+                (href === "/new-dashboard/buyer" && pathname === "/new-dashboard");
               return (
                 <Link
                   key={href}
@@ -107,7 +110,7 @@ export default function BuyerSidebar({
           </nav>
         </div>
 
-        {/* Sticky Footer at true bottom (no scroll needed if enough space) */}
+        {/* Sticky Footer */}
         <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-4">
           <Link
             href="/new-dashboard/settings"

@@ -11,6 +11,7 @@ import Link from "next/link";
 import useTheme from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleView } from "@/contexts/RoleViewContext";
+import NotificationsBell from "@/components/common/nav/NotificationsBell";
 import RoleSwitcher from "@/components/new-dashboard/RoleSwitcher";
 
 export default function TopBar({ toggleMobileSidebar, toggleDesktopSidebar, sidebarVisible }) {
@@ -164,26 +165,7 @@ export default function TopBar({ toggleMobileSidebar, toggleDesktopSidebar, side
           </div>
 
           {/* Notifications */}
-          <div className="relative">
-            <button onClick={() => toggle(setNotifDropdown)} className="p-1 relative" aria-label="Notifications">
-              <Bell className="w-5 h-5" />
-              {/* sample badge */}
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
-                3
-              </span>
-            </button>
-            {notifDropdown && (
-              <div className="absolute right-0 mt-2 w-72 max-h-80 bg-white dark:bg-gray-800 border rounded shadow z-50 flex flex-col">
-                <div className="px-3 py-2 font-semibold text-sm border-b">Notifications</div>
-                <div className="flex-1 overflow-auto">
-                  {/* … render notifications … */}
-                </div>
-                <div onClick={() => router.push("/notifications")} className="px-3 py-2 text-xs text-brand hover:underline cursor-pointer border-t">
-                  View all notifications →
-                </div>
-              </div>
-            )}
-          </div>
+<NotificationsBell dashboardHref="/new-dashboard" />
 
           {/* Settings */}
           <button className="p-1" onClick={() => router.push("/settings")} aria-label="Settings">

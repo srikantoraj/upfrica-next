@@ -1,3 +1,4 @@
+
 // src/lib/api.js
 // Cookie-first API helper that goes through Next's proxy (/api/...)
 // so the server can inject Authorization from the HttpOnly `up_auth` cookie.
@@ -5,6 +6,7 @@
 const DIRECT_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   process.env.NEXT_PUBLIC_API_BASE ||
+  process.env.BACKEND_BASE ||            // ← extra fallback
   "http://127.0.0.1:8000";
 
 const PROXY_PREFIX = "/api"; // ✅ no /b
@@ -13,11 +15,7 @@ const PROXY_PREFIX = "/api"; // ✅ no /b
 
 function resolveTimezone() {
   if (typeof window === "undefined") return undefined;
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
-  } catch {
-    return undefined;
-  }
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined; } catch { return undefined; }
 }
 
 function persistTzCookie(tz) {
@@ -30,20 +28,13 @@ function persistTzCookie(tz) {
 function withTZ(url, tz) {
   if (!tz) return url;
   try {
-    const u = new URL(
-      url,
-      typeof window !== "undefined" ? window.location.origin : "http://localhost"
-    );
+    const u = new URL(url, typeof window !== "undefined" ? window.location.origin : "http://localhost");
     if (!u.searchParams.has("tz")) u.searchParams.set("tz", tz);
     return u.toString();
-  } catch {
-    return url;
-  }
+  } catch { return url; }
 }
 
-function isFormData(v) {
-  return typeof FormData !== "undefined" && v instanceof FormData;
-}
+function isFormData(v) { return typeof FormData !== "undefined" && v instanceof FormData; }
 
 function hasHeader(headersObj, name) {
   if (!headersObj) return false;
@@ -54,13 +45,8 @@ function hasHeader(headersObj, name) {
   return Object.keys(headersObj).some((k) => k.toLowerCase() === lower);
 }
 
-function looksLikeFile(p = "") {
-  return /\.[a-z0-9]+$/i.test(p);
-}
-
-function trimSlashes(p = "") {
-  return String(p).replace(/^\/+|\/+$/g, "");
-}
+function looksLikeFile(p = "") { return /\.[a-z0-9]+$/i.test(p); }
+function trimSlashes(p = "") { return String(p).replace(/^\/+|\/+$/g, ""); }
 
 function splitUrlish(s = "") {
   const hashIdx = s.indexOf("#");
@@ -98,19 +84,22 @@ function stripProxyPrefixes(p = "") {
   return out;
 }
 
+function canonHost(h) {
+  const low = String(h || "").toLowerCase();
+  return low === "localhost" ? "127.0.0.1" : low;
+}
+
 function sameOriginAsDirectBase(absUrl) {
   try {
     const u = new URL(absUrl);
     const b = new URL(DIRECT_BASE);
-    const low = (x) => String(x || "").toLowerCase();
+    const lp = (x) => String(x || "").toLowerCase();
     return (
-      low(u.protocol) === low(b.protocol) &&
-      low(u.hostname) === low(b.hostname) &&
+      lp(u.protocol) === lp(b.protocol) &&
+      canonHost(u.hostname) === canonHost(b.hostname) &&
       String(u.port || "") === String(b.port || "")
     );
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 }
 
 /** ---- core fetcher ---- */
@@ -120,7 +109,10 @@ function sameOriginAsDirectBase(absUrl) {
  *     "addresses", "/addresses", "product/4345/reviews"
  * - If you pass "/api/..." or "api/..." (or even "api/b/..."), we normalize it.
  * - Absolute URLs that match DIRECT_BASE are rewritten to /api/<path>/ so cookies work.
- * - Other absolute URLs are fetched directly (not proxied).
+ * - Other absolute URLs are fetched directly (not proxied), unless opts.forceProxy is true.
+ *
+ * Extra opts:
+ *   - forceProxy?: boolean — force routing through /api even for absolute URLs that match DIRECT_BASE.
  */
 export async function api(path, opts = {}) {
   const tz = resolveTimezone();
@@ -138,15 +130,18 @@ export async function api(path, opts = {}) {
   if (!form && !hasHeader(headers, "Content-Type") && body != null) {
     headers.set("Content-Type", "application/json");
   }
+  if (!hasHeader(headers, "Accept")) {
+    headers.set("Accept", "application/json");
+  }
   if (tz && !hasHeader(headers, "X-Timezone")) {
     headers.set("X-Timezone", tz);
   }
 
   let url = String(path || "");
 
-  // 1) Absolute URL? If it's your backend, route via proxy. Else fetch direct.
+  // 1) Absolute URL? If it's your backend (or forceProxy), route via proxy. Else fetch direct.
   if (/^https?:\/\//i.test(url)) {
-    if (sameOriginAsDirectBase(url)) {
+    if (opts.forceProxy || sameOriginAsDirectBase(url)) {
       const u = new URL(url);
       const qs = u.search || "";
       const hash = u.hash || "";
@@ -164,11 +159,7 @@ export async function api(path, opts = {}) {
     url = `${PROXY_PREFIX}/${normalized}${search}${hash}`; // → /api/<path>/
   }
 
-  const fetchInit = {
-    ...opts,
-    headers,
-    credentials: "include",
-  };
+  const fetchInit = { ...opts, headers, credentials: "include" };
 
   const res = await fetch(withTZ(url, tz), fetchInit);
 
@@ -189,14 +180,16 @@ export async function api(path, opts = {}) {
     throw new Error(msg);
   }
 
+  // No content
+  if (res.status === 204 || res.status === 205) return null;
+
   const ct = res.headers.get("content-type") || "";
   return ct.includes("application/json") ? res.json() : res.text();
 }
 
 /** POST (JSON) convenience */
 export async function apiJSON(path, data, opts = {}) {
-  const body =
-    data != null && typeof data !== "string" ? JSON.stringify(data) : data;
+  const body = data != null && typeof data !== "string" ? JSON.stringify(data) : data;
   return api(path, { ...opts, method: opts.method || "POST", body });
 }
 

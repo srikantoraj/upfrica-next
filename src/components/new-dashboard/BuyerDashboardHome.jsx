@@ -1,30 +1,48 @@
-//src/components/new-dashboard/BuyerDashboardHome.jsx
+// src/components/new-dashboard/BuyerDashboardHome.jsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import clsx from "clsx";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifSummary } from "@/lib/notifications";
+import ActiveAnnouncements from "@/components/common/announcements/ActiveAnnouncements"
 import RecentReviews from "./RecentReviews";
 import { BASE_API_URL } from "@/app/constants";
-import { ShoppingBag, CreditCard, Clock, Star, MessageSquare, Heart, Info } from "lucide-react";
+import {
+  ShoppingBag, CreditCard, Clock, Star, MessageSquare, Heart, Info,
+  ClipboardList, Inbox, CheckCircle2
+} from "lucide-react";
 
 export default function BuyerDashboardHome() {
   const { user, token, hydrated } = useAuth();
-  const [showWelcome, setShowWelcome] = useState(user?.is_new_user);
 
-  const roles = Array.isArray(user?.account_type)
-    ? user.account_type
-    : user?.account_type
-    ? [user.account_type]
-    : [];
+  // ---- roles ---------------------------------------------------------------
+  const roles = useMemo(() => (
+    Array.isArray(user?.account_type)
+      ? user.account_type
+      : user?.account_type
+        ? [user.account_type]
+        : []
+  ), [user?.account_type]);
 
   const hasSeller = roles.includes("seller_private") || roles.includes("seller_business");
-  const hasAgent = roles.includes("agent");
+  const hasAgent  = roles.includes("agent");
+  const isBuyer   = roles.includes("buyer") || (!hasAgent && !hasSeller);
 
+  // ---- local state ---------------------------------------------------------
+  const [showWelcome, setShowWelcome] = useState(Boolean(user?.is_new_user));
   const [pendingReviews, setPendingReviews] = useState([]);
   const [myReviews, setMyReviews] = useState([]);
   const [orderCount, setOrderCount] = useState(0);
 
+  // Global notifications summary (polls; light-weight)
+  const { summary } = useNotifSummary({ enabled: hydrated });
+  const { total, buyer_quotes = 0, agent_approvals = 0, hrefs = {} } = summary || {};
+  const quotesHref   = hrefs.buyer_quotes   || "/new-dashboard/offers";     // buyer “received”
+  const approvalsHref= hrefs.agent_approvals|| "/new-dashboard/offers?view=sent"; // agent “sent”
+
+  // ---- effects -------------------------------------------------------------
   useEffect(() => {
     if (!hydrated || !token || !user) return;
 
@@ -53,8 +71,8 @@ export default function BuyerDashboardHome() {
         });
         if (!res.ok) throw new Error("Failed to fetch reviews");
         const data = await res.json();
-        const approved = data.results.filter((r) => r.status === 1);
-        const pending = data.results.filter((r) => r.status === 0);
+        const approved = (data.results || []).filter((r) => r.status === 1);
+        const pending  = (data.results || []).filter((r) => r.status === 0);
         setMyReviews(approved);
         setPendingReviews(pending);
       } catch (err) {
@@ -70,7 +88,7 @@ export default function BuyerDashboardHome() {
         });
         if (!res.ok) throw new Error("Failed to fetch order count");
         const data = await res.json();
-        setOrderCount(data.order_count || 0);
+        setOrderCount(Number(data.order_count || 0));
       } catch (err) {
         console.error("❌ Failed to fetch order count:", err);
       }
@@ -81,6 +99,7 @@ export default function BuyerDashboardHome() {
     fetchOrderCount();
   }, [hydrated, token, user]);
 
+  // ---- loading guard -------------------------------------------------------
   if (!hydrated) {
     return (
       <div className="max-w-7xl mx-auto p-6 text-gray-500 dark:text-gray-300">
@@ -89,29 +108,30 @@ export default function BuyerDashboardHome() {
     );
   }
 
+  // ---- UI ------------------------------------------------------------------
   return (
     <div className="max-w-7xl mx-auto p-4 text-gray-800 dark:text-white transition">
       <h1 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4">
         Welcome back{user?.username ? `, ${user.username}` : ""}!
       </h1>
 
-      {roles.length === 1 && roles.includes("buyer") && (
-        <div className="bg-yellow-100 text-yellow-800 text-sm p-3 rounded-md mb-4 border border-yellow-300 shadow-sm">
+      {/* Role upsell (pure buyer only) */}
+      {roles.length === 1 && isBuyer && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-900 dark:text-amber-200 text-sm p-3 rounded-md mb-4 border border-amber-200 dark:border-amber-800 shadow-sm">
           🎯 Want to earn on Upfrica?
-          <Link href="/onboarding/account-type" className="ml-2 font-semibold text-purple-600 hover:underline">
+          <Link href="/onboarding/account-type" className="ml-2 font-semibold text-purple-600 dark:text-purple-300 hover:underline">
             Become a Seller or Agent
           </Link>
         </div>
       )}
 
+      {/* Welcome block (first-time) */}
       {showWelcome && (
         <div className="bg-purple-50 dark:bg-purple-900 text-purple-800 dark:text-white border border-purple-200 dark:border-purple-700 rounded-lg p-4 mb-6">
           <h2 className="text-lg font-semibold mb-2">👋 Welcome to Upfrica!</h2>
           <p className="text-sm mb-4">
-            Your account is set up as a <strong>Buyer</strong> by default. You can now start placing orders, saving items to your wishlist, or
-            upgrade to our VIP Buyer program.
-            <br />
-            Want to sell products or become a local sourcing agent? You can add a Seller or Agent profile anytime.
+            Your account is set up as a <strong>Buyer</strong> by default. You can start placing orders, saving items to your wishlist, or
+            upgrade to our VIP Buyer program. You can add a Seller or Agent profile anytime.
           </p>
           <div className="flex flex-wrap gap-2">
             <Link href="/">
@@ -122,43 +142,76 @@ export default function BuyerDashboardHome() {
             </Link>
 
             {(!hasSeller || !hasAgent) && (
-              <div className="relative group">
-                <button
-                  disabled={roles.includes("affiliate")}
-                  onClick={() => {
-                    if (!roles.includes("affiliate")) window.location.href = "/onboarding/account-type";
-                  }}
-                  className={`bg-gray-200 dark:bg-gray-700 px-3 py-1.5 rounded text-sm transition ${
-                    roles.includes("affiliate")
-                      ? "text-gray-500 cursor-not-allowed bg-gray-300 dark:bg-gray-600"
-                      : "hover:bg-gray-300 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {hasSeller && !hasAgent
-                    ? "Become an Agent"
-                    : !hasSeller && hasAgent
-                    ? "Sell on Upfrica"
-                    : "Switch to Seller or Agent"}
-                </button>
-
-                {roles.includes("affiliate") && (
-                  <div className="absolute top-full left-0 mt-1 text-xs text-red-500 dark:text-red-400">
-                    🚫 Cannot switch: Affiliate accounts cannot become sellers or agents.
-                  </div>
+              <Link
+                href="/onboarding/account-type"
+                className={clsx(
+                  "px-3 py-1.5 rounded text-sm transition",
+                  "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
                 )}
-              </div>
+              >
+                {hasSeller && !hasAgent
+                  ? "Become an Agent"
+                  : !hasSeller && hasAgent
+                  ? "Sell on Upfrica"
+                  : "Switch to Seller or Agent"}
+              </Link>
             )}
           </div>
         </div>
       )}
 
-      {/* Action Bar */}
+      {/* Sourcing action strip (uses global notif summary) */}
+      {(buyer_quotes > 0 || agent_approvals > 0) && (
+        <div
+          className="rounded-xl p-3 sm:p-4 mb-6 text-sm text-neutral-900 dark:text-neutral-100 border border-[#8710D8]/20 dark:border-[#8710D8]/30"
+          style={{ backgroundImage: "linear-gradient(90deg, #8710D880, #8710D8CC 55%, #1E5BFF 100%)" }}
+        >
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="font-medium flex items-center gap-2">
+              <ClipboardList className="w-4 h-4" />
+              Sourcing updates • {total} item{total === 1 ? "" : "s"} need attention
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {buyer_quotes > 0 && (
+                <Link
+                  href={quotesHref}
+                  className="inline-flex items-center gap-2 rounded-lg bg-white/90 dark:bg-neutral-900/80 border border-white/50 dark:border-neutral-700 px-3 py-1.5 text-sm hover:bg-white dark:hover:bg-neutral-800"
+                >
+                  <Inbox className="w-4 h-4" /> Review quotes
+                  <span className="ml-1 rounded-full border border-neutral-300 dark:border-neutral-700 px-2 text-xs">
+                    {buyer_quotes}
+                  </span>
+                </Link>
+              )}
+              {agent_approvals > 0 && (
+                <Link
+                  href={approvalsHref}
+                  className="inline-flex items-center gap-2 rounded-lg bg-white/90 dark:bg-neutral-900/80 border border-white/50 dark:border-neutral-700 px-3 py-1.5 text-sm hover:bg-white dark:hover:bg-neutral-800"
+                >
+                  <CheckCircle2 className="w-4 h-4" /> Awaiting buyer approval
+                  <span className="ml-1 rounded-full border border-neutral-300 dark:border-neutral-700 px-2 text-xs">
+                    {agent_approvals}
+                  </span>
+                </Link>
+              )}
+              <Link
+                href="/new-dashboard/requests"
+                className="inline-flex items-center gap-2 rounded-lg bg-white/90 dark:bg-neutral-900/80 border border-white/50 dark:border-neutral-700 px-3 py-1.5 text-sm hover:bg-white dark:hover:bg-neutral-800"
+              >
+                View my requests →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Action Bar */}
       <div className="flex gap-2 mb-6 overflow-x-auto flex-nowrap">
-        <button className="min-h-10 bg-purple-600 text-white px-4 py-2 rounded text-sm hover:bg-purple-700 transition">Claim €5 Reward</button>
-        <button className="min-h-10 bg-purple-600 text-white px-4 py-2 rounded text-sm hover:bg-purple-700 transition">Leave Review</button>
-        <button className="min-h-10 bg-purple-600 text-white px-4 py-2 rounded text-sm hover:bg-purple-700 transition">View Wishlist Deals</button>
-        <button className="min-h-10 bg-purple-600 text-white px-4 py-2 rounded text-sm hover:bg-purple-700 transition">Upgrade to 1P</button>
-        <button className="min-h-10 bg-purple-600 text-white px-4 py-2 rounded text-sm hover:bg-purple-700 transition">Pay / BNPL</button>
+        <ActionBtn>Claim €5 Reward</ActionBtn>
+        <ActionBtn>Leave Review</ActionBtn>
+        <ActionBtn>View Wishlist Deals</ActionBtn>
+        <ActionBtn>Upgrade to 1P</ActionBtn>
+        <ActionBtn>Pay / BNPL</ActionBtn>
 
         {(!hasSeller || !hasAgent) && (
           <Link href="/onboarding/account-type">
@@ -171,12 +224,11 @@ export default function BuyerDashboardHome() {
 
       {/* Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Link href="/new-dashboard/orders">
-          <MetricBox icon={<ShoppingBag />} label="Orders" value={orderCount} />
-        </Link>
+        <Link href="/new-dashboard/orders"><MetricBox icon={<ShoppingBag />} label="Orders" value={orderCount} /></Link>
         <MetricBox icon={<CreditCard />} label="Total Spend" value="€4,500" />
         <MetricBox icon={<Clock />} label="Avg. Delivery" value="2.1 days" />
         <MetricBox icon={<Star />} label="Buyer Rating" value="Excellent" />
+
         <Link href="/new-dashboard/reviews">
           <MetricBox
             icon={<MessageSquare />}
@@ -184,20 +236,21 @@ export default function BuyerDashboardHome() {
             hint="Approved vs Pending Reviews"
             value={
               <div className="flex items-center gap-1">
-                <span className="text-green-600">{myReviews.length} ✅</span>
-                <span className="text-gray-500">/</span>
-                <span className="text-yellow-500">{pendingReviews.length} ⏳</span>
+                <span className="text-green-600 dark:text-green-400">{myReviews.length} ✅</span>
+                <span className="text-gray-500 dark:text-gray-400">/</span>
+                <span className="text-amber-500 dark:text-amber-400">{pendingReviews.length} ⏳</span>
               </div>
             }
           />
         </Link>
+
         <MetricBox icon={<Heart />} label="Wishlist Items" value="5" />
 
         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
           <h2 className="text-sm font-bold text-gray-800 dark:text-white mb-1">Wishlist</h2>
           <p className="text-sm mb-3 text-gray-600 dark:text-gray-400">3 items have price drops!</p>
-          <Link href="/wishlist">
-            <span className="text-sm font-medium text-blue-600 dark:text-blue-400 cursor-pointer">View Items &rarr;</span>
+          <Link href="/wishlist" className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
+            View Items →
           </Link>
         </div>
       </div>
@@ -211,7 +264,7 @@ export default function BuyerDashboardHome() {
             <span>Progress</span>
             <span>90%</span>
           </div>
-          <div className="h-2 w-full bg-gray-300 rounded">
+          <div className="h-2 w-full bg-gray-300 dark:bg-gray-700 rounded">
             <div className="h-2 bg-blue-600 rounded" style={{ width: "90%" }} />
           </div>
           <p className="text-xs mt-2 text-gray-500 dark:text-gray-400">€500 to go</p>
@@ -220,6 +273,14 @@ export default function BuyerDashboardHome() {
         <RecentReviews token={token} />
       </div>
     </div>
+  );
+}
+
+function ActionBtn({ children }) {
+  return (
+    <button className="min-h-10 bg-purple-600 text-white px-4 py-2 rounded text-sm hover:bg-purple-700 transition">
+      {children}
+    </button>
   );
 }
 

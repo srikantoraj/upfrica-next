@@ -1,16 +1,14 @@
 // app/(pages)/[cc]/page.jsx
 import Head from "next/head";
 import { cookies } from "next/headers";
-import TopBar from "@/components/home/TopBar";
-import Header from "@/components/home/Header";
+
 import HeroCurved from "@/components/home/HeroCurved";
 import HeroCarousel from "@/components/home/HeroCarousel";
 import PromoTiles from "@/components/home/PromoTiles";
 import ValuePills from "@/components/home/ValuePills";
 import NavCategories from "@/components/home/NavCategories";
-import Footer from "@/components/home/Footer";
-import BottomBar from "@/components/home/BottomBar";
 import ProductRail from "@/components/home/ProductRail";
+
 import { COUNTRY_META, fetchCategories, getHomeRails } from "@/lib/home";
 import { SITE_BASE_URL, BASE_API_URL, API_BASE, COUNTRY_ALIAS } from "@/app/constants";
 
@@ -18,8 +16,10 @@ export const revalidate = 300;
 export const dynamic = "force-static";
 
 /* ---------- helpers to map ISO <-> slug (GB <-> uk) ---------- */
-const isoToSlug = (iso) => (String(iso).toUpperCase() === "GB" ? "uk" : String(iso || "").toLowerCase());
-const slugToIso = (slug) => (String(slug).toLowerCase() === "uk" ? "GB" : String(slug || "").toUpperCase());
+const isoToSlug = (iso) =>
+  (String(iso).toUpperCase() === "GB" ? "uk" : String(iso || "").toLowerCase());
+const slugToIso = (slug) =>
+  (String(slug).toLowerCase() === "uk" ? "GB" : String(slug || "").toUpperCase());
 
 /* ---------- build static params from backend-supported countries ---------- */
 export async function generateStaticParams() {
@@ -33,7 +33,6 @@ export async function generateStaticParams() {
     const uniq = Array.from(new Set(supported));
     return (uniq.length ? uniq : ["gh", "ng", "uk"]).map((cc) => ({ cc }));
   } catch {
-    // Safe fallback for build
     return ["gh", "ng", "uk"].map((cc) => ({ cc }));
   }
 }
@@ -42,14 +41,17 @@ export async function generateMetadata({ params }) {
   const cc = (params?.cc || "gh").toLowerCase();
   const meta = COUNTRY_META[cc] || COUNTRY_META.gh;
 
-  // Try to get a good country name from API; fall back to COUNTRY_META
   let countryName = meta.name;
   try {
-    const res = await fetch(`${API_BASE}/i18n/init/?country=${encodeURIComponent(cc)}`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_BASE}/i18n/init/?country=${encodeURIComponent(cc)}`, {
+      next: { revalidate: 3600 },
+    });
     if (res.ok) {
       const j = await res.json();
       const iso = slugToIso(cc);
-      const hit = (j?.supported?.countries || []).find((c) => String(c.code).toUpperCase() === iso);
+      const hit = (j?.supported?.countries || []).find(
+        (c) => String(c.code).toUpperCase() === iso
+      );
       if (hit?.name) countryName = hit.name;
     }
   } catch {}
@@ -75,7 +77,14 @@ export async function generateMetadata({ params }) {
       url,
       siteName: "Upfrica",
       type: "website",
-      images: [{ url: `${baseUrl}/og/upfrica-${cc}.png`, width: 1200, height: 630, alt: `Upfrica ${countryName}` }],
+      images: [
+        {
+          url: `${baseUrl}/og/upfrica-${cc}.png`,
+          width: 1200,
+          height: 630,
+          alt: `Upfrica ${countryName}`,
+        },
+      ],
       locale: "en",
     },
     twitter: {
@@ -100,7 +109,8 @@ async function fetchCountryHome(cc) {
     });
     clearTimeout(timer);
     if (res.ok) return res.json();
-    if (res.status === 404) return { country: norm, version: 0, updated_at: null, sections: [] };
+    if (res.status === 404)
+      return { country: norm, version: 0, updated_at: null, sections: [] };
     console.warn("[country-home] Non-OK response", res.status);
     return null;
   } catch (err) {
@@ -140,7 +150,6 @@ const HERO_FALLBACK = {
 };
 const heroImage = (cc) => HERO_FALLBACK[cc] || HERO_FALLBACK.gh;
 
-// Prefer API’s primary_image, then images_by_name[name], then first image, then fallback
 function pickImage(section, name, fallback) {
   if (!section) return fallback;
   if (section.primary_image?.url) return section.primary_image.url;
@@ -163,9 +172,10 @@ function cardImageFromCMS(card, section, fallback) {
 /* ---------------------- mappers ---------------------- */
 function heroCurvedFromCMS(section, cc, meta) {
   const cfg = section?.config || {};
-  const cityList = Array.isArray(cfg.cities) && cfg.cities.length > 0
-    ? cfg.cities
-    : (COUNTRY_META[cc]?.cities || ["Your City"]);
+  const cityList =
+    Array.isArray(cfg.cities) && cfg.cities.length > 0
+      ? cfg.cities
+      : COUNTRY_META[cc]?.cities || ["Your City"];
   const city = cityList[0];
 
   const normalizeHref = (href) => {
@@ -174,9 +184,9 @@ function heroCurvedFromCMS(section, cc, meta) {
   };
 
   const defaults = [
-    { title: "Today’s Deals",       href: `/${cc}/deals` },
+    { title: "Today’s Deals", href: `/${cc}/deals` },
     { title: `Same-Day in ${city}`, href: `/${cc}/search?delivery=same-day` },
-    { title: "Wholesale & Bulk",    href: `/${cc}/wholesale` },
+    { title: "Wholesale & Bulk", href: `/${cc}/wholesale` },
   ];
 
   const rawCards = Array.isArray(cfg.mini_cards) ? cfg.mini_cards.slice(0, 3) : [];
@@ -196,22 +206,25 @@ function heroCurvedFromCMS(section, cc, meta) {
   });
 
   const mainImage =
-    (cfg.image_slot && (section?.images_by_name?.[cfg.image_slot] ||
-                        section?.images?.find?.(i => i.name === cfg.image_slot)?.url)) ||
+    (cfg.image_slot &&
+      (section?.images_by_name?.[cfg.image_slot] ||
+        section?.images?.find?.((i) => i.name === cfg.image_slot)?.url)) ||
     pickImage(section, "hero", heroImage(cc));
 
-  const primaryCtaRaw = cfg.primaryCta || cfg.primary_cta || { label: "Browse Today’s Deals", href: `/${cc}/deals` };
-  const secondaryCtaRaw = cfg.secondaryCta || cfg.secondary_cta || { label: "Sell on Upfrica", href: `/${cc}/sell` };
+  const primaryCtaRaw =
+    cfg.primaryCta || cfg.primary_cta || { label: "Browse Today’s Deals", href: `/${cc}/deals` };
+  const secondaryCtaRaw =
+    cfg.secondaryCta || cfg.secondary_cta || { label: "Sell on Upfrica", href: `/${cc}/sell` };
 
   const primaryCta = { ...primaryCtaRaw, href: normalizeHref(primaryCtaRaw.href) };
   const secondaryCta = { ...secondaryCtaRaw, href: normalizeHref(secondaryCtaRaw.href) };
 
   return {
     cc,
-    headline:  cfg.headline || meta.lcpHeadline,
-    tagline:   cfg.tagline  || meta.lcpTagline,
-    image:     mainImage,
-    alt:       cfg.alt || `Upfrica ${meta.name} marketplace deals banner`,
+    headline: cfg.headline || meta.lcpHeadline,
+    tagline: cfg.tagline || meta.lcpTagline,
+    image: mainImage,
+    alt: cfg.alt || `Upfrica ${meta.name} marketplace deals banner`,
     primaryCta,
     secondaryCta,
     miniCards,
@@ -229,6 +242,7 @@ function bannersFromCMS(section, cc) {
     img: img.url,
   }));
 }
+
 function promosFromCMS(section, cc) {
   if (!section) return [];
   const cfg = section.config || {};
@@ -247,10 +261,7 @@ export default async function CountryHome({ params }) {
 
   const ck = cookies();
   const cookieDeliver =
-    ck.get(`deliver_to_${cc}`)?.value ||
-    ck.get("deliver_to")?.value ||
-    null;
-  const deliverTo = cookieDeliver || (COUNTRY_META[cc]?.cities?.[0] || "City");
+    ck.get(`deliver_to_${cc}`)?.value || ck.get("deliver_to")?.value || null;
 
   const [cms, railsFromApi, categories] = await Promise.all([
     fetchCountryHome(cc),
@@ -258,20 +269,21 @@ export default async function CountryHome({ params }) {
     fetchCategories(cc).catch(() => []),
   ]);
 
-  const rails = (Array.isArray(railsFromApi) && railsFromApi.length)
-    ? railsFromApi
-    : await getHomeRails(cc);
+  const rails =
+    Array.isArray(railsFromApi) && railsFromApi.length
+      ? railsFromApi
+      : await getHomeRails(cc);
 
   const sections = cms?.sections || [];
   const heroSec =
     sections.find((s) => s.kind === "hero_curved" && s.key === "hero") ||
     sections.find((s) => s.kind === "hero_curved");
   const bannerSec = sections.find((s) => s.kind === "banner_carousel");
-  const promoSec  = sections.find((s) => s.kind === "promo_tiles");
+  const promoSec = sections.find((s) => s.kind === "promo_tiles");
 
   const heroProps = heroCurvedFromCMS(heroSec, cc, meta);
-  const banners   = bannersFromCMS(bannerSec, cc);
-  const promos    = promosFromCMS(promoSec, cc);
+  const banners = bannersFromCMS(bannerSec, cc);
+  const promos = promosFromCMS(promoSec, cc);
 
   const cdnHost = process.env.NEXT_PUBLIC_CDN_HOST || "https://cdn.upfrica.com";
 
@@ -284,15 +296,6 @@ export default async function CountryHome({ params }) {
         <link rel="preconnect" href={BASE_API_URL} />
         {heroProps?.image && <link rel="preload" as="image" href={heroProps.image} />}
       </Head>
-
-      <Header
-        cc={cc}
-        countryCode={meta.code}
-        searchPlaceholder="Search products, brands, shops…"
-        deliverCity={deliverTo}
-        categories={categories}
-      />
-      <TopBar cc={cc} country={meta.name} />
 
       <main className="bg-[#f1f2f4] text-[var(--ink)]">
         <HeroCurved section={heroSec} cc={cc} {...heroProps} />
@@ -314,9 +317,6 @@ export default async function CountryHome({ params }) {
             currencySymbol={meta.currencySymbol}
           />
         ))}
-
-        <Footer cc={cc} />
-        <BottomBar cc={cc} />
       </main>
     </>
   );

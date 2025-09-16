@@ -1,8 +1,7 @@
 // src/components/PhotosSection.jsx
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
-import ImageUploader from "@/components/ImageUploader";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -10,192 +9,286 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import SortableImage from "@/components/SortableImage";
-import { BASE_API_URL } from "@/app/constants";
-import { getCleanToken } from "@/lib/getCleanToken";
 
-function authHeaders() {
-  const t = getCleanToken?.();
-  return t ? { Authorization: `Token ${t}` } : {};
+// --- presign + upload helpers (via unified /api proxy) -----------------
+async function presignProductUpload(productId, file) {
+  const resp = await fetch("/api/uploads/presign/", {
+    method: "POST",
+    headers: { "content-type": "application/json", Accept: "application/json" },
+    credentials: "include",
+    body: JSON.stringify({
+      kind: "product",
+      product_id: productId,
+      filename: file.name,
+      contentType: file.type || "application/octet-stream",
+      content_type: file.type || "application/octet-stream",
+    }),
+  });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(data?.detail || `presign failed (${resp.status})`);
+
+  if (data?.upload?.url && data?.upload?.fields) {
+    return { method: "post", url: data.upload.url, fields: data.upload.fields, publicUrl: data.cdnUrl || data.publicUrl || null };
+  }
+  if (Array.isArray(data?.uploads) && data.uploads[0]?.url && data.uploads[0]?.fields) {
+    const u = data.uploads[0];
+    return { method: "post", url: u.url, fields: u.fields, publicUrl: u.publicUrl || data.cdnUrl || null };
+  }
+  if (data?.upload_url) return { method: "put", url: data.upload_url, publicUrl: data.public_url || data.cdnUrl || null };
+  if (data?.url && data?.fields) return { method: "post", url: data.url, fields: data.fields, publicUrl: data.publicUrl || null };
+  throw new Error("Invalid presign response");
+}
+
+async function uploadWithSignature(sig, file) {
+  if (sig.method === "post" && sig.url && sig.fields) {
+    const form = new FormData();
+    Object.entries(sig.fields).forEach(([k, v]) => form.append(k, v));
+    form.append("file", file);
+    const up = await fetch(sig.url, { method: "POST", body: form });
+    if (!up.ok) throw new Error(`upload failed (${up.status})`);
+    const loc = up.headers.get("Location");
+    return sig.publicUrl || loc || sig.url.split("?")[0];
+  }
+  if (sig.method === "put" && sig.url) {
+    const up = await fetch(sig.url, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": file.type || "application/octet-stream" },
+    });
+    if (!up.ok) throw new Error(`upload failed (${up.status})`);
+    return sig.publicUrl || sig.url.split("?")[0];
+  }
+  throw new Error("Unsupported presign method");
 }
 
 // Helpers
 const isRealId = (v) => Number.isFinite(Number(v)) && Number(v) > 0;
 const normalizeFromApi = (it) => ({
   id: Number(it.id),
-  url: it.image_url || it.image || "",
+  url: it.image_url || it.external_url || it.image || "",
   primary: !!it.is_main,
 });
 
 export default function PhotosSection({ productId, ensureProductId }) {
-  // Each item: { id: number, url: string, primary: boolean }
   const [images, setImages] = useState([]);
   const [pid, setPid] = useState(productId ?? null);
   const hasProduct = useMemo(() => pid != null, [pid]);
 
-  // Only mirror a provided productId → local pid (no auto-creation here)
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const fileInputRef = useRef(null);
+
   useEffect(() => {
     if (productId != null) setPid(productId);
   }, [productId]);
 
-  // Load existing images when we have a product
+  // Load existing images (via proxy)
   useEffect(() => {
     if (!hasProduct) return;
     let cancelled = false;
-
     (async () => {
       try {
-        const r = await fetch(
-          `${BASE_API_URL}/api/product-images/?product=${pid}`,
-          { headers: { ...authHeaders() }, credentials: "include" }
-        );
+        const r = await fetch(`/api/product-images/?product=${pid}`, {
+          headers: { Accept: "application/json" },
+          credentials: "include",
+        });
         if (!r.ok) return;
         const data = await r.json();
         const list = Array.isArray(data) ? data : data.results || [];
         const mapped = list.map(normalizeFromApi).filter((it) => it.url);
         if (!cancelled) setImages(mapped);
-      } catch {
-        /* ignore; UI can stay empty */
-      }
+      } catch {}
     })();
-
     return () => {
       cancelled = true;
     };
   }, [hasProduct, pid]);
 
-  // When a new upload succeeds we receive the saved ProductImage object OR a temp URL
   const handleUploaded = useCallback((imgObjOrUrl) => {
-    // Saved object returned by backend
     if (imgObjOrUrl && typeof imgObjOrUrl === "object") {
-      const url =
-        imgObjOrUrl.image_url || imgObjOrUrl.image || imgObjOrUrl.url || "";
+      const url = imgObjOrUrl.image_url || imgObjOrUrl.external_url || imgObjOrUrl.image || imgObjOrUrl.url || "";
       if (!url) return;
-
       const realId = Number(imgObjOrUrl.id);
-
       setImages((imgs) => {
-        // If we previously inserted a temp entry for this URL, replace its id
         const idx = imgs.findIndex((i) => i.url === url && !isRealId(i.id));
         if (idx !== -1) {
           const next = imgs.slice();
-          next[idx] = {
-            ...next[idx],
-            id: realId,
-            primary: !!imgObjOrUrl.is_main || next[idx].primary,
-          };
+          next[idx] = { ...next[idx], id: realId, primary: !!imgObjOrUrl.is_main || next[idx].primary };
           return next;
         }
-        // Otherwise append
-        return [
-          ...imgs,
-          {
-            id: realId,
-            url,
-            primary: !!imgObjOrUrl.is_main,
-          },
-        ];
+        return [...imgs, { id: realId, url, primary: !!imgObjOrUrl.is_main }];
       });
       return;
     }
-
-    // Plain URL (temp preview before server responds with an ID)
     if (typeof imgObjOrUrl === "string" && imgObjOrUrl) {
-      setImages((imgs) => [
-        ...imgs,
-        {
-          id: Date.now(), // temp id (will be replaced when real object arrives)
-          url: imgObjOrUrl,
-          primary: imgs.length === 0,
-        },
-      ]);
+      setImages((imgs) => [...imgs, { id: Date.now(), url: imgObjOrUrl, primary: imgs.length === 0 }]);
     }
   }, []);
 
-  // Toggle primary using the server action (optimistic + rollback)
+  // Attach using the field the serializer expects: external_url ✅
+  async function attachImageUrl(productId, publicUrl) {
+    const res = await fetch(`/api/product-images/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        product: productId,
+        external_url: publicUrl,     // 👈 key fix
+        // is_main: false,            // optional
+      }),
+    });
+
+    if (res.ok) return res.json();
+
+    // Fallback to multipart (still `external_url`)
+    if (res.status === 400 || res.status === 415) {
+      const fd = new FormData();
+      fd.append("product", String(productId));
+      fd.append("external_url", publicUrl);
+      const res2 = await fetch(`/api/product-images/`, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        credentials: "include",
+        body: fd,
+      });
+      if (!res2.ok) {
+        const txt = await res2.text().catch(() => "");
+        throw new Error(`attach failed (${res2.status}) ${txt}`);
+      }
+      return res2.json();
+    }
+
+    const txt = await res.text().catch(() => "");
+    throw new Error(`attach failed (${res.status}) ${txt}`);
+  }
+
+  // Upload flow: presign -> S3 upload -> attach (external_url)
+// REPLACE your onPickImages with this version
+async function onPickImages(e) {
+  setError("");
+  const files = Array.from(e.target.files || []).filter((f) => /^image\//i.test(f.type));
+  e.target.value = "";
+  if (!files.length) return;
+
+  try {
+    setUploading(true);
+
+    const id =
+      pid ?? (typeof ensureProductId === "function" ? await ensureProductId() : null);
+    if (id == null) throw new Error("No product id available");
+    if (pid == null) setPid(id);
+
+    // --- FIX 1: only the first temp is primary when list is empty
+    const startLen = images.length;
+    const tempEntries = files.slice(0, 10).map((f, idx) => {
+      const tempId = Date.now() + Math.random();
+      return {
+        id: tempId,
+        url: URL.createObjectURL(f),
+        primary: startLen === 0 && idx === 0,
+        _temp: true,
+      };
+    });
+    setImages((prev) => [...prev, ...tempEntries]);
+
+    // Upload sequentially and replace each temp in-place when saved
+    for (let i = 0; i < files.length; i += 1) {
+      const f = files[i];
+      const tempId = tempEntries[i].id;
+
+      const sig = await presignProductUpload(id, f);
+      const publicUrl = await uploadWithSignature(sig, f);
+
+      // Attach (uses external_url)
+      const saved = await attachImageUrl(id, publicUrl);
+      const savedUrl = saved.image_url || saved.external_url || saved.image || "";
+
+      // --- FIX 2: replace the corresponding temp instead of appending a new item
+      setImages((prev) => {
+        const idx = prev.findIndex((x) => x.id === tempId);
+        if (idx !== -1) {
+          const wasPrimary = !!prev[idx].primary;
+          const next = prev.slice();
+          next[idx] = {
+            id: Number(saved.id),
+            url: savedUrl,
+            primary: saved.is_main ?? wasPrimary,
+          };
+          return next;
+        }
+        // fallback: avoid duplicates if temp not found for any reason
+        if (prev.some((x) => x.id === Number(saved.id) || x.url === savedUrl)) return prev;
+        return [...prev, { id: Number(saved.id), url: savedUrl, primary: !!saved.is_main }];
+      });
+
+      // optional: free the blob preview
+      try { URL.revokeObjectURL(tempEntries[i].url); } catch {}
+    }
+  } catch (err) {
+    setError(err?.message || "Upload failed");
+  } finally {
+    setUploading(false);
+  }
+}
+
   async function handleSetPrimary(id) {
     const prev = images.find((i) => i.primary);
     setImages((imgs) => imgs.map((i) => ({ ...i, primary: i.id === id })));
-
     try {
-      const r = await fetch(
-        `${BASE_API_URL}/api/product-images/${id}/set_primary/`,
-        {
-          method: "POST",
-          headers: { ...authHeaders() },
-          credentials: "include",
-        }
-      );
+      const r = await fetch(`/api/product-images/${id}/set_primary/`, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        credentials: "include",
+      });
       if (!r.ok) throw new Error("set_primary failed");
     } catch {
-      setImages((imgs) =>
-        imgs.map((i) => ({ ...i, primary: !!prev && i.id === prev.id }))
-      );
+      setImages((imgs) => imgs.map((i) => ({ ...i, primary: !!prev && i.id === prev.id })));
     }
   }
 
-  // Remove (server first; then update UI regardless)
   async function handleDelete(id) {
     try {
-      await fetch(`${BASE_API_URL}/api/product-images/${id}/`, {
+      await fetch(`/api/product-images/${id}/`, {
         method: "DELETE",
-        headers: { ...authHeaders() },
+        headers: { Accept: "application/json" },
         credentials: "include",
       });
-    } catch {
-      /* ignore */
-    }
+    } catch {}
     setImages((imgs) => imgs.filter((i) => i.id !== id));
   }
 
-  // Drag → reorder + persist to backend using latest state
   async function handleDragEnd(event) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    // 1) compute the new order locally and set it
     let newOrder = [];
     setImages((imgs) => {
       const oldIndex = imgs.findIndex((i) => i.id === active.id);
       const newIndex = imgs.findIndex((i) => i.id === over.id);
       const moved = arrayMove(imgs, oldIndex, newIndex);
-      // Only include real DB IDs; coerce to integers
-      newOrder = moved
-        .map((i) => Number(i.id))
-        .filter((n) => Number.isFinite(n) && n > 0);
+      newOrder = moved.map((i) => Number(i.id)).filter((n) => Number.isFinite(n) && n > 0);
       return moved;
     });
 
-    // 2) persist order (send multiple compatible keys)
     try {
       const productIdToUse =
-        pid != null
-          ? pid
-          : typeof ensureProductId === "function"
-          ? await ensureProductId()
-          : null;
+        pid != null ? pid : typeof ensureProductId === "function" ? await ensureProductId() : null;
       if (productIdToUse == null || newOrder.length === 0) return;
 
-      const res = await fetch(`${BASE_API_URL}/api/product-images/reorder/`, {
+      const res = await fetch(`/api/product-images/reorder/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders() },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          // product id (accepts either key on server)
           product: productIdToUse,
-          product_id: productIdToUse,
-          // ordered ids (accepts any of these keys on server)
           ordered_ids: newOrder,
-          ordered_image_ids: newOrder,
-          image_ids: newOrder,
         }),
       });
-
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
         console.error("Reorder failed:", res.status, txt);
       }
     } catch (e) {
-      // silently ignore; UI keeps new order
       console.error("Reorder request error:", e);
     }
   }
@@ -203,30 +296,31 @@ export default function PhotosSection({ productId, ensureProductId }) {
   return (
     <section>
       <div className="rounded-md border p-3 space-y-3">
-        <ImageUploader
-          productId={pid ?? undefined}
-          ensureProductId={async () => {
-            if (pid != null) return pid;           // use existing id
-            if (typeof ensureProductId === "function") {
-              const id = await ensureProductId();  // lazily create draft when needed
-              setPid(id);
-              return id;
-            }
-            throw new Error("No product id available");
-          }}
-          onUploaded={handleUploaded}
-          multiple
-        />
+        <div className="flex items-center justify-between">
+          <label className="block text-sm font-medium">Upload images</label>
+          <button
+            type="button"
+            className="px-3 py-1.5 text-sm rounded-md border"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            {uploading ? "Uploading…" : "Choose"}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={onPickImages}
+          />
+        </div>
+
+        {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
 
         {images.length > 0 && (
-          <DndContext
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={images.map((i) => i.id)}
-              strategy={verticalListSortingStrategy}
-            >
+          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={images.map((i) => i.id)} strategy={verticalListSortingStrategy}>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                 {images.map((img) => (
                   <div key={img.id} data-photo-id={img.id}>

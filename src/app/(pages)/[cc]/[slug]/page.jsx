@@ -227,7 +227,7 @@ export default async function Page({ params: { cc, slug }, searchParams }) {
 
   return (
     <>
-      <Header />
+ 
       <main className="w-full max-w-[1380px] mx-auto py-8 px-4 sm:px-5 lg:px-8 xl:px-[4rem] 2xl:px-[5rem]">
         {/* PDP */}
         <ProductDetailSection product={product} />

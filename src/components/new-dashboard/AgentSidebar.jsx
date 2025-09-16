@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { usePathname } from "next/navigation";
 import { clearToggle } from "@/app/store/slices/toggleSlice";
 import RoleSwitcher from "@/components/new-dashboard/RoleSwitcher";
+
 import {
   X,
   LayoutDashboard,
@@ -18,15 +19,19 @@ import {
   User,
   HelpCircle,
   Settings,
+  Handshake,
+  ClipboardList,
 } from "lucide-react";
 
 const navItems = [
-  { label: "Agent Dashboard", href: "/new-dashboard", icon: LayoutDashboard },
+  { label: "Agent Dashboard", href: "/new-dashboard/agent", icon: LayoutDashboard },
+  { label: "Find-for-me Queue", href: "/agent/requests", icon: Handshake },
+  { label: "Sourcing / Gigs", href: "/new-dashboard/sourcing", icon: ClipboardList },
   { label: "My Orders", href: "/orders", icon: ShoppingBag },
   { label: "Pickup Tasks", href: "/agent/pickups", icon: Truck },
   { label: "Messages", href: "/agent/messages", icon: Mail },
   { label: "My Commissions", href: "/agent/earnings", icon: DollarSign },
-  { label: "Profile Settings", href: "new-dashboard/settings/profile", icon: User },
+  { label: "Profile Settings", href: "/new-dashboard/settings/profile", icon: User },
   { label: "Help Center", href: "/help", icon: HelpCircle },
 ];
 
@@ -42,7 +47,7 @@ export default function AgentSidebar({
 
   useEffect(() => {
     if (toggle) dispatch(clearToggle());
-  }, [pathname]);
+  }, [pathname, toggle, dispatch]);
 
   const handleClose = () => {
     dispatch(clearToggle());
@@ -85,7 +90,7 @@ export default function AgentSidebar({
 
           <nav className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
             {navItems.map(({ label, href, icon: Icon }) => {
-              const isActive = pathname === href;
+              const isActive = pathname === href || pathname.startsWith(href + "/");
               return (
                 <Link
                   key={href}

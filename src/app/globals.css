@@ -13,6 +13,10 @@ body{
   background-color:#fff;
 }
 
+/* react-datepicker minimal styles + z-index fix for modals/poppers */
+@import 'react-datepicker/dist/react-datepicker.css';
+.react-datepicker-popper { z-index: 40; }
+
 /* Headings */
 h1,h2,h3,h4,h5,h6{
   @apply font-semibold text-gray-900 leading-tight;
@@ -204,9 +208,40 @@ h3{@apply text-lg md:text-xl;}
     -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
   }
 
-  /* --- Logo (wordmark + market badge) ----------------------------------- */
-  .uf-logo{ display:inline-flex; align-items:center; gap:.5rem; line-height:1; }
-  .uf-logo__brand{ font-weight:800; font-size:24px; letter-spacing:-.25px; color:var(--ink); }
+/* --- Logo (wordmark + market badge) ----------------------------------- */
+@layer components {
+  .uf-logo{
+    --logo-size: 24px;
+    --logo-accent: var(--accent, var(--brand-600,#2563eb));
+    --u-grad: linear-gradient(215deg,#b388ff 0%, #8b5cf6 55%, #4f46e5 100%);
+    display:inline-flex; align-items:flex-end; gap:.55rem; line-height:1;
+  }
+  .uf-logo__brand{
+    display:inline-flex; align-items:flex-end;
+    font-weight:800; font-size:var(--logo-size);
+    letter-spacing:-.02em; color:var(--ink);
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+
+  .uf-logo__mark{ position:relative; display:inline-block; }
+  .uf-logo__u{
+    position:relative; z-index:1; margin-right:.01em; font-weight:900;
+    background:var(--u-grad); -webkit-background-clip:text; background-clip:text; color: #8710D8CC
+  }
+
+  /* inline-SVG caret – consistent, retina-crisp */
+.uf-logo__caret {
+    position: absolute;
+    left: calc(var(--logo-size) * 0.31);
+    top: calc(var(--logo-size) * -0.19);
+    width: calc(var(--logo-size) * 0.56);
+    height: calc(var(--logo-size) * 0.56);
+    color:  #8710D8CC;
+    pointer-events: none;
+}
+
+  .uf-logo__rest{ margin-left:-.03em; color:var(--ink); }
+
   .uf-logo__badge{
     display:inline-flex; align-items:center; justify-content:center;
     height:18px; padding:0 10px; border-radius:999px;
@@ -214,18 +249,51 @@ h3{@apply text-lg md:text-xl;}
     color:var(--brand-700); background:var(--brand-100); border:1px solid var(--brand-200);
     box-shadow:0 1px 0 rgba(17,24,39,.04);
   }
-  @media (max-width:768px){
-    .uf-logo__brand{ font-size:22px; }
-    .uf-logo__badge{ height:16px; padding:0 8px; font-size:11px; }
-  }
+
+  a.uf-logo:hover{ background:transparent; } /* keep brand still */
   a.uf-logo:focus-visible{ outline:var(--ud-focus-ring); outline-offset:var(--ud-focus-offset); border-radius:.5rem; }
-  a.uf-logo:hover{ background:var(--brand-50); }
-  .dark .uf-logo__brand{ color:#fff; }
+
+  .dark .uf-logo__brand, .dark .uf-logo__rest{ color:#fff; }
   .dark .uf-logo__badge{
     color:var(--brand-200);
     background:color-mix(in sRGB, var(--brand-700) 18%, transparent);
     border-color:color-mix(in sRGB, var(--brand-700) 35%, transparent);
   }
+
+  @media (max-width:768px){
+    .uf-logo{ --logo-size:22px; }
+    .uf-logo__badge{ height:16px; padding:0 8px; font-size:11px; }
+    .uf-logo__caret{ width:.48em; height:.48em; left:-.05em; top:-.26em; }
+  }
+
+  /* variants */
+  .uf-logo--mono .uf-logo__u{ background:none; color:currentColor; }
+  .uf-logo--mono .uf-logo__caret{ color:currentColor; }
+  .uf-logo.no-caret .uf-logo__caret{ display:none; }
+} 
+
+/* Caret: size/position scale with the wordmark */
+
+
+/* Make the chevron crisp and consistent */
+.uf-logo__caret path{
+  stroke: currentColor;
+  stroke-width: calc(var(--logo-size) * 0.11);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  shape-rendering: geometricPrecision;
+  vector-effect: non-scaling-stroke; /* keeps stroke looking the same as it scales */
+}
+
+/* Mobile: slightly smaller + lower */
+@media (max-width: 768px){
+  .uf-logo{ --logo-size: 22px; }
+  .uf-logo__caret{
+    top:  calc(var(--logo-size) * -0.28);
+    width: calc(var(--logo-size) * 0.50);
+    height:calc(var(--logo-size) * 0.50);
+  }
+}
 
   /* === Upfrica button system (tokenized) ================================= */
   .ud-btn{

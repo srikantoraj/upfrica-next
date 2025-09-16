@@ -6,16 +6,16 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import { listOffers, acceptOffer } from '@/lib/sourcing/api';
 
-function formatPrice(value, currency) {
-  if (value == null || value === '') return '—';
+function money(v, ccy) {
+  if (v == null || v === '' || Number.isNaN(Number(v))) return '—';
   try {
     return new Intl.NumberFormat(undefined, {
-      style: currency ? 'currency' : 'decimal',
-      currency: currency || undefined,
+      style: 'currency',
+      currency: (ccy || 'USD').toUpperCase(),
       maximumFractionDigits: 2,
-    }).format(Number(value));
+    }).format(Number(v));
   } catch {
-    return `${value}${currency ? ` ${currency}` : ''}`;
+    return `${ccy ? `${ccy} ` : ''}${Number(v).toFixed(2)}`;
   }
 }
 
@@ -43,66 +43,123 @@ function SkeletonCard() {
   );
 }
 
+function isImg(url = '') {
+  return /\.(png|jpe?g|webp|gif)$/i.test(url);
+}
+
 function OfferCard({ offer, onAccept, disabled }) {
-  const seller =
-    offer?.seller_name ||
-    offer?.seller?.name ||
-    offer?.seller ||
-    'Seller';
+  const statusRaw = (offer?.status || 'submitted').toLowerCase();
+  const status =
+    statusRaw === 'submitted' || statusRaw === 'pending' ? 'pending' : statusRaw;
 
-  const status = (offer?.status || 'pending').toLowerCase();
-  const tone = status === 'accepted' ? 'success' : status === 'pending' ? 'info' : 'neutral';
+  const tone =
+    status === 'accepted' ? 'success' : status === 'pending' ? 'info' : 'neutral';
 
-  const price =
-    offer?.price ??
-    offer?.total_price ??
-    offer?.amount ??
-    null;
+  const ccy =
+    (offer?.currency ||
+      offer?.price_currency ||
+      offer?.currency_code ||
+      'GHS').toUpperCase();
 
-  const currency =
-    offer?.currency ||
-    offer?.price_currency ||
-    offer?.currency_code ||
-    undefined;
+  // New schema (with graceful fallbacks)
+  const item = offer?.quoted_item_cost ?? offer?.item_price ?? offer?.price ?? 0;
+  const service = offer?.agent_fee ?? offer?.service_fee ?? 0;
+  const delivery = offer?.delivery_fee ?? offer?.shipping_fee ?? 0;
+  const total =
+    offer?.buyer_total ??
+    [item, service, delivery].map(Number).reduce((a, b) => a + b, 0);
 
   const eta =
     offer?.eta_days != null
       ? `${offer.eta_days} day${offer.eta_days === 1 ? '' : 's'}`
-      : offer?.eta || null;
+      : offer?.eta || '—';
+
+  const submitterTag =
+    offer?.submitter_type === 'seller'
+      ? 'Offer from Verified Seller'
+      : 'Offer from Upfrica Sourcing Agent';
+
+  const specBits = [offer?.brand, offer?.model, offer?.variant]
+    .filter(Boolean)
+    .join(' · ');
+  const exactOnly = offer?.no_alternatives === true;
+
+  const attachments = Array.isArray(offer?.attachments) ? offer.attachments : [];
 
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-base font-semibold">{seller}</h3>
-            <Badge tone={tone}>{status}</Badge>
-          </div>
-          <div className="mt-1 text-sm text-neutral-600 line-clamp-2">
-            {offer?.notes || offer?.message || offer?.description || 'No seller note'}
+            <h3 className="text-base font-semibold truncate">
+              {offer?.seller_name || offer?.seller?.name || offer?.submitter_name || 'Seller'}
+            </h3>
+            <Badge tone="neutral">{submitterTag}</Badge>
+            {exactOnly && <Badge tone="warn">Exact match only</Badge>}
+            <Badge tone={tone}>&nbsp;{status}</Badge>
           </div>
 
-          <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
+          {specBits && (
+            <div className="mt-1 text-sm text-neutral-700">
+              <span className="text-neutral-500">Spec: </span>
+              <span className="font-medium">{specBits}</span>
+            </div>
+          )}
+
+          <div className="mt-1 text-sm text-neutral-600 line-clamp-2">
+            {offer?.notes || offer?.message || offer?.description || 'No note from seller/agent'}
+          </div>
+
+          {/* Attachments */}
+          {!!attachments.length && (
+            <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
+              {attachments.slice(0, 6).map((u, i) => (
+                <a
+                  key={`${offer.id}-att-${i}`}
+                  href={u}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block overflow-hidden rounded-md border"
+                >
+                  {isImg(u) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={u} alt={`Attachment ${i + 1}`} className="h-20 w-full object-cover" />
+                  ) : (
+                    <div className="grid h-20 w-full place-items-center text-xs text-neutral-500">
+                      View
+                    </div>
+                  )}
+                </a>
+              ))}
+            </div>
+          )}
+
+          {/* Price breakdown */}
+          <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-5">
             <div>
-              <dt className="text-neutral-500">Price</dt>
-              <dd className="font-medium">{formatPrice(price, currency)}</dd>
+              <dt className="text-neutral-500">Item</dt>
+              <dd className="font-medium">{money(item, ccy)}</dd>
             </div>
             <div>
-              <dt className="text-neutral-500">Condition</dt>
-              <dd className="font-medium capitalize">{offer?.condition || '—'}</dd>
+              <dt className="text-neutral-500">Service</dt>
+              <dd className="font-medium">{money(service, ccy)}</dd>
+            </div>
+            <div>
+              <dt className="text-neutral-500">Delivery</dt>
+              <dd className="font-medium">{money(delivery, ccy)}</dd>
             </div>
             <div>
               <dt className="text-neutral-500">ETA</dt>
-              <dd className="font-medium">{eta || '—'}</dd>
+              <dd className="font-medium">{eta}</dd>
             </div>
-            <div>
-              <dt className="text-neutral-500">MOQ</dt>
-              <dd className="font-medium">{offer?.moq ?? '—'}</dd>
+            <div className="sm:text-right">
+              <dt className="text-neutral-500">All-in total</dt>
+              <dd className="font-semibold">{money(total, ccy)}</dd>
             </div>
           </dl>
         </div>
 
-        <div className="flex gap-2 sm:flex-col">
+        <div className="flex gap-2 sm:flex-col sm:items-stretch">
           <button
             type="button"
             disabled={disabled || status === 'accepted'}
@@ -114,7 +171,7 @@ function OfferCard({ offer, onAccept, disabled }) {
                 : 'bg-black text-white hover:bg-black/90 disabled:opacity-50'
             )}
           >
-            {status === 'accepted' ? 'Accepted' : 'Accept offer'}
+            {status === 'accepted' ? 'Accepted' : 'Accept & Continue'}
           </button>
 
           {offer?.details_url && (
@@ -151,7 +208,7 @@ export default function OfferList({ requestId, cc }) {
     if (requestId) params.request = requestId;
     if (cc) params.country = String(cc).toLowerCase();
     if (status !== 'all') params.status = status;
-    if (q.trim()) params.search = q.trim();
+    if (q.trim()) params.q = q.trim();
     return params;
   }, [requestId, cc, status, q]);
 
@@ -162,22 +219,26 @@ export default function OfferList({ requestId, cc }) {
           setLoading(true);
           pageRef.current = 1;
         }
-        // Call the raw endpoint so we can detect "next" for Load More
-        const url = new URL('/api/sourcing/offers/', window.location.origin);
-        Object.entries(queryParams).forEach(([k, v]) => url.searchParams.set(k, v));
-
-        const res = await fetch(url.toString(), { credentials: 'include' });
-        if (!res.ok) throw new Error(`Failed (${res.status})`);
-        const data = await res.json();
+        // Prefer your API helper; fall back to fetch if needed.
+        let data;
+        try {
+          data = await listOffers(queryParams);
+        } catch {
+          const url = new URL('/api/sourcing/offers/', window.location.origin);
+          Object.entries(queryParams).forEach(([k, v]) => url.searchParams.set(k, v));
+          const res = await fetch(url.toString(), { credentials: 'include' });
+          if (!res.ok) throw new Error(`Failed (${res.status})`);
+          data = await res.json();
+        }
 
         const items = Array.isArray(data?.results) ? data.results : Array.isArray(data) ? data : [];
         setOffers(reset ? items : (prev) => [...prev, ...items]);
 
         const hasNext =
           (data && typeof data?.next === 'string' && data.next) ||
-          (Array.isArray(data?.results) && data.results.length >= 20); // heuristic
+          (Array.isArray(data?.results) && data.results.length >= 20);
         setHasMore(Boolean(hasNext));
-      } catch (e) {
+      } catch {
         setError('Could not load offers.');
       } finally {
         setLoading(false);
@@ -188,7 +249,6 @@ export default function OfferList({ requestId, cc }) {
 
   useEffect(() => {
     fetchOffers(true);
-    // Poll for updates every 15s (cleans up on unmount)
     const t = setInterval(() => fetchOffers(true), 15000);
     return () => clearInterval(t);
   }, [fetchOffers]);
@@ -200,15 +260,15 @@ export default function OfferList({ requestId, cc }) {
 
   async function handleAccept(offer) {
     if (!offer?.id) return;
-    if (!window.confirm('Accept this offer? The seller will be notified.')) return;
+    if (!window.confirm('Accept this offer? Specs will be locked and you’ll continue to checkout.')) return;
     try {
       setAcceptingId(offer.id);
-      await acceptOffer(offer.id);
-      // Optimistic local update
+      await acceptOffer(offer.id); // POST /offers/:id/accept/
+      // Optimistic refresh
       setOffers((prev) =>
         prev.map((o) => (o.id === offer.id ? { ...o, status: 'accepted' } : o))
       );
-    } catch (e) {
+    } catch {
       alert('Sorry, failed to accept this offer.');
     } finally {
       setAcceptingId(null);
@@ -216,17 +276,20 @@ export default function OfferList({ requestId, cc }) {
   }
 
   const filtered = useMemo(() => {
-    // Client-side extra search fallback (if backend search isn’t present)
     const needle = q.trim().toLowerCase();
     if (!needle) return offers;
     return offers.filter((o) => {
       const hay = [
         o?.seller_name,
         o?.seller?.name,
+        o?.submitter_name,
         o?.notes,
         o?.message,
         o?.description,
-        String(o?.price ?? ''),
+        o?.brand,
+        o?.model,
+        o?.variant,
+        String(o?.quoted_item_cost ?? o?.price ?? ''),
       ]
         .filter(Boolean)
         .join(' ')
@@ -252,6 +315,7 @@ export default function OfferList({ requestId, cc }) {
               <option value="pending">Pending</option>
               <option value="accepted">Accepted</option>
               <option value="rejected">Rejected</option>
+              <option value="withdrawn">Withdrawn</option>
             </select>
           </div>
 

@@ -1,3 +1,4 @@
+//src/lib/cdn-image-loader.js
 // Custom loader for next/image.
 // Rewrites S3 & /media/* URLs to your CDN host, and appends ?w=&q= for Next.
 // Other absolute URLs are passed through (with ?w=&q= appended).
