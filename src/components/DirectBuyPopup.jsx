@@ -6,6 +6,10 @@ import { HiXMark } from "react-icons/hi2";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 
+// ✅ same image path used in Slider & Basket
+import SafeImage, { fixDisplayUrl } from "@/components/common/SafeImage";
+import { FALLBACK_IMAGE } from "@/lib/image";
+
 /* ---------- tiny helpers ---------- */
 
 const LoadingDots = ({ color = "white" }) => {
@@ -19,12 +23,65 @@ const LoadingDots = ({ color = "white" }) => {
   );
 };
 
-// Normalize a bunch of possible product image shapes → URL string
-const coverUrlFrom = (img) => {
-  if (!img) return "";
-  if (Array.isArray(img)) img = img[0];
-  if (typeof img === "string") return img;
-  return img?.image_url || img?.url || img?.src || "";
+/* ---------- image helpers (mirrors BasketSheet) ---------- */
+
+// Clean → display URL
+const toDisplayUrl = (raw) =>
+  (typeof raw === "string" && raw.trim() ? fixDisplayUrl(raw) : FALLBACK_IMAGE) || FALLBACK_IMAGE;
+
+// Pull a usable URL out of a list of media objects/strings
+const pickFromMediaList = (list) => {
+  for (const it of list || []) {
+    if (!it) continue;
+    if (typeof it === "string" && it.trim()) return it;
+    const u =
+      it.image_url ||
+      it.url ||
+      it.src ||
+      it.secure_url ||
+      it.path ||
+      it.thumbnail ||
+      it.image;
+    if (typeof u === "string" && u.trim()) return u;
+  }
+  return null;
+};
+
+// Resolve a product's primary image from many shapes
+const resolvePrimaryImage = (p) => {
+  if (!p) return "";
+  // single-value candidates first
+  const singles = [
+    p.card_image,
+    p.card_image_url,
+    p.thumbnail,
+    p.image_url,
+    p.image,
+    p.main_image,
+    p.product_image,
+    p.product_image_url,
+  ];
+  for (const v of singles) {
+    if (typeof v === "string" && v.trim()) return v;
+  }
+  // array-shaped media
+  const arrays = [
+    p.product_images,
+    p.images,
+    p.imageObjects,
+    p.image_objects,
+    p.gallery,
+    p.photos,
+    p.media,
+    p.assets,
+    p.thumbnails,
+    p.image, // sometimes an array
+  ];
+  for (const arr of arrays) {
+    const picked = pickFromMediaList(arr);
+    if (picked) return picked;
+  }
+  return "";
 };
 
 /* ---------- component ---------- */
@@ -51,7 +108,7 @@ export default function DirectBuyPopup({
   const [directBuyQuantity, setDirectBuyQuantity] = useState(quantity);
   const [selectedProduct, setSelectedProduct] = useState({
     id: product?.id,
-    image: coverUrlFrom(product?.product_images),
+    image: toDisplayUrl(resolvePrimaryImage(product)),
     title: product?.title || "",
     price: product?.price_cents || 0,
     currency: product?.price_currency || "GHS",
@@ -63,7 +120,7 @@ export default function DirectBuyPopup({
     setDirectBuyQuantity(quantity);
     setSelectedProduct({
       id: product?.id,
-      image: coverUrlFrom(product?.product_images),
+      image: toDisplayUrl(resolvePrimaryImage(product)),
       title: product?.title || "",
       price: product?.price_cents || 0,
       currency: product?.price_currency || "GHS",
@@ -159,9 +216,7 @@ export default function DirectBuyPopup({
   const estimatedDelivery = (() => {
     if (product?.dispatch_time_in_days) {
       const d = new Date();
-      d.setDate(
-        d.getDate() + parseInt(product.dispatch_time_in_days, 10)
-      );
+      d.setDate(d.getDate() + parseInt(product.dispatch_time_in_days, 10));
       return d.toLocaleDateString();
     }
     return "N/A";
@@ -207,15 +262,19 @@ export default function DirectBuyPopup({
 
         {/* Product row */}
         <div className="px-4 md:px-6 py-3 border-b border-gray-200 dark:border-gray-800 flex gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={selectedProduct.image || "/placeholder.png"}
-            onError={(e) => {
-              e.currentTarget.src = "/placeholder.png";
-            }}
-            alt={selectedProduct.title}
-            className="w-[84px] h-[84px] md:w-[96px] md:h-[96px] object-cover rounded"
-          />
+          <div className="w-[84px] h-[84px] md:w-[96px] md:h-[96px]">
+            <SafeImage
+              src={selectedProduct.image || FALLBACK_IMAGE}
+              alt={selectedProduct.title || "Product"}
+              width={96}
+              height={96}
+              sizes="96px"
+              className="w-full h-full object-cover rounded"
+              loading="lazy"
+              quality={75}
+            />
+          </div>
+
           <div className="flex-1 min-w-0">
             <p className="text-sm md:text-base font-medium line-clamp-2">
               {selectedProduct.title}
@@ -324,18 +383,7 @@ export default function DirectBuyPopup({
           )}
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
-
-
-
-
-
-
-
         </div>
-
-
-
-        
 
         {/* Sticky footer */}
         <div className="px-4 md:px-6 pt-2">

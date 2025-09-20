@@ -1,3 +1,4 @@
+//src/components/ProductDetailSection/StickyPriceBar.jsx
 'use client';
 
 import React from 'react';

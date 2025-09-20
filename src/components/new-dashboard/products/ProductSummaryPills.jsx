@@ -1,3 +1,4 @@
+// src/components/new-dashboard/products/ProductSummaryPills.jsx
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";

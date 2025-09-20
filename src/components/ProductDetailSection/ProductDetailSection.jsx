@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter, usePathname } from 'next/navigation';
@@ -10,6 +9,7 @@ import { useSaleCountdown } from '@/hooks/useSaleCountdown';
 
 import axios from '@/lib/axiosInstance';
 import { b } from '@/lib/api-path';
+import * as pm from '@/lib/product-metrics';
 
 import { pickProductImage } from '@/lib/image';
 
@@ -71,7 +71,6 @@ function contactReasonText(reason, allowed) {
 }
 
 /* ---------------- tiny helpers ---------------- */
-// simple cookie reader (no regex)
 function readCookie(name) {
   try {
     if (typeof document === 'undefined') return '';
@@ -86,7 +85,6 @@ function readCookie(name) {
   }
 }
 
-/* Try to open the Region & Preferences sheet in the header (no coupling) */
 function openLocaleSheetSafe() {
   try {
     const btn = document.querySelector('button[aria-label="Open region & preferences"]');
@@ -200,30 +198,6 @@ function resolveRelatedImage(item) {
 
   return FALLBACK_IMAGE;
 }
-function RelatedThumb({ item, alt }) {
-  const candidate = React.useMemo(() => resolveRelatedImage(item), [item]);
-  React.useEffect(() => {
-    if (DEBUG)
-      console.info('[related item]', { id: item?.id, picked: candidate, raw: item });
-  }, [item, candidate]);
-  const [broken, setBroken] = React.useState(false);
-  const src = broken ? FALLBACK_IMAGE : candidate;
-  return (
-    <div className="relative w-full h-40">
-      <Image
-        key={src}
-        src={src}
-        alt={alt || 'Product image'}
-        fill
-        className="object-cover"
-        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-        quality={80}
-        onError={() => setBroken(true)}
-      />
-    </div>
-  );
-}
-
 
 /* ---------------- phones helpers ---------------- */
 function normalizeShopPhones(shop) {
@@ -308,6 +282,20 @@ function legacyPhoneFromSellerContact(scn, shopUpdatedAt, isVerified) {
   return null;
 }
 
+const SignalsPills = ({ views24h = 0, baskets24h = 0, wishlistsTotal = 0 }) => (
+  <div className="mt-2 mb-3 flex flex-wrap gap-2 text-xs">
+    <span className="inline-flex items-center gap-1 rounded-full border px-2 py-1">
+      👀 {Number(views24h).toLocaleString()} views (24h)
+    </span>
+    <span className="inline-flex items-center gap-1 rounded-full border px-2 py-1">
+      🧺 {Number(baskets24h).toLocaleString()} added to basket (24h)
+    </span>
+    <span className="inline-flex items-center gap-1 rounded-full border px-2 py-1">
+      ❤️ {Number(wishlistsTotal).toLocaleString()} wishlists
+    </span>
+  </div>
+);
+
 /* ---------- contact click tracking ---------- */
 function hasFiredContactFor(slug) {
   try {
@@ -356,16 +344,62 @@ async function postContactClick(slug, source = 'pdp') {
 }
 
 /* ---------------- PDP ---------------- */
-export default function ProductDetailSection({ product }) {
+export default function ProductDetailSection({ product, signals }) {
   const dispatch = useDispatch();
   const router = useRouter();
   const currentPath = usePathname();
 
-  // i18n / FX from provider
+  const containerRef = React.useRef(null);
+
+
+  // --- Add these inside ProductDetailSection component (near other hooks) ---
+const mark = useCallback(async (kind, delta = 1) => {
+  if (!product?.id) return;
+  const sid = getOrCreateSessionId();
+  const url = `${b('pdp')}?id=${encodeURIComponent(product.id)}&kind=${encodeURIComponent(kind)}&delta=${delta}&sid=${encodeURIComponent(sid)}`;
+  try {
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(url, new Blob(["1"], { type: "text/plain" }));
+    } else {
+      await fetch(url, {
+        method: "POST",
+        keepalive: true,
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-Session-Id": sid,
+        },
+      });
+    }
+  } catch {}
+}, [product?.id]);
+
+useEffect(() => {
+  if (!product?.id || !containerRef.current) return;
+
+  const onceKey = `pv:${product.id}:seen`;
+  if (sessionStorage.getItem(onceKey) === '1') return;
+
+  const cb = (entries, obs) => {
+    if (entries.some(e => e.isIntersecting)) {
+      sessionStorage.setItem(onceKey, '1');
+      mark('views', 1);
+      obs.disconnect();
+    }
+  };
+
+  // <-- here
+  const io = new IntersectionObserver(cb, { threshold: 0, rootMargin: '100px' });
+  io.observe(containerRef.current);
+
+  return () => io.disconnect();
+}, [product?.id, mark]);
+
+
+
+
   const { country: uiCountry, currency: uiCurrency, price: conv, resolvedLanguage } =
     useLocalization();
 
-  // Safeguarded one-shot converter (prevents double/inverted FX)
   const convSafe = useCallback(
     (amount, fromCurrency) => {
       if (amount == null) return null;
@@ -374,7 +408,7 @@ export default function ProductDetailSection({ product }) {
         const out = Number(conv(amount, fromCurrency));
         if (!Number.isFinite(out) || out <= 0) return amount;
         const ratio = out / amount;
-        if (ratio > 10 || ratio < 0.1) return amount; // block obviously wrong FX
+        if (ratio > 10 || ratio < 0.1) return amount;
         return out;
       } catch {
         return amount;
@@ -383,7 +417,6 @@ export default function ProductDetailSection({ product }) {
     [conv, uiCurrency]
   );
 
-  // amount-only formatter for arbitrary currency (used for add-ons)
   const amountOnly = useCallback(
     (n, currency) => {
       try {
@@ -405,6 +438,7 @@ export default function ProductDetailSection({ product }) {
     [resolvedLanguage]
   );
 
+
   useEffect(() => {
     try {
       document.documentElement.setAttribute('lang', resolvedLanguage || 'en');
@@ -412,8 +446,7 @@ export default function ProductDetailSection({ product }) {
   }, [resolvedLanguage]);
 
   const {
-    id, title, price_cents, sale_price_cents, postage_fee_cents, sale_end_date,
-    product_images, shop, user, variants, is_published
+    id, title, product_images, shop, user, variants, is_published,
   } = product || {};
 
   const { token, user: currentUser } = useSelector((s) => s.auth);
@@ -495,6 +528,47 @@ export default function ProductDetailSection({ product }) {
   const waNumber = useMemo(() => phoneToShow?.e164 || telDigits || '', [phoneToShow?.e164, telDigits]);
   const waLink = useMemo(() => (contactRevealed ? whatsappUrl(waNumber) : null), [contactRevealed, waNumber]);
 
+  // ---- Signals (normalize + live refresh) ----
+  const normalizeSignals = useCallback((src) => {
+    const n = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+    const s = src || {};
+    return {
+      views24h:       n(s.views24h ?? s.views_24h ?? s.views_last_24h ?? s.views),
+      baskets24h:     n(s.baskets24h ?? s.baskets_24h ?? s.added_to_basket_24h ?? s.baskets),
+      wishlistsTotal: n(s.wishlistsTotal ?? s.wishlists_total ?? s.wishlist_total ?? s.wishlists),
+    };
+  }, []);
+
+  const [sig, setSig] = useState(() => normalizeSignals(signals));
+
+  useEffect(() => {
+    setSig(normalizeSignals(signals));
+  }, [signals, normalizeSignals]);
+
+  useEffect(() => {
+    if (!product?.id) return;
+    let cancelled = false;
+
+    const refresh = async () => {
+      try {
+        const url = `${b('pdp/signals')}?id=${encodeURIComponent(product.id)}`;
+        const res = await fetch(url, {
+          cache: 'no-store',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setSig(normalizeSignals(data));
+      } catch {}
+    };
+
+    refresh();
+    const catchPing = setTimeout(refresh, 1200);
+    const iv = setInterval(refresh, 15000);
+
+    return () => { cancelled = true; clearTimeout(catchPing); clearInterval(iv); };
+  }, [product?.id, normalizeSignals]);
+
   const maskPhone = useCallback((s) => {
     const digits = String(s || '').replace(/[^\d]/g, '');
     if (digits.length <= 4) return '••••';
@@ -512,11 +586,11 @@ export default function ProductDetailSection({ product }) {
 
   /* ---------------- related + reviews state ---------------- */
   const [relatedProducts, setRelatedProducts] = useState([]);
-   const [reviewStats, setReviewStats] = useState({
-   average_rating: 0,
-   review_count: 0,
-   rating_percent: {},
- });
+  const [reviewStats, setReviewStats] = useState({
+    average_rating: 0,
+    review_count: 0,
+    rating_percent: {},
+  });
 
   /* ---------------- Related products (proxied) ---------------- */
   useEffect(() => {
@@ -553,74 +627,73 @@ export default function ProductDetailSection({ product }) {
   }, [product?.slug, uiCountry]);
 
   /* ---------------- Reviews (single effect via proxy) ---------------- */
-useEffect(() => {
-  if (!id) return;
+  useEffect(() => {
+    if (!id) return;
 
-  let cancelled = false;
-  dispatch(fetchReviewsStart());
+    let cancelled = false;
+    dispatch(fetchReviewsStart());
 
-  (async () => {
-    try {
-      const { data, status } = await axios.get(b(['product', id, 'reviews']), {
-        withCredentials: true,
-        validateStatus: () => true,
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-      });
+    (async () => {
+      try {
+        const { data, status } = await axios.get(b(['product', id, 'reviews']), {
+          withCredentials: true,
+          validateStatus: () => true,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        });
 
-      if (cancelled) return;
-      if (status < 200 || status >= 300) throw new Error(`HTTP ${status}`);
+        if (cancelled) return;
+        if (status < 200 || status >= 300) throw new Error(`HTTP ${status}`);
 
-      const results = data.results ?? data.reviews ?? [];
+        const results = data.results ?? data.reviews ?? [];
 
-      // Derive rating distribution if API didn't include percentages
-      const countsFromApi =
-        data.rating_counts ?? data.rating_count ?? data.counts ?? null; // {5:n,4:n,...}
-      let ratingPercent = data.rating_percent ?? data.rating_distribution ?? null;
+        const countsFromApi =
+          data.rating_counts ?? data.rating_count ?? data.counts ?? null;
+        let ratingPercent = data.rating_percent ?? data.rating_distribution ?? null;
 
-      if (!ratingPercent) {
-        const counts =
-          countsFromApi ??
-          results.reduce((acc, r) => {
-            const s = Math.max(1, Math.min(5, Math.round(Number(r?.rating) || 0)));
-            acc[s] = (acc[s] || 0) + 1;
-            return acc;
-          }, {});
-        const total = Object.values(counts || {}).reduce((a, b) => a + b, 0);
-        const pct = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-        if (total > 0) {
-          for (let s = 1; s <= 5; s++) {
-            const c = Number(counts?.[s] || 0);
-            pct[s] = Math.round((c / total) * 100);
+        if (!ratingPercent) {
+          const counts =
+            countsFromApi ??
+            results.reduce((acc, r) => {
+              const s = Math.max(1, Math.min(5, Math.round(Number(r?.rating) || 0)));
+              acc[s] = (acc[s] || 0) + 1;
+              return acc;
+            }, {});
+          const total = Object.values(counts || {}).reduce((a, b) => a + b, 0);
+          const pct = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+          if (total > 0) {
+            for (let s = 1; s <= 5; s++) {
+              const c = Number(counts?.[s] || 0);
+              pct[s] = Math.round((c / total) * 100);
+            }
           }
+          ratingPercent = pct;
         }
-        ratingPercent = pct;
-      }
 
-      dispatch(
-        fetchReviewsSuccess({
-          results,
+        dispatch(
+          fetchReviewsSuccess({
+            results,
+            average_rating: data.average_rating ?? 0,
+            review_count: data.review_count ?? results.length,
+            rating_percent: ratingPercent ?? {},
+          })
+        );
+
+        setReviewStats({
           average_rating: data.average_rating ?? 0,
           review_count: data.review_count ?? results.length,
           rating_percent: ratingPercent ?? {},
-        })
-      );
-
-      setReviewStats({
-        average_rating: data.average_rating ?? 0,
-        review_count: data.review_count ?? results.length,
-        rating_percent: ratingPercent ?? {},
-      });
-    } catch (err) {
-      if (!cancelled) {
-        dispatch(fetchReviewsFailure(err?.message || String(err)));
+        });
+      } catch (err) {
+        if (!cancelled) {
+          dispatch(fetchReviewsFailure(err?.message || String(err)));
+        }
       }
-    }
-  })();
+    })();
 
-  return () => {
-    cancelled = true;
-  };
-}, [dispatch, id]);
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch, id]);
 
   /* Variants selection */
   const [selectedVariants, setSelectedVariants] = useState({});
@@ -633,7 +706,7 @@ useEffect(() => {
     setSelectedVariants(defaults);
   }, [variants]);
 
-  // ---- Pricing (minimal, safe FX) ----
+  // ---- Pricing base (safe FX) ----
   const pricing = useMemo(
     () =>
       buildPricingMini(product, {
@@ -643,18 +716,248 @@ useEffect(() => {
       }),
     [product, uiCurrency, resolvedLanguage, convSafe]
   );
-
   const priceSymbol = pricing.display.symbol;
   const saleActive = pricing.saleActive;
-  const activePrice = pricing.display.activeAmountOnly;
-  const originalPrice = pricing.display.originalAmountOnly;
+
+  // ---- SKUs (combo rows) ----
+  const [skus, setSkus] = useState([]);
+  useEffect(() => {
+    if (!product?.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, status } = await axios.get(b([`products`, product.id, `skus`]));
+        if (cancelled) return;
+        if (status >= 200 && status < 300) {
+          setSkus(Array.isArray(data?.results) ? data.results : (data || []));
+        } else {
+          setSkus([]);
+        }
+      } catch {
+        if (!cancelled) setSkus([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [product?.id]);
+
+  const valueSortIndex = useMemo(() => {
+    const map = {};
+    (product?.variants || []).forEach((variant) => {
+      const ord = Number(variant?.ordering ?? 0);
+      (variant?.values || []).forEach((val) => { map[val.id] = [ord, val.id]; });
+    });
+    return map;
+  }, [product?.variants]);
+
+  const keyFor = useCallback(
+    (ids) =>
+      (ids || [])
+        .slice()
+        .map(Number)
+        .sort((a, b) => {
+          const A = valueSortIndex[a] || [0, a];
+          const B = valueSortIndex[b] || [0, b];
+          return A[0] - B[0] || A[1] - B[1];
+        })
+        .map((id) => `v${id}`)
+        .join('-'),
+    [valueSortIndex]
+  );
+
+  const haveSkus = (skus || []).length > 0;
+  const activeSkus = useMemo(
+    () => (skus || []).filter((s) => s?.is_active !== false && (s?.quantity ?? 0) > 0),
+    [skus]
+  );
+  const skuByKey = useMemo(() => {
+    const m = new Map();
+    (skus || []).forEach((s) => m.set(s.options_key, s));
+    return m;
+  }, [skus]);
+
+  const containsSubset = useCallback(
+    (ids) => {
+      if (!haveSkus) return true;
+      if (!ids?.length) return true;
+      const tokens = ids.map((id) => `v${id}`);
+      for (const s of activeSkus) {
+        const ok = tokens.every((t) => s.options_key.includes(t));
+        if (ok) return true;
+      }
+      return false;
+    },
+    [activeSkus, haveSkus]
+  );
+
+  const selectedValueIds = useMemo(
+    () => Object.values(selectedVariants || {}).map((v) => v?.id).filter(Boolean),
+    [selectedVariants]
+  );
+  const selectedKey = useMemo(() => keyFor(selectedValueIds), [keyFor, selectedValueIds]);
+  const selectedSku = useMemo(() => skuByKey.get(selectedKey) || null, [skuByKey, selectedKey]);
+
+  const outOfStock = useMemo(() => {
+    if (!haveSkus) return false;
+    if (!selectedSku) return true;
+    return (selectedSku.quantity ?? 0) <= 0 || selectedSku.is_active === false;
+  }, [haveSkus, selectedSku]);
+
+  const totalAdditionalCents = useMemo(
+    () => Object.values(selectedVariants).reduce((s, v) => s + (v.additional_price_cents || 0), 0),
+    [selectedVariants]
+  );
+
+  const baseActiveMajor = useMemo(() => {
+    const cents = saleActive ? (product?.sale_price_cents || 0) : (product?.price_cents || 0);
+    return Number(cents) / 100;
+  }, [saleActive, product?.sale_price_cents, product?.price_cents]);
+
+  const baseOriginalMajor = useMemo(() => Number(product?.price_cents || 0) / 100, [product?.price_cents]);
+  const addonMajor = useMemo(() => Number(totalAdditionalCents || 0) / 100, [totalAdditionalCents]);
+
+  const selectedActiveSellerMajor = useMemo(() => {
+    if (selectedSku) {
+      if (saleActive && selectedSku.sale_price_cents_override != null) {
+        return Number(selectedSku.sale_price_cents_override) / 100;
+      }
+      if (selectedSku.price_cents_override != null) {
+        return Number(selectedSku.price_cents_override) / 100;
+      }
+    }
+    return baseActiveMajor + addonMajor;
+  }, [selectedSku, saleActive, baseActiveMajor, addonMajor]);
+
+  const selectedOriginalSellerMajor = useMemo(
+    () => baseOriginalMajor + addonMajor,
+    [baseOriginalMajor, addonMajor]
+  );
+
+  const toDisplayMajorNumber = useCallback((sellerMajor) => {
+    const displayCcy = pricing.display.currency;
+    const sellerCcy = pricing.sellerCurrency || 'USD';
+    let n = Number(sellerMajor || 0);
+    if (convSafe && displayCcy !== sellerCcy) {
+      const x = Number(convSafe(n, sellerCcy));
+      if (Number.isFinite(x) && x > 0) n = x;
+    }
+    return n;
+  }, [pricing.display.currency, pricing.sellerCurrency, convSafe]);
+
+  const activeDisplayMajor = useMemo(
+    () => toDisplayMajorNumber(selectedActiveSellerMajor),
+  [toDisplayMajorNumber, selectedActiveSellerMajor]
+  );
+
+  const originalDisplayMajor = useMemo(
+    () => (saleActive ? toDisplayMajorNumber(selectedOriginalSellerMajor) : null),
+    [saleActive, toDisplayMajorNumber, selectedOriginalSellerMajor]
+  );
+
+  const activeAmountOnly = useMemo(
+    () => amountOnly(activeDisplayMajor, pricing.display.currency),
+    [activeDisplayMajor, pricing.display.currency]
+  );
+
+  const originalAmountOnly = useMemo(
+    () => (originalDisplayMajor != null
+      ? amountOnly(originalDisplayMajor, pricing.display.currency)
+      : null),
+    [originalDisplayMajor, pricing.display.currency]
+  );
+
+  const savedDisplayMajor = useMemo(() => {
+    return originalDisplayMajor != null
+      ? Math.max(0, originalDisplayMajor - activeDisplayMajor)
+      : 0;
+  }, [originalDisplayMajor, activeDisplayMajor]);
+
+  const discountPct = useMemo(() => {
+    return originalDisplayMajor
+      ? Math.round((savedDisplayMajor / originalDisplayMajor) * 100)
+      : null;
+  }, [savedDisplayMajor, originalDisplayMajor]);
+
+  /* Wishlist (proxied) */
+// --- Replace your handleToggleWishlist with this ---
+const handleToggleWishlist = async () => {
+  const authed = await verifyAuth();
+  if (!authed) {
+    router.push(`/login?next=${encodeURIComponent(currentPath)}`);
+    return;
+  }
+
+  setLoading(true);
+  try {
+    if (isWishlisted) {
+      await fetch(b(`wishlist/${id}/`), {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          ...(token ? { Authorization: `Token ${token}` } : {}),
+        },
+      });
+      setIsWishlisted(false);
+      // decrement wishlists
+      mark('wishlists', -1);
+    } else {
+      await fetch(b('wishlist/'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          ...(token ? { Authorization: `Token ${token}` } : {}),
+        },
+        body: JSON.stringify({ product_id: id, note: '' }),
+      });
+      setIsWishlisted(true);
+      // increment wishlists
+      mark('wishlists', 1);
+    }
+  } catch {
+  } finally {
+    setLoading(false);
+  }
+};
+
+  /* Admin actions (proxied) */
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    try {
+      await fetch(b(`products/${id}/`), {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          ...(token ? { Authorization: `Token ${token}` } : {}),
+        },
+      });
+      router.back();
+    } catch {}
+  };
+
+  const handleUnpublish = async () => {
+    try {
+      await fetch(b(`products/${id}/unpublish/`), {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          ...(token ? { Authorization: `Token ${token}` } : {}),
+        },
+      });
+      router.refresh?.();
+    } catch {}
+  };
 
   // ---- Shipping preview (min fee + availability, proxied) ----
   const [shipPreview, setShipPreview] = useState({
-    available: null, // true | false | null (unknown)
-    minFeeCents: null, // number | null (seller cents)
-    currency: pricing.sellerCurrency || 'USD', // fee currency (seller)
-    method: null, // optional label
+    available: null,
+    minFeeCents: null,
+    currency: pricing.sellerCurrency || 'USD',
+    method: null,
   });
 
   useEffect(() => {
@@ -666,7 +969,6 @@ useEffect(() => {
       const cc = uiCountry || 'gh';
       const city = typeof document !== 'undefined' ? readCookie(`deliver_to_${cc}`) || '' : '';
 
-      // try plural and singular endpoints for both product and shop
       const paths = [
         `products/${product.id}/shipping/preview/?cc=${encodeURIComponent(cc)}&city=${encodeURIComponent(city)}`,
         `product/${product.id}/shipping/preview/?cc=${encodeURIComponent(cc)}&city=${encodeURIComponent(city)}`,
@@ -705,9 +1007,7 @@ useEffect(() => {
           }
           ok = true;
           break;
-        } catch {
-          /* try next path */
-        }
+        } catch {}
       }
 
       if (!ok && !cancelled) {
@@ -733,125 +1033,58 @@ useEffect(() => {
   );
 
   const shipBlocked = shipPreview.available === false;
+  const shipOrStockBlocked = shipBlocked || outOfStock;
 
-  // -------- Sale countdown (hook) --------
-  const { timeRemaining, progressPct: saleProgressPct /* 0-100 */, urgency } =
+  const { timeRemaining, progressPct: saleProgressPct } =
     useSaleCountdown(product?.sale_start_date, product?.sale_end_date);
-
-  const parseMoney = (s) =>
-    typeof s === 'string' ? Number(s.replace(/[^0-9.]/g, '')) : Number(s || 0);
-
-  const discountPct = (() => {
-    const orig = parseMoney(originalPrice);
-    const act = parseMoney(activePrice);
-    return orig > 0 && Number.isFinite(act) ? Math.round(((orig - act) / orig) * 100) : null;
-  })();
 
   const showCountdown = Boolean(saleActive && product?.sale_end_date);
 
-  /* Wishlist (proxied) */
-  const handleToggleWishlist = async () => {
-    const authed = await verifyAuth();
-    if (!authed) {
-      router.push(`/login?next=${encodeURIComponent(currentPath)}`);
-      return;
-    }
-    setLoading(true);
-    const url = b(`wishlist/${id}/`);
-    try {
-      if (isWishlisted) {
-        await fetch(url, {
-          method: 'DELETE',
-          credentials: 'include',
-          headers: { 'X-Requested-With': 'XMLHttpRequest', ...(token ? { Authorization: `Token ${token}` } : {}) },
-        });
-        setIsWishlisted(false);
-      } else {
-        await fetch(b('wishlist/'), {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            ...(token ? { Authorization: `Token ${token}` } : {}),
-          },
-          body: JSON.stringify({ product_id: id, note: '' }),
-        });
-        setIsWishlisted(true);
-      }
-    } catch {} finally {
-      setLoading(false);
-    }
-  };
-
-  /* Admin actions (proxied) */
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-    await fetch(b(`products/${id}/`), {
-      method: 'DELETE',
-      credentials: 'include',
-      headers: { 'X-Requested-With': 'XMLHttpRequest', ...(token ? { Authorization: `Token ${token}` } : {}) },
-    });
-    router.back();
-  };
-  const handleUnpublish = async () => {
-    await fetch(b(`products/${id}/unpublish/`), {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-        ...(token ? { Authorization: `Token ${token}` } : {}),
-      },
-    });
-    router.refresh?.();
-  };
-
-  // Additional price cents for basket calc (server currency minor units)
-  const totalAdditionalCents = useMemo(
-    () =>
-      Object.values(selectedVariants).reduce((s, v) => s + (v.additional_price_cents || 0), 0),
-    [selectedVariants]
-  );
-
-// inside ProductDetailSection component
-React.useEffect(() => {
-  const open = () => setIsModalVisible(true);
-  window.addEventListener("open-basket-sheet", open);
-  return () => window.removeEventListener("open-basket-sheet", open);
-}, []);
-
+  React.useEffect(() => {
+    const open = () => setIsModalVisible(true);
+    window.addEventListener('open-basket-sheet', open);
+    return () => window.removeEventListener('open-basket-sheet', open);
+  }, []);
 
   /* Basket */
-  const handleAddToBasket = () => {
-    if (shipBlocked) return; // guard
-    const priceCentsForBasket =
-      price_cents || sale_price_cents
-        ? saleActive
-          ? Math.round((sale_price_cents || 0) + (totalAdditionalCents || 0))
-          : Math.round((price_cents || 0) + (totalAdditionalCents || 0))
-        : Math.round(pricing.seller.activeMajor * 100) + Math.round(totalAdditionalCents || 0);
+// --- Replace your handleAddToBasket with this ---
+const handleAddToBasket = () => {
+  if (shipOrStockBlocked) return;
 
-    dispatch({
-      type: 'basket/addToBasket',
-      payload: {
-        id,
-        title,
-        price_cents: priceCentsForBasket,
-        quantity,
-        image: product_images,
-        postage_fee: product?.postage_fee_cents || 0,
-        secondary_postage_fee: product?.secondary_postage_fee_cents || 0,
-        variants: selectedVariants,
-        sku:
-          'SKU-' +
+  // record "added to basket"
+  mark('baskets', 1);
+
+  // keep your existing analytics if you want
+  // pm.markAddToBasket(product.slug, { source: 'pdp' });
+
+  const basketPriceCents = Math.round(selectedActiveSellerMajor * 100);
+
+  dispatch({
+    type: 'basket/addToBasket',
+    payload: {
+      id,
+      title,
+      price_cents: basketPriceCents,
+      quantity,
+      image: product_images,
+      postage_fee: product?.postage_fee_cents || 0,
+      secondary_postage_fee: product?.secondary_postage_fee_cents || 0,
+      variants: selectedVariants,
+      sku_id: selectedSku?.id || null,
+      options_key: selectedKey,
+      value_ids: selectedValueIds,
+      sku:
+        selectedSku?.sku ||
+        ('SKU-' +
           Object.values(selectedVariants)
             .map((o) => o.value.replace(/\s+/g, '-').toUpperCase())
-            .join('-'),
-      },
-    });
-    setIsModalVisible(true);
-  };
+            .join('-')),
+    },
+  });
+  setIsModalVisible(true);
+};
+
+
   const handleCloseModal = () => setIsModalVisible(false);
   const handleQuantityChange = (pid, q) =>
     dispatch({ type: 'basket/updateQuantity', payload: { id: pid, quantity: q } });
@@ -864,7 +1097,6 @@ React.useEffect(() => {
     setSelectedMultiBuyTier((prev) => (prev?.minQuantity === tier.minQuantity ? prev : tier));
   }, []);
 
-  // tiny auth probe (through proxy) for wishlist/direct-buy
   const verifyAuth = useCallback(async () => {
     try {
       const r = await fetch(b('users/me'), {
@@ -880,26 +1112,25 @@ React.useEffect(() => {
     }
   }, []);
 
-  const handleDirectBuyNow = async () => {
-    if (shipBlocked) return;
+  const handleDirectBuyNow = async (arg) => {
+    const uiSource = typeof arg === 'string' ? arg : 'primary_panel';
+    if (arg && typeof arg.preventDefault === 'function') arg.preventDefault();
+
+    if (shipOrStockBlocked) return;
+
+    pm.markPrimaryBuyClick(product.slug, { source: 'pdp', ui: uiSource });
 
     const authed = await verifyAuth();
     if (!authed) {
-      const next =
-        typeof window !== 'undefined'
-          ? location.pathname + location.search + location.hash
-          : '/';
+      const next = typeof window !== 'undefined'
+        ? location.pathname + location.search + location.hash
+        : '/';
       router.push(`/login?next=${encodeURIComponent(next)}`);
       return;
     }
 
-    // Always open the bottom sheet; it will disable Confirm until an address is chosen
     setIsDirectBuyPopupVisible(true);
-
-    // If the user has no addresses, also pop the “Add address” modal
-    if (!isAddressLoading && (!addresses || addresses.length === 0)) {
-      setShowNewModal(true);
-    }
+    if (!isAddressLoading && (!addresses || addresses.length === 0)) setShowNewModal(true);
   };
 
   const descriptionHtml = useMemo(() => {
@@ -914,7 +1145,6 @@ React.useEffect(() => {
     return raw || '<p>No description provided.</p>';
   }, [product]);
 
-  // helper to print variant add-on in the same display currency as the main price
   const formatAddonInDisplayCurrency = useCallback(
     (sellerMajor) => {
       const displayCurrency = pricing.display.currency;
@@ -930,7 +1160,6 @@ React.useEffect(() => {
     [amountOnly, convSafe, priceSymbol, pricing.display.currency, pricing.sellerCurrency]
   );
 
-  /* Build a market-prefixed href for related items (keeps /{cc}/...) */
   const relatedHref = useCallback(
     (seoSlug) => {
       const clean = String(seoSlug || '').replace(/^\/?[a-z]{2}\//i, '');
@@ -1009,7 +1238,7 @@ React.useEffect(() => {
       }
     })();
 
-  return () => {
+    return () => {
       cancelled = true;
     };
   }, [token]);
@@ -1084,11 +1313,27 @@ React.useEffect(() => {
               <Breadcrumbs path={product?.category_breadcrumb || []} title={product?.title || ''} />
             </div>
 
+            {/* impression sentinel for view metric */}
+            <span ref={containerRef} className="block h-px" aria-hidden />
+            {/* popularity pills (mobile + desktop) */}
+            <SignalsPills
+              views24h={sig.views24h}
+              baskets24h={sig.baskets24h}
+              wishlistsTotal={sig.wishlistsTotal}
+            />
+
+            {DEBUG && (
+              <pre className="text-[10px] opacity-70 select-text">
+                signals(live): {JSON.stringify(sig)}
+              </pre>
+            )}
+
+            {/* image slider (mobile full-bleed + desktop) */}
             <div className="block md:hidden relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
-              <ProductSlider mediaItems={product.product_images} />
+              <ProductSlider mediaItems={product.product_images} inBaskets={sig.baskets24h} />
             </div>
             <div className="hidden md:block">
-              <ProductSlider mediaItems={product.product_images} />
+              <ProductSlider mediaItems={product.product_images} inBaskets={sig.baskets24h} />
             </div>
 
             {/* ------- MOBILE SUMMARY ------- */}
@@ -1154,20 +1399,19 @@ React.useEffect(() => {
                 )}
 
                 <SimplePrice
-                  symbol={pricing.display.symbol}
-                  activeAmountOnly={activePrice}
-                  originalAmountOnly={originalPrice}
+                  symbol={priceSymbol}
+                  activeAmountOnly={activeAmountOnly}
+                  originalAmountOnly={originalAmountOnly}
                   saleActive={saleActive}
-                  /* shipping preview (postage always seller currency) */
                   postageCents={shipPreview.minFeeCents}
                   postageSymbol={postageSymbol}
                   shipAvailable={shipPreview.available}
                 />
 
-                {saleActive && originalPrice && (
+                {saleActive && originalAmountOnly && (
                   <div className="mt-1 text-xs text-green-700 dark:text-green-300">
-                    You save <strong>{pricing.display.symbol}{(parseMoney(originalPrice) - parseMoney(activePrice)).toLocaleString()}</strong>
-                    {typeof discountPct === 'number' && !Number.isNaN(discountPct) ? ` (${discountPct}% off)` : null}
+                    You save <strong>{priceSymbol}{amountOnly(savedDisplayMajor, pricing.display.currency)}</strong>
+                    {typeof discountPct === 'number' ? ` (${discountPct}% off)` : null}
                   </div>
                 )}
 
@@ -1192,9 +1436,9 @@ React.useEffect(() => {
                 <button
                   type="button"
                   onClick={handleAddToBasket}
-                  disabled={shipBlocked}
+                  disabled={shipOrStockBlocked}
                   className={`w-full rounded-full py-2.5 font-medium border border-neutral-300 text-slate-900 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 dark:border-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-800 ${
-                    shipBlocked ? 'opacity-50 cursor-not-allowed' : ''
+                    shipOrStockBlocked ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 >
                   Add to Basket
@@ -1202,27 +1446,47 @@ React.useEffect(() => {
 
                 <button
                   type="button"
-                  disabled={shipBlocked}
-                  className={`w-full rounded-full py-2.5 font-medium border border-neutral-300 text-slate-900 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 dark:border-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-800 ${
-                    shipBlocked ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
+                  onMouseDown={() => pm.markBNPLClick(product.slug, { source: 'pdp' })}
+                  onClick={() => {}}
+                  aria-pressed={false}
+                  title="Pay later (coming soon)"
+                  disabled
+                  className="w-full rounded-full py-2.5 font-medium border border-neutral-300 text-slate-900 hover:bg-neutral-50 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 dark:border-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-800"
                 >
-                  Buy Now Pay Later (BNPL)
+                  BNPL
                 </button>
 
                 <button
                   type="button"
+                  onMouseDown={() =>
+                    pm.markWishlistToggle(product.slug, !isWishlisted, { source: 'pdp' })
+                  }
                   onClick={handleToggleWishlist}
-                  disabled={loading}
                   aria-pressed={!!isWishlisted}
+                  aria-label={isWishlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                  title={isWishlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                  data-testid="wishlist-cta"
+                  disabled={loading}
                   className="w-full rounded-full py-2.5 font-medium border border-neutral-300 text-slate-900 hover:bg-neutral-50 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 dark:border-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-800"
                 >
-                  {loading ? '…' : isWishlisted ? '💜 Remove from Watchlist' : '♡ Add to Watchlist'}
+                  {loading ? (
+                    <div className="flex space-x-2 justify-center items-center h-6">
+                      <div className="h-2 w-2 bg-current rounded-full animate-bounce" />
+                      <div className="h-2 w-2 bg-current rounded-full animate-bounce delay-150" />
+                      <div className="h-2 w-2 bg-current rounded-full animate-bounce delay-300" />
+                    </div>
+                  ) : (
+                    <>
+                      {isWishlisted ? <FaHeart className="w-5 h-5 text-violet-700" /> : <FaRegHeart className="w-5 h-5" />}
+                      <span>{isWishlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}</span>
+                    </>
+                  )}
                 </button>
               </div>
 
               {canShowPhone && (
                 <ContactSellerCard
+                  productSlug={product?.slug}
                   canShowPhone={canShowPhone}
                   unavailableText={contactReasonText(gate?.reason, gate?.allowed)}
                   verified={isVerifiedSeller}
@@ -1266,20 +1530,13 @@ React.useEffect(() => {
               descriptionHtml={descriptionHtml}
             />
 
-
-
-{/* Reviews (standalone) */}
-{reviewStats?.review_count > 0 && (
-<section id="reviews" className="mt-8">
-  <h2 className="sr-only">Customer reviews</h2>
-  <DisplayReviews product={product} />
-</section>
-)}
-
-
-
-
-            
+            {/* Reviews (standalone) */}
+            {reviewStats?.review_count > 0 && (
+              <section id="reviews" className="mt-8">
+                <h2 className="sr-only">Customer reviews</h2>
+                <DisplayReviews product={product} />
+              </section>
+            )}
           </div>
 
           {/* RIGHT (sticky) */}
@@ -1340,6 +1597,7 @@ React.useEffect(() => {
 
               {canShowPhone && (
                 <ContactSellerCard
+                  productSlug={product?.slug}
                   canShowPhone={canShowPhone}
                   unavailableText={contactReasonText(gate?.reason, gate?.allowed)}
                   verified={isVerifiedSeller}
@@ -1363,7 +1621,6 @@ React.useEffect(() => {
               )}
 
               <div className="rounded-xl p-4 border border-violet-100 dark:border-violet-900/40 bg-white dark:bg-slate-900">
-                {/* Desktop: same rich countdown card */}
                 {showCountdown && (
                   <section
                     className="mb-3 rounded-xl border border-orange-200/70 bg-gradient-to-r from-orange-50 to-amber-50
@@ -1414,18 +1671,21 @@ React.useEffect(() => {
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {variant.values.map((val) => {
+                          const nextSel = { ...selectedVariants, [variant.id]: val };
+                          const nextIds = Object.values(nextSel).map((v) => v.id);
+                          const disabled = !containsSubset(nextIds);
                           const addSellerMajor = (val.additional_price_cents || 0) / 100;
+
                           return (
                             <button
                               key={val.id}
-                              onClick={() =>
-                                setSelectedVariants((prev) => ({ ...prev, [variant.id]: val }))
-                              }
-                              className={`px-4 ${val.additional_price_cents === 0 && 'py-2'} border rounded-full text-sm ${
-                                selectedVariants[variant.id]?.id === val.id
+                              onClick={() => !disabled && setSelectedVariants(nextSel)}
+                              disabled={disabled}
+                              className={`px-4 ${val.additional_price_cents === 0 && 'py-2'} border rounded-full text-sm
+                                ${selectedVariants[variant.id]?.id === val.id
                                   ? 'border-black dark:border-white font-semibold'
-                                  : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200'
-                              }`}
+                                  : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200'}
+                                ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
                             >
                               {val.value}
                               {val.additional_price_cents > 0 && (
@@ -1443,14 +1703,20 @@ React.useEffect(() => {
 
                 <div className="mt-2">
                   <SimplePrice
-                    symbol={pricing.display.symbol}
-                    activeAmountOnly={activePrice}
-                    originalAmountOnly={originalPrice}
+                    symbol={priceSymbol}
+                    activeAmountOnly={activeAmountOnly}
+                    originalAmountOnly={originalAmountOnly}
                     saleActive={saleActive}
                     postageCents={shipPreview.minFeeCents}
                     postageSymbol={postageSymbol}
                     shipAvailable={shipPreview.available}
                   />
+                  {saleActive && originalAmountOnly && (
+                    <div className="mt-1 text-xs text-green-700 dark:text-green-300">
+                      You save <strong>{priceSymbol}{amountOnly(savedDisplayMajor, pricing.display.currency)}</strong>
+                      {typeof discountPct === 'number' ? ` (${discountPct}% off)` : null}
+                    </div>
+                  )}
                   <div className="mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
                     <span>
                       {shipPreview.method && shipPreview.minFeeCents !== null
@@ -1469,7 +1735,9 @@ React.useEffect(() => {
               </div>
 
               <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">In stock</span>
+                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                  {outOfStock ? 'Out of stock' : 'In stock'}
+                </span>
                 <div className="flex items-center rounded-md border border-gray-300 dark:border-gray-700 overflow-hidden w-fit">
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -1500,10 +1768,10 @@ React.useEffect(() => {
               <div className="mt-2 space-y-2">
                 <button
                   className={`w-full rounded-full py-3 font-semibold bg-[var(--violet-600,#7c3aed)] text-white hover:bg-[var(--violet-700,#6d28d9)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 dark:focus-visible:ring-violet-500 ${
-                    shipBlocked ? 'opacity-50 cursor-not-allowed' : ''
+                    shipOrStockBlocked ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                   onClick={handleDirectBuyNow}
-                  disabled={shipBlocked}
+                  disabled={shipOrStockBlocked}
                 >
                   Buy Now (SafePay)
                 </button>
@@ -1511,9 +1779,9 @@ React.useEffect(() => {
                 <button
                   type="button"
                   onClick={handleAddToBasket}
-                  disabled={shipBlocked}
+                  disabled={shipOrStockBlocked}
                   className={`w-full rounded-full py-2.5 font-medium border border-neutral-300 text-slate-900 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 dark:border-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-800 ${
-                    shipBlocked ? 'opacity-50 cursor-not-allowed' : ''
+                    shipOrStockBlocked ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 >
                   Add to Basket
@@ -1521,8 +1789,26 @@ React.useEffect(() => {
 
                 <button
                   type="button"
+                  onMouseDown={() => pm.markBNPLClick(product.slug, { source: 'pdp' })}
+                  onClick={() => {}}
+                  aria-pressed={false}
+                  title="Pay later (coming soon)"
+                  disabled
+                  className="w-full rounded-full py-2.5 font-medium border border-neutral-300 text-slate-900 hover:bg-neutral-50 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 dark:border-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-800"
+                >
+                  BNPL
+                </button>
+
+                <button
+                  type="button"
+                  onMouseDown={() =>
+                    pm.markWishlistToggle(product.slug, !isWishlisted, { source: 'pdp' })
+                  }
                   onClick={handleToggleWishlist}
                   aria-pressed={!!isWishlisted}
+                  aria-label={isWishlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                  title={isWishlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                  data-testid="wishlist-cta"
                   disabled={loading}
                   className="w-full rounded-full py-2.5 font-medium border border-neutral-300 text-slate-900 hover:bg-neutral-50 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 dark:border-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-800"
                 >
@@ -1534,7 +1820,11 @@ React.useEffect(() => {
                     </div>
                   ) : (
                     <>
-                      {isWishlisted ? <FaHeart className="w-5 h-5 text-violet-700" /> : <FaRegHeart className="w-5 h-5" />}
+                      {isWishlisted ? (
+                        <FaHeart className="w-5 h-5 text-violet-700" />
+                      ) : (
+                        <FaRegHeart className="w-5 h-5" />
+                      )}
                       <span>{isWishlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}</span>
                     </>
                   )}
@@ -1558,7 +1848,6 @@ React.useEffect(() => {
             onUndoRemove={(item) => dispatch({ type: 'basket/addToBasket', payload: item })}
             relatedProducts={relatedProducts}
             onAddSuggested={(item) => {
-              // choose best raw url from many shapes, then normalize to absolute
               const raw =
                 item.__resolved_image ||
                 item.image_url ||
@@ -1584,8 +1873,8 @@ React.useEffect(() => {
                   price_cents,
                   quantity: 1,
                   sku: item.sku,
-                  __resolved_image: img,        // ← BasketSheet reads this first
-                  image: [{ image_url: img }],  // ← legacy basket shape still supported
+                  __resolved_image: img,
+                  image: [{ image_url: img }],
                 },
               });
             }}
@@ -1687,7 +1976,11 @@ React.useEffect(() => {
         />
       )}
 
-      <StickyPriceBar symbol={priceSymbol} activePrice={activePrice} onBuyNow={handleDirectBuyNow} />
+      <StickyPriceBar
+        symbol={priceSymbol}
+        activePrice={activeAmountOnly}
+        onBuyNow={() => handleDirectBuyNow('sticky_bar')}
+      />
     </section>
   );
 }

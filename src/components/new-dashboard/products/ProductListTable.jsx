@@ -1,4 +1,4 @@
-//src/components/new-dashboard/products/ProductListTable.jsx
+// src/components/new-dashboard/products/ProductLisTable.jsx
 "use client";
 
 import React, { useEffect, useMemo, useState, useRef } from "react";
@@ -32,7 +32,107 @@ import {
   AlertTriangle,
   Wrench,
   ChevronDown,
+  ArrowUpDown,
+  Download,
+  ListFilter,
+  Clock,
 } from "lucide-react";
+
+/* ---- metrics batch refresh (uses /api/metrics/summary/) ---- */
+const METRIC_FIELDS =
+  "views,clicks,whatsapp_clicks,phone_clicks,contact_clicks";
+
+async function fetchMetricsSummary(ids = [], opts = {}) {
+  if (!ids.length) return {};
+  const { window = "all" } = opts; // '7d' | '28d' | '90d' | 'all'
+  const { data } = await axiosInstance.get("metrics/summary/", {
+    params: { ids: ids.join(","), fields: METRIC_FIELDS, window },
+    headers: { Accept: "application/json" },
+    withCredentials: true,
+  });
+
+  // Accept array or map; normalize to { [id]: metrics }
+  if (Array.isArray(data)) {
+    const map = {};
+    for (const row of data) {
+      const pid = Number(row.product_id ?? row.id);
+      if (pid) map[pid] = row;
+    }
+    return map;
+  }
+  return data || {};
+}
+
+// header sort button (shows active state)
+function SortBtn({ label, k, alignRight = false, sort, setSort }) {
+  const active = sort.key === k;
+  const dir = active ? sort.dir : "asc";
+  const Icon = active ? (dir === "asc" ? ChevronUp : ChevronDown) : ArrowUpDown;
+  return (
+    <button
+      className={`inline-flex items-center gap-1 hover:underline ${
+        active ? "font-semibold text-gray-900 dark:text-white" : ""
+      } ${alignRight ? "ml-auto" : ""}`}
+      onClick={() =>
+        setSort((s) => ({
+          key: k,
+          dir: s.key === k && s.dir === "asc" ? "desc" : "asc",
+        }))
+      }
+      title={`Sort by ${label}`}
+      aria-sort={
+        active ? (dir === "asc" ? "ascending" : "descending") : "none"
+      }
+    >
+      {label}
+      <Icon className="w-3.5 h-3.5 opacity-70" aria-hidden="true" />
+    </button>
+  );
+}
+
+
+
+
+// tiny mq hook for Auto/Table/Card switching
+// SSR-safe media query hook (single subscription)
+function useMediaQuery(query) {
+  const getMatch = () => {
+    if (typeof window === "undefined" || !("matchMedia" in window)) return false;
+    try {
+      return window.matchMedia(query).matches;
+    } catch {
+      return false;
+    }
+  };
+
+  const [matches, setMatches] = useState(getMatch);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("matchMedia" in window)) return;
+
+    const mql = window.matchMedia(query);
+    const onChange = (e) => setMatches(e.matches);
+
+    // sync on mount and when query changes
+    setMatches(mql.matches);
+
+    if (typeof mql.addEventListener === "function") {
+      mql.addEventListener("change", onChange);
+      return () => mql.removeEventListener("change", onChange);
+    } else {
+      mql.addListener(onChange);
+      return () => mql.removeListener(onChange);
+    }
+  }, [query]);
+
+  return matches;
+}
+
+
+
+
+
+
 
 /* ----------------------- image helpers ----------------------- */
 const API_ROOT = (BASE_API_URL || "").replace(/\/+$/, "");
@@ -106,7 +206,6 @@ function qtyFieldFor(p) {
     return "product_quantity";
   if (Object.prototype.hasOwnProperty.call(p || {}, "quantity")) return "quantity";
   if (Object.prototype.hasOwnProperty.call(p || {}, "stock")) return "stock";
-  // default to product_quantity if none present
   return "product_quantity";
 }
 function qtyOfSafe(p) {
@@ -316,6 +415,14 @@ function smartFilterRows(rows, q) {
   });
 }
 
+
+
+
+
+
+
+
+
 /* ----------------------- toast system ----------------------- */
 function Toast({ type = "info", title, message, onClose, actionLabel, onAction }) {
   const styles =
@@ -340,9 +447,7 @@ function Toast({ type = "info", title, message, onClose, actionLabel, onAction }
             <div className="text-sm font-semibold leading-tight">{title}</div>
           ) : null}
           {message ? (
-            <div className="text-[12px] opacity-90 leading-snug mt-0.5">
-              {message}
-            </div>
+            <div className="text-[12px] opacity-90 leading-snug mt-0.5">{message}</div>
           ) : null}
         </div>
         <div className="flex items-center gap-1">
@@ -369,7 +474,14 @@ function Toast({ type = "info", title, message, onClose, actionLabel, onAction }
 function useToasts() {
   const [toasts, setToasts] = React.useState([]);
   const dismiss = (id) => setToasts((t) => t.filter((x) => x.id !== id));
-  const push = ({ type = "info", title, message, ttl = 4500, actionLabel, onAction }) => {
+  const push = ({
+    type = "info",
+    title,
+    message,
+    ttl = 4500,
+    actionLabel,
+    onAction,
+  }) => {
     const id = Math.random().toString(36).slice(2);
     setToasts((t) => [...t, { id, type, title, message, actionLabel, onAction }]);
     if (ttl) window.setTimeout(() => dismiss(id), ttl);
@@ -604,8 +716,18 @@ function BottomSheet({ open, onClose, title, children, footer }) {
   );
 }
 
-/* ----------------------- Auto-Fix Bottom Sheet ----------------------- */
 
+
+
+
+
+
+
+
+
+
+
+/* ----------------------- Auto-Fix Bottom Sheet ----------------------- */
 function computeAutoFixPreview(products) {
   const now = Date.now();
 
@@ -813,7 +935,7 @@ function AutoFixSheet({ open, onClose, products, patchProduct, openCapFor, push 
                 <div className="w-28 h-1.5 bg-gray-200 dark:bg-gray-800 rounded overflow-hidden">
                   <div
                     className="h-1.5 bg-gray-900 dark:bg-white"
-                    style={{ width: `${Math.round((done / Math.max(1,totalTargets)) * 100)}%` }}
+                    style={{ width: `${Math.round((done / Math.max(1, totalTargets)) * 100)}%` }}
                   />
                 </div>
               </>
@@ -924,8 +1046,24 @@ function AutoFixSheet({ open, onClose, products, patchProduct, openCapFor, push 
   );
 }
 
+
+
+
+
+
+
+
+
+
 /* ----------------------- main component ----------------------- */
-export default function ProductListTable() {
+export default function ProductListTable({
+  filter,
+  query,
+  metricWindow,
+  density,
+  view = "auto", // "auto" | "table" | "card"
+  onMeta,
+}) {
   const router = useRouter();
 
   const [products, setProducts] = useState([]);
@@ -936,9 +1074,66 @@ export default function ProductListTable() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [demoMode, setDemoMode] = useState(false);
-  const [filter, setFilter] = useState("all");
+
+  const [lastStatsAt, setLastStatsAt] = useState(null);
+  const [statsBusy, setStatsBusy] = useState(false);
+
   const [capOpen, setCapOpen] = useState(false);
   const [capCtx, setCapCtx] = useState(null);
+
+  // Column visibility manager
+  const [colMenuOpen, setColMenuOpen] = useState(false);
+  const colMenuRef = useRef(null);
+  const [visibleCols, setVisibleCols] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("prod.visibleCols") || "{}");
+      return {
+        image: true,
+        title: true,
+        status: true,
+        visibility: true,
+        availability: true,
+        price: true,
+        views: true,
+        clicks: true,
+        contacts: true,
+        actions: true,
+        ...saved,
+      };
+    } catch {
+      return {
+        image: true,
+        title: true,
+        status: true,
+        visibility: true,
+        availability: true,
+        price: true,
+        views: true,
+        clicks: true,
+        contacts: true,
+        actions: true,
+      };
+    }
+  });
+  useEffect(() => {
+    localStorage.setItem("prod.visibleCols", JSON.stringify(visibleCols));
+  }, [visibleCols]);
+
+  useEffect(() => {
+    function onDocClick(e) {
+      if (!colMenuRef.current) return;
+      if (!colMenuRef.current.contains(e.target)) setColMenuOpen(false);
+    }
+    function onEsc(e) {
+      if (e.key === "Escape") setColMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, []);
 
   // batch selection
   const [selected, setSelected] = useState(new Set());
@@ -964,53 +1159,55 @@ export default function ProductListTable() {
 
   const { toasts, push, dismiss } = useToasts();
 
-  // search + URL + prefs
-  const [searchInput, setSearchInput] = useState("");
-  const [query, setQuery] = useState("");
+  // query from props (defer heavy filtering)
   const deferredQuery = React.useDeferredValue(query);
 
-  const searchRef = useRef(null);
+  // StrictMode: prevent double initial toast/fetch
+  const loadedOnceRef = useRef(false);
 
-  // hydrate from URL/localStorage
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const u = new URL(window.location.href);
-    const q = u.searchParams.get("q") || localStorage.getItem("prod.q") || "";
-    const tab = u.searchParams.get("tab") || localStorage.getItem("prod.tab") || "all";
-    setSearchInput(q);
-    setQuery(q.trim());
-    setFilter(tab);
-  }, []);
+  // metrics refresher (polling + window)
+  async function refreshStats() {
+    const ids = products.map((p) => p.id).filter(Boolean);
+    if (!ids.length) return;
+    setStatsBusy(true);
+    try {
+      const summary = await fetchMetricsSummary(ids, { window: metricWindow });
+      setProducts((prev) =>
+        prev.map((p) => {
+          const s = summary[p.id];
+          if (!s) return p;
+          const next = { ...p };
+          next.metrics = { ...(p.metrics || {}), ...s };
+          if (s.views != null) next.impressions = s.views;
+          if (s.impressions != null) next.impressions = s.impressions;
+          if (s.clicks != null) next.clicks = s.clicks;
+          if (s.whatsapp_clicks != null) next.whatsapp_clicks = s.whatsapp_clicks;
+          if (s.phone_clicks != null) next.phone_clicks = s.phone_clicks;
+          if (s.contact_clicks != null) next.contact_clicks = s.contact_clicks;
+          return next;
+        })
+      );
+      setLastStatsAt(new Date());
+    } finally {
+      setStatsBusy(false);
+    }
+  }
 
-  // persist to URL + prefs
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const qs = new URLSearchParams();
-    if (filter && filter !== "all") qs.set("tab", filter);
-    if (searchInput.trim()) qs.set("q", searchInput.trim());
-    const str = qs.toString();
-    router.replace(str ? `?${str}` : "?", { scroll: false });
-    localStorage.setItem("prod.tab", filter);
-    localStorage.setItem("prod.q", searchInput.trim());
-  }, [filter, searchInput, router]);
+    if (products.length) refreshStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products.length, metricWindow]);
 
-  // debounce search
   useEffect(() => {
-    const t = setTimeout(() => setQuery(searchInput.trim()), 250);
-    return () => clearTimeout(t);
-  }, [searchInput]);
-
-  // Cmd/Ctrl+K focus
-  useEffect(() => {
-    const onK = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        searchRef.current?.focus();
-      }
+    let t;
+    const loop = () => {
+      if (document.visibilityState === "visible") refreshStats();
+      t = setTimeout(loop, 20000);
     };
-    window.addEventListener("keydown", onK);
-    return () => window.removeEventListener("keydown", onK);
-  }, []);
+    loop();
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products.map((p) => p.id).join(","), metricWindow]);
 
   const capInfo = useMemo(() => {
     for (const p of products) {
@@ -1039,7 +1236,8 @@ export default function ProductListTable() {
     setError(null);
   }
 
-  async function fetchProducts(pageNum = 1) {
+  async function fetchProducts(pageNum = 1, opts = {}) {
+    const { silent = false } = opts;
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
     if (!hasMore && pageNum > 1) return;
 
@@ -1059,7 +1257,7 @@ export default function ProductListTable() {
       setError(null);
       setDemoMode(false);
 
-      if (pageNum === 1) {
+      if (pageNum === 1 && !silent) {
         push({
           type: "success",
           title: "Listings loaded",
@@ -1073,7 +1271,11 @@ export default function ProductListTable() {
         await loadDummy();
       } else {
         setError("Failed to load products");
-        push({ type: "error", title: "Couldn’t load listings", message: tidyError(e) });
+        push({
+          type: "error",
+          title: "Couldn’t load listings",
+          message: tidyError(e),
+        });
       }
     } finally {
       setLoading(false);
@@ -1081,14 +1283,16 @@ export default function ProductListTable() {
   }
 
   useEffect(() => {
-    fetchProducts(1);
+    if (loadedOnceRef.current) return;
+    loadedOnceRef.current = true;
+    fetchProducts(1, { silent: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleLoadMore() {
     const next = page + 1;
     setPage(next);
-    fetchProducts(next);
+    fetchProducts(next, { silent: true });
   }
 
   function toggleRow(id) {
@@ -1125,8 +1329,10 @@ export default function ProductListTable() {
       const { data } = await axiosInstance.patch(`/api/products/${id}/`, patch);
       setProducts((p) => p.map((x) => (x.id === id ? { ...x, ...data } : x)));
 
-      // show undo only for a subset of actions
-      const allowUndo = ["pause", "draft", "publish"].includes(mode) || "is_paused" in patch || "status" in patch;
+      const allowUndo =
+        ["pause", "draft", "publish"].includes(mode) ||
+        "is_paused" in patch ||
+        "status" in patch;
       if (allowUndo && prev) {
         push({
           type: "success",
@@ -1142,11 +1348,16 @@ export default function ProductListTable() {
           ttl: 6000,
         });
       } else {
-        push({ type: "success", title: "Saved", message: "Your changes have been applied.", ttl: 2000 });
+        push({
+          type: "success",
+          title: "Saved",
+          message: "Your changes have been applied.",
+          ttl: 2000,
+        });
       }
     } catch (e) {
       const payload = tidyAxiosPayload(e);
-      await fetchProducts(1);
+      await fetchProducts(1, { silent: true });
       if (payload && maybeOpenSheetFromError(id, payload, mode || "publish")) return;
 
       push({ type: "error", title: "Update failed", message: tidyError(e) });
@@ -1159,7 +1370,11 @@ export default function ProductListTable() {
   async function handleArchive(id) {
     if (demoMode) {
       setProducts((prev) => prev.filter((p) => p.id !== id));
-      push({ type: "info", title: "Archived (demo)", message: "This is demo mode." });
+      push({
+        type: "info",
+        title: "Archived (demo)",
+        message: "This is demo mode.",
+      });
       return;
     }
     if (!confirm("Archive this product?")) return;
@@ -1207,11 +1422,7 @@ export default function ProductListTable() {
     const p = capCtx?.product;
     if (!p) return;
     setCapOpen(false);
-    await patchProduct(
-      p.id,
-      { status: 1, is_paused: false, autofix: true },
-      "publish"
-    );
+    await patchProduct(p.id, { status: 1, is_paused: false, autofix: true }, "publish");
   }
 
   const filteredByTab = useMemo(() => {
@@ -1227,11 +1438,44 @@ export default function ProductListTable() {
     }
   }, [products, filter]);
 
+
   const filtered = useMemo(
     () => smartFilterRows(filteredByTab, deferredQuery),
     [filteredByTab, deferredQuery]
   );
   const smartTokens = useMemo(() => parseSmartQuery(deferredQuery), [deferredQuery]);
+
+  // sorting
+  const [sort, setSort] = useState({ key: "updated", dir: "desc" }); // 'views'|'clicks'|'contacts'|'price'|'title'|'status'|'updated'
+  const sorted = useMemo(() => {
+    const arr = [...filtered];
+    const get = (p) => {
+      switch (sort.key) {
+        case "views":
+          return Number(viewsOf(p));
+        case "clicks":
+          return Number(clicksOf(p));
+        case "contacts":
+          return Number(contactClicksOf(p));
+        case "price":
+          return Number(p.price_cents || 0);
+        case "title":
+          return (p.title || "").toLowerCase();
+        case "status":
+          return Number(p.status || 0) + (p.is_paused ? -0.5 : 0);
+        case "updated":
+        default:
+          return new Date(p.updated_at || p.created_at || 0).getTime();
+      }
+    };
+    arr.sort((a, b) => {
+      const va = get(a);
+      const vb = get(b);
+      if (va === vb) return 0;
+      return sort.dir === "asc" ? (va > vb ? 1 : -1) : va < vb ? 1 : -1;
+    });
+    return arr;
+  }, [filtered, sort]);
 
   // selection helpers
   const toggleSelect = (id, checked) => {
@@ -1242,11 +1486,17 @@ export default function ProductListTable() {
       return next;
     });
   };
-  const allIdsInView = filtered.map((p) => p.id);
-  const allChecked =
-    selected.size > 0 && allIdsInView.every((id) => selected.has(id));
-
+  const allIdsInView = sorted.map((p) => p.id);
+  const allChecked = selected.size > 0 && allIdsInView.every((id) => selected.has(id));
   const clearSelection = () => setSelected(new Set());
+
+  // master checkbox: indeterminate
+  const masterRef = useRef(null);
+  useEffect(() => {
+    if (!masterRef.current) return;
+    masterRef.current.indeterminate =
+      selected.size > 0 && !allChecked && allIdsInView.length > 0;
+  }, [selected, allChecked, allIdsInView.length]);
 
   async function runBatch(action) {
     setBatchBusy(true);
@@ -1262,67 +1512,140 @@ export default function ProductListTable() {
         } else if (action === "stock0") {
           const field = qtyFieldFor(p);
           await patchProduct(id, { [field]: 0 }, "qty");
+        } else if (action === "publish") {
+          await patchProduct(id, { status: 1, is_paused: false }, "publish");
         }
       });
-      push({ type: "success", title: "Batch complete", message: `${ids.length} item(s) updated.` });
+      push({
+        type: "success",
+        title: "Batch complete",
+        message: `${ids.length} item(s) updated.`,
+      });
     } finally {
       clearSelection();
       setBatchBusy(false);
     }
   }
 
+  // density is a prop now
+  const imgSize = density === "compact" ? 40 : density === "comfortable" ? 64 : 56;
+  const tableText = density === "compact" ? "text-xs" : "text-sm";
+
+  const lastUpdatedLabel = useMemo(() => {
+    if (!lastStatsAt) return "—";
+    const s = Math.floor((Date.now() - lastStatsAt.getTime()) / 1000);
+    if (s < 10) return "just now";
+    if (s < 60) return `${s}s ago`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    return `${h}h ago`;
+  }, [lastStatsAt]);
+
+  function exportCSV() {
+    const rows = sorted;
+    const header = [
+      "id","title","status","is_live","is_paused","qty","price_cents","currency",
+      "views","clicks","whatsapp_clicks","phone_clicks","contacts","ctr","contact_ctr","url",
+    ];
+    const lines = [header.join(",")];
+    for (const p of rows) {
+      const qty = qtyOfSafe(p);
+      const v = viewsOf(p);
+      const c = clicksOf(p);
+      const w = whatsappClicksOf(p);
+      const ph = phoneClicksOf(p);
+      const cc = contactClicksOf(p);
+      const line = [
+        p.id,
+        `"${(p.title || "").replace(/"/g, '""')}"`,
+        statusLabel(p.status),
+        p.is_live ? 1 : 0,
+        p.is_paused ? 1 : 0,
+        qty,
+        Number(p.price_cents || 0),
+        p.price_currency || "",
+        v,
+        c,
+        w,
+        ph,
+        cc,
+        typeof ctrOf(p) === "string" ? ctrOf(p) : "",
+        typeof contactCtrOf(p) === "string" ? contactCtrOf(p) : "",
+        viewHrefAbsolute(p),
+      ].join(",");
+      lines.push(line);
+    }
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "products.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+//optional onMeta prop and report whenever things change
+  useEffect(() => {
+    onMeta?.({
+      count: filtered.length,
+      statsBusy,
+      updatedAt: lastStatsAt, // pass the Date; parent formats "X ago"
+    });
+  }, [filtered.length, statsBusy, lastStatsAt, onMeta]);
+
+
+  // view mode decision (Card on small screens if "auto")
+// Decide view mode (avoid hydration flicker on first paint)
+const [mounted, setMounted] = useState(false);
+useEffect(() => setMounted(true), []);
+
+const isSmall = useMediaQuery("(max-width: 1023px)");
+
+const useCards = useMemo(() => {
+  if (view === "card") return true;
+  if (view === "table") return false;
+  // "auto": only switch to cards after mount so SSR/CSR match
+  return mounted && isSmall;
+}, [view, mounted, isSmall]);
+
+
+
+
   return (
     <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow border border-gray-100 dark:border-gray-700">
-      {/* Header */}
-      <div className="sticky top-0 z-20 p-6 bg-white/85 dark:bg-gray-800/85 backdrop-blur border-b border-gray-100 dark:border-gray-700 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      {/* Header / Toolbar */}
+      <div className="sticky top-0 z-20 p-6 bg-white/85 dark:bg-gray-800/85 backdrop-blur border-b border-gray-100 dark:border-gray-700 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="space-y-1">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             My Product Listings
           </h2>
+
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-          <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-1 flex">
-            {[
-              { key: "all", label: "All" },
-              { key: "live", label: "Live" },
-              { key: "paused", label: "Paused" },
-              { key: "draft", label: "Drafts" },
-            ].map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setFilter(f.key)}
-                className={`px-3 py-1.5 rounded-md text-sm ${
-                  filter === f.key
-                    ? "bg-white dark:bg-gray-800 shadow text-gray-900 dark:text-white"
-                    : "text-gray-600 dark:text-gray-300"
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-
-          {/* smart search */}
-          <div className="relative">
-            <input
-              id="prod-search"
-              ref={searchRef}
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder='Search: text or tokens (e.g. status:live minviews:100 country:gh id:42)'
-              className="w-[420px] max-w-[92vw] pl-9 pr-8 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-gray-900/20"
-              aria-label="Search listings"
-            />
-            <Search className="w-4 h-4 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-            {!!searchInput && (
-              <button
-                aria-label="Clear search"
-                onClick={() => setSearchInput("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <XCircle className="w-4 h-4" />
-              </button>
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* columns */}
+          <div className="relative" ref={colMenuRef}>
+            <button
+              onClick={() => setColMenuOpen((v) => !v)}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700"
+              title="Columns"
+            >
+              <ListFilter className="w-4 h-4" /> Columns
+            </button>
+            {colMenuOpen && (
+              <div className="absolute right-0 mt-1 w-56 rounded-xl border bg-white dark:bg-gray-900 shadow-lg p-2 text-sm z-20">
+                {Object.entries(visibleCols).map(([k, v]) => (
+                  <label key={k} className="flex items-center justify-between gap-2 px-2 py-1 rounded hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <span className="capitalize">{k}</span>
+                    <input
+                      type="checkbox"
+                      checked={v}
+                      onChange={(e) => setVisibleCols((c) => ({ ...c, [k]: e.target.checked }))}
+                    />
+                  </label>
+                ))}
+              </div>
             )}
           </div>
 
@@ -1333,6 +1656,14 @@ export default function ProductListTable() {
           >
             <Wrench className="w-4 h-4" />
             Auto-Fix
+          </button>
+
+          <button
+            onClick={exportCSV}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700"
+            title="Export CSV"
+          >
+            <Download className="w-4 h-4" /> Export
           </button>
 
           <button
@@ -1393,12 +1724,6 @@ export default function ProductListTable() {
                 </span>
               ))
             : null}
-          <button
-            className="ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            onClick={() => setSearchInput("")}
-          >
-            Clear
-          </button>
         </div>
       )}
 
@@ -1445,335 +1770,513 @@ export default function ProductListTable() {
         </div>
       )}
 
-      <div className="overflow-x-auto p-6">
-        <table className="min-w-full text-sm text-left text-gray-700 dark:text-gray-200">
-          <thead className="sticky top-[68px] z-10 bg-gray-50 dark:bg-gray-900/60 backdrop-blur text-gray-800 dark:text-gray-100 text-sm font-semibold">
-            <tr>
-              <th className="p-3">
-                <input
-                  type="checkbox"
-                  aria-label="Select all"
-                  checked={allChecked}
-                  onChange={(e) =>
-                    setSelected(
-                      e.target.checked ? new Set(allIdsInView) : new Set()
-                    )
-                  }
-                />
-              </th>
-              <th className="p-3">Image</th>
-              <th className="p-3">Title</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Visibility</th>
-              <th className="p-3">Availability</th>
-              <th className="p-3">Price</th>
-              <th className="p-3">Views</th>
-              <th className="p-3">Clicks</th>
-              <th className="p-3">Contacts</th>
-              <th className="p-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => {
-              const img = thumbOf(p);
-              const price = toMajor(p.price_cents, 2);
-              const ccy = (p.price_currency || "").toUpperCase();
-              const href = viewHrefAbsolute(p);
-              const isOpen = expandedRows.includes(p.id);
+      {/* BODY: Card or Table */}
+      <div className="p-6">
+        {/* error */}
+        {error ? (
+          <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-rose-800 dark:border-rose-900 dark:bg-rose-900/20 dark:text-rose-200">
+            {error}
+          </div>
+        ) : null}
 
-              const v = Number(viewsOf(p));
-              const c = Number(clicksOf(p));
-              const w = Number(whatsappClicksOf(p));
-              const ph = Number(phoneClicksOf(p));
-              const cc = Number(contactClicksOf(p));
-              const pct = v ? (c / v) * 100 : 0;
+        {/* empty state */}
+        {!loading && sorted.length === 0 ? (
+          <div className="rounded-xl border border-dashed p-10 text-center text-sm text-gray-500 dark:border-gray-700">
+            No listings matched your filters.
+            <div className="mt-2">
+              Try clearing search, switching tabs, or{" "}
+              <button
+                onClick={() => router.push("/new-dashboard/products/new")}
+                className="underline decoration-dotted underline-offset-4"
+              >
+                add a product
+              </button>
+              .
+            </div>
+          </div>
+        ) : null}
 
-              const visText =
-                p.visibility_label ||
-                (p.status === 1 ? (p.is_paused ? "Paused" : "Published") : "Hidden");
-              const visClass = p.is_live
-                ? "text-emerald-600"
-                : p.status === 1 && p.is_paused
-                ? "text-amber-600"
-                : "text-gray-500";
+        {/* skeleton (initial load) */}
+        {loading && products.length === 0 ? (
+          <div className="grid gap-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-14 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"
+              />
+            ))}
+          </div>
+        ) : null}
 
-              const canPublish = p?.can_publish !== false;
-              const canPause = p?.can_resume !== false;
-
-              const qty = qtyOfSafe(p);
-              const qtyClass =
-                qty === 0
-                  ? "text-rose-600"
-                  : qty < 5
-                  ? "text-amber-600"
-                  : "text-emerald-600";
-
-              return (
-                <React.Fragment key={p.id}>
-                  <tr className="border-t border-gray-200 dark:border-gray-700 align-top">
-                    <td className="p-3 align-middle">
-                      <input
-                        type="checkbox"
-                        aria-label={`Select ${p.title || `#${p.id}`}`}
-                        checked={selected.has(p.id)}
-                        onChange={(e) => toggleSelect(p.id, e.target.checked)}
-                      />
-                    </td>
-
-                    <td className="p-3">
-                      <Link href={href} className="block w-fit" target="_blank">
-                        <SafeImage
-                          src={img}
-                          alt={p.title || "Product"}
-                          width={56}
-                          height={56}
-                          className="rounded object-cover ring-1 ring-gray-200 dark:ring-gray-700"
-                        />
-                      </Link>
-                    </td>
-
-                    <td className="p-3 font-medium text-gray-900 dark:text-white">
-                      <div className="flex flex-col">
-                        <Link href={href} target="_blank" className="hover:underline">
-                          {p.title || "—"}
-                        </Link>
-                        <div className="mt-1 flex flex-wrap gap-1.5">
-                          <Chip icon={Eye} label="Views" value={nfmt(v)} muted />
-                          <Chip icon={MousePointerClick} label="Clicks" value={nfmt(c)} muted />
-                          <Chip icon={MessageCircle} label="Contacts" value={nfmt(cc)} muted />
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="p-3">
-                      <span
-                        className={`inline-flex items-center gap-1 ${
-                          p.status === 1 ? "text-emerald-600" : "text-gray-500"
-                        }`}
-                      >
-                        <CheckCircle className="w-4 h-4" />
+        {/* CARD GRID */}
+        {useCards && sorted.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {sorted.map((p) => (
+<div
+  key={p.id}
+  role="button"
+  tabIndex={0}
+  aria-label={`Open ${p.title || `product #${p.id}`}`}
+  className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 flex gap-3 hover:shadow transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20"
+  onClick={() => router.push(`/new-dashboard/products/${p.id}`)}
+  onKeyDown={(e) => {
+    // Activate with Enter/Space, ignore when using modifiers
+    if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+    const k = e.key;
+    if (k === "Enter" || k === " " || k === "Spacebar") {
+      e.preventDefault();
+      router.push(`/new-dashboard/products/${p.id}`);
+    }
+  }}
+>
+                <div className="w-16 h-16 rounded-lg overflow-hidden ring-1 ring-gray-200 dark:ring-gray-700 shrink-0">
+                  <SafeImage
+                    src={thumbOf(p)}
+                    alt=""
+                    width={64}
+                    height={64}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium line-clamp-2">
+                    {p.title || `#${p.id}`}
+                  </div>
+                  <div className="mt-1 flex items-center gap-2 text-[11px] text-gray-500">
+                    <span className="inline-flex items-center gap-1">
+                      <Eye className="w-3.5 h-3.5" /> {nfmt(viewsOf(p))}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <MousePointerClick className="w-3.5 h-3.5" /> {nfmt(clicksOf(p))}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Phone className="w-3.5 h-3.5" /> {nfmt(contactClicksOf(p))}
+                    </span>
+                  </div>
+                  <div className="mt-1 text-[11px]">
+                    {p.is_live ? (
+                      <span className="px-1.5 py-0.5 rounded bg-emerald-600/15 text-emerald-700 dark:text-emerald-300">
+                        Live
+                      </span>
+                    ) : p.status === 0 ? (
+                      <span className="px-1.5 py-0.5 rounded bg-gray-500/15 text-gray-700 dark:text-gray-300">
+                        Draft
+                      </span>
+                    ) : (
+                      <span className="px-1.5 py-0.5 rounded bg-amber-600/15 text-amber-700 dark:text-amber-300">
                         {statusLabel(p.status)}
                       </span>
-                    </td>
+                    )}
+                  </div>
+                </div>
+                <div className="shrink-0 self-start">
+                  <a
+                    href={viewHrefAbsolute(p)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-2 py-1 text-xs rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-800 inline-flex items-center gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Eye className="w-3.5 h-3.5" /> View
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
 
-                    <td className="p-3">
-                      <div className="flex flex-col gap-1">
-                        <span className={`inline-flex items-center gap-1 ${visClass}`}>
-                          <Eye className="w-4 h-4" />
-                          {visText} {p.is_live ? "(live)" : ""}
-                        </span>
-                        {(p.publish_at_friendly || p.unpublish_at_friendly) && (
-                          <span className="text-[11px] text-gray-500 dark:text-gray-400">
-                            {p.publish_at_friendly ? `Publishes: ${p.publish_at_friendly}` : ""}
-                            {p.publish_at_friendly && p.unpublish_at_friendly ? " · " : ""}
-                            {p.unpublish_at_friendly ? `Unpublishes: ${p.unpublish_at_friendly}` : ""}
-                          </span>
-                        )}
-                      </div>
-                    </td>
+        {/* TABLE */}
+        {!useCards && sorted.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className={`min-w-[900px] w-full ${tableText}`}>
+              <thead className="sticky top-0 z-10 bg-white/90 dark:bg-gray-800/90 backdrop-blur">
+                <tr className="text-xs uppercase tracking-wide text-gray-500">
+                  <th className="w-10 px-2 py-2">
+                    <input
+                      ref={masterRef}
+                      type="checkbox"
+                      checked={allChecked}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setSelected(checked ? new Set(allIdsInView) : new Set());
+                      }}
+                      aria-label="Select all in view"
+                    />
+                  </th>
 
-                    <td className="p-3 whitespace-nowrap">
-                      <button
-                        onClick={() => setQtyTarget(p)}
-                        className={`${qtyClass} font-semibold underline decoration-dotted underline-offset-2 hover:opacity-90`}
-                        title="Quick edit stock"
-                      >
-                        {qty > 0 ? "In Stock" : "Out of Stock"} ({qty})
-                      </button>
-                    </td>
+                  {visibleCols.image && <th className="w-16 px-2 py-2">Image</th>}
 
-                    <td className="p-3 font-bold text-gray-900 dark:text-white whitespace-nowrap">
-                      <button
-                        onClick={() => setPriceTarget(p)}
-                        className="underline decoration-dotted underline-offset-2 hover:opacity-90"
-                        title="Quick edit price"
-                      >
-                        {ccy ? `${ccy} ${price}` : price}
-                      </button>
-                    </td>
-
-                    <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 text-gray-700 dark:text-gray-300">
-                          <Eye className="w-4 h-4" />
-                          {nfmt(v)}
-                        </span>
-                        <ProgressMini valuePct={pct} />
-                      </div>
-                      <div className="text-[11px] text-gray-500 mt-0.5">CTR {ctrOf(p)}</div>
-                    </td>
-
-                    <td className="p-3">
-                      <div className="inline-flex items-center gap-1 text-gray-700 dark:text-gray-300">
-                        <MousePointerClick className="w-4 h-4" />
-                        {nfmt(c)}
-                      </div>
-                    </td>
-
-                    <td className="p-3">
-                      <div className="flex flex-col gap-1 items-start">
-                        <div className="flex items-center gap-3">
-                          <span className="inline-flex items-center gap-1" title="WhatsApp clicks">
-                            <MessageCircle className="w-4 h-4" />
-                            {nfmt(w)}
-                          </span>
-                          <span className="inline-flex items-center gap-1" title="Phone clicks">
-                            <Phone className="w-4 h-4" />
-                            {nfmt(ph)}
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-gray-500">Contact CTR {contactCtrOf(p)}</div>
-                      </div>
-                    </td>
-
-                    <td className="p-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button
-                          onClick={() => router.push(`/new-dashboard/products/editor?id=${p.id}`)}
-                          className="px-2 py-1 rounded border hover:bg-gray-100 dark:hover:bg-gray-700"
-                          title="Edit"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-
-                        <button
-                          onClick={() => tryPublish(p)}
-                          className={`px-2 py-1 rounded border ${canPublish ? "hover:bg-emerald-50 dark:hover:bg-emerald-900/20" : "opacity-70 hover:bg-white/0"}`}
-                          title={canPublish ? "Publish" : "Publish (limit reached)"}
-                        >
-                          <Rocket className={`w-4 h-4 ${canPublish ? "text-emerald-600" : "text-gray-400"}`} />
-                        </button>
-
-                        <button
-                          onClick={() => patchProduct(p.id, { status: 0 }, "draft")}
-                          className="px-2 py-1 rounded border hover:bg-gray-100 dark:hover:bg-gray-700"
-                          title="Move to Draft"
-                          disabled={!!actionLoading[p.id]}
-                        >
-                          <FileEdit className="w-4 h-4" />
-                        </button>
-
-                        {p.status === 1 && (
-                          <button
-                            onClick={() => tryTogglePause(p)}
-                            className={`px-2 py-1 rounded border ${canPause ? "hover:bg-gray-100 dark:hover:bg-gray-700" : "opacity-60"}`}
-                            title={p.is_paused ? "Resume" : "Pause"}
-                          >
-                            {p.is_paused ? (
-                              <Play className={`w-4 h-4 ${canPause ? "text-emerald-600" : "text-gray-400"}`} />
-                            ) : (
-                              <Pause className={`w-4 h-4 ${canPause ? "text-amber-600" : "text-gray-400"}`} />
-                            )}
-                          </button>
-                        )}
-
-                        <button
-                          onClick={() => toggleRow(p.id)}
-                          title={isOpen ? "Hide details" : "Schedule / Details"}
-                          className="px-2 py-1 rounded border hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          {isOpen ? <ChevronUp className="w-4 h-4" /> : <Calendar className="w-4 h-4" />}
-                        </button>
-
-                        <button
-                          onClick={() => handleArchive(p.id)}
-                          className="px-2 py-1 rounded border hover:bg-red-50 dark:hover:bg-red-900/20"
-                          title="Archive"
-                          disabled={!!actionLoading[p.id]}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                        </button>
-
-                        {actionLoading[p.id] && (
-                          <span className="inline-flex items-center text-xs text-gray-500">
-                            <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                            {actionLoading[p.id]}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-
-                  {isOpen && (
-                    <tr className="bg-gray-50 dark:bg-gray-900/40">
-                      <td colSpan={11} className="p-4">
-                        <div className="grid gap-4 md:grid-cols-3">
-                          <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-800 md:col-span-2">
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
-                                Scheduling
-                              </h4>
-                              <div className="text-[11px] text-gray-500">Times saved in your local timezone.</div>
-                            </div>
-
-                            <ScheduleEditor
-                              product={p}
-                              canSchedule={p?.can_schedule !== false}
-                              onBlocked={() => {
-                                setCapCtx({
-                                  product: p,
-                                  mode: "schedule",
-                                  cap: { max: p?.publish_cap, used: p?.published_count },
-                                  reason: "plan_no_schedule",
-                                });
-                                setCapOpen(true);
-                              }}
-                              onSave={(payload) => patchProduct(p.id, payload, "schedule")}
-                            />
-                          </div>
-
-                          <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-800">
-                            <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-2">Details</h4>
-                            <div className="text-xs text-gray-600 dark:text-gray-300 space-y-1">
-                              <div><span className="font-semibold">Date Added:</span> {fmtFriendly(p.created_at_friendly || p.created_at)}</div>
-                              <div><span className="font-semibold">Last Updated:</span> {fmtFriendly(p.updated_at_friendly || p.updated_at)}</div>
-                              <div><span className="font-semibold">Product ID:</span> #{p.id}</div>
-                              {p.slug && (
-                                <div className="flex items-center gap-1">
-                                  <span className="font-semibold">URL:</span>{" "}
-                                  <code className="text-[11px] break-all">
-                                    /{(p.listing_country_code || p.seller_country || "gh").toLowerCase()}/{p.slug}
-                                  </code>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
+                  {visibleCols.title && (
+                    <th className="px-2 py-2">
+                      <SortBtn label="Title" k="title" sort={sort} setSort={setSort} />
+                    </th>
                   )}
-                </React.Fragment>
-              );
-            })}
 
-            {!loading && !error && filtered.length === 0 && (
-              <tr>
-                <td colSpan={11} className="p-10 text-center text-gray-500">No products match this view.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                  {visibleCols.status && (
+                    <th className="px-2 py-2">
+                      <SortBtn label="Status" k="status" sort={sort} setSort={setSort} />
+                    </th>
+                  )}
 
-        {loading && (
-          <p className="text-center mt-4 text-gray-400 dark:text-gray-500">
-            <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />
-            Loading…
-          </p>
-        )}
+                  {visibleCols.visibility && <th className="px-2 py-2">Visibility</th>}
+                  {visibleCols.availability && <th className="px-2 py-2">Qty</th>}
 
-        {hasMore && !loading && (
-          <div className="text-center mt-6">
-            <button onClick={handleLoadMore} disabled={demoMode} className="bg-gray-900 text-white px-5 py-2 rounded-lg hover:bg-black disabled:opacity-60">
-              {demoMode ? "Demo: Pagination Off" : "Load More"}
+                  {visibleCols.price && (
+                    <th className="px-2 py-2">
+                      <SortBtn label="Price" k="price" sort={sort} setSort={setSort} />
+                    </th>
+                  )}
+
+                  {visibleCols.views && (
+                    <th className="px-2 py-2 text-right">
+                      <SortBtn label="Views" k="views" sort={sort} setSort={setSort} alignRight />
+                    </th>
+                  )}
+
+                  {visibleCols.clicks && (
+                    <th className="px-2 py-2 text-right">
+                      <SortBtn label="Clicks" k="clicks" sort={sort} setSort={setSort} alignRight />
+                    </th>
+                  )}
+
+                  {visibleCols.contacts && (
+                    <th className="px-2 py-2 text-right">
+                      <SortBtn label="Contacts" k="contacts" sort={sort} setSort={setSort} alignRight />
+                    </th>
+                  )}
+
+                  {visibleCols.actions && <th className="w-[280px] px-2 py-2">Actions</th>}
+                </tr>
+              </thead>
+
+              <tbody className="align-top">
+                {sorted.map((p) => {
+                  const isExpanded = expandedRows.includes(p.id);
+                  const isChecked = selected.has(p.id);
+                  const qty = qtyOfSafe(p);
+                  const priceMajor = toMajor(p.price_cents, 2);
+                  const ccy = p.price_currency || "";
+                  const isLive = !!p.is_live;
+                  const isPub = p.status === 1;
+
+                  return (
+                    <React.Fragment key={p.id}>
+                      <tr className="border-t border-gray-100 dark:border-gray-700">
+                        {/* select */}
+                        <td className="px-2 py-2">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => toggleSelect(p.id, e.target.checked)}
+                          />
+                        </td>
+
+                        {/* image */}
+                        {visibleCols.image && (
+                          <td className="px-2 py-2">
+                            <div className="h-full flex items-center">
+                              <div className="rounded-md overflow-hidden ring-1 ring-gray-200 dark:ring-gray-700">
+                                <SafeImage
+                                  src={thumbOf(p)}
+                                  alt={p.title || "image"}
+                                  width={imgSize}
+                                  height={imgSize}
+                                  className="object-cover"
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        )}
+
+                        {/* title */}
+                        {visibleCols.title && (
+                          <td className="px-2 py-2">
+                            <div className="flex items-start gap-2">
+                              <button
+                                className="mt-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 p-1"
+                                onClick={() => toggleRow(p.id)}
+                                aria-label={isExpanded ? "Collapse" : "Expand"}
+                              >
+                                {isExpanded ? (
+                                  <ChevronUp className="w-4 h-4" />
+                                ) : (
+                                  <ChevronDown className="w-4 h-4" />
+                                )}
+                              </button>
+                              <div className="min-w-0">
+                                <div className="font-medium line-clamp-2">
+                                  {p.title || `#${p.id}`}
+                                </div>
+                                <div className="text-[11px] text-gray-500">
+                                  Updated {fmtFriendly(p.updated_at || p.created_at)}
+                                </div>
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                  <Chip label="CTR" value={ctrOf(p)} muted />
+                                  <Chip label="Contact CTR" value={contactCtrOf(p)} muted />
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        )}
+
+                        {/* status */}
+                        {visibleCols.status && (
+                          <td className="px-2 py-2">
+                            <span
+                              className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] ${
+                                isPub
+                                  ? "bg-emerald-600/10 text-emerald-700 dark:text-emerald-300"
+                                  : "bg-gray-200/60 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                              }`}
+                            >
+                              {statusLabel(p.status)}
+                            </span>
+                          </td>
+                        )}
+
+                        {/* visibility */}
+                        {visibleCols.visibility && (
+                          <td className="px-2 py-2">
+                            {isLive ? (
+                              <span className="text-emerald-600 dark:text-emerald-400">
+                                Live
+                              </span>
+                            ) : p.is_paused ? (
+                              <span className="text-amber-600 dark:text-amber-400">
+                                Paused
+                              </span>
+                            ) : (
+                              <span className="text-gray-500">—</span>
+                            )}
+                          </td>
+                        )}
+
+                        {/* qty */}
+                        {visibleCols.availability && (
+                          <td className="px-2 py-2">
+                            <button
+                              onClick={() => setQtyTarget(p)}
+                              className="inline-flex items-center gap-1 rounded border px-2 py-0.5 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              title="Quick edit quantity"
+                            >
+                              {qty}
+                            </button>
+                          </td>
+                        )}
+
+                        {/* price */}
+                        {visibleCols.price && (
+                          <td className="px-2 py-2">
+                            <button
+                              onClick={() => setPriceTarget(p)}
+                              className="inline-flex items-center gap-1 rounded border px-2 py-0.5 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              title="Quick edit price"
+                            >
+                              {priceMajor} {ccy}
+                            </button>
+                          </td>
+                        )}
+
+                        {/* views */}
+                        {visibleCols.views && (
+                          <td className="px-2 py-2 text-right">{nfmt(viewsOf(p))}</td>
+                        )}
+                        {/* clicks */}
+                        {visibleCols.clicks && (
+                          <td className="px-2 py-2 text-right">{nfmt(clicksOf(p))}</td>
+                        )}
+                        {/* contacts */}
+                        {visibleCols.contacts && (
+                          <td className="px-2 py-2 text-right">
+                            {nfmt(contactClicksOf(p))}
+                          </td>
+                        )}
+
+                        {/* actions */}
+                        {visibleCols.actions && (
+                          <td className="px-2 py-2">
+                            <div className="flex flex-wrap gap-1.5">
+                              {isPub ? (
+                                p.is_paused ? (
+                                  <button
+                                    onClick={() => tryTogglePause(p)}
+                                    className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    disabled={!!actionLoading[p.id]}
+                                    title="Resume"
+                                  >
+                                    <Play className="w-3.5 h-3.5" /> Resume
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => tryTogglePause(p)}
+                                    className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    disabled={!!actionLoading[p.id]}
+                                    title="Pause"
+                                  >
+                                    <Pause className="w-3.5 h-3.5" /> Pause
+                                  </button>
+                                )
+                              ) : (
+                                <button
+                                  onClick={() => tryPublish(p)}
+                                  className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                  disabled={!!actionLoading[p.id]}
+                                  title="Publish"
+                                >
+                                  <Rocket className="w-3.5 h-3.5" /> Publish
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => router.push(`/new-dashboard/products/editor?id=${p.id}`)}
+                                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                title="Edit"
+                              >
+                                <FileEdit className="w-3.5 h-3.5" /> Edit
+                              </button>
+
+                              <a
+                                href={viewHrefAbsolute(p)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                title="View"
+                              >
+                                <Eye className="w-3.5 h-3.5" /> View
+                              </a>
+
+                              <button
+                                onClick={() => handleArchive(p.id)}
+                                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                title="Archive"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> Archive
+                              </button>
+
+                              {actionLoading[p.id] ? (
+                                <span className="inline-flex items-center gap-1 text-xs text-gray-500 ml-1">
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  {actionLoading[p.id]}
+                                </span>
+                              ) : null}
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+
+                      {/* expanded row */}
+                      {isExpanded ? (
+                        <tr className="border-t border-gray-100 dark:border-gray-700">
+                          <td />
+                          <td colSpan={999} className="px-2 py-3">
+                            <div className="grid gap-4 md:grid-cols-3">
+                              <div className="rounded-lg border p-3 dark:border-gray-700">
+                                <div className="text-xs font-semibold mb-2">
+                                  Schedule
+                                </div>
+                                <ScheduleEditor
+                                  product={p}
+                                  canSchedule={p?.can_schedule !== false}
+                                  onBlocked={() =>
+                                    setCapCtx({
+                                      product: p,
+                                      mode: "publish",
+                                      reason: "plan_no_schedule",
+                                    })
+                                  }
+                                  onSave={(payload) =>
+                                    patchProduct(p.id, payload, "schedule")
+                                  }
+                                />
+                              </div>
+
+                              <div className="rounded-lg border p-3 dark:border-gray-700">
+                                <div className="text-xs font-semibold mb-2">
+                                  Engagement (last {metricWindow})
+                                </div>
+                                <div className="flex items-center gap-2 text-xs">
+                                  <MousePointerClick className="w-4 h-4" />
+                                  Clicks: <strong>{nfmt(clicksOf(p))}</strong>
+                                  <Phone className="w-4 h-4 ml-3" />
+                                  Calls: <strong>{nfmt(phoneClicksOf(p))}</strong>
+                                  <MessageCircle className="w-4 h-4 ml-3" />
+                                  WhatsApp: <strong>{nfmt(whatsappClicksOf(p))}</strong>
+                                </div>
+                                <div className="mt-2">
+                                  <ProgressMini
+                                    valuePct={Number(
+                                      String(ctrOf(p)).replace("%", "") || 0
+                                    )}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="rounded-lg border p-3 dark:border-gray-700">
+                                <div className="text-xs font-semibold mb-2">
+                                  Quick edits
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  <button
+                                    onClick={() => setQtyTarget(p)}
+                                    className="px-2 py-1 rounded-md border hover:bg-gray-50 dark:hover:bg-gray-700"
+                                  >
+                                    Change Qty
+                                  </button>
+                                  <button
+                                    onClick={() => setPriceTarget(p)}
+                                    className="px-2 py-1 rounded-md border hover:bg-gray-50 dark:hover:bg-gray-700"
+                                  >
+                                    Change Price
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : null}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+
+        {/* pagination / load more */}
+        {hasMore ? (
+          <div className="mt-4 flex items-center justify-center">
+            <button
+              onClick={handleLoadMore}
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-60"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              Load more
             </button>
           </div>
-        )}
+        ) : null}
+
+        {/* loading spinner when appending */}
+        {loading && products.length > 0 ? (
+          <div className="mt-3 flex items-center justify-center text-xs text-gray-500">
+            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            Loading…
+          </div>
+        ) : null}
       </div>
 
       {/* Batch action bar */}
       {selected.size > 0 && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[1000] rounded-xl bg-gray-900 text-white px-3 py-2 shadow-lg flex items-center gap-2">
           <span className="text-sm opacity-80">{selected.size} selected</span>
+          <button
+            onClick={() => runBatch("publish")}
+            disabled={batchBusy}
+            className="px-2 py-1 rounded bg-white/10 hover:bg-white/15 text-sm"
+            title="Publish selected"
+          >
+            Publish
+          </button>
           <button
             onClick={() => runBatch("pause")}
             disabled={batchBusy}
@@ -1799,7 +2302,7 @@ export default function ProductListTable() {
             Stock 0
           </button>
           <button
-            onClick={clearSelection}
+            onClick={() => setSelected(new Set())}
             className="ml-1 px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-sm"
             title="Clear selection"
           >
@@ -1824,7 +2327,12 @@ export default function ProductListTable() {
       </div>
 
       {/* Cap sheet */}
-      <CapBottomSheet open={capOpen} onClose={() => setCapOpen(false)} ctx={capCtx} onAutofix={handleAutofix} />
+      <CapBottomSheet
+        open={capOpen}
+        onClose={() => setCapOpen(false)}
+        ctx={capCtx}
+        onAutofix={handleAutofix}
+      />
 
       {/* Auto-Fix sheet */}
       <AutoFixSheet
@@ -1836,7 +2344,7 @@ export default function ProductListTable() {
         push={push}
       />
 
-      {/* Quick Qty modal */}
+      {/* Quick modals */}
       {qtyTarget && (
         <QuickQtyModal
           product={qtyTarget}
@@ -1847,8 +2355,6 @@ export default function ProductListTable() {
           }}
         />
       )}
-
-      {/* Quick Price modal */}
       {priceTarget && (
         <QuickPriceModal
           product={priceTarget}
@@ -1862,6 +2368,16 @@ export default function ProductListTable() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
 
 /* ----------------------- Quick Qty modal ----------------------- */
 function QuickQtyModal({ product, onClose, onSave }) {

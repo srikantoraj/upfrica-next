@@ -28,11 +28,10 @@ function stripLeadingRoots(p = "") {
   return s;
 }
 
-// ---- Same-origin check (protects cookie->Authorization on writes) ----
+// ---- Same-origin check ----
 function isSameOrigin(req) {
   const h = nextHeaders();
   const origin = h.get("origin");
-  // If no Origin (e.g., curl, server fetch), treat as same-origin.
   if (!origin) return true;
   try {
     const o = new URL(origin);
@@ -43,59 +42,93 @@ function isSameOrigin(req) {
   }
 }
 
+// Read token from any historical cookie name
+function readAnyTokenCookie() {
+  const jar = cookies();
+  return (
+    jar.get("up_auth")?.value ||
+    jar.get("authToken")?.value ||
+    jar.get("auth_token")?.value ||
+    jar.get("token")?.value ||
+    null
+  );
+}
+
 function isPublicRequestsBrowse(pathNoRoot, method) {
   if (method !== "GET") return false;
   const p = trimSlashes(pathNoRoot).toLowerCase();
   return p === "sourcing/requests" || p === "sourcing/requests/";
 }
 
-/**
- * Compute outbound auth safely:
- *  - If client supplied Authorization → forward it (explicit beats implicit).
- *  - Else if cookie present AND (method is safe OR same-origin) → convert cookie to Authorization.
- *  - Else if unauth'd GET to sourcing/requests and PUBLIC_TOKEN configured → inject public token + force public=1.
- */
+/** Decide auth → also return debug flags */
 function computeAuthForUpstream(req, pathNoRoot) {
   const h = nextHeaders();
   const incomingAuth = h.get("authorization");
-  if (incomingAuth) {
-    return { useAuthHeader: true, authHeaderValue: incomingAuth };
-  }
-
-  const cookieAuth = cookies().get("up_auth")?.value;
+  const cookieAuth = readAnyTokenCookie();
   const safeMethod = req.method === "GET" || req.method === "HEAD";
-  if (cookieAuth && (safeMethod || isSameOrigin(req))) {
-    return { useAuthHeader: true, authHeaderValue: `Token ${cookieAuth}` };
-  }
 
-  if (isPublicRequestsBrowse(pathNoRoot, req.method) && PUBLIC_TOKEN && !incomingAuth && !cookieAuth) {
-    if (PUBLIC_HEADER.toLowerCase() === "authorization") {
-      const val = PUBLIC_SCHEME ? `${PUBLIC_SCHEME} ${PUBLIC_TOKEN}` : PUBLIC_TOKEN;
-      return { useAuthHeader: true, authHeaderValue: val, injectPublicParam: true };
-    }
+  if (incomingAuth) {
     return {
-      useAuthHeader: false,
-      publicHeaderKV: [PUBLIC_HEADER, PUBLIC_SCHEME ? `${PUBLIC_SCHEME} ${PUBLIC_TOKEN}` : PUBLIC_TOKEN],
-      injectPublicParam: true,
+      useAuthHeader: true,
+      authHeaderValue: incomingAuth,
+      source: "header",
+      hadCookie: Boolean(cookieAuth),
+      sameOrigin: isSameOrigin(req),
     };
   }
 
-  return { useAuthHeader: false };
+  if (cookieAuth && (safeMethod || isSameOrigin(req))) {
+    return {
+      useAuthHeader: true,
+      authHeaderValue: `Token ${cookieAuth}`,
+      source: "cookie",
+      hadCookie: true,
+      sameOrigin: isSameOrigin(req),
+    };
+  }
+
+  if (isPublicRequestsBrowse(pathNoRoot, req.method) && PUBLIC_TOKEN && !incomingAuth && !cookieAuth) {
+    const val = PUBLIC_SCHEME ? `${PUBLIC_SCHEME} ${PUBLIC_TOKEN}` : PUBLIC_TOKEN;
+    if (PUBLIC_HEADER.toLowerCase() === "authorization") {
+      return {
+        useAuthHeader: true,
+        authHeaderValue: val,
+        injectPublicParam: true,
+        source: "public",
+        hadCookie: false,
+        sameOrigin: isSameOrigin(req),
+      };
+    }
+    return {
+      useAuthHeader: false,
+      publicHeaderKV: [PUBLIC_HEADER, val],
+      injectPublicParam: true,
+      source: "public",
+      hadCookie: false,
+      sameOrigin: isSameOrigin(req),
+    };
+  }
+
+  return {
+    useAuthHeader: false,
+    source: "none",
+    hadCookie: Boolean(cookieAuth),
+    sameOrigin: isSameOrigin(req),
+  };
 }
 
 function buildForwardHeaders(req, { useAuthHeader, authHeaderValue } = {}) {
   const out = new Headers();
   const h = nextHeaders();
 
-  out.set("Accept", "application/json");
+  out.set("Accept", h.get("accept") || "application/json");
 
   const ct = h.get("content-type");
   if (ct) out.set("Content-Type", ct);
 
-  // Pass helpful, non-sensitive headers only
-  const tz  = h.get("x-timezone");       if (tz)  out.set("X-Timezone", tz);
-  const xhr = h.get("x-requested-with"); if (xhr) out.set("X-Requested-With", xhr);
-  const csrf= h.get("x-csrftoken");      if (csrf)out.set("X-CSRFToken", csrf);
+  const tz   = h.get("x-timezone");       if (tz)  out.set("X-Timezone", tz);
+  const xhr  = h.get("x-requested-with"); if (xhr) out.set("X-Requested-With", xhr);
+  const csrf = h.get("x-csrftoken");      if (csrf)out.set("X-CSRFToken", csrf);
 
   if (useAuthHeader && authHeaderValue) {
     out.set("Authorization", authHeaderValue);
@@ -107,10 +140,8 @@ async function forward(req, url, extra = {}) {
   const method = req.method;
   const body = method === "GET" || method === "HEAD" ? undefined : await req.arrayBuffer();
 
-  // Extra CSRF guard: if cross-site & mutating & no explicit Authorization → reject
   if (!(method === "GET" || method === "HEAD")) {
     if (!isSameOrigin(req)) {
-      // Only allow if caller provided its own Authorization header (e.g., server-to-server)
       const hasAuth = nextHeaders().get("authorization");
       if (!hasAuth) {
         return new NextResponse(JSON.stringify({ detail: "Cross-site write blocked" }), {
@@ -140,6 +171,13 @@ async function forward(req, url, extra = {}) {
   h.delete("transfer-encoding");
   h.delete("content-encoding");
 
+  // 🔎 Debug crumbs
+  h.set("x-up-proxy-auth", extra.auth?.useAuthHeader ? "1" : "0");
+  if (extra.auth?.source) h.set("x-up-proxy-auth-source", extra.auth.source);
+  h.set("x-up-had-cookie", extra.auth?.hadCookie ? "1" : "0");
+  h.set("x-up-same-origin", extra.auth?.sameOrigin ? "1" : "0");
+  h.set("x-up-proxy-target", url.toString());
+
   return new NextResponse(upstream.body, { status: upstream.status, headers: h });
 }
 
@@ -150,11 +188,11 @@ function jsonOk(obj) {
   });
 }
 
-async function handler(req, ctx) {
+export async function handler(req, ctx) {
   const parts = Array.isArray(ctx?.params?.path) ? ctx.params.path : [];
   const raw = trimSlashes(parts.join("/")).replace(/,+/g, "/");
 
-  // Shipping preview convenience (unchanged)
+  // ✅ Shipping preview convenience (product_id OR shop_slug)
   const mProd = raw.match(/^(?:api\/)?(product|products)\/(\d+)\/shipping\/preview\/?$/i);
   const mShop = raw.match(/^(?:api\/)?(shop|shops)\/([^/]+)\/shipping\/preview\/?$/i);
   if (mProd || mShop) {
@@ -163,11 +201,17 @@ async function handler(req, ctx) {
     if (mProd) u.searchParams.set("product_id", mProd[2]);
     if (mShop) u.searchParams.set("shop_slug", mShop[2]);
 
-    const resp = await forward(req, u);
-    if (resp.status === 404) return jsonOk({ available: null, currency: null, options: [] });
+    // Compute auth normally so cookie→Authorization still works (if needed)
+    const auth = computeAuthForUpstream(req, "shipping/preview");
+    const resp = await forward(req, u, { auth });
+
+    if (resp.status === 404) {
+      return jsonOk({ available: null, currency: null, options: [] });
+    }
     return resp;
   }
 
+  // Normal proxy path
   const pathNoRoot = stripLeadingRoots(raw);
   const normalized = ensureDrfSlash(pathNoRoot);
 
@@ -176,8 +220,6 @@ async function handler(req, ctx) {
   req.nextUrl.searchParams.forEach((v, k) => url.searchParams.append(k, v));
 
   const auth = computeAuthForUpstream(req, pathNoRoot);
-
-  // Force public=1 only for public-browse injection
   if (auth.injectPublicParam && !url.searchParams.has("public")) {
     url.searchParams.set("public", "1");
   }

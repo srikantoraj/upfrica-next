@@ -151,7 +151,6 @@ module.exports = {
   },
   plugins: [
     flowbitePlugin,
-    require("@tailwindcss/line-clamp"),
     require("@tailwindcss/typography"),
     require("@tailwindcss/forms"),
   ],

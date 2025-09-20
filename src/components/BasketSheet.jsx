@@ -7,7 +7,10 @@ import { HiXMark, HiPlus, HiMinus } from 'react-icons/hi2';
 import { useSelector } from 'react-redux';
 import { selectSelectedCountry } from '@/app/store/slices/countrySlice';
 import { getCardImage } from '@/app/constants';
-import { pickProductImage, fixImageUrl, FALLBACK_IMAGE } from '@/lib/image';
+
+// ✅ same helpers as slider
+import SafeImage, { fixDisplayUrl } from '@/components/common/SafeImage';
+import { pickProductImage, FALLBACK_IMAGE } from '@/lib/image';
 
 export default function BasketSheet({
   isOpen = false,
@@ -28,42 +31,80 @@ export default function BasketSheet({
   const scrollerRef = useRef(null);
   const activeBeforeOpenRef = useRef(null);
 
-  /* ───────────────── image helpers (strings only, SSR-safe) ───────────────── */
+  /* ──────────────── image helpers (same path as slider) ──────────────── */
 
-  const getCardImageFn = typeof getCardImage === 'function' ? getCardImage : undefined;
+  const getCardImageFn =
+    typeof getCardImage === 'function' ? getCardImage : undefined;
 
-  // Resolve a usable cart image (handles basket-shape + products)
-  const imageOfCartItem = (p) => {
-    const raw =
-      p?.__resolved_image ||
-      p?.image?.[0]?.image_url ||
-      p?.image?.[0]?.url ||
-      p?.image_url ||
-      p?.thumbnail ||
-      p?.image ||
-      getCardImageFn?.(p) ||
-      pickProductImage(p) ||
-      FALLBACK_IMAGE;
+  // Clean → display URL (matches slider behavior)
+  const toDisplayUrl = (raw) =>
+    (typeof raw === 'string' && raw.trim()
+      ? fixDisplayUrl(raw)
+      : FALLBACK_IMAGE) || FALLBACK_IMAGE;
 
-    return fixImageUrl(raw);
+  // Pull a usable URL out of a list of media objects/strings
+  const pickFromMediaList = (list) => {
+    for (const it of list || []) {
+      if (!it) continue;
+      if (typeof it === 'string' && it.trim()) return it;
+      const u =
+        it.image_url ||
+        it.url ||
+        it.src ||
+        it.secure_url ||
+        it.path ||
+        it.thumbnail ||
+        it.image;
+      if (typeof u === 'string' && u.trim()) return u;
+    }
+    return null;
   };
 
-  // Resolve a usable suggested card image
+  // Cart line item image
+  const imageOfCartItem = (p) =>
+    toDisplayUrl(
+      p?.__resolved_image ||
+        p?.image?.[0]?.image_url ||
+        p?.image?.[0]?.url ||
+        p?.image_url ||
+        p?.thumbnail ||
+        p?.image ||
+        getCardImageFn?.(p) ||
+        pickProductImage(p) ||
+        FALLBACK_IMAGE
+    );
+
+  // ✅ Suggested card image (now handles array-shaped media too)
   const imageOfSuggested = (p) => {
-    const raw =
-      getCardImageFn?.(p) ||
+    let raw =
       p?.card_image ||
       p?.card_image_url ||
       p?.thumbnail ||
       p?.image_url ||
-      p?.image ||
-      pickProductImage(p) ||
-      FALLBACK_IMAGE;
+      (typeof p?.image === 'string' ? p.image : '') ||
+      (typeof p?.main_image === 'string' ? p.main_image : '') ||
+      (typeof p?.product_image === 'string' ? p.product_image : '') ||
+      (typeof p?.product_image_url === 'string' ? p.product_image_url : '');
 
-    return fixImageUrl(raw);
+    if (!raw) {
+      raw =
+        pickFromMediaList(p?.image) ||
+        pickFromMediaList(p?.images) ||
+        pickFromMediaList(p?.gallery) ||
+        pickFromMediaList(p?.photos) ||
+        pickFromMediaList(p?.media) ||
+        pickFromMediaList(p?.assets) ||
+        pickFromMediaList(p?.thumbnails) ||
+        pickFromMediaList(p?.product_images) ||
+        pickFromMediaList(p?.image_objects) ||
+        pickFromMediaList(p?.imageObjects);
+    }
+
+    if (!raw) raw = getCardImageFn?.(p) || pickProductImage(p) || FALLBACK_IMAGE;
+    return toDisplayUrl(raw);
   };
 
-  /* ───────────────────────────────────────────────────────────────────────── */
+  /* ──────────────────────────────────────────────────────────────────── */
 
   const selectedCountry = useSelector(selectSelectedCountry);
   const symbol = selectedCountry?.symbol ?? '₵';
@@ -364,18 +405,15 @@ export default function BasketSheet({
                     >
                       {/* Image */}
                       <div className="w-[96px] h-[96px] flex-shrink-0">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <SafeImage
                           src={img}
                           alt={product.title || 'Product'}
                           width={96}
                           height={96}
-                          loading="lazy"
-                          decoding="async"
-                          referrerPolicy="no-referrer"
+                          sizes="96px"
                           className="h-full w-full object-cover rounded-lg bg-neutral-100 dark:bg-neutral-800"
-                          onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
-                          draggable={false}
+                          loading="lazy"
+                          quality={70}
                         />
                       </div>
 
@@ -464,16 +502,15 @@ export default function BasketSheet({
                             className="block text-left"
                             aria-label={item.title}
                           >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                            <SafeImage
                               src={img}
-                              onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
                               alt={item.title ?? 'Product image'}
+                              width={160}
+                              height={120}
+                              sizes="160px"
                               className="w-[160px] h-[120px] object-cover rounded-lg border bg-neutral-50 dark:bg-neutral-800"
                               loading="lazy"
-                              decoding="async"
-                              referrerPolicy="no-referrer"
-                              draggable={false}
+                              quality={70}
                             />
                             <div className="mt-1 text-[13px] font-medium line-clamp-2">
                               {item.title}

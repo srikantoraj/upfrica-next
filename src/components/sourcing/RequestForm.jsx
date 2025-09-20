@@ -9,6 +9,9 @@ import { addDays, format as fmt } from 'date-fns';
 import { createRequest, getConfig } from '@/lib/sourcing/api';
 import { useAuthSheet } from '@/components/auth/AuthSheetProvider';
 
+// ✅ same display logic used app-wide
+import SafeImage, { fixDisplayUrl } from '@/components/common/SafeImage';
+
 const COUNTRY_LABELS = {
   gh: 'Ghana',
   ng: 'Nigeria',
@@ -21,7 +24,6 @@ const COUNTRY_LABELS = {
   us: 'United States',
 };
 
-// Currency by country (extend as needed)
 const CC_CURRENCY = {
   gh: { code: 'GHS', symbol: '₵' },
   ng: { code: 'NGN', symbol: '₦' },
@@ -122,7 +124,6 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  // Helper: remove ?resume=1 from URL without reloading
   const stripResumeFromUrl = () => {
     const sp = new URLSearchParams(searchParams?.toString() || '');
     if (sp.has('resume')) {
@@ -131,7 +132,7 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
     }
   };
 
-  // Try to access the global auth sheet (defensive: provider may not be mounted)
+  // auth sheet (defensive)
   let openLoginSheet = null;
   try {
     const sheet = useAuthSheet?.();
@@ -142,9 +143,7 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
 
   // Core fields
   const [title, setTitle] = useState(initialTitle);
-  useEffect(() => {
-    setTitle(initialTitle);
-  }, [initialTitle]);
+  useEffect(() => { setTitle(initialTitle); }, [initialTitle]);
 
   const [details, setDetails] = useState('');
   const [budgetMin, setBudgetMin] = useState('');
@@ -154,17 +153,25 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
   // Extras
   const [quantity, setQuantity] = useState(1);
   const [allowAlts, setAllowAlts] = useState(false);
-  const [neededByDt, setNeededByDt] = useState(null); // Date | null
+  const [neededByDt, setNeededByDt] = useState(null);
   const [brands, setBrands] = useState('');
   const [city, setCity] = useState('');
-  const [area, setArea] = useState(''); // neighborhood/area
+  const [area, setArea] = useState('');
 
-  // Media
-  const [imageFiles, setImageFiles] = useState([]);   // File[]
-  const [videoFile, setVideoFile] = useState(null);   // File | null
-  const [mediaLinks, setMediaLinks] = useState(['']); // string[]
+  // Media (🚀 immediate upload & display)
+  /**
+   * images: [{ id, preview, final, uploading }]
+   * video:  { name, preview, final, uploading }
+   * audio:  { name, final, uploading }
+   */
+  const [images, setImages] = useState([]);
+  const [video, setVideo] = useState({ name: '', preview: '', final: '', uploading: false });
+  const [audio, setAudio] = useState({ name: '', final: '', uploading: false });
+  const [mediaLinks, setMediaLinks] = useState(['']);
+
   const imgPickerRef = useRef(null);
   const vidPickerRef = useRef(null);
+  const audPickerRef = useRef(null);
 
   // UX
   const [submitting, setSubmitting] = useState(false);
@@ -201,7 +208,9 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
       const pre = [
         ...(Array.isArray(draft?.preUploadedUrls) ? draft.preUploadedUrls : []),
         ...(draft?.preUploadedVideo ? [draft.preUploadedVideo] : []),
+        ...(draft?.preUploadedAudio ? [draft.preUploadedAudio] : []),
       ].filter(Boolean);
+
       if (pre.length) {
         setMediaLinks((prev) => {
           const merged = Array.from(new Set([...pre, ...prev.filter(Boolean)]));
@@ -211,7 +220,7 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
 
       setOkMessage('Welcome back! We restored your draft from before login.');
       sessionStorage.removeItem(DRAFT_KEY);
-      stripResumeFromUrl(); // keep URL clean after restoring
+      stripResumeFromUrl();
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -244,12 +253,13 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
     return Number.isFinite(n) ? n : null;
   }
 
-  // Build a structured JSON for specs (keeps JSONField happy & future-proof)
-  function buildSpecs({ uploadedUrls = [], videoUrl = null }) {
+  // Build JSON specs
+  function buildSpecs({ uploadedUrls = [], videoUrl = null, audioUrl = null }) {
     const links = [
       ...uploadedUrls,
       ...mediaLinks.map((s) => s.trim()).filter(Boolean),
       ...(videoUrl ? [videoUrl] : []),
+      ...(audioUrl ? [audioUrl] : []),
     ];
     return {
       details: details.trim(),
@@ -263,14 +273,14 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
     };
   }
 
-  // --- Upload helpers -----------------------------------------------------
+  // --- Upload helpers (presign → upload) ---------------------------------
   async function presignUpload(file) {
     const options = {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({
-        kind: 'request',
+        kind: 'request',                    // <— server groups uploads separately from product uploads
         filename: file.name,
         contentType: file.type || 'application/octet-stream',
         content_type: file.type || 'application/octet-stream',
@@ -326,19 +336,108 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
     return null;
   }
 
-  async function uploadAllSelected() {
-    const urls = [];
-    for (const f of imageFiles) {
-      if (urls.length >= 5) break;
-      const u = await uploadFile(f);
-      if (u) urls.push(u);
-    }
-    let videoUrl = null;
-    if (videoFile && /^video\/mp4$/i.test(videoFile.type)) {
-      videoUrl = await uploadFile(videoFile);
-    }
-    return { urls, videoUrl };
+  // === Immediate upload handlers ========================================
+
+  const anyUploading =
+    images.some((i) => i.uploading) || !!video.uploading || !!audio.uploading;
+
+  function onPickImages(e) {
+    const files = Array.from(e.target.files || []).filter((f) => /^image\//i.test(f.type));
+    e.target.value = '';
+    if (!files.length) return;
+
+    const remainingSlots = Math.max(0, 5 - images.length);
+    const chosen = files.slice(0, remainingSlots);
+
+    // optimistic entries with previews
+    const temps = chosen.map((f, idx) => ({
+      id: Date.now() + idx + Math.random(),
+      preview: URL.createObjectURL(f),
+      final: '',
+      uploading: true,
+    }));
+
+    setImages((prev) => [...prev, ...temps]);
+
+    // upload sequentially to keep it simple
+    (async () => {
+      for (let i = 0; i < chosen.length; i += 1) {
+        const f = chosen[i];
+        const tempId = temps[i].id;
+        try {
+          const url = await uploadFile(f);
+          const final = fixDisplayUrl(url || '');
+          setImages((prev) => {
+            const idx = prev.findIndex((x) => x.id === tempId);
+            if (idx === -1) return prev;
+            const next = prev.slice();
+            next[idx] = { ...next[idx], final, uploading: false };
+            return next;
+          });
+        } catch {
+          setImages((prev) => prev.filter((x) => x.id !== tempId));
+        } finally {
+          try { URL.revokeObjectURL(temps[i].preview); } catch {}
+        }
+      }
+    })();
   }
+
+  function removeImageAt(i) {
+    setImages((prev) => {
+      const it = prev[i];
+      if (it?.preview?.startsWith('blob:')) {
+        try { URL.revokeObjectURL(it.preview); } catch {}
+      }
+      const next = prev.slice();
+      next.splice(i, 1);
+      return next;
+    });
+  }
+
+  async function onPickVideo(e) {
+    const f = (e.target.files || [])[0];
+    e.target.value = '';
+    if (!f) return;
+    if (!/^video\/mp4$/i.test(f.type)) { setError('Please choose an MP4 video.'); return; }
+
+    const preview = URL.createObjectURL(f);
+    setVideo({ name: f.name, preview, final: '', uploading: true });
+
+    try {
+      const url = await uploadFile(f);
+      setVideo({ name: f.name, preview, final: fixDisplayUrl(url || ''), uploading: false });
+    } catch {
+      setVideo({ name: '', preview: '', final: '', uploading: false });
+      setError('Video upload failed.');
+    } finally {
+      try { URL.revokeObjectURL(preview); } catch {}
+    }
+  }
+
+  async function onPickAudio(e) {
+    const f = (e.target.files || [])[0];
+    e.target.value = '';
+    if (!f) return;
+    if (!/^audio\/(mpeg|mp3)$/i.test(f.type)) { setError('Please choose an MP3 audio file.'); return; }
+
+    setAudio({ name: f.name, final: '', uploading: true });
+    try {
+      const url = await uploadFile(f);
+      setAudio({ name: f.name, final: fixDisplayUrl(url || ''), uploading: false });
+    } catch {
+      setAudio({ name: '', final: '', uploading: false });
+      setError('Audio upload failed.');
+    }
+  }
+
+  const uploadedImageUrls = useMemo(
+    () => images.filter((i) => i.final && !i.uploading).map((i) => i.final),
+    [images]
+  );
+
+  const neededByDisplay = neededByDt ? fmt(neededByDt, 'EEE, MMM d') : 'Pick a date';
+  const { code: curCode, symbol: curSymbol } = currencyForCountry(country);
 
   function resetForm() {
     setTitle('');
@@ -351,8 +450,9 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
     setBrands('');
     setCity('');
     setArea('');
-    setImageFiles([]);
-    setVideoFile(null);
+    setImages([]);
+    setVideo({ name: '', preview: '', final: '', uploading: false });
+    setAudio({ name: '', final: '', uploading: false });
     setMediaLinks(['']);
   }
 
@@ -360,34 +460,33 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
     e.preventDefault();
     setError('');
     setOkMessage('');
+
+    if (anyUploading) {
+      setError('Please wait for uploads to finish before submitting.');
+      return;
+    }
+
     setSubmitting(true);
 
-    // keep these in outer scope so we can store them on AUTH_REQUIRED
-    let uploadedUrls = [];
-    let uploadedVideo = null;
+    // keep these in outer scope for AUTH_REQUIRED resume
+    const uploadedUrls = uploadedImageUrls.slice();
+    const uploadedVideo = video.final || null;
+    const uploadedAudio = audio.final || null;
 
     try {
-      // Upload media first (works for guests), so we can resume after login
-      const up = await uploadAllSelected();
-      uploadedUrls = up.urls;
-      uploadedVideo = up.videoUrl;
-
-      const specs = buildSpecs({ uploadedUrls, videoUrl: uploadedVideo });
-
-      // Compose media array for the dedicated field as well
+      const specs = buildSpecs({ uploadedUrls, videoUrl: uploadedVideo, audioUrl: uploadedAudio });
       const mediaCombined = Array.from(new Set(specs.media_links || []));
       const { code: curCode } = currencyForCountry(country);
 
       const payload = {
         title: title?.trim(),
-        specs,                             // JSON object
-        media: mediaCombined,              // list of URLs (images/video)
+        specs,
+        media: mediaCombined,
         budget_min: toDecimal(budgetMin),
         budget_max: toDecimal(budgetMax),
         deliver_to_country: (country || 'gh').toLowerCase(),
-        // join city + area into a single field supported by backend
         deliver_to_city: [city, area].filter(Boolean).join(' — ') || '',
-        deadline: specs.needed_by,         // "YYYY-MM-DD" or null
+        deadline: specs.needed_by,
         currency: curCode,
       };
 
@@ -395,52 +494,38 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
 
       setOkMessage('Request posted! We’ll notify you when offers arrive.');
       resetForm();
-      stripResumeFromUrl(); // clean URL on success
+      stripResumeFromUrl();
 
       if (typeof onSuccess === 'function') {
         onSuccess(created, country);
       } else if (created?.id) {
-        // fallback if no handler is provided
         router.replace(`/${(country || 'gh')}/sourcing?request=${created.id}`, { scroll: false });
       }
     } catch (err) {
-      // If auth required, save a resumable draft then open login UI
       if (err?.code === 'AUTH_REQUIRED' || err?.response?.status === 401 || err?.response?.status === 403) {
         try {
           const draft = {
             at: Date.now(),
             cc: country,
             fields: {
-              title,
-              details,
-              budgetMin,
-              budgetMax,
-              quantity,
-              allowAlts,
-              brands,
-              city,
-              area,
+              title, details, budgetMin, budgetMax, quantity, allowAlts, brands, city, area,
               neededByDt: neededByDt ? neededByDt.toISOString() : null,
             },
-            preUploadedUrls: [
-              ...uploadedUrls,
-              ...((mediaLinks || []).filter((x) => /^https?:\/\//i.test(x))),
-            ],
+            preUploadedUrls: uploadedUrls,
             preUploadedVideo: uploadedVideo || null,
+            preUploadedAudio: uploadedAudio || null,
           };
           sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
         } catch {}
 
         const nextPath = `/${(country || 'gh')}/sourcing?resume=1`;
-
         if (typeof openLoginSheet === 'function') {
-          // Open the sheet, and if it reports success, try submit again immediately.
           openLoginSheet({
             mode: 'login',
             reason: 'Please sign in to post your request',
             onSuccess: async () => {
               try {
-                const specs2 = buildSpecs({ uploadedUrls, videoUrl: uploadedVideo });
+                const specs2 = buildSpecs({ uploadedUrls, videoUrl: uploadedVideo, audioUrl: uploadedAudio });
                 const media2 = Array.from(new Set(specs2.media_links || []));
                 const { code } = currencyForCountry(country);
                 const payload2 = {
@@ -469,13 +554,12 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
                 setError(e2?.response?.data?.detail || 'Sorry, failed to submit after login. Please try again.');
               }
             },
-            // If the sheet is closed, keep the draft and let the user submit later
           });
         } else {
-          // Fallback: go to the normal login page
           router.push(`/login?next=${encodeURIComponent(nextPath)}`);
         }
-        return; // don’t show generic error
+        setSubmitting(false);
+        return;
       }
 
       const msg =
@@ -483,31 +567,9 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
         (Array.isArray(err?.response?.data?.non_field_errors) && err.response.data.non_field_errors.join(', ')) ||
         'Sorry, failed to submit. Please try again.';
       setError(msg);
-    } finally {
       setSubmitting(false);
     }
   }
-
-  // Media handlers
-  function onPickImages(e) {
-    const files = Array.from(e.target.files || []);
-    const imgs = files
-      .filter((f) => /^image\//i.test(f.type))
-      .slice(0, Math.max(0, 5 - imageFiles.length));
-    if (imgs.length) setImageFiles((prev) => [...prev, ...imgs]);
-    e.target.value = '';
-  }
-  function onPickVideo(e) {
-    const f = (e.target.files || [])[0];
-    if (f) setVideoFile(f);
-    e.target.value = '';
-  }
-  function removeImageAt(i) {
-    setImageFiles((prev) => prev.filter((_, idx) => idx !== i));
-  }
-
-  const neededByDisplay = neededByDt ? fmt(neededByDt, 'EEE, MMM d') : 'Pick a date';
-  const { code: curCode, symbol: curSymbol } = currencyForCountry(country);
 
   return (
     <form
@@ -665,7 +727,7 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Images (up to 5)</div>
-                <TextHelp>JPG/PNG; previews below.</TextHelp>
+                <TextHelp>JPG/PNG; uploads start immediately — previews below.</TextHelp>
               </div>
               <button
                 type="button"
@@ -683,12 +745,26 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
                 onChange={onPickImages}
               />
             </div>
-            {!!imageFiles.length && (
+
+            {!!images.length && (
               <div className="mt-3 grid grid-cols-5 gap-2">
-                {imageFiles.map((f, i) => (
-                  <div key={`${f.name}-${i}`} className="relative aspect-square overflow-hidden rounded-md border border-neutral-300 dark:border-neutral-700">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img alt={f.name} src={URL.createObjectURL(f)} className="h-full w-full object-cover" />
+                {images.map((it, i) => (
+                  <div key={it.id} className="relative aspect-square overflow-hidden rounded-md border border-neutral-300 dark:border-neutral-700">
+                    <SafeImage
+                      src={fixDisplayUrl(it.final || it.preview)}
+                      alt={`Image ${i + 1}`}
+                      width={300}
+                      height={300}
+                      sizes="120px"
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                      quality={70}
+                    />
+                    {it.uploading && (
+                      <div className="absolute inset-0 bg-black/40 text-white text-[11px] grid place-items-center">
+                        Uploading…
+                      </div>
+                    )}
                     <button
                       type="button"
                       onClick={() => removeImageAt(i)}
@@ -708,14 +784,14 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Video (mp4, 1 file)</div>
-                <TextHelp>Short clip of the product if you have one.</TextHelp>
+                <TextHelp>Short clip of the product if you have one. Upload begins immediately.</TextHelp>
               </div>
               <button
                 type="button"
                 className="text-sm rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-1 hover:bg-neutral-50 dark:hover:bg-neutral-800"
                 onClick={() => vidPickerRef.current?.click()}
               >
-                {videoFile ? 'Replace' : 'Choose'}
+                {video.final || video.preview ? 'Replace' : 'Choose'}
               </button>
               <input
                 ref={vidPickerRef}
@@ -725,8 +801,47 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
                 onChange={onPickVideo}
               />
             </div>
-            {videoFile && <div className="mt-3 text-sm text-neutral-700 dark:text-neutral-300 truncate">{videoFile.name}</div>}
+            {(video.final || video.preview) && (
+              <div className="mt-3">
+                <video
+                  src={video.final || video.preview}
+                  controls
+                  className="w-full rounded-md"
+                />
+                {video.uploading && <TextHelp>Uploading video…</TextHelp>}
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Audio (MP3) */}
+        <div className="mt-4 rounded-lg border border-dashed border-neutral-300 dark:border-neutral-700 p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Audio (mp3, optional)</div>
+              <TextHelp>Recordings or voice notes describing the request.</TextHelp>
+            </div>
+            <button
+              type="button"
+              className="text-sm rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-1 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+              onClick={() => audPickerRef.current?.click()}
+            >
+              {audio.final ? 'Replace' : 'Choose'}
+            </button>
+            <input
+              ref={audPickerRef}
+              type="file"
+              accept="audio/mpeg,audio/mp3"
+              className="hidden"
+              onChange={onPickAudio}
+            />
+          </div>
+          {audio.final && (
+            <div className="mt-3">
+              <audio controls src={audio.final} className="w-full" />
+              {audio.uploading && <TextHelp>Uploading audio…</TextHelp>}
+            </div>
+          )}
         </div>
 
         {/* Media links */}
@@ -782,13 +897,14 @@ export default function RequestForm({ cc = 'gh', initialTitle = '', onSuccess })
 
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || anyUploading}
         className={clsx(
           'w-full md:w-auto inline-flex items-center justify-center rounded-lg px-5 py-2.5',
           'bg-black text-white hover:bg-black/90',
           'dark:bg-white dark:text-black dark:hover:bg-white/90',
           'disabled:opacity-50'
         )}
+        title={anyUploading ? 'Please wait for uploads to finish' : undefined}
       >
         {submitting ? 'Sending…' : 'Post Sourcing Request'}
       </button>

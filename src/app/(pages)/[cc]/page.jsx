@@ -1,16 +1,19 @@
 // app/(pages)/[cc]/page.jsx
-import Head from "next/head";
-import { cookies } from "next/headers";
+import { Suspense } from "react";
 
 import HeroCurved from "@/components/home/HeroCurved";
 import HeroCarousel from "@/components/home/HeroCarousel";
 import PromoTiles from "@/components/home/PromoTiles";
 import ValuePills from "@/components/home/ValuePills";
 import NavCategories from "@/components/home/NavCategories";
-import ProductRail from "@/components/home/ProductRail";
+import PersonalizedRails from "@/components/home/PersonalizedRails.server";
 
-import { COUNTRY_META, fetchCategories, getHomeRails } from "@/lib/home";
-import { SITE_BASE_URL, BASE_API_URL, API_BASE, COUNTRY_ALIAS } from "@/app/constants";
+import {
+  COUNTRY_META,
+  fetchCategories,
+  getHomeRails,
+} from "@/lib/home";
+import { SITE_BASE_URL, API_BASE, COUNTRY_ALIAS } from "@/app/constants";
 
 export const revalidate = 300;
 export const dynamic = "force-static";
@@ -96,7 +99,7 @@ export async function generateMetadata({ params }) {
   };
 }
 
-/* ---------------------- server fetch helpers ---------------------- */
+/* ---------------------- server fetch helpers (static-safe) ---------------------- */
 async function fetchCountryHome(cc) {
   const norm = (COUNTRY_ALIAS?.[cc] ?? cc ?? "gh").toLowerCase();
   const controller = new AbortController();
@@ -111,44 +114,12 @@ async function fetchCountryHome(cc) {
     if (res.ok) return res.json();
     if (res.status === 404)
       return { country: norm, version: 0, updated_at: null, sections: [] };
-    console.warn("[country-home] Non-OK response", res.status);
     return null;
-  } catch (err) {
+  } catch {
     clearTimeout(timer);
-    console.warn("[country-home] fetch failed:", err?.message || err);
     return null;
   }
 }
-
-async function fetchHomeRails(cc, deliverTo) {
-  const norm = (COUNTRY_ALIAS?.[cc] ?? cc ?? "gh").toLowerCase();
-  const qs = deliverTo ? `?deliver_to=${encodeURIComponent(deliverTo)}` : "";
-  try {
-    const res = await fetch(`${API_BASE}/home/${norm}/rails${qs}`, {
-      next: { revalidate: 300, tags: [`home-${norm}`] },
-      headers: { Accept: "application/json" },
-    });
-    if (!res.ok) {
-      console.warn("[home-rails] Non-OK response", res.status);
-      return [];
-    }
-    const srcHdr = res.headers?.get?.("X-Rails-Source-CC");
-    if (srcHdr) console.log("[home-rails] source cc:", srcHdr);
-    const data = await res.json();
-    return Array.isArray(data?.rails) ? data.rails : [];
-  } catch (err) {
-    console.warn("[home-rails] fetch failed:", err?.message || err);
-    return [];
-  }
-}
-
-/* ---------------------- image helpers ---------------------- */
-const HERO_FALLBACK = {
-  gh: "https://images.unsplash.com/photo-1560393464-5c69a73c5770?q=80&w=2400&auto=format&fit=crop",
-  ng: "https://images.unsplash.com/photo-1590648938591-6fc4f1a6391c?q=80&w=2400&auto=format&fit=crop",
-  uk: "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=2400&auto=format&fit=crop",
-};
-const heroImage = (cc) => HERO_FALLBACK[cc] || HERO_FALLBACK.gh;
 
 function pickImage(section, name, fallback) {
   if (!section) return fallback;
@@ -157,6 +128,13 @@ function pickImage(section, name, fallback) {
   if (byName[name]) return byName[name];
   return section.images?.[0]?.url || fallback;
 }
+
+const HERO_FALLBACK = {
+  gh: "https://images.unsplash.com/photo-1560393464-5c69a73c5770?q=80&w=2400&auto=format&fit=crop",
+  ng: "https://images.unsplash.com/photo-1590648938591-6fc4f1a6391c?q=80&w=2400&auto=format&fit=crop",
+  uk: "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=2400&auto=format&fit=crop",
+};
+const heroImage = (cc) => HERO_FALLBACK[cc] || HERO_FALLBACK.gh;
 
 function cardImageFromCMS(card, section, fallback) {
   if (card?.image) return card.image;
@@ -169,7 +147,6 @@ function cardImageFromCMS(card, section, fallback) {
   return fallback;
 }
 
-/* ---------------------- mappers ---------------------- */
 function heroCurvedFromCMS(section, cc, meta) {
   const cfg = section?.config || {};
   const cityList =
@@ -259,20 +236,11 @@ export default async function CountryHome({ params }) {
   const cc = (params?.cc || "gh").toLowerCase();
   const meta = COUNTRY_META[cc] || COUNTRY_META.gh;
 
-  const ck = cookies();
-  const cookieDeliver =
-    ck.get(`deliver_to_${cc}`)?.value || ck.get("deliver_to")?.value || null;
-
-  const [cms, railsFromApi, categories] = await Promise.all([
+  const [cms, categories, fallbackRails] = await Promise.all([
     fetchCountryHome(cc),
-    fetchHomeRails(cc, cookieDeliver),
     fetchCategories(cc).catch(() => []),
+    getHomeRails(cc), // static fallback (no cookies)
   ]);
-
-  const rails =
-    Array.isArray(railsFromApi) && railsFromApi.length
-      ? railsFromApi
-      : await getHomeRails(cc);
 
   const sections = cms?.sections || [];
   const heroSec =
@@ -285,39 +253,18 @@ export default async function CountryHome({ params }) {
   const banners = bannersFromCMS(bannerSec, cc);
   const promos = promosFromCMS(promoSec, cc);
 
-  const cdnHost = process.env.NEXT_PUBLIC_CDN_HOST || "https://cdn.upfrica.com";
-
   return (
-    <>
-      <Head>
-        <meta httpEquiv="x-dns-prefetch-control" content="on" />
-        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="" />
-        <link rel="preconnect" href={cdnHost} />
-        <link rel="preconnect" href={BASE_API_URL} />
-        {heroProps?.image && <link rel="preload" as="image" href={heroProps.image} />}
-      </Head>
+    <main className="bg-[#f1f2f4] text-[var(--ink)]">
+      <HeroCurved section={heroSec} cc={cc} {...heroProps} />
+      {banners.length > 0 && <HeroCarousel banners={banners} />}
+      <ValuePills cc={cc} />
+      <NavCategories categories={categories} />
+      {promos.length > 0 && <PromoTiles tiles={promos} />}
 
-      <main className="bg-[#f1f2f4] text-[var(--ink)]">
-        <HeroCurved section={heroSec} cc={cc} {...heroProps} />
-
-        {banners.length > 0 && <HeroCarousel banners={banners} />}
-        <ValuePills cc={cc} />
-        <NavCategories categories={categories} />
-        {promos.length > 0 && <PromoTiles tiles={promos} />}
-
-        {rails.map((rail) => (
-          <ProductRail
-            key={rail.key}
-            railKey={rail.key}
-            cc={cc}
-            title={rail.title}
-            subtitle={rail.subtitle}
-            items={rail.items}
-            currency={meta.currency}
-            currencySymbol={meta.currencySymbol}
-          />
-        ))}
-      </main>
-    </>
+      {/* cookie/personalized rails in a dynamic nested component */}
+      <Suspense fallback={null}>
+        <PersonalizedRails cc={cc} fallbackRails={fallbackRails} />
+      </Suspense>
+    </main>
   );
 }

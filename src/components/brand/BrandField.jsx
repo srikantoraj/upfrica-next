@@ -24,7 +24,15 @@ async function searchBrands(q, signal) {
   });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const data = await r.json().catch(() => ({}));
-  return Array.isArray(data) ? data : data.results || [];
+  const list = Array.isArray(data) ? data : data.results || [];
+  // IMPORTANT: include `id` so parent can send the FK
+  return list
+    .map((b) => ({
+      id: b?.id ?? b?.pk ?? null,
+      name: b?.name || b?.label || "",
+      slug: b?.slug || "",
+    }))
+    .filter((b) => (b.name || b.slug));
 }
 
 async function postBrandSuggestion({ name }) {
@@ -46,13 +54,13 @@ export default function BrandField({
   label = "Brand (optional)",
   value = "",
   onChange,             // (text) => void
-  onResolved,           // ({name, slug}|null) => void
-  autosave = () => {},  // called when selection is committed/blurred
+  onResolved,           // ({id, name, slug} | null) => void
+  autosave = () => {},  // called on commit/blur
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState(value || "");
   const [loading, setLoading] = useState(false);
-  const [opts, setOpts] = useState([]); // [{name, slug}]
+  const [opts, setOpts] = useState([]); // [{id, name, slug}]
   const [err, setErr] = useState("");
   const [active, setActive] = useState(0);
 
@@ -78,12 +86,7 @@ export default function BrandField({
       setLoading(true);
       try {
         const list = await searchBrands(text, ctrl.signal);
-        setOpts(
-          list
-            .map((b) => ({ name: b?.name || b?.label || "", slug: b?.slug || "" }))
-            .filter((b) => b.name || b.slug)
-            .slice(0, 20)
-        );
+        setOpts(list.slice(0, 20));
         setActive(0);
       } catch (e) {
         if (e.name !== "AbortError") setErr(e.message || "Brand search failed");
@@ -104,20 +107,24 @@ export default function BrandField({
 
   function commitSelection(item) {
     setOpen(false);
-    onChange?.(item?.name || q);
-    onResolved?.(item || null);
+    const nextText = item?.name || q;
+    onChange?.(nextText);
+    // Pass full object (with id) to parent; if free-typed, null
+    onResolved?.(item?.id ? item : null);
     autosave?.();
   }
 
   function onKeyDown(e) {
+    const maxIndex = opts.length; // +1 row for "suggest", handled with rows array below
     if (!open && (e.key === "ArrowDown" || e.key === "Enter")) { setOpen(true); return; }
     if (!open) return;
-    if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(opts.length, a + 1)); }
+
+    if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(maxIndex, a + 1)); }
     if (e.key === "ArrowUp")   { e.preventDefault(); setActive((a) => Math.max(0, a - 1)); }
     if (e.key === "Escape")    setOpen(false);
     if (e.key === "Enter") {
       e.preventDefault();
-      if (active === opts.length) { // suggest row
+      if (active === maxIndex) { // suggest row
         setShowSuggest(true);
       } else {
         commitSelection(opts[active] || null);
@@ -129,9 +136,8 @@ export default function BrandField({
   const [showSuggest, setShowSuggest] = useState(false);
 
   const rows = useMemo(() => {
-    const base = opts;
-    // add “suggest brand” pseudo-row at end
-    return [...base, { __suggest: true, name: q.trim() }];
+    const text = q.trim();
+    return [...opts, { __suggest: true, name: text }];
   }, [opts, q]);
 
   return (
@@ -146,6 +152,8 @@ export default function BrandField({
           onBlur={() => autosave?.()}
           onKeyDown={onKeyDown}
           placeholder="Start typing (e.g., Samsung)…"
+          role="combobox"
+          aria-expanded={open}
           aria-autocomplete="list"
         />
 
@@ -161,8 +169,9 @@ export default function BrandField({
                   const isSuggest = b.__suggest;
                   const isActive = idx === active;
                   return (
-                    <li key={isSuggest ? "__suggest" : b.slug || b.name}>
+                    <li key={isSuggest ? "__suggest" : String(b.id ?? b.slug ?? b.name)}>
                       <button
+                        type="button"
                         className={cls(
                           "w-full text-left px-3 py-2 text-sm",
                           isActive ? "bg-gray-100 dark:bg-gray-800" : "hover:bg-gray-50 dark:hover:bg-gray-800",
@@ -173,7 +182,8 @@ export default function BrandField({
                       >
                         {isSuggest ? (
                           <div>
-                            Can’t find it? <span className="underline">Suggest “{b.name || "this brand"}”</span>
+                            Can’t find it?{" "}
+                            <span className="underline">Suggest “{b.name || "this brand"}”</span>
                           </div>
                         ) : (
                           <>
@@ -199,7 +209,6 @@ export default function BrandField({
           defaultName={q.trim()}
           onClose={() => setShowSuggest(false)}
           onSent={(createdName) => {
-            // Keep user input; optionally set to createdName
             onChange?.(createdName || q);
             onResolved?.(null);
           }}
@@ -245,7 +254,7 @@ function SuggestBrandModal({ defaultName = "", onClose, onSent }) {
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="w-full max-w-md h-full bg-white dark:bg-gray-900 shadow-xl border-l border-gray-200 dark:border-gray-800 p-4 overflow-y-auto">
+      <div className="w/full max-w-md h-full bg-white dark:bg-gray-900 shadow-xl border-l border-gray-200 dark:border-gray-800 p-4 overflow-y-auto">
         <h4 className="text-lg font-semibold mb-3">Suggest a new brand</h4>
         <label className="block text-sm mb-1">Brand name</label>
         <input

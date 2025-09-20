@@ -1,7 +1,7 @@
+// src/components/ProductDetailSection/ProductSlider.jsx
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import Image from "next/image";
+import React from "react";
 import Modal from "react-modal";
 import { FaPlay, FaTiktok, FaInstagram, FaYoutube, FaLink } from "react-icons/fa";
 import { FiShare2, FiChevronUp, FiChevronDown } from "react-icons/fi";
@@ -16,94 +16,33 @@ import {
   LinkedinIcon,
 } from "next-share";
 
-/* ===========================
-   Helpers
-   =========================== */
-const FALLBACK_IMAGE =
-  "https://d3q0odwafjkyv1.cloudfront.net/50g59dwfx74fq23f6c2p5noqotgo";
+//load product images
+import ImageSkeleton from "@/components/common/ImageSkeleton";
+import SafeImage, { fixDisplayUrl } from "@/components/common/SafeImage";
 
-const CDN_BASE = (process.env.NEXT_PUBLIC_CDN_BASE || "").replace(/\/+$/, "");
-const API_BASE = (
-  process.env.NEXT_PUBLIC_MEDIA_BASE ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  ""
-).replace(/\/+$/, "");
-
-function fixImageUrl(input) {
-  if (!input) return FALLBACK_IMAGE;
-  let s = String(input).trim();
-  if (!s) return FALLBACK_IMAGE;
-  if (s.startsWith("data:")) return s;
-  s = s.replace("cloudfront.netdirect_uploads", "cloudfront.net/direct_uploads");
-  if (/^https?:\/\//i.test(s)) return s;
-
-  if (s.startsWith("direct_uploads")) {
-    if (CDN_BASE) return `${CDN_BASE}/${s}`;
-    if (API_BASE) return `${API_BASE}/media/${s}`;
-    return `/media/${s}`;
-  }
-  if (s.startsWith("/media/")) {
-    if (API_BASE) return `${API_BASE}${s}`;
-    return s;
-  }
-  if (s.startsWith("media/")) {
-    if (API_BASE) return `${API_BASE}/${s}`;
-    return `/${s}`;
-  }
-  if (API_BASE) return `${API_BASE}/${s.replace(/^\/+/, "")}`;
-  return `/${s.replace(/^\/+/, "")}`;
-}
-
+/* =========================== Helpers =========================== */
 function normalizeMediaItems(mediaItems = []) {
   if (!Array.isArray(mediaItems)) return [];
   return mediaItems
     .map((item) => {
       const src =
-        item?.image_url || item?.url || item?.src || (typeof item === "string" ? item : null);
+        item?.image_url ||
+        item?.url ||
+        item?.src ||
+        (typeof item === "string" ? item : null);
       if (!src) return null;
-      const isVideo = typeof item?.type === "string" && item.type.toLowerCase() === "video";
+
+      const isVideo =
+        typeof item?.type === "string" &&
+        item.type.toLowerCase() === "video";
+
       return {
         type: isVideo ? "video" : "image",
-        src: fixImageUrl(src),
-        thumbnail: item?.thumbnail ? fixImageUrl(item.thumbnail) : null,
+      src: fixDisplayUrl(src),
+     thumbnail: item?.thumbnail ? fixDisplayUrl(item.thumbnail) : null,
       };
     })
     .filter(Boolean);
-}
-
-function SafeImage({
-  src,
-  alt,
-  className,
-  width,
-  height,
-  sizes,
-  priority,
-  fill,
-  style,
-  quality = 80,
-  onLoadingComplete,
-  loading,
-}) {
-  const [imgSrc, setImgSrc] = useState(fixImageUrl(src));
-  useEffect(() => setImgSrc(fixImageUrl(src)), [src]);
-  return (
-    <Image
-      src={imgSrc}
-      alt={alt || "Image"}
-      className={className}
-      width={fill ? undefined : width}
-      height={fill ? undefined : height}
-      sizes={sizes}
-      priority={priority}
-      onError={() => setImgSrc(FALLBACK_IMAGE)}
-      fill={fill}
-      style={style}
-      quality={quality}
-      onLoadingComplete={onLoadingComplete}
-      loading={loading}
-    />
-  );
 }
 
 /* ===========================
@@ -122,27 +61,38 @@ const ProductSlider = ({
   instagramUrl = "https://www.instagram.com/upfrica",
   youtubeUrl = "https://www.youtube.com/@upfricamarketplace8512",
 }) => {
-  const items = normalizeMediaItems(mediaItems);
+const items = React.useMemo(() => {
+  const norm = normalizeMediaItems(mediaItems);
+  const seen = new Set();
+  return norm.filter((x) => {
+    if (!x?.src) return false;
+    const key = `${x.type}|${x.src}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}, [mediaItems]);
 
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [showBasketBadge, setShowBasketBadge] = useState(true);
-  const [copied, setCopied] = useState(false);
-  const [isShareOpen, setIsShareOpen] = useState(false);
-  const [computedUrl, setComputedUrl] = useState(shareUrl || "");
-  const [computedTitle, setComputedTitle] = useState(shareTitle || "Share product");
-  const [computedText, setComputedText] = useState(shareText || "Check this out on Upfrica");
+
+  const [selectedIndex, setSelectedIndex] = React.useState(0);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = React.useState(false);
+  const [showBasketBadge, setShowBasketBadge] = React.useState(true);
+  const [copied, setCopied] = React.useState(false);
+  const [isShareOpen, setIsShareOpen] = React.useState(false);
+  const [computedUrl, setComputedUrl] = React.useState(shareUrl || "");
+  const [computedTitle, setComputedTitle] = React.useState(shareTitle || "Share product");
+  const [computedText, setComputedText] = React.useState(shareText || "Check this out on Upfrica");
 
   // Measure hero height to cap thumbnail column
-  const heroRef = useRef(null);
-  const [thumbMaxH, setThumbMaxH] = useState(null);
+  const heroRef = React.useRef(null);
+  const [thumbMaxH, setThumbMaxH] = React.useState(null);
 
   // Thumbnail rail refs/state
-  const thumbsRef = useRef(null);
-  const rafScrollRef = useRef(null);
-  const [thumbCanUp, setThumbCanUp] = useState(false);
-  const [thumbCanDown, setThumbCanDown] = useState(false);
+  const thumbsRef = React.useRef(null);
+  const rafScrollRef = React.useRef(null);
+  const [thumbCanUp, setThumbCanUp] = React.useState(false);
+  const [thumbCanDown, setThumbCanDown] = React.useState(false);
   const updateThumbScrollState = () => {
     const el = thumbsRef.current;
     if (!el) return;
@@ -155,41 +105,45 @@ const ProductSlider = ({
     if (rafScrollRef.current) cancelAnimationFrame(rafScrollRef.current);
     rafScrollRef.current = null;
   };
-  const startThumbAutoScroll = (dir /* -1 up, +1 down */) => {
-    stopThumbAutoScroll();
-    const step = () => {
-      const el = thumbsRef.current;
-      if (!el) return;
-      el.scrollTop += dir * 6; // gentle continuous scroll
-      updateThumbScrollState();
-      // stop when we hit the edge
-      if ((dir < 0 && !thumbCanUp) || (dir > 0 && !thumbCanDown)) {
-        stopThumbAutoScroll();
-        return;
-      }
-      rafScrollRef.current = requestAnimationFrame(step);
-    };
+const startThumbAutoScroll = (dir /* -1 up, +1 down */) => {
+  stopThumbAutoScroll();
+  const step = () => {
+    const el = thumbsRef.current;
+    if (!el) return;
+
+    // read from DOM so we don't lag a frame behind state
+    const atTop = el.scrollTop <= 0;
+    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+
+    if ((dir < 0 && atTop) || (dir > 0 && atBottom)) {
+      stopThumbAutoScroll();
+      return;
+    }
+
+    el.scrollTop += dir * 6;   // gentle continuous scroll
+    updateThumbScrollState();  // keep arrows/fades in sync
     rafScrollRef.current = requestAnimationFrame(step);
   };
+  rafScrollRef.current = requestAnimationFrame(step);
+};
 
-  const videoRef = useRef(null);
-  const autoplayRef = useRef(null);
-  const shareRef = useRef(null);
+  const videoRef = React.useRef(null);
+  const autoplayRef = React.useRef(null);
+  const shareRef = React.useRef(null);
 
   const current = items[selectedIndex];
 
   // Swipe
-  const touchStartX = useRef(null);
-  const touchStartTime = useRef(null);
-  const touchEndX = useRef(null);
+  const touchStartX = React.useRef(null);
+  const touchStartTime = React.useRef(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!shareUrl && typeof window !== "undefined") setComputedUrl(window.location.href);
     if (!shareTitle && typeof document !== "undefined")
       setComputedTitle(document.title || "Share product");
   }, [shareUrl, shareTitle]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const onDocClick = (e) => {
       if (!shareRef.current) return;
       if (!shareRef.current.contains(e.target)) setIsShareOpen(false);
@@ -198,19 +152,22 @@ const ProductSlider = ({
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [isShareOpen]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (autoplay && !isModalOpen && !isVideoPlaying && items.length > 1) {
-      autoplayRef.current = setInterval(() => setSelectedIndex((i) => (i + 1) % items.length), autoplayDelay);
+      autoplayRef.current = setInterval(
+        () => setSelectedIndex((i) => (i + 1) % items.length),
+        autoplayDelay
+      );
     }
     return () => clearInterval(autoplayRef.current);
   }, [selectedIndex, isModalOpen, isVideoPlaying, autoplay, autoplayDelay, items.length]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setIsVideoPlaying(false);
     videoRef.current?.pause?.();
   }, [selectedIndex]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (inBaskets > 0) {
       setShowBasketBadge(true);
       const t = setTimeout(() => setShowBasketBadge(false), 5000);
@@ -224,7 +181,7 @@ const ProductSlider = ({
     if (h && h !== thumbMaxH) setThumbMaxH(h);
     updateThumbScrollState();
   };
-  useEffect(() => {
+  React.useEffect(() => {
     measure();
     const onResize = () => measure();
     window.addEventListener("resize", onResize);
@@ -235,7 +192,6 @@ const ProductSlider = ({
       el?.removeEventListener("scroll", updateThumbScrollState);
       stopThumbAutoScroll();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Swipe handlers
@@ -244,9 +200,9 @@ const ProductSlider = ({
     touchStartTime.current = new Date().getTime();
   };
   const onTouchEnd = (e) => {
-    touchEndX.current = e.changedTouches[0].clientX;
+    const touchEndX = e.changedTouches[0].clientX;
     const t = new Date().getTime() - (touchStartTime.current || 0);
-    const delta = (touchStartX.current || 0) - (touchEndX.current || 0);
+    const delta = (touchStartX.current || 0) - touchEndX;
     const v = Math.abs(delta) / (t || 1);
     if (delta > 50 || (delta > 20 && v > 0.3)) setSelectedIndex((i) => (i + 1) % items.length);
     else if (delta < -50 || (delta < -20 && v > 0.3)) setSelectedIndex((i) => (i - 1 + items.length) % items.length);
@@ -274,7 +230,13 @@ const ProductSlider = ({
   };
 
   if (items.length === 0) {
-    return <p className="text-center text-gray-500">No images available</p>;
+    return (
+      <div className="relative w-full">
+        <div className="relative w-full aspect-square md:aspect-[4/3] rounded-md overflow-hidden">
+          <ImageSkeleton className="absolute inset-0" />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -339,7 +301,6 @@ const ProductSlider = ({
           })}
         </div>
 
-        {/* Fade masks */}
         {(thumbCanUp || thumbCanDown) && (
           <>
             <div className="pointer-events-none absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white/90 to-transparent dark:from-neutral-900/90 rounded-t-md" />
@@ -347,7 +308,6 @@ const ProductSlider = ({
           </>
         )}
 
-        {/* Up arrow */}
         {thumbCanUp && (
           <button
             className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 w-8 h-8 rounded-full bg-black/60 hover:bg-black/70 text-white flex items-center justify-center shadow"
@@ -360,7 +320,6 @@ const ProductSlider = ({
           </button>
         )}
 
-        {/* Down arrow */}
         {thumbCanDown && (
           <button
             className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-10 w-8 h-8 rounded-full bg-black/60 hover:bg-black/70 text-white flex items-center justify-center shadow"
@@ -466,13 +425,34 @@ const ProductSlider = ({
                     <LinkedinIcon size={44} round />
                   </LinkedinShareButton>
 
-                  <a href={tiktokUrl} target="_blank" rel="noopener noreferrer" className="hover:opacity-80" aria-label="Open TikTok profile" title="TikTok">
+                  <a
+                    href={tiktokUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:opacity-80"
+                    aria-label="Open TikTok profile"
+                    title="TikTok"
+                  >
                     <FaTiktok size={44} className="rounded-full" />
                   </a>
-                  <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:opacity-80" aria-label="Open Instagram profile" title="Instagram">
+                  <a
+                    href={instagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:opacity-80"
+                    aria-label="Open Instagram profile"
+                    title="Instagram"
+                  >
                     <FaInstagram size={44} className="rounded-full" />
                   </a>
-                  <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="hover:opacity-80" aria-label="Open YouTube channel" title="YouTube">
+                  <a
+                    href={youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:opacity-80"
+                    aria-label="Open YouTube channel"
+                    title="YouTube"
+                  >
                     <FaYoutube size={44} className="rounded-full" />
                   </a>
                 </div>
@@ -515,7 +495,7 @@ const ProductSlider = ({
                     className="object-contain"
                     priority={idx === 0}
                     quality={85}
-                    onLoadingComplete={measure}
+                    onLoad={measure}
                   />
                 )}
               </div>
@@ -540,59 +520,72 @@ const ProductSlider = ({
       </div>
 
       {/* Lightbox */}
-      <Modal
-        isOpen={isModalOpen}
-        onRequestClose={() => setIsModalOpen(false)}
-        contentLabel="Media Lightbox"
-        className="fixed inset-0 flex items-center justify-center z-50"
-        overlayClassName="fixed inset-0 bg-black/30 backdrop-blur-md"
-        ariaHideApp={false}
-      >
-        <div className="relative flex items-center justify-center w-full h-full">
-          <button
-            className="absolute top-4 right-4 text-white text-3xl bg-black bg-opacity-50 p-2 rounded-full"
-            onClick={() => setIsModalOpen(false)}
-            aria-label="Close"
-          >
-            ✖
-          </button>
-          <button
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-3xl bg-black bg-opacity-50 p-3 rounded-full"
-            onClick={() => setSelectedIndex((i) => (i - 1 + items.length) % items.length)}
-            aria-label="Previous"
-          >
-            ◀
-          </button>
-          <div className="flex-grow flex items-center justify-center">
-            {current?.type === "video" ? (
-              <video
-                controls
-                src={current.src}
-                className="max-w-[90vw] max-h-[90vh] object-contain rounded-md"
-              />
-            ) : (
-              <SafeImage
-                src={current?.src}
-                alt={`Slide ${selectedIndex + 1}`}
-                width={1600}
-                height={1600}
-                sizes="(max-width: 768px) 90vw, (max-width: 1280px) 80vw, 1200px"
-                className="object-contain rounded-md"
-                style={{ maxWidth: "90vw", maxHeight: "90vh" }}
-                priority
-                quality={85}
-              />
-            )}
-          </div>
-          <button
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-3xl bg-black bg-opacity-50 p-3 rounded-full"
-            onClick={() => setSelectedIndex((i) => (i + 1) % items.length)}
-            aria-label="Next"
-          >
-            ▶
-          </button>
-        </div>
-      </Modal>
+ <Modal
+  isOpen={isModalOpen}
+  onRequestClose={() => setIsModalOpen(false)}
+  contentLabel="Media Lightbox"
+  ariaHideApp={false}
+  /* ↑ keep react-modal portal; give the overlay a higher z than your header */
+  overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1000]"
+  /* ↑ content on top of overlay, a bit higher still + padding */
+  className="fixed inset-0 z-[1001] flex items-center justify-center p-3 md:p-6"
+>
+  <div className="relative w-full h-full flex items-center justify-center">
+    {/* CLOSE */}
+    <button
+      className="absolute text-white text-2xl md:text-3xl bg-black/60 hover:bg-black/70 p-2 rounded-full shadow-lg"
+      /* safe area so it never hides under the OS bar */
+      style={{
+        top: 'max(env(safe-area-inset-top), 1rem)',
+        right: 'max(env(safe-area-inset-right), 1rem)',
+      }}
+      onClick={() => setIsModalOpen(false)}
+      aria-label="Close"
+    >
+      ✖
+    </button>
+
+    {/* PREV */}
+    <button
+      className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-white text-2xl md:text-3xl bg-black/60 hover:bg-black/70 p-3 rounded-full shadow-lg z-[1002]"
+      onClick={() => setSelectedIndex((i) => (i - 1 + items.length) % items.length)}
+      aria-label="Previous"
+    >
+      ◀
+    </button>
+
+    <div className="flex-grow flex items-center justify-center">
+      {current?.type === "video" ? (
+        <video
+          controls
+          src={current.src}
+          className="max-w-[90vw] max-h-[90vh] object-contain rounded-md"
+        />
+      ) : (
+        <SafeImage
+          src={current?.src}
+          alt={`Slide ${selectedIndex + 1}`}
+          width={1600}
+          height={1600}
+          sizes="(max-width: 768px) 90vw, (max-width: 1280px) 80vw, 1200px"
+          className="object-contain rounded-md"
+          style={{ maxWidth: "90vw", maxHeight: "90vh" }}
+          priority
+          quality={85}
+        />
+      )}
+    </div>
+
+    {/* NEXT */}
+    <button
+      className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 text-white text-2xl md:text-3xl bg-black/60 hover:bg-black/70 p-3 rounded-full shadow-lg z-[1002]"
+      onClick={() => setSelectedIndex((i) => (i + 1) % items.length)}
+      aria-label="Next"
+    >
+      ▶
+    </button>
+  </div>
+</Modal>
     </div>
   );
 };

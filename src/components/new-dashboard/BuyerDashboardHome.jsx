@@ -6,16 +6,14 @@ import Link from "next/link";
 import clsx from "clsx";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifSummary } from "@/lib/notifications";
-import ActiveAnnouncements from "@/components/common/announcements/ActiveAnnouncements"
 import RecentReviews from "./RecentReviews";
-import { BASE_API_URL } from "@/app/constants";
 import {
   ShoppingBag, CreditCard, Clock, Star, MessageSquare, Heart, Info,
-  ClipboardList, Inbox, CheckCircle2
+  ClipboardList, Inbox, CheckCircle2, ShieldCheck
 } from "lucide-react";
 
 export default function BuyerDashboardHome() {
-  const { user, token, hydrated } = useAuth();
+  const { user, hydrated } = useAuth(); // ⬅️ no token needed for proxy
 
   // ---- roles ---------------------------------------------------------------
   const roles = useMemo(() => (
@@ -36,26 +34,33 @@ export default function BuyerDashboardHome() {
   const [myReviews, setMyReviews] = useState([]);
   const [orderCount, setOrderCount] = useState(0);
 
+  // Finance overview
+  const [finance, setFinance] = useState(null);
+  const [financeLoading, setFinanceLoading] = useState(true);
+
   // Global notifications summary (polls; light-weight)
   const { summary } = useNotifSummary({ enabled: hydrated });
   const { total, buyer_quotes = 0, agent_approvals = 0, hrefs = {} } = summary || {};
-  const quotesHref   = hrefs.buyer_quotes   || "/new-dashboard/offers";     // buyer “received”
-  const approvalsHref= hrefs.agent_approvals|| "/new-dashboard/offers?view=sent"; // agent “sent”
+  const quotesHref   = hrefs.buyer_quotes    || "/new-dashboard/offers";
+  const approvalsHref= hrefs.agent_approvals || "/new-dashboard/offers?view=sent";
+
+  // helpers
+  const prettyMoney = (amt, currency) => {
+    if (amt === null || amt === undefined) return "-";
+    const n = Number(amt);
+    const val = Number.isFinite(n) ? n.toLocaleString() : String(amt);
+    return currency ? `${currency} ${val}` : val;
+  };
 
   // ---- effects -------------------------------------------------------------
   useEffect(() => {
-    if (!hydrated || !token || !user) return;
+    if (!hydrated || !user) return;
 
     const markSeen = async () => {
       if (user?.is_new_user) {
         try {
-          await fetch(`${BASE_API_URL}/api/users/mark-dashboard-seen/`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Token ${token}`,
-            },
-          });
+          // ✅ via proxy, cookie -> Authorization handled server-side
+          await fetch("/api/users/mark-dashboard-seen/", { method: "POST" });
           setShowWelcome(false);
         } catch (error) {
           console.error("❌ Failed to mark dashboard seen:", error);
@@ -65,16 +70,12 @@ export default function BuyerDashboardHome() {
 
     const fetchReviews = async () => {
       try {
-        const res = await fetch(`${BASE_API_URL}/api/reviews/my-reviews/?limit=100`, {
-          headers: { Authorization: `Token ${token}` },
-          cache: "no-store",
-        });
+        const res = await fetch("/api/reviews/my-reviews/?limit=100", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch reviews");
         const data = await res.json();
-        const approved = (data.results || []).filter((r) => r.status === 1);
-        const pending  = (data.results || []).filter((r) => r.status === 0);
-        setMyReviews(approved);
-        setPendingReviews(pending);
+        const list = Array.isArray(data?.results) ? data.results : [];
+        setMyReviews(list.filter((r) => r.status === 1));
+        setPendingReviews(list.filter((r) => r.status === 0));
       } catch (err) {
         console.error("❌ Failed to fetch my reviews:", err);
       }
@@ -82,22 +83,35 @@ export default function BuyerDashboardHome() {
 
     const fetchOrderCount = async () => {
       try {
-        const res = await fetch(`${BASE_API_URL}/api/buyer/order-summary/`, {
-          headers: { Authorization: `Token ${token}` },
-          cache: "no-store",
-        });
+        const res = await fetch("/api/buyer/order-summary/", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch order count");
         const data = await res.json();
-        setOrderCount(Number(data.order_count || 0));
+        setOrderCount(Number(data?.order_count || 0));
       } catch (err) {
         console.error("❌ Failed to fetch order count:", err);
+      }
+    };
+
+    const fetchFinance = async () => {
+      setFinanceLoading(true);
+      try {
+        const res = await fetch("/api/dashboard/finance/", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to fetch finance overview");
+        const data = await res.json();
+        setFinance(data || {});
+      } catch (err) {
+        console.error("❌ Failed to fetch finance overview:", err);
+        setFinance(null);
+      } finally {
+        setFinanceLoading(false);
       }
     };
 
     markSeen();
     fetchReviews();
     fetchOrderCount();
-  }, [hydrated, token, user]);
+    fetchFinance();
+  }, [hydrated, user]);
 
   // ---- loading guard -------------------------------------------------------
   if (!hydrated) {
@@ -107,6 +121,13 @@ export default function BuyerDashboardHome() {
       </div>
     );
   }
+
+  const score     = finance?.credit_score?.score ?? null;
+  const band      = finance?.credit_score?.band ?? null;
+  const currency  = finance?.bnpl?.currency || finance?.currency || "";
+  const avail     = finance?.bnpl?.available_limit ?? finance?.available_credit ?? null;
+  const balance   = finance?.bnpl?.total_balance ?? null;
+  const kycOk     = !!finance?.kyc_verified;
 
   // ---- UI ------------------------------------------------------------------
   return (
@@ -222,9 +243,42 @@ export default function BuyerDashboardHome() {
         )}
       </div>
 
+      {/* Finance strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <MetricBox
+          icon={<CreditCard />}
+          label="Available Credit"
+          value={financeLoading ? "Loading..." : prettyMoney(avail, currency)}
+          hint="Usable BNPL limit"
+        />
+        <MetricBox
+          icon={<CreditCard />}
+          label="BNPL Balance"
+          value={financeLoading ? "Loading..." : prettyMoney(balance, currency)}
+          hint="Outstanding amount"
+        />
+        <MetricBox
+          icon={<ShieldCheck />}
+          label="Credit Score"
+          value={
+            financeLoading
+              ? "Loading..."
+              : (score != null ? (
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold">{score}</span>
+                    {band && <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700">{band}</span>}
+                  </div>
+                ) : "—")
+          }
+          renderValueAs="node"
+        />
+      </div>
+
       {/* Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Link href="/new-dashboard/orders"><MetricBox icon={<ShoppingBag />} label="Orders" value={orderCount} /></Link>
+        <Link href="/new-dashboard/orders">
+          <MetricBox icon={<ShoppingBag />} label="Orders" value={orderCount} />
+        </Link>
         <MetricBox icon={<CreditCard />} label="Total Spend" value="€4,500" />
         <MetricBox icon={<Clock />} label="Avg. Delivery" value="2.1 days" />
         <MetricBox icon={<Star />} label="Buyer Rating" value="Excellent" />
@@ -241,6 +295,7 @@ export default function BuyerDashboardHome() {
                 <span className="text-amber-500 dark:text-amber-400">{pendingReviews.length} ⏳</span>
               </div>
             }
+            renderValueAs="node"
           />
         </Link>
 
@@ -270,7 +325,8 @@ export default function BuyerDashboardHome() {
           <p className="text-xs mt-2 text-gray-500 dark:text-gray-400">€500 to go</p>
         </div>
 
-        <RecentReviews token={token} />
+        {/* RecentReviews can keep its own fetching; proxy will attach cookie */}
+        <RecentReviews />
       </div>
     </div>
   );
@@ -284,7 +340,13 @@ function ActionBtn({ children }) {
   );
 }
 
-function MetricBox({ icon, label, value, hint }) {
+// NOTE: renderValueAs fixes the hydration warning by avoiding <div> inside <p>
+function MetricBox({ icon, label, value, hint, renderValueAs = "text" }) {
+  const Value =
+    renderValueAs === "node"
+      ? <div className="text-2xl font-bold">{value}</div>
+      : <p className="text-2xl font-bold">{value}</p>;
+
   return (
     <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 hover:ring-1 hover:ring-gray-300 dark:hover:ring-gray-600 hover:scale-[1.01] transition duration-200">
       <div className="flex items-center justify-between mb-2">
@@ -294,7 +356,7 @@ function MetricBox({ icon, label, value, hint }) {
         </span>
         {icon && React.cloneElement(icon, { className: "w-5 h-5 text-gray-400 dark:text-gray-300" })}
       </div>
-      <p className="text-2xl font-bold">{value}</p>
+      {Value}
     </div>
   );
 }

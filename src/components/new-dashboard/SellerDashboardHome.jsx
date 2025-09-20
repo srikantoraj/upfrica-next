@@ -444,7 +444,7 @@ export default function SellerDashboardHome() {
           </div>
 
           <div
-            className="relative w-full h-2 bg-gray-200 dark:bg-gray-700 rounded mb-6"
+            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded mb-6 "
             role="progressbar"
             aria-valuenow={usagePercent}
             aria-valuemin={0}

@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import TopBar from "@/components/new-dashboard/TopBar";
 import Footer from "@/components/new-dashboard/Footer";
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,9 +40,13 @@ function EnsureHydrated({ children }) {
 function Layout({ children }) {
   const PREF_KEY = "nd.sidebarVisible.v1";
   const { hydrated } = useAuth();
+  const pathname = usePathname();
 
-  // ⬇️ Collapsed by default, then hydrate from localStorage
-  const [sidebarVisible, setSidebarVisible] = useState(false);
+  // Full-bleed for products pages; centered elsewhere
+  const isFullBleed = pathname?.startsWith("/new-dashboard/products");
+
+  // Collapsed by default, then hydrate from localStorage
+  const [sidebarVisible, setSidebarVisible] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const sidebarRef = useRef(null);
 
@@ -50,7 +55,6 @@ function Layout({ children }) {
     try {
       const saved = localStorage.getItem(PREF_KEY);
       if (saved !== null) setSidebarVisible(saved === "1");
-      // else keep default (collapsed)
     } catch {}
   }, []);
 
@@ -80,15 +84,23 @@ function Layout({ children }) {
         sidebarVisible={sidebarVisible}
       />
       <div className="flex flex-1 min-h-0 overflow-hidden relative">
-        {mobileOpen && <div className="fixed inset-0 bg-black bg-opacity-40 z-30 md:hidden" />}
+        {mobileOpen && <div className="fixed inset-0 bg-black bg-opacity-40 z-0 md:hidden" />}
         <DynamicSidebarLayout
           sidebarVisible={sidebarVisible}
           mobileOpen={mobileOpen}
           toggleMobile={setMobileOpen}
           sidebarRef={sidebarRef}
         />
-        <main className="flex-1 flex flex-col min-h-[calc(100vh-64px)] w-full overflow-hidden dark:bg-gray-950">
-          <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-12 py-6 flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950 text-black dark:text-white transition-colors duration-300">
+
+        <main className="flex-1 min-w-0 flex flex-col min-h-[calc(100vh-64px)] w-full overflow-hidden dark:bg-gray-950">
+          <div
+            className={[
+              "flex-1 min-h-0 overflow-y-auto text-black dark:text-white transition-colors duration-300 ",
+              isFullBleed
+                ? "px-4 sm:px-6 lg:px-0 bg-gray-50 dark:bg-gray-950" // full width (products)
+                : "w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-12 bg-gray-50 dark:bg-gray-950", // centered container (others)
+            ].join(" ")}
+          >
             {/* 👉 Announcements sit above page content */}
             {hydrated && <ActiveAnnouncements className="mb-4" />}
             {children}

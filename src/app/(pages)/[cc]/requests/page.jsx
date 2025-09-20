@@ -64,7 +64,6 @@ async function fetchOpenCount(cc) {
   const data = await res.json().catch(() => null);
   return typeof data?.count === "number" ? data.count : null;
 }
-
 /* ------------------------------ metadata ------------------------------ */
 export async function generateMetadata({ params }) {
   const cc = String(params?.cc || "gh").toUpperCase();

@@ -9,8 +9,11 @@ import BasketSheetGlobal from "@/components/BasketSheetGlobal";
 import LocalizationProvider from "@/contexts/LocalizationProvider";
 import LangDomSync from "@/components/common/LangDomSync";
 
-// ⬇️ New: global bottom-sheet auth UI
+// ⬇️ Global bottom-sheet auth UI
 import { AuthSheetProvider } from "@/components/auth/AuthSheetProvider";
+
+// ⬇️ NEW: keeps proxy auth cookie in sync with AuthContext token
+import AuthCookieBridge from "@/components/auth/AuthCookieBridge";
 
 const SITE =
   (process.env.NEXT_PUBLIC_SITE_BASE_URL || "https://upfrica.com").replace(/\/$/, "");
@@ -86,10 +89,12 @@ export default function RootLayout({ children }) {
           {/* Keep <html lang> in sync with user’s language */}
           <LangDomSync />
 
-          {/* Your existing app-wide providers (Redux/theme/etc.) */}
+          {/* App-wide providers (Redux/theme/etc.) */}
           <Providers>
-            {/* ⬇️ New: makes openAuth() and the login/signup bottom sheet globally available */}
+            {/* Auth UI + cookie bridge for proxy auth */}
             <AuthSheetProvider>
+              <AuthCookieBridge />
+
               {children}
 
               {/* Global basket sheet lives here (renders into #portal-root) */}

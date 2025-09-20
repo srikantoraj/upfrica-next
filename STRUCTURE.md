@@ -274,6 +274,10 @@ upfrica/
 │   │   │   │   │   ├── layout.js
 │   │   │   │   │   ├── page.jsx
 │   │   │   │   │   └── page2.jsx
+│   │   │   │   ├── offers/
+│   │   │   │   │   ├── [id]/
+│   │   │   │   │   │   └── page.jsx
+│   │   │   │   │   └── page.jsx
 │   │   │   │   ├── order-edit/
 │   │   │   │   │   ├── [id]/
 │   │   │   │   │   │   └── page.jsx
@@ -450,6 +454,8 @@ upfrica/
 │   │   │   │   └── page.jsx
 │   │   │   ├── updated-profile/
 │   │   │   │   └── page.jsx
+│   │   │   ├── uploaded-test/
+│   │   │   │   └── page.jsx
 │   │   │   ├── upsearch/
 │   │   │   │   └── [name]/
 │   │   │   │       ├── layout.js
@@ -461,6 +467,7 @@ upfrica/
 │   │   │   │   └── page.jsx
 │   │   │   ├── zoomImage/
 │   │   │   │   └── page.jsx
+│   │   │   ├── display-uploaded-test.jsx
 │   │   │   ├── page.jsx
 │   │   │   └── upload-test.jsx
 │   │   ├── agent/
@@ -490,6 +497,8 @@ upfrica/
 │   │   │   ├── suggest/
 │   │   │   │   └── route.js
 │   │   │   └── products.js
+│   │   ├── debug-auth/
+│   │   │   └── page.jsx
 │   │   ├── fonts/
 │   │   │   ├── GeistMonoVF.woff
 │   │   │   └── GeistVF.woff
@@ -536,6 +545,8 @@ upfrica/
 │   │   │   ├── showToast.js
 │   │   │   ├── storage.js
 │   │   │   └── utils.js
+│   │   ├── verify/
+│   │   │   └── page.jsx
 │   │   ├── constants.js
 │   │   ├── favicon.ico
 │   │   ├── globals.css
@@ -618,6 +629,7 @@ upfrica/
 │   │   │   └── useBrands.js
 │   │   ├── auth/
 │   │   │   ├── AccessDeniedScreen.jsx
+│   │   │   ├── AuthCookieBridge.jsx
 │   │   │   ├── AuthSheetProvider.jsx
 │   │   │   ├── LoginForm.jsx
 │   │   │   └── RoleGuard.jsx
@@ -638,9 +650,17 @@ upfrica/
 │   │   │   ├── ShareButtons.jsx
 │   │   │   ├── TableOfContents.jsx
 │   │   │   └── WhatIsAI.jsx
+│   │   ├── bnpl/
+│   │   │   └── CreditScoreCard.jsx
+│   │   ├── brand/
+│   │   │   └── BrandField.jsx
+│   │   ├── category/
+│   │   │   └── CategoryField.jsx
 │   │   ├── common/
 │   │   │   ├── New arrivals/
 │   │   │   │   └── NewArrivals.jsx
+│   │   │   ├── announcements/
+│   │   │   │   └── ActiveAnnouncements.jsx
 │   │   │   ├── footer/
 │   │   │   │   └── Footer.jsx
 │   │   │   ├── header/
@@ -768,6 +788,7 @@ upfrica/
 │   │   │   │   │   └── MySourcingOrders.jsx
 │   │   │   │   ├── MyRequests.jsx
 │   │   │   │   ├── OfferComposeModal.jsx
+│   │   │   │   ├── OfferEditSheet.jsx
 │   │   │   │   ├── RequestDetails.jsx
 │   │   │   │   ├── SourcingWorkbench.jsx
 │   │   │   │   └── page.jsx
@@ -780,8 +801,10 @@ upfrica/
 │   │   │   ├── BuyerDashboardHome.jsx
 │   │   │   ├── BuyerSidebar.jsx
 │   │   │   ├── CompleteSetupBanner.jsx
+│   │   │   ├── ConnectivityStrip.jsx
 │   │   │   ├── DashboardHomeTheme.jsx
 │   │   │   ├── DashboardLayout.jsx
+│   │   │   ├── DashboardTasks.jsx
 │   │   │   ├── DynamicSidebar.jsx
 │   │   │   ├── DynamicSidebarLayout.jsx
 │   │   │   ├── Footer.jsx
@@ -918,6 +941,7 @@ upfrica/
 │   │   ├── CreateReview.jsx
 │   │   ├── CreateReviews.jsx
 │   │   ├── CustomerReviewsSection.jsx
+│   │   ├── DashboardTasks.jsx
 │   │   ├── DeliveryDate.jsx
 │   │   ├── DescriptionAndReviews.jsx
 │   │   ├── DirectBuyPopup.jsx
@@ -953,6 +977,7 @@ upfrica/
 │   │   ├── ShopRichArticle.jsx
 │   │   ├── SimplePrice.jsx
 │   │   ├── Slider.jsx
+│   │   ├── SmartImage.jsx
 │   │   ├── SortableImage.jsx
 │   │   ├── TextSection.jsx
 │   │   ├── TitleFrom.jsx
@@ -983,6 +1008,10 @@ upfrica/
 │   │   ├── api/
 │   │   │   ├── search.js
 │   │   │   └── suggest.js
+│   │   ├── auth/
+│   │   │   └── waitForAuthReady.js
+│   │   ├── dashbord/
+│   │   │   └── health.js
 │   │   ├── products/
 │   │   │   └── api.js
 │   │   ├── seo/
@@ -998,6 +1027,7 @@ upfrica/
 │   │   ├── axiosInstance.js
 │   │   ├── cc.js
 │   │   ├── cdn-image-loader.js
+│   │   ├── credit.js
 │   │   ├── currency.js
 │   │   ├── fx.js
 │   │   ├── geo.js
@@ -1014,6 +1044,7 @@ upfrica/
 │   │   ├── rails.js
 │   │   ├── seller-contact.js
 │   │   ├── socialLoginUrl.js
+│   │   ├── upload.js
 │   │   └── utils.js
 │   └── public/
 │       ├── icon/

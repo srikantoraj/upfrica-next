@@ -1,10 +1,11 @@
 // app/(pages)/[cc]/[slug]/page.jsx
 import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
-import Header from "@/components/home/Header";
 import Footer from "@/components/common/footer/Footer";
 import ProductDetailSection from "@/components/ProductDetailSection/ProductDetailSection";
 import RelatedProducts from "@/components/home/ProductList/RealtedProduct";
+import ClientTrackView from "./ClientTrackView";
+import { getPdpSignals } from "@/lib/pdp-signals-server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -65,10 +66,63 @@ function looksLikeProduct(d) {
 }
 
 function toApiPath(p) {
-  // Ensure paths we follow from JSON redirects go through /api/…
   if (!p) return "";
   if (p.startsWith("/api/")) return p;
   return `/api${p.startsWith("/") ? "" : "/"}${p}`;
+}
+
+/** Normalize signals to the UI shape regardless of backend keys */
+function normalizeSignals(src) {
+  const pickNum = (...keys) => {
+    for (const k of keys) {
+      const v = src?.[k];
+      if (v != null && Number.isFinite(Number(v))) return Number(v);
+    }
+    return 0;
+  };
+  return {
+    views24h: pickNum("views24h", "views_24h", "views_last_24h", "views"),
+    baskets24h: pickNum("baskets24h", "baskets_24h", "added_to_basket_24h", "baskets"),
+    wishlistsTotal: pickNum("wishlistsTotal", "wishlists_total", "wishlist_total", "wishlists"),
+  };
+}
+
+/** Get signals with multiple fallbacks: Redis helper → API by ID → API by slug */
+async function getSignalsSSR(cc, slug, productId) {
+  // 1) Redis/server util
+  try {
+    const s = await getPdpSignals(productId);
+    if (s && Object.keys(s).length) return normalizeSignals(s);
+  } catch {}
+
+  const origin = getOrigin();
+
+  // Helper that follows one JSON redirect
+  const fetchMaybeRedirect = async (firstUrl) => {
+    const r = await tryJson(firstUrl);
+    if (
+      (r.status === 200 || r.status === 301 || r.status === 302) &&
+      r.data?.redirect
+    ) {
+      const redirectedPath = toApiPath(r.data.redirect);
+      const viaProxy = `${origin}${redirectedPath}`;
+      const r2 = await tryJson(viaProxy);
+      if (r2.ok && r2.data) return r2.data;
+    }
+    if (r.ok && r.data) return r.data;
+    return null;
+  };
+
+  // 2) API by product ID
+  const byId = await fetchMaybeRedirect(`${origin}/api/products/${encodeURIComponent(productId)}/signals`);
+  if (byId) return normalizeSignals(byId);
+
+  // 3) API by slug/market
+  const bySlug = await fetchMaybeRedirect(`${origin}/api/${cc}/${slug}/signals`);
+  if (bySlug) return normalizeSignals(bySlug);
+
+  // Default
+  return { views24h: 0, baskets24h: 0, wishlistsTotal: 0 };
 }
 
 /**
@@ -82,10 +136,7 @@ async function resolveProduct({ cc, slug, id }) {
   const tried = [];
 
   const candidates = [];
-  if (id)
-    candidates.push(
-      `${origin}/api/products/${encodeURIComponent(id)}`
-    );
+  if (id) candidates.push(`${origin}/api/products/${encodeURIComponent(id)}`);
   candidates.push(`${origin}/api/${cc}/${slug}`);
 
   for (const firstUrl of candidates) {
@@ -131,7 +182,7 @@ async function getRelatedProducts(cc, slug) {
     (r.status === 200 || r.status === 301 || r.status === 302) &&
     r.data?.redirect
   ) {
-    const redirectedPath = toApiPath(r.data.redirect); // e.g. "/api/gh/canonical-slug/related"
+    const redirectedPath = toApiPath(r.data.redirect);
     const viaProxy = `${origin}${redirectedPath}`;
     const r2 = await tryJson(viaProxy);
     if (r2.ok && Array.isArray(r2.data?.results)) return r2.data.results;
@@ -173,8 +224,7 @@ export async function generateMetadata({ params: { cc, slug }, searchParams }) {
     title: `${product.title} – ${countryForTitle}`,
     description:
       (typeof product.description === "string" &&
-        product.description.replace(/<[^>]*>/g, "").slice(0, 180)) ||
-      "",
+        product.description.replace(/<[^>]*>/g, "").slice(0, 180)) || "",
     alternates: { canonical },
     openGraph: { title: product.title, url: canonical },
   };
@@ -217,6 +267,9 @@ export default async function Page({ params: { cc, slug }, searchParams }) {
     );
   }
 
+  // PDP signals (views, baskets, wishlists) with robust fallbacks
+  let signals = await getSignalsSSR(cc, slug, product.id);
+
   const relatedProducts = await getRelatedProducts(cc, slug);
   const regionLower = (cc || "").toLowerCase();
   const locationDisplay =
@@ -227,10 +280,9 @@ export default async function Page({ params: { cc, slug }, searchParams }) {
 
   return (
     <>
- 
-      <main className="w-full max-w-[1380px] mx-auto py-8 px-4 sm:px-5 lg:px-8 xl:px-[4rem] 2xl:px-[5rem]">
+      <main className="w-full max-w-[1380px] mx-auto py-0 px-4 sm:px-5 lg:px-8 xl:px-[4rem] 2xl:px-[5rem]">
         {/* PDP */}
-        <ProductDetailSection product={product} />
+        <ProductDetailSection product={product} signals={signals} />
 
         {/* Related */}
         <section id="related" aria-labelledby="related-heading" className="mt-10">
@@ -245,6 +297,10 @@ export default async function Page({ params: { cc, slug }, searchParams }) {
           />
         </section>
       </main>
+
+      {/* Client-side, one-per-session view ping */}
+      <ClientTrackView productId={product.id} slug={product.slug} />
+
       <Footer />
     </>
   );

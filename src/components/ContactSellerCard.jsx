@@ -1,5 +1,8 @@
 'use client';
 import axiosInstance from '@/lib/axiosInstance';
+import * as pm from '@/lib/product-metrics'; // ← metrics hooks
+
+
 
 import React, {
   useEffect,
@@ -9,6 +12,10 @@ import React, {
   useState,
   useCallback,
 } from 'react';
+
+    // Build absolute URL to the Next API proxy
+import { postProductEvent } from '@/lib/product-events';
+
 
 export default function ContactSellerCard({
   canShowPhone,
@@ -109,51 +116,42 @@ export default function ContactSellerCard({
     return clean ? `tel:${clean}` : '';
   }, [telDigits]);
 
-  // -------- auth probe (use /api/b proxy) --------
-  const hasAuthCookie = () => {
-    try { return /(?:^|;\s*)up_auth=/.test(document.cookie); } catch { return false; }
-  };
-
-
   // -------- robust auth probe (always confirm with backend) --------
- const extractAuthed = (j) => {
-   if (!j || typeof j !== 'object') return false;
-   const check = (o) =>
-     !!o && typeof o === 'object' && (
-       o.is_authenticated === true ||
-       o.id != null || o.pk != null || o.user_id != null ||
-       typeof o.username === 'string' || typeof o.email === 'string'
-     );
-   if (check(j)) return true;
-   const candidates = [
-     j.user, j.me, j.data, j.result, j.results, j.profile,
-     j.data?.user, j.result?.user, j.results?.user, j.user?.data
-   ];
-   return candidates.some(check);
- };
-
+  const extractAuthed = (j) => {
+    if (!j || typeof j !== 'object') return false;
+    const check = (o) =>
+      !!o && typeof o === 'object' && (
+        o.is_authenticated === true ||
+        o.id != null || o.pk != null || o.user_id != null ||
+        typeof o.username === 'string' || typeof o.email === 'string'
+      );
+    if (check(j)) return true;
+    const candidates = [
+      j.user, j.me, j.data, j.result, j.results, j.profile,
+      j.data?.user, j.result?.user, j.results?.user, j.user?.data
+    ];
+    return candidates.some(check);
+  };
 
   // tiny 5s cache to avoid flooding on quick re-clicks
   const authCache = useRef({ t: 0, ok: false });
- const verifyAuth = useCallback(async () => {
-   const now = Date.now();
-   if (now - authCache.current.t < 5000) return authCache.current.ok;
-   try {
-     // IMPORTANT: backend path (axios baseURL = "/api/b")
-     const { status, data } = await axiosInstance.get('api/users/me/', {
-       headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-       withCredentials: true,
-     });
-     const ok = status >= 200 && status < 300 && extractAuthed(data);
-     authCache.current = { t: now, ok };
-     return ok;
-   } catch {
-     authCache.current = { t: now, ok: false };
-     return false;
-   }
- }, []);
-
-
+  const verifyAuth = useCallback(async () => {
+    const now = Date.now();
+    if (now - authCache.current.t < 5000) return authCache.current.ok;
+    try {
+      // IMPORTANT: backend path (axios baseURL = "/api")
+      const { status, data } = await axiosInstance.get('users/me/', {
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        withCredentials: true,
+      });
+      const ok = status >= 200 && status < 300 && extractAuthed(data);
+      authCache.current = { t: now, ok };
+      return ok;
+    } catch {
+      authCache.current = { t: now, ok: false };
+      return false;
+    }
+  }, []);
 
   const goToSignin = useCallback(() => {
     const next = typeof window !== 'undefined'
@@ -173,10 +171,22 @@ export default function ContactSellerCard({
     }
   }, [productSlug, signinUrl]);
 
+
+
+
+
+
+
+
+
+
+
   const actuallyReveal = () => {
     setContactRevealed?.(true);
     bumpReveal();
     vibrate(25);
+    // 🔢 metrics: count "contact reveal"
+    if (productSlug) pm?.markContactReveal?.(productSlug, { source: 'pdp' });
     if (!firedRevealOnce.current) {
       onReveal?.();
       firedRevealOnce.current = true;
@@ -195,36 +205,64 @@ export default function ContactSellerCard({
     else actuallyReveal();
   };
 
-  const handleCopy = async () => {
-    await copyToClipboard?.();
-    vibrate(15);
-    onCopy?.();
-  };
 
-  const openWA = (e) => {
-    if (!waLink && !telDigits) return;
-    e.preventDefault();
-    const prefill = `Hi, I'm interested in "${(typeof document !== 'undefined' && document.title) || 'your item'}". I will pay via Upfrica SafePay.`;
-    const base =
-      waLink && !waLink.includes('text=')
-        ? `${waLink}${waLink.includes('?') ? '&' : '?'}text=${encodeURIComponent(prefill)}`
-        : waLink || `https://wa.me/${telDigits}?text=${encodeURIComponent(prefill)}`;
-    const native = `whatsapp://send?phone=${encodeURIComponent(telDigits || '')}&text=${encodeURIComponent(prefill)}`;
 
-    let usedNative = false;
-    let timer;
-    try {
-      location.href = native;
-      usedNative = true;
-      timer = window.setTimeout(() => {
-        if (usedNative) window.open(base, '_blank', 'noopener,noreferrer');
-      }, 600);
-    } catch {
-      window.open(base, '_blank', 'noopener,noreferrer');
-    }
-    window.addEventListener('pagehide', () => timer && clearTimeout(timer), { once: true });
-    onWhatsApp?.();
-  };
+const handleCopy = async () => {
+  await copyToClipboard?.();
+  vibrate(15);
+  onCopy?.();
+  // 🧾 metrics: copy contact
+  if (productSlug) {
+    postProductEvent(productSlug, 'copy_contact', { source: 'pdp' });
+    pm?.markCopyContact?.(productSlug, { source: 'pdp' });
+  }
+};
+
+const openWA = (e) => {
+  if (!waLink && !telDigits) return;
+  e.preventDefault();
+
+  // 💬 record BEFORE navigation
+  if (productSlug) {
+    postProductEvent(productSlug, 'whatsapp_click', { source: 'pdp' });
+    pm?.markWhatsAppClick?.(productSlug, { source: 'pdp' });
+  }
+  onWhatsApp?.(); // keeps your single contact_click
+
+  const prefill = `Hi, I'm interested in "${
+    (typeof document !== 'undefined' && document.title) || 'your item'
+  }". I will pay via Upfrica SafePay.`;
+
+  const base =
+    waLink && !waLink.includes('text=')
+      ? `${waLink}${waLink.includes('?') ? '&' : '?'}text=${encodeURIComponent(prefill)}`
+      : waLink || `https://wa.me/${telDigits}?text=${encodeURIComponent(prefill)}`;
+
+  const native = `whatsapp://send?phone=${encodeURIComponent(telDigits || '')}&text=${encodeURIComponent(prefill)}`;
+
+  let usedNative = false;
+  let timer;
+  try {
+    location.href = native;
+    usedNative = true;
+    timer = window.setTimeout(() => {
+      if (usedNative) window.open(base, '_blank', 'noopener,noreferrer');
+    }, 600);
+  } catch {
+    window.open(base, '_blank', 'noopener,noreferrer');
+  }
+  window.addEventListener('pagehide', () => timer && clearTimeout(timer), { once: true });
+};
+
+const handleCallClick = () => {
+  // ☎️ record BEFORE tel: navigation
+  if (productSlug) {
+    postProductEvent(productSlug, 'phone_click', { source: 'pdp' });
+    pm?.markPhoneClick?.(productSlug, { source: 'pdp' });
+  }
+  onCall?.(); // also logs your one-time contact_click
+};
+
 
   // Auto-open once after login (parent hint)
   useEffect(() => {
@@ -365,7 +403,7 @@ export default function ContactSellerCard({
               {telHref ? (
                 <a
                   href={telHref}
-                  onClick={onCall}
+                  onClick={handleCallClick}
                   className="py-2 rounded-full text-center text-white bg-violet-600 hover:bg-violet-700
                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2"
                   data-testid="call-cta"
@@ -435,7 +473,13 @@ export default function ContactSellerCard({
             <div className="mt-4 grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => { if (dontShow) snoozeSafety(); setSafetyOpen(false); onBuySafely?.(); }}
+                onClick={() => {
+                  if (dontShow) snoozeSafety();
+                  setSafetyOpen(false);
+                  // 🛒 metrics: primary buy from safety sheet
+                  if (productSlug) pm?.markPrimaryBuyClick?.(productSlug, { source: 'contact_sheet' });
+                  onBuySafely?.();
+                }}
                 className="h-12 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700
                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2"
               >

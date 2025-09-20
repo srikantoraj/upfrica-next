@@ -69,7 +69,13 @@ const normalizeFromApi = (it) => ({
   primary: !!it.is_main,
 });
 
-export default function PhotosSection({ productId, ensureProductId }) {
+export default function PhotosSection({
+  productId,
+  ensureProductId,
+  onCountChange,  // <-- new optional callbacks
+  onUploaded,
+  onRemoved,
+}) {
   const [images, setImages] = useState([]);
   const [pid, setPid] = useState(productId ?? null);
   const hasProduct = useMemo(() => pid != null, [pid]);
@@ -77,6 +83,15 @@ export default function PhotosSection({ productId, ensureProductId }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
+
+  // small helper to emit count safely
+  const emitCount = useCallback(
+    (arrOrLen) => {
+      const n = Array.isArray(arrOrLen) ? arrOrLen.length : Number(arrOrLen || 0);
+      onCountChange?.(n);
+    },
+    [onCountChange]
+  );
 
   useEffect(() => {
     if (productId != null) setPid(productId);
@@ -96,13 +111,17 @@ export default function PhotosSection({ productId, ensureProductId }) {
         const data = await r.json();
         const list = Array.isArray(data) ? data : data.results || [];
         const mapped = list.map(normalizeFromApi).filter((it) => it.url);
-        if (!cancelled) setImages(mapped);
+        if (!cancelled) {
+          setImages(mapped);
+          emitCount(mapped); // tell parent initial count
+        }
       } catch {}
     })();
-    return () => {
-      cancelled = true;
-    };
-  }, [hasProduct, pid]);
+    return () => { cancelled = true; };
+  }, [hasProduct, pid, emitCount]);
+
+  // Safety net: if length changes for any reason, emit count
+  useEffect(() => { emitCount(images.length); }, [images.length, emitCount]);
 
   const handleUploaded = useCallback((imgObjOrUrl) => {
     if (imgObjOrUrl && typeof imgObjOrUrl === "object") {
@@ -118,12 +137,14 @@ export default function PhotosSection({ productId, ensureProductId }) {
         }
         return [...imgs, { id: realId, url, primary: !!imgObjOrUrl.is_main }];
       });
+      onUploaded?.();
       return;
     }
     if (typeof imgObjOrUrl === "string" && imgObjOrUrl) {
       setImages((imgs) => [...imgs, { id: Date.now(), url: imgObjOrUrl, primary: imgs.length === 0 }]);
+      onUploaded?.();
     }
-  }, []);
+  }, [onUploaded]);
 
   // Attach using the field the serializer expects: external_url ✅
   async function attachImageUrl(productId, publicUrl) {
@@ -133,8 +154,7 @@ export default function PhotosSection({ productId, ensureProductId }) {
       credentials: "include",
       body: JSON.stringify({
         product: productId,
-        external_url: publicUrl,     // 👈 key fix
-        // is_main: false,            // optional
+        external_url: publicUrl,
       }),
     });
 
@@ -163,73 +183,66 @@ export default function PhotosSection({ productId, ensureProductId }) {
   }
 
   // Upload flow: presign -> S3 upload -> attach (external_url)
-// REPLACE your onPickImages with this version
-async function onPickImages(e) {
-  setError("");
-  const files = Array.from(e.target.files || []).filter((f) => /^image\//i.test(f.type));
-  e.target.value = "";
-  if (!files.length) return;
+  async function onPickImages(e) {
+    setError("");
+    const files = Array.from(e.target.files || []).filter((f) => /^image\//i.test(f.type));
+    e.target.value = "";
+    if (!files.length) return;
 
-  try {
-    setUploading(true);
+    try {
+      setUploading(true);
 
-    const id =
-      pid ?? (typeof ensureProductId === "function" ? await ensureProductId() : null);
-    if (id == null) throw new Error("No product id available");
-    if (pid == null) setPid(id);
+      const id = pid ?? (typeof ensureProductId === "function" ? await ensureProductId() : null);
+      if (id == null) throw new Error("No product id available");
+      if (pid == null) setPid(id);
 
-    // --- FIX 1: only the first temp is primary when list is empty
-    const startLen = images.length;
-    const tempEntries = files.slice(0, 10).map((f, idx) => {
-      const tempId = Date.now() + Math.random();
-      return {
-        id: tempId,
+      // Only first temp is primary when list is empty
+      const startLen = images.length;
+      const tempEntries = files.slice(0, 10).map((f, idx) => ({
+        id: Date.now() + Math.random(),
         url: URL.createObjectURL(f),
         primary: startLen === 0 && idx === 0,
         _temp: true,
-      };
-    });
-    setImages((prev) => [...prev, ...tempEntries]);
+      }));
 
-    // Upload sequentially and replace each temp in-place when saved
-    for (let i = 0; i < files.length; i += 1) {
-      const f = files[i];
-      const tempId = tempEntries[i].id;
-
-      const sig = await presignProductUpload(id, f);
-      const publicUrl = await uploadWithSignature(sig, f);
-
-      // Attach (uses external_url)
-      const saved = await attachImageUrl(id, publicUrl);
-      const savedUrl = saved.image_url || saved.external_url || saved.image || "";
-
-      // --- FIX 2: replace the corresponding temp instead of appending a new item
       setImages((prev) => {
-        const idx = prev.findIndex((x) => x.id === tempId);
-        if (idx !== -1) {
-          const wasPrimary = !!prev[idx].primary;
-          const next = prev.slice();
-          next[idx] = {
-            id: Number(saved.id),
-            url: savedUrl,
-            primary: saved.is_main ?? wasPrimary,
-          };
-          return next;
-        }
-        // fallback: avoid duplicates if temp not found for any reason
-        if (prev.some((x) => x.id === Number(saved.id) || x.url === savedUrl)) return prev;
-        return [...prev, { id: Number(saved.id), url: savedUrl, primary: !!saved.is_main }];
+        const next = [...prev, ...tempEntries];
+        emitCount(next);          // optimistic count
+        return next;
       });
 
-      // optional: free the blob preview
-      try { URL.revokeObjectURL(tempEntries[i].url); } catch {}
+      // Upload sequentially and replace each temp when saved
+      for (let i = 0; i < files.length; i += 1) {
+        const f = files[i];
+        const tempId = tempEntries[i].id;
+
+        const sig = await presignProductUpload(id, f);
+        const publicUrl = await uploadWithSignature(sig, f);
+
+        const saved = await attachImageUrl(id, publicUrl);
+        const savedUrl = saved.image_url || saved.external_url || saved.image || "";
+
+        setImages((prev) => {
+          const idx = prev.findIndex((x) => x.id === tempId);
+          if (idx !== -1) {
+            const wasPrimary = !!prev[idx].primary;
+            const next = prev.slice();
+            next[idx] = { id: Number(saved.id), url: savedUrl, primary: saved.is_main ?? wasPrimary };
+            return next;
+          }
+          if (prev.some((x) => x.id === Number(saved.id) || x.url === savedUrl)) return prev;
+          return [...prev, { id: Number(saved.id), url: savedUrl, primary: !!saved.is_main }];
+        });
+
+        onUploaded?.();           // notify parent for its own refresh logic
+        try { URL.revokeObjectURL(tempEntries[i].url); } catch {}
+      }
+    } catch (err) {
+      setError(err?.message || "Upload failed");
+    } finally {
+      setUploading(false);
     }
-  } catch (err) {
-    setError(err?.message || "Upload failed");
-  } finally {
-    setUploading(false);
   }
-}
 
   async function handleSetPrimary(id) {
     const prev = images.find((i) => i.primary);
@@ -254,7 +267,12 @@ async function onPickImages(e) {
         credentials: "include",
       });
     } catch {}
-    setImages((imgs) => imgs.filter((i) => i.id !== id));
+    setImages((prev) => {
+      const next = prev.filter((i) => i.id !== id);
+      emitCount(next);            // update count immediately
+      return next;
+    });
+    onRemoved?.();                // notify parent
   }
 
   async function handleDragEnd(event) {
@@ -279,10 +297,7 @@ async function onPickImages(e) {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          product: productIdToUse,
-          ordered_ids: newOrder,
-        }),
+        body: JSON.stringify({ product: productIdToUse, ordered_ids: newOrder }),
       });
       if (!res.ok) {
         const txt = await res.text().catch(() => "");

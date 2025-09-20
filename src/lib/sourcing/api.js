@@ -3,7 +3,6 @@ import axios from "@/lib/axiosInstance";
 
 const BASE = "/api/sourcing";
 
-/* ---------- helpers to keep guest mode frictionless ---------- */
 const ok = (s) => s >= 200 && s < 300;
 const authErr = (s) => s === 401 || s === 403;
 const emptyPage = () => ({ count: 0, next: null, previous: null, results: [] });
@@ -22,7 +21,6 @@ export const isAuthRequired = (e) =>
   authErr(e?.status) ||
   authErr(e?.response?.status);
 
-/* ------------------------ internals ------------------------- */
 function normalizeCc(cc) {
   return cc == null ? "" : String(cc).trim().toLowerCase();
 }
@@ -32,7 +30,7 @@ function withCountry(params = {}) {
   return cc ? { ...rest, deliver_to_country: cc } : rest;
 }
 
-/* ------------------------ guest-safe GET helpers ------------------------- */
+/* ---------------- guest-safe GET helpers ---------------- */
 async function safeGetPaginated(url, config) {
   const res = await axios.get(url, {
     withCredentials: true,
@@ -41,6 +39,7 @@ async function safeGetPaginated(url, config) {
   });
   if (ok(res.status)) return res.data;
   if (authErr(res.status)) return emptyPage();
+  if (res.status === 404) return emptyPage(); // ← treat “not found” as end of list
   throw new Error(res?.data?.detail || res.statusText || "Request failed");
 }
 async function safeGetOne(url, config) {
@@ -51,6 +50,7 @@ async function safeGetOne(url, config) {
   });
   if (ok(res.status)) return res.data;
   if (authErr(res.status)) return null;
+  if (res.status === 404) return null;
   throw new Error(res?.data?.detail || res.statusText || "Request failed");
 }
 
@@ -76,7 +76,7 @@ export async function listOpenRequests(params = {}) {
   const {
     page = 1,
     page_size = 12,
-    pageSize, // tolerate either
+    pageSize,
     ordering = "-created_at",
     ...rest
   } = params;
@@ -99,7 +99,7 @@ export async function listPublicOpenRequests(params = {}) {
   const {
     page = 1,
     page_size = 12,
-    pageSize, // tolerate either
+    pageSize,
     ordering = "-created_at",
     ...rest
   } = params;
@@ -123,6 +123,7 @@ export async function listPublicOpenRequests(params = {}) {
   });
 
   if (res.status === 401 || res.status === 403) return emptyPage();
+  if (res.status === 404) return emptyPage(); // ← stop error banner / loops
   if (!res.ok) throw new Error(`public requests failed: ${res.status}`);
   return res.json();
 }
@@ -134,6 +135,8 @@ export async function myRequests(params = {}) {
 export async function getRequest(id) {
   return safeGetOne(`${BASE}/requests/${encodeURIComponent(id)}/`);
 }
+
+
 
 /* ------------------------------ Offers ------------------------------ */
 export async function createOffer(payload) {

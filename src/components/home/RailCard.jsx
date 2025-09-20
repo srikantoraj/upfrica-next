@@ -1,8 +1,9 @@
 // components/home/RailCard.jsx
-import Image from "next/image";
+import SafeImage from "@/components/common/SafeImage";
 
 export default function RailCard({ cc, item, currency, currencySymbol }) {
   if (!item) return null;
+
   const showDiscount =
     Number.isFinite(item.compareAt) && item.compareAt > item.price;
   const pct = showDiscount
@@ -16,16 +17,14 @@ export default function RailCard({ cc, item, currency, currencySymbol }) {
         className="group block h-[460px] rounded-2xl border border-[var(--line)] bg-white hover:shadow-sm overflow-hidden flex flex-col"
       >
         <div className="relative aspect-square">
-          <Image
-            src={item.image}
-            alt=""
-            aria-hidden="true"
+          <SafeImage
+            src={item.image || process.env.NEXT_PUBLIC_FALLBACK_IMAGE || "/placeholder.png"}
+            alt={item.title || "Product image"}
             fill
             sizes="(max-width:768px) 60vw, 224px"
             className="object-cover transition-transform group-hover:scale-[1.01]"
             loading="lazy"
-            decoding="async"
-            draggable={false}
+            quality={75}
           />
         </div>
 
@@ -77,7 +76,12 @@ function formatMoney(n, currency = "USD", symbol) {
   const sym =
     symbol || ({ GHS: "GH₵", NGN: "₦", GBP: "£", USD: "$", EUR: "€" }[currency] || "");
   const amount = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
-  return sym ? `${sym}${amount}` : new Intl.NumberFormat(undefined, {
-    style: "currency", currency, currencyDisplay: "narrowSymbol", maximumFractionDigits: 0
-  }).format(n);
+  return sym
+    ? `${sym}${amount}`
+    : new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency,
+        currencyDisplay: "narrowSymbol",
+        maximumFractionDigits: 0,
+      }).format(n);
 }

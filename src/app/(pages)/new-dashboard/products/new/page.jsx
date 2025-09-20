@@ -1,4 +1,3 @@
-// src/app/(pages)/new-dashboard/products/new/page.jsx
 "use client";
 
 import { useEffect, useRef, useState, useMemo } from "react";
@@ -7,6 +6,7 @@ import PhotosSection from "@/components/PhotosSection";
 import CategoryField from "@/components/category/CategoryField";
 import BrandField from "@/components/brand/BrandField";
 import { useAuthSheet } from "@/components/auth/AuthSheetProvider";
+import OverlayPageFrame from "@/components/ui/OverlayPageFrame";
 
 const DRAFT_META_KEY = "upfrica:newProductDraftMeta";
 const DRAFT_FORM_KEY = "upfrica:newProductDraftForm";
@@ -36,8 +36,8 @@ export default function NewProductPage() {
 
   // ---------- brand (optional; typeahead) ----------
   const [brandInput, setBrandInput] = useState("");
-  const [brandOptions, setBrandOptions] = useState([]); // [{name, slug}]
-  const [brandResolved, setBrandResolved] = useState(null); // {name, slug} or null
+  const [brandOptions, setBrandOptions] = useState([]);
+  const [brandResolved, setBrandResolved] = useState(null);
   const [brandErr, setBrandErr] = useState("");
   const chosenBrand = useMemo(() => {
     const hit = brandOptions.find(
@@ -49,6 +49,7 @@ export default function NewProductPage() {
   }, [brandInput, brandOptions]);
 
   // ---------- images (for publish gating) ----------
+  const [uploaderCount, setUploaderCount] = useState(0);
   const [imageCount, setImageCount] = useState(0);
 
   // ---------- draft bookkeeping ----------
@@ -147,7 +148,7 @@ export default function NewProductPage() {
         const data = await r.json().catch(() => ({}));
         const list = Array.isArray(data) ? data : data.results || [];
         setBrandOptions(
-          list.map((b) => ({ name: b?.name || b?.label || "", slug: b?.slug || "" }))
+          list.map((b) => ({ id: b?.id, name: b?.name || b?.label || "", slug: b?.slug || "" }))
               .filter((b) => b.name || b.slug)
               .slice(0, 20)
         );
@@ -186,28 +187,35 @@ export default function NewProductPage() {
 
     if (categoryId) fd.append("category", String(categoryId));
 
-    if (brandInput.trim()) {
-      const slug = brandResolved?.slug || "";
-      fd.append("brand", slug || brandInput.trim());
-      fd.append("brand_slug", slug);
-      fd.append("brand_name", brandInput.trim());
+    const inputName = (brandInput || "").trim();
+    const brandId = Number(brandResolved?.id);
+    if (Number.isFinite(brandId) && brandId > 0) {
+      fd.append("brand", String(brandId));
+    } else {
+      if (inputName) fd.append("brand_name", inputName);
+      const slug = (brandResolved?.slug || "").trim();
+      if (slug) fd.append("brand_slug", slug);
     }
 
     return fd;
   }
 
-  function getMissing() {
+  function getMissingBasics() {
     const m = [];
     if (!title.trim()) m.push("Title");
     if (priceMajor === "" || isNaN(Number(priceMajor)) || Number(priceMajor) <= 0) m.push("Price");
     if (!categoryId) m.push("Category");
     if (!condition) m.push("Condition");
     if (asInt(quantity, 0) <= 0) m.push("Quantity");
-    if (imageCount < 2) m.push("At least 2 photos");
+    return m;
+  }
+  function getMissingFull() {
+    const m = getMissingBasics();
+    const photos = Math.max(uploaderCount, imageCount);
+    if (photos < 2) m.push("At least 2 photos");
     return m;
   }
 
-  // ---------- create / update draft ----------
   async function createDraft(auto = false) {
     const res = await fetch(`/api/products/`, {
       method: "POST",
@@ -229,6 +237,7 @@ export default function NewProductPage() {
     const product = await res.json();
     if (product?.id != null) setDraftId(Number(product.id));
     if (product?.u_pid) setUPid(String(product.u_pid));
+    try { router.prefetch(`/new-dashboard/products/editor?id=${product.id}&step=media`); } catch {}
     return product;
   }
 
@@ -250,7 +259,9 @@ export default function NewProductPage() {
       const txt = await res.text().catch(() => "");
       throw new Error(`update failed ${res.status} ${txt}`);
     }
-    return await res.json();
+    const product = await res.json();
+    try { router.prefetch(`/new-dashboard/products/editor?id=${product.id || draftId}&step=media`); } catch {}
+    return product;
   }
 
   function clearPersisted() {
@@ -264,31 +275,32 @@ export default function NewProductPage() {
 
     try {
       if (!auto) {
-        const probs = getMissing();
+        const probs = getMissingBasics();
         if (probs.length) throw new Error(probs.join("\n"));
       }
 
       let product;
-      if (!draftId) {
-        product = await createDraft(auto);
-      } else {
-        try {
-          product = await patchDraft(auto);
-        } catch (err) {
-          if (String(err?.message || "").includes("update failed 404")) {
-            product = await createDraft(auto);
-          } else {
-            throw err;
-          }
+      if (!draftId) product = await createDraft(auto);
+      else {
+        try { product = await patchDraft(auto); }
+        catch (err) {
+          if (String(err?.message || "").includes("update failed 404")) product = await createDraft(auto);
+          else throw err;
         }
       }
 
       setLastSaved(new Date());
 
       if (!auto) {
-        router.push(`/new-dashboard/products/editor?id=${product.id}`);
-        clearPersisted();
+        const id = Number(product?.id ?? draftId);
+        if (Number.isFinite(id) && id > 0) {
+          setTimeout(() => router.push(`/new-dashboard/products/editor?id=${id}&step=media`), 0);
+          clearPersisted();
+        } else {
+          console.warn("Save succeeded but no product id found; staying on page.", product);
+        }
       }
+
       return product;
     } catch (err) {
       console.error(err);
@@ -302,7 +314,6 @@ export default function NewProductPage() {
     }
   }
 
-  // ensure id for uploader
   async function ensureDraftId() {
     if (draftId) return draftId;
     if (ensureDraftPromiseRef.current) return await ensureDraftPromiseRef.current;
@@ -318,14 +329,10 @@ export default function NewProductPage() {
       throw new Error("Could not create draft (check auth and required fields)");
     })();
 
-    try {
-      return await ensureDraftPromiseRef.current;
-    } finally {
-      ensureDraftPromiseRef.current = null;
-    }
+    try { return await ensureDraftPromiseRef.current; }
+    finally { ensureDraftPromiseRef.current = null; }
   }
 
-  // ---------- image count refresh helper ----------
   async function refreshImageCount(id = draftId) {
     if (!id) return;
     try {
@@ -336,40 +343,75 @@ export default function NewProductPage() {
       if (!r.ok) return;
       const data = await r.json().catch(() => ({}));
       const count =
-        typeof data?.count === "number"
-          ? data.count
-          : Array.isArray(data)
-          ? data.length
-          : (data?.results || []).length;
+        typeof data?.count === "number" ? data.count :
+        Array.isArray(data) ? data.length :
+        (data?.results || []).length;
       setImageCount(Number(count) || 0);
     } catch {}
   }
 
-  // initial load once we have a draft id
   useEffect(() => {
-    if (draftId) refreshImageCount(draftId);
-  }, [draftId]);
+    if (draftId) {
+      refreshImageCount(draftId);
+      try { router.prefetch(`/new-dashboard/products/editor?id=${draftId}&step=media`); } catch {}
+    }
+  }, [draftId, router]);
 
-  // refresh when tab regains focus (uploads may finish elsewhere)
   useEffect(() => {
     const onVis = () => { if (document.visibilityState === "visible") refreshImageCount(); };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
-  const missing = getMissing();
-  const canPublish = missing.length === 0 && !saving;
+  const missingBasics = getMissingBasics();
+  const canContinue = missingBasics.length === 0 && !saving;
 
-  // ---------- UI ----------
-  return (
-    <main className="p-4 md:p-8 max-w-3xl mx-auto bg-gray-50 dark:bg-gray-950 min-h-[100svh] pb-40 md:pb-28">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold dark:text-gray-200">Add Product</h1>
-        <span className="text-xs rounded-full px-3 py-1 border bg-white/70 dark:bg-gray-900/60 dark:text-gray-300">
-          {saving ? "Autosave • Saving…" : lastSaved ? `Autosave • Saved ${lastSaved.toLocaleTimeString()}` : "Autosave • On"}
+  // Header right pill
+  const headerRight = (
+    <span className="text-[11px] rounded-full px-2 py-1 border bg-white/70 dark:bg-gray-900/60 dark:text-gray-300">
+      {saving ? "Autosave • Saving…" : lastSaved ? `Autosave • Saved ${lastSaved.toLocaleTimeString()}` : "Autosave • On"}
+    </span>
+  );
+
+  // Footer (sheet’s sticky)
+  const footer = (
+    <div className="flex items-center justify-between gap-3">
+      {lastSaved && <span className="text-xs text-gray-500">Saved {lastSaved.toLocaleTimeString()}</span>}
+      {!canContinue && (
+        <span className="hidden sm:block text-xs text-amber-500">
+          Finish: {missingBasics.join(" · ")}
         </span>
+      )}
+      <div className="flex gap-3">
+        <button
+          onClick={() => createOrUpdate(true)}
+          disabled={saving}
+          className="px-4 py-2 rounded-md border bg-white dark:bg-gray-900"
+        >
+          {saving ? "Saving…" : "Save Draft"}
+        </button>
+        <button
+          type="button"
+          onClick={() => createOrUpdate(false)}
+          disabled={!canContinue}
+          aria-disabled={!canContinue}
+          className={`px-4 py-2 rounded-md text-white ${canContinue ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"}`}
+          title={!canContinue ? `Finish first: ${missingBasics.join(", ")}` : "Open the full editor"}
+        >
+          Continue to editor
+        </button>
       </div>
+    </div>
+  );
 
+  return (
+    <OverlayPageFrame
+      title="Add Product"
+      right={headerRight}
+      footer={footer}
+      onClose={() => router.push("/new-dashboard/products")}
+      maxWidth="max-w-3xl"
+    >
       {error && <p className="mb-4 whitespace-pre-wrap text-red-500">{error}</p>}
 
       <div className="space-y-6">
@@ -397,9 +439,21 @@ export default function NewProductPage() {
           <PhotosSection
             productId={draftId ?? undefined}
             ensureProductId={ensureDraftId}
-            onCountChange={(n) => setImageCount(asInt(n, 0))}
-            onUploaded={() => setImageCount((c) => c + 1)}
-            onRemoved={() => setImageCount((c) => Math.max(0, c - 1))}
+            onCountChange={(n) => {
+              const c = asInt(n, 0);
+              setUploaderCount(c);
+              setImageCount((prev) => (c > prev ? c : prev));
+            }}
+            onUploaded={() => {
+              setUploaderCount((c) => c + 1);
+              setImageCount((c) => c + 1);
+              setTimeout(() => refreshImageCount(), 800);
+            }}
+            onRemoved={() => {
+              setUploaderCount((c) => Math.max(0, c - 1));
+              setImageCount((c) => Math.max(0, c - 1));
+              setTimeout(() => refreshImageCount(), 400);
+            }}
           />
           <p className="mt-2 text-xs text-gray-500">
             Tip: long-press and drag to reorder; tap star to set as primary. You’ll need at least <strong>2 photos</strong> to publish.
@@ -483,52 +537,15 @@ export default function NewProductPage() {
             autosave={() => createOrUpdate(true)}
           />
 
-          {/* Progress hint (mobile, below fields) */}
-          {!canPublish && (
+          {!canContinue && (
             <div className="md:col-span-2 md:hidden">
               <div className="mt-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 dark:text-amber-300 dark:bg-amber-900/20 dark:border-amber-800 rounded-md px-3 py-2">
-                <span className="font-medium">Finish:</span> {missing.join(" · ")}
+                <span className="font-medium">Finish:</span> {missingBasics.join(" · ")}
               </div>
             </div>
           )}
         </div>
       </div>
-
-      {/* Sticky footer */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white/90 dark:bg-gray-900/90 backdrop-blur px-4 py-3 pb-[env(safe-area-inset-bottom)]">
-        <div className="mx-auto max-w-3xl flex items-center justify-between gap-3">
-          {lastSaved && <span className="text-xs text-gray-500">Saved {lastSaved.toLocaleTimeString()}</span>}
-
-          {/* readiness hint (desktop) */}
-          {!canPublish && (
-            <span className="hidden md:block text-xs text-amber-500">
-              Finish: {missing.join(" · ")}
-            </span>
-          )}
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => createOrUpdate(true)}
-              disabled={saving}
-              className="px-4 py-2 rounded-md border bg-white dark:bg-gray-900"
-            >
-              {saving ? "Saving…" : "Save Draft"}
-            </button>
-
-            <button
-              onClick={() => createOrUpdate(false)}
-              disabled={!canPublish}
-              aria-disabled={!canPublish}
-              className={`px-4 py-2 rounded-md text-white ${
-                canPublish ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
-              }`}
-              title={!canPublish ? `Finish first: ${missing.join(", ")}` : "Submit your listing for review"}
-            >
-              Publish for approval
-            </button>
-          </div>
-        </div>
-      </div>
-    </main>
+    </OverlayPageFrame>
   );
 }
