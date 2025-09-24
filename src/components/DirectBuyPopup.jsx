@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import axiosInstance from "@/lib/axiosInstance";
 import { HiXMark } from "react-icons/hi2";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,10 @@ import { useSelector } from "react-redux";
 // ✅ same image path used in Slider & Basket
 import SafeImage, { fixDisplayUrl } from "@/components/common/SafeImage";
 import { FALLBACK_IMAGE } from "@/lib/image";
+
+// ✅ localization / FX
+import { useLocalization } from "@/contexts/LocalizationProvider";
+import { symbolFor } from "@/lib/pricing-mini";
 
 /* ---------- tiny helpers ---------- */
 
@@ -25,32 +29,22 @@ const LoadingDots = ({ color = "white" }) => {
 
 /* ---------- image helpers (mirrors BasketSheet) ---------- */
 
-// Clean → display URL
 const toDisplayUrl = (raw) =>
   (typeof raw === "string" && raw.trim() ? fixDisplayUrl(raw) : FALLBACK_IMAGE) || FALLBACK_IMAGE;
 
-// Pull a usable URL out of a list of media objects/strings
 const pickFromMediaList = (list) => {
   for (const it of list || []) {
     if (!it) continue;
     if (typeof it === "string" && it.trim()) return it;
     const u =
-      it.image_url ||
-      it.url ||
-      it.src ||
-      it.secure_url ||
-      it.path ||
-      it.thumbnail ||
-      it.image;
+      it.image_url || it.url || it.src || it.secure_url || it.path || it.thumbnail || it.image;
     if (typeof u === "string" && u.trim()) return u;
   }
   return null;
 };
 
-// Resolve a product's primary image from many shapes
 const resolvePrimaryImage = (p) => {
   if (!p) return "";
-  // single-value candidates first
   const singles = [
     p.card_image,
     p.card_image_url,
@@ -61,10 +55,8 @@ const resolvePrimaryImage = (p) => {
     p.product_image,
     p.product_image_url,
   ];
-  for (const v of singles) {
-    if (typeof v === "string" && v.trim()) return v;
-  }
-  // array-shaped media
+  for (const v of singles) if (typeof v === "string" && v.trim()) return v;
+
   const arrays = [
     p.product_images,
     p.images,
@@ -84,23 +76,69 @@ const resolvePrimaryImage = (p) => {
   return "";
 };
 
+/* ---------- currency / FX helpers ---------- */
+
+const currencyOf = (p) =>
+  String(
+    p?.price_currency ??
+      p?.currency ??
+      p?.seller_currency ??
+      p?.sellerCurrency ??
+      "USD"
+  ).toUpperCase();
+
+const amountOnly = (n, currency, locale = "en") => {
+  try {
+    const parts = new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).formatToParts(Number(n || 0));
+    return parts.filter((p) => p.type !== "currency").map((p) => p.value).join("").trim();
+  } catch {
+    return Number(n || 0).toFixed(2);
+  }
+};
+
+const convMajorSafe = (major, fromCcy, convert, toCcy) => {
+  const n = Number(major || 0);
+  const src = String(fromCcy || "USD").toUpperCase();
+  const dst = String(toCcy || src).toUpperCase();
+  if (!convert || src === dst) return n;
+  const out = Number(convert(n, src, dst));
+  return Number.isFinite(out) && out >= 0 ? out : n;
+};
+
 /* ---------- component ---------- */
 
 export default function DirectBuyPopup({
   selectedAddressId,
-  setSelectedAddressId, // required from parent
+  setSelectedAddressId,
   isAddressLoading,
   addresses,
   product,
   isVisible,
   onClose,
   quantity,
-  relatedProducts = [],
 }) {
   const router = useRouter();
   const { token } = useSelector((s) => s.auth) || {};
 
-  const [paymentMethod, setPaymentMethod] = useState("paystack");
+  // Deliver-to prefs
+  const { country: uiCountry, currency: uiCurrency, convert, resolvedLanguage } = useLocalization();
+  const isGH = String(uiCountry || "").trim().toLowerCase().startsWith("gh");
+  const symbol = useMemo(
+    () => symbolFor(uiCurrency || "USD", resolvedLanguage || "en") || "₵",
+    [uiCurrency, resolvedLanguage]
+  );
+
+  // Auto-decide payment method (no radios shown)
+  const [paymentMethod, setPaymentMethod] = useState(isGH ? "paystack" : "stripe");
+  useEffect(() => {
+    setPaymentMethod(isGH ? "paystack" : "stripe");
+  }, [isGH]);
+
   const [acceptedPolicy, setAcceptedPolicy] = useState(true);
   const [isConfirmLoading, setIsConfirmLoading] = useState(false);
   const [error, setError] = useState("");
@@ -110,11 +148,11 @@ export default function DirectBuyPopup({
     id: product?.id,
     image: toDisplayUrl(resolvePrimaryImage(product)),
     title: product?.title || "",
-    price: product?.price_cents || 0,
-    currency: product?.price_currency || "GHS",
+    price: product?.price_cents || 0, // cents (seller currency)
+    currency: product?.price_currency || "USD",
   });
 
-  // keep data fresh each open
+  // refresh per open
   useEffect(() => {
     if (!isVisible) return;
     setDirectBuyQuantity(quantity);
@@ -123,18 +161,16 @@ export default function DirectBuyPopup({
       image: toDisplayUrl(resolvePrimaryImage(product)),
       title: product?.title || "",
       price: product?.price_cents || 0,
-      currency: product?.price_currency || "GHS",
+      currency: product?.price_currency || "USD",
     });
   }, [isVisible, quantity, product]);
 
-  // 🧊 prevent background scroll + close on ESC
+  // prevent background scroll + ESC close
   useEffect(() => {
     if (!isVisible) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (e) => {
-      if (e.key === "Escape") onClose?.();
-    };
+    const onKey = (e) => e.key === "Escape" && onClose?.();
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
@@ -145,6 +181,29 @@ export default function DirectBuyPopup({
   const decrementQuantity = () =>
     setDirectBuyQuantity((prev) => (prev > 1 ? prev - 1 : 1));
   const incrementQuantity = () => setDirectBuyQuantity((prev) => prev + 1);
+
+  /* ---------- price / totals in UI currency ---------- */
+
+  const sellerCcy = currencyOf(product);
+
+  const unitPriceMajorUI = useMemo(
+    () => convMajorSafe((selectedProduct.price || 0) / 100, sellerCcy, convert, uiCurrency),
+    [selectedProduct.price, sellerCcy, convert, uiCurrency]
+  );
+
+  const postageMajorUI = useMemo(() => {
+    const cents = Number(product?.postage_fee_cents);
+    if (!Number.isFinite(cents)) return 0;
+    const baseCcy = product?.postage_fee_currency || sellerCcy;
+    return convMajorSafe(cents / 100, baseCcy, convert, uiCurrency);
+  }, [product?.postage_fee_cents, product?.postage_fee_currency, sellerCcy, convert, uiCurrency]);
+
+  const totalMajorUI = useMemo(
+    () => unitPriceMajorUI * directBuyQuantity + postageMajorUI,
+    [unitPriceMajorUI, directBuyQuantity, postageMajorUI]
+  );
+
+  /* ---------- confirm purchase ---------- */
 
   const handleConfirmPurchase = async () => {
     setError("");
@@ -165,7 +224,7 @@ export default function DirectBuyPopup({
           product: selectedProduct.id,
           quantity: directBuyQuantity,
           address: selectedAddressId,
-          payment_method_id: paymentMethod,
+          payment_method_id: paymentMethod, // paystack for GH, stripe otherwise
         },
         {
           withCredentials: true,
@@ -222,10 +281,6 @@ export default function DirectBuyPopup({
     return "N/A";
   })();
 
-  const totalCharge =
-    (selectedProduct.price / 100) * directBuyQuantity +
-    (product?.postage_fee_cents || 0) / 100;
-
   return (
     <div aria-modal="true" role="dialog" aria-label="Buy Now" className="fixed inset-0 z-[100]">
       {/* Overlay */}
@@ -280,17 +335,18 @@ export default function DirectBuyPopup({
               {selectedProduct.title}
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-              ₵{(selectedProduct.price / 100).toFixed(2)}
+              {symbol}
+              {amountOnly(unitPriceMajorUI, uiCurrency, resolvedLanguage)}
             </p>
 
             <div className="mt-2 inline-flex items-center rounded-md border border-gray-300 dark:border-gray-700 overflow-hidden">
-              <button onClick={decrementQuantity} className="w-9 h-8 text-lg">
+              <button onClick={decrementQuantity} className="w-9 h-8 text-lg" aria-label="Decrease quantity">
                 −
               </button>
-              <div className="min-w-[2.75rem] h-8 flex items-center justify-center border-l border-r border-gray-300 dark:border-gray-700 text-sm font-semibold">
+              <div className="min-w-[2.75rem] h-8 flex items-center justify-center border-l border-r border-gray-300 dark:border-gray-700 text-sm font-semibold" aria-live="polite">
                 {directBuyQuantity}
               </div>
-              <button onClick={incrementQuantity} className="w-9 h-8 text-lg">
+              <button onClick={incrementQuantity} className="w-9 h-8 text-lg" aria-label="Increase quantity">
                 +
               </button>
             </div>
@@ -306,8 +362,8 @@ export default function DirectBuyPopup({
             <p>
               Delivery Charges:{" "}
               <span className="font-medium">
-                {product?.postage_fee_cents
-                  ? `₵${(product.postage_fee_cents / 100).toFixed(2)}`
+                {Number(product?.postage_fee_cents) > 0
+                  ? `${symbol}${amountOnly(postageMajorUI, uiCurrency, resolvedLanguage)}`
                   : "Free"}
               </span>
             </p>
@@ -325,33 +381,12 @@ export default function DirectBuyPopup({
             </div>
           )}
 
-          {/* payment */}
-          <div>
-            <p className="text-sm font-medium mb-2">Payment Method</p>
-            <div className="flex gap-6">
-              <label className="inline-flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="stripe"
-                  checked={paymentMethod === "stripe"}
-                  onChange={() => setPaymentMethod("stripe")}
-                />
-                <span>Stripe</span>
-              </label>
-              <label className="inline-flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="paystack"
-                  checked={paymentMethod === "paystack"}
-                  onChange={() => setPaymentMethod("paystack")}
-                />
-                <span>Paystack</span>
-              </label>
-            </div>
-          </div>
-
           <p className="text-sm">
-            Total Charges: <span className="font-semibold">₵{totalCharge.toFixed(2)}</span>
+            Total Charges:{" "}
+            <span className="font-semibold">
+              {symbol}
+              {amountOnly(totalMajorUI, uiCurrency, resolvedLanguage)}
+            </span>
           </p>
 
           <label className="flex items-start gap-2 text-sm">
@@ -386,7 +421,7 @@ export default function DirectBuyPopup({
         </div>
 
         {/* Sticky footer */}
-        <div className="px-4 md:px-6 pt-2">
+        <div className="px-4 md:px-6 pt-2 pb-3">
           <button
             onClick={handleConfirmPurchase}
             disabled={isConfirmLoading || !acceptedPolicy || !selectedAddressId}
@@ -394,18 +429,22 @@ export default function DirectBuyPopup({
           >
             {isConfirmLoading ? <LoadingDots color="white" /> : "Confirm Purchase"}
           </button>
+
+          {/* minimal payment hint (like screenshot) */}
+          <div className="mt-2 flex items-center justify-center gap-2 text-[11px] text-neutral-500 dark:text-neutral-400">
+            <span>🔒</span>
+            <span>{isGH ? "Upfrica SafePay — MoMo & Card" : "Upfrica SafePay — Card"}</span>
+            <span aria-hidden>•</span>
+            <span>{isGH ? "Paystack" : "Stripe"}</span>
+          </div>
         </div>
       </div>
 
       {/* slide-up keyframes */}
       <style jsx global>{`
         @keyframes slideUp {
-          from {
-            transform: translateY(100%);
-          }
-          to {
-            transform: translateY(0%);
-          }
+          from { transform: translateY(100%); }
+          to { transform: translateY(0%); }
         }
       `}</style>
     </div>

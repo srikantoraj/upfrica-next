@@ -67,7 +67,7 @@ function RelatedProducts({
   }
 
   if (!Array.isArray(relatedProducts) || relatedProducts.length === 0) {
-    return null; // stay quiet if nothing to show
+    return null;
   }
 
   // —— mobile scroller with smart chevrons
@@ -137,12 +137,7 @@ function RelatedProducts({
           onKeyDown={onKeyScroll}
         >
           {relatedProducts.map((p) => (
-            <div
-              key={p.id}
-              data-card
-              role="listitem"
-              className="snap-start basis-[66%] xs:basis-[58%] sm:basis-[46%] shrink-0"
-            >
+            <div key={p.id} data-card role="listitem" className="snap-start basis-[66%] xs:basis-[58%] sm:basis-[46%] shrink-0">
               <RelatedProductCard product={p} />
             </div>
           ))}
@@ -188,5 +183,4 @@ function RelatedProducts({
 }
 
 export default RelatedProducts;
-// Back-compat export so existing imports with the typo won’t break:
-export const RealtedProduct = RelatedProducts;
+export const RealtedProduct = RelatedProducts; // back-compat

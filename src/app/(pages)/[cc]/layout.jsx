@@ -4,6 +4,7 @@ import { isoToCc } from "@/lib/cc";
 import { api } from "@/lib/api";
 import { COUNTRY_META, fetchCategories } from "@/lib/home";
 
+import LocalizationProvider from "@/contexts/LocalizationProvider"; // ⬅️ add this
 import Header from "@/components/home/Header";
 import TopBar from "@/components/home/TopBar";
 import Footer from "@/components/home/Footer";
@@ -51,20 +52,22 @@ export default async function CountryLayout({ children, params: { cc } }) {
   const categories = await fetchCategories(country).catch(() => []);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header
-        cc={country}
-        countryCode={meta.code}
-        searchPlaceholder="Search products, brands, shops…"
-        deliverCity={deliverTo}
-        categories={categories}
-      />
-      <TopBar cc={country} country={meta.name} />
+    <LocalizationProvider routeCc={country}>
+      <div className="min-h-screen flex flex-col">
+        <Header
+          cc={country}
+          countryCode={meta.code}
+          searchPlaceholder="Search products, brands, shops…"
+          deliverCity={deliverTo}
+          categories={categories}
+        />
+        <TopBar cc={country} country={meta.name} />
 
-      <main className="flex-1">{children}</main>
+        <main className="flex-1">{children}</main>
 
-      <Footer cc={country} />
-      <BottomBar cc={country} />
-    </div>
+        <Footer cc={country} />
+        <BottomBar cc={country} />
+      </div>
+    </LocalizationProvider>
   );
 }

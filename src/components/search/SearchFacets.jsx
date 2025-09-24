@@ -3,6 +3,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
+import { useLocalization } from "@/contexts/LocalizationProvider";
 
 // small util to update URL params
 function useQueryUpdater() {
@@ -37,10 +38,15 @@ export default function SearchFacets({ cc, facets }) {
   const sp = useSearchParams();
   const setParams = useQueryUpdater();
 
+  // 🔗 Global localization state (for correct defaults/symbols)
+  const { country: deliverCountry, currency, symbolFor } = useLocalization();
+  const uiCcy = String(currency || "USD").toUpperCase();
+  const uiSymbol = symbolFor(uiCcy);
+
   // current selections from URL
   const brandSel  = sp.getAll("brand");
   const speedSel  = sp.getAll("delivery_speed");
-  const deliverTo = sp.get("deliver_to") || "";
+  const deliverToParam = sp.get("deliver_to") || "";
 
   const priceMin  = sp.get("price_min") || "";
   const priceMax  = sp.get("price_max") || "";
@@ -106,6 +112,14 @@ export default function SearchFacets({ cc, facets }) {
     setParams({ include_global: checked ? "1" : null });
   };
 
+  // Display cc label preference: URL param → localization.country → prop cc
+  const effectiveDeliverTo = String(
+    deliverToParam || deliverCountry || cc || "gh"
+  ).toUpperCase();
+
+  const showUseCountryShortcut =
+    !deliverToParam && deliverCountry && effectiveDeliverTo !== String(cc || "").toUpperCase();
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -125,7 +139,7 @@ export default function SearchFacets({ cc, facets }) {
             disabled={includeGlobal}
           />
           <span className="flex-1">
-            Deliverable to {String(deliverTo || cc || "gh").toUpperCase()}
+            Deliverable to {effectiveDeliverTo}
           </span>
           {availability.deliverableTotal > 0 && (
             <span className="text-[11px] text-[var(--ink-2)]">
@@ -158,32 +172,45 @@ export default function SearchFacets({ cc, facets }) {
       {/* Deliver to */}
       <div className="rounded-xl border border-[var(--line)] p-3">
         <div className="text-sm font-medium">Deliver to</div>
-        <input
-          type="text"
-          placeholder={(cc || "gh").toUpperCase()}
-          value={deliverTo}
-          onChange={(e) => setParams({ deliver_to: e.target.value })}
-          className="mt-2 w-full h-9 rounded-lg border border-[var(--line)] px-2 text-sm"
-        />
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            type="text"
+            placeholder={(deliverCountry || cc || "gh").toUpperCase()}
+            value={deliverToParam}
+            onChange={(e) => setParams({ deliver_to: e.target.value })}
+            className="flex-1 h-9 rounded-lg border border-[var(--line)] px-2 text-sm"
+          />
+          {/* Quick use-current-country helper */}
+          <button
+            type="button"
+            onClick={() => setParams({ deliver_to: (deliverCountry || cc || "gh").toUpperCase() })}
+            className="h-9 px-2 rounded-lg border border-[var(--line)] text-xs"
+            title="Use current deliver-to country"
+          >
+            Use {(deliverCountry || cc || "gh").toUpperCase()}
+          </button>
+        </div>
         <p className="text-[11px] text-[var(--ink-2)] mt-1">
           Improves ETA & shipping options.
         </p>
       </div>
 
-      {/* Price */}
+      {/* Price (in current UI currency) */}
       <div className="rounded-xl border border-[var(--line)] p-3">
-        <div className="text-sm font-medium">Price</div>
+        <div className="text-sm font-medium">
+          Price <span className="text-[11px] text-[var(--ink-2)]">(in {uiCcy})</span>
+        </div>
         <div className="mt-2 grid grid-cols-2 gap-2">
           <input
             inputMode="numeric"
-            placeholder="Min"
+            placeholder={`Min (${uiSymbol})`}
             value={min}
             onChange={(e) => setMin(e.target.value)}
             className="h-9 rounded-lg border border-[var(--line)] px-2 text-sm"
           />
           <input
             inputMode="numeric"
-            placeholder="Max"
+            placeholder={`Max (${uiSymbol})`}
             value={max}
             onChange={(e) => setMax(e.target.value)}
             className="h-9 rounded-lg border border-[var(--line)] px-2 text-sm"

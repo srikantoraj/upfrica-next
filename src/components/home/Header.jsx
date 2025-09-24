@@ -23,6 +23,20 @@ const normalizeCc = (cc) => {
   return v === "gb" ? "uk" : v || "uk";
 };
 
+// country code -> emoji flag (handles UK/GB gracefully)
+const toFlag = (cc) => {
+  const raw = String(cc || "").toLowerCase();
+  const code = raw === "uk" ? "gb" : raw; // map UK -> GB for emoji
+  const s = code.slice(0, 2).toUpperCase();
+  if (!/^[A-Z]{2}$/.test(s)) return "🌐";
+  const pts = [...s].map((c) => 0x1f1e6 + (c.charCodeAt(0) - 65));
+  try {
+    return String.fromCodePoint(...pts);
+  } catch {
+    return "🌐";
+  }
+};
+
 /* ---------------------------------------------------------------------- */
 /* Header                                                                 */
 /* ---------------------------------------------------------------------- */
@@ -31,7 +45,6 @@ export default function Header({
   countryCode,
   searchPlaceholder,
   categories = [],
-  deliverCity,
 }) {
   const { country: ctxCountry } = useLocalization();
   const { user, hydrated, logout } = useAuth();
@@ -46,6 +59,9 @@ export default function Header({
     if (ctxCountry) setViewCc(normalizeCc(ctxCountry));
   }, [ctxCountry]);
 
+  // precompute country code pieces for the brand
+  const cc2 = (ccInitial ?? "gh").slice(0, 2).toLowerCase();
+  const cc2Upper = cc2.toUpperCase();
   const brandHref = useMemo(() => withCountryPrefix(ccInitial, "/"), [ccInitial]);
 
   // locale sheet
@@ -67,12 +83,19 @@ export default function Header({
 
   useEffect(() => {
     if (!locOpen && openerRef.current) {
-      try { openerRef.current.focus(); } catch {}
+      try {
+        openerRef.current.focus();
+      } catch {}
     }
   }, [locOpen]);
 
   const handleLogout = useCallback(async () => {
-    try { await logout(); } finally { router.push("/"); router.refresh(); }
+    try {
+      await logout();
+    } finally {
+      router.push("/");
+      router.refresh();
+    }
   }, [logout, router]);
 
   const hotSearches = [
@@ -84,7 +107,33 @@ export default function Header({
     "Shea Butter",
   ];
 
-  const displayCc = normalizeCc(countryCode || viewCc);
+  // derive first name (robust to various backend keys)
+  const firstName = useMemo(() => {
+    const raw =
+      (user?.first_name ??
+        user?.firstName ??
+        user?.given_name ??
+        user?.name ??
+        "")
+        .toString()
+        .trim();
+    if (!raw) return "";
+    const fn = raw.split(/\s+/)[0];
+    return fn.charAt(0).toUpperCase() + fn.slice(1);
+  }, [user]);
+
+  // Read saved city cookie (for a tiny caption under the mobile pill)
+  const [savedCity, setSavedCity] = useState("");
+  useEffect(() => {
+    try {
+      const cc = (String(viewCc || "uk")).toLowerCase();
+      const key = `deliver_to_${cc}`;
+      const m = document.cookie.match(new RegExp(`(?:^|; )${key}=([^;]+)`));
+      setSavedCity(m ? decodeURIComponent(m[1]) : "");
+    } catch {
+      setSavedCity("");
+    }
+  }, [viewCc, locOpen]);
 
   return (
     <header className="sticky top-0 z-[70] bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-b border-[var(--line)]">
@@ -140,43 +189,33 @@ export default function Header({
           </span>
         </label>
 
-{/* Brand */}
-<a
-  href={withCountryPrefix(cc || "gh", "/")}
-  className="uf-logo"
-  data-country={(String(cc || "gh")).slice(0, 2).toLowerCase()}
-  aria-label={`Upfrica ${String(cc || "gh").slice(0, 2).toUpperCase()}`}
->
-  <span className="uf-logo__brand" aria-hidden="true">
-    <span className="uf-logo__mark">
-      <span className="uf-logo__u">U</span>
+        {/* Brand */}
+        <a href={brandHref} className="uf-logo" data-country={cc2} aria-label={`Upfrica ${cc2Upper}`}>
+          <span className="uf-logo__brand" aria-hidden="true">
+            <span className="uf-logo__mark">
+              <span className="uf-logo__u">U</span>
+              <svg className="uf-logo__caret" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 14 L12 6 L20 14" fill="none" />
+              </svg>
+            </span>
+            <span className="uf-logo__rest">pfrica</span>
+          </span>
+          <span className="uf-logo__badge" aria-hidden="true">
+            {cc2Upper}
+          </span>
+          <span className="sr-only">Upfrica {cc2Upper}</span>
+        </a>
 
-      {/* crisp arrow (SVG), inherits color from --logo-accent */}
-<svg className="uf-logo__caret" viewBox="0 0 24 24" aria-hidden="true">
-  <path d="M4 14 L12 6 L20 14" fill="none" />
-</svg>
-    </span>
-
-    <span className="uf-logo__rest">pfrica</span>
-  </span>
-
-  <span className="uf-logo__badge" aria-hidden="true">
-    {String(cc || "gh").slice(0, 2).toUpperCase()}
-  </span>
-
-  <span className="sr-only">
-    Upfrica {String(cc || "gh").slice(0, 2).toUpperCase()}
-  </span>
-</a>
-
-        {/* i18n pill (desktop) */}
-{/* desktop */}
-<LocalePill
-  onClick={(e) => { openerRef.current = e.currentTarget; setOpen(true); }}
-  ariaExpanded={locOpen}
-/>
-
-
+        {/* i18n pill — desktop only to avoid mobile duplication */}
+        <span className="hidden md:inline-flex">
+          <LocalePill
+            onClick={(e) => {
+              openerRef.current = e.currentTarget;
+              setOpen(true);
+            }}
+            ariaExpanded={locOpen}
+          />
+        </span>
 
         {/* Desktop search + categories */}
         <div className="flex-1 hidden md:flex items-stretch gap-2 min-w-0" role="search">
@@ -194,33 +233,47 @@ export default function Header({
         </div>
 
         {/* Right controls */}
-        <div className="ml-auto flex items-center gap-1 sm:gap-3 shrink-0">
-        {/* notification (desktop) */}
-        {hydrated && user ? (
-           <NotificationsBell dashboardHref="/new-dashboard" />
-         ) : null}
+        <div className="ml-auto flex items-center gap-2 sm:gap-3 shrink-0">
+          {hydrated && user ? <NotificationsBell dashboardHref="/new-dashboard" /> : null}
 
-          {/* New: Sourcing dropdown (desktop) */}
           <span className="hidden md:block">
             <SourcingDropdown cc={ccInitial} />
           </span>
 
-          {/* Earn menu with icons */}
           <span className="hidden md:block">
             <EarnDropdown cc={ccInitial} />
           </span>
 
-          {/* Auth-aware actions */}
           {hydrated && user ? (
             <>
-              <Link href="/new-dashboard" className="px-2 py-2 rounded-lg hover:bg-[var(--alt-surface)]">
-                <span className="hidden sm:inline">Account</span>
-                <span className="sm:hidden">👤</span>
+              {/* Hello, {name} / Account (desktop) */}
+              <Link
+                href="/new-dashboard"
+                className="hidden md:flex flex-col justify-center px-2 py-1.5 rounded-lg hover:bg-[var(--alt-surface)] leading-tight"
+                aria-label="Go to your account"
+              >
+                <span className="text-[11px] text-[var(--ink-2)]">
+                  {`Hello${firstName ? "," : ""} ${firstName || ""}`.trim()}
+                </span>
+                <span className="text-sm font-medium">Account</span>
               </Link>
+
+              {/* Compact account on small screens — shows firstName */}
+              <Link
+                href="/new-dashboard"
+                className="md:hidden px-2 py-1 rounded-lg hover:bg-[var(--alt-surface)] inline-flex items-center gap-1 max-w-[44vw]"
+                aria-label={firstName ? `Account — ${firstName}` : "Account"}
+                title={firstName ? `Hello, ${firstName}` : "Account"}
+              >
+                <span aria-hidden>👤</span>
+                <span className="text-sm font-medium truncate">{firstName || "Account"}</span>
+              </Link>
+
+              {/* Hide logout on mobile to reduce crowding */}
               <button
                 type="button"
                 onClick={handleLogout}
-                className="px-3 py-2 rounded-lg hover:bg-[var(--alt-surface)] text-[var(--ink)]"
+                className="hidden md:inline-flex px-3 py-2 rounded-lg hover:bg-[var(--alt-surface)] text-[var(--ink)]"
                 aria-label="Log out"
               >
                 Log out
@@ -231,19 +284,22 @@ export default function Header({
               <Link href="/login" className="px-3 py-2 rounded-lg hover:bg-[var(--alt-surface)]">
                 Log in
               </Link>
-              <Link href="/signup" className="px-3 py-2 rounded-lg bg-[var(--brand-600)] text-white hover:bg-[var(--brand-700)]">
+              <Link
+                href="/signup"
+                className="px-3 py-2 rounded-lg bg-[var(--brand-600)] text-white hover:bg-[var(--brand-700)]"
+              >
                 Sign up
               </Link>
             </>
           )}
 
-          {/* Cart */}
+          {/* Cart — larger tap target */}
           <a
             href={`/${ccInitial}/cart`}
-            className="px-1 py-1 rounded-lg hover:bg-[var(--alt-surface)]"
+            className="h-11 w-11 inline-flex items-center justify-center rounded-xl hover:bg-[var(--alt-surface)]"
             aria-label="Cart"
           >
-            <span className="inline-flex items-center justify-center rounded-lg ring-2 ring-[var(--brand-600)] px-2 py-1 text-[18px] font-black">
+            <span className="inline-flex items-center justify-center rounded-lg ring-1 ring-[var(--brand-600)] px-2 py-1 text-[18px] font-black">
               🛒
             </span>
           </a>
@@ -265,19 +321,28 @@ export default function Header({
           scopes={["products", "requests", "shops"]}
           defaultScope={isRequests ? "requests" : "products"}
         />
-
         <div className="mt-2">
-{/* mobile */}
-<LocalePill
-  compact
-  onClick={(e) => { openerRef.current = e.currentTarget; setOpen(true); }}
-  ariaExpanded={locOpen}
-/>
+          {/* keep only this Deliver To pill on mobile */}
+          <LocalePill
+            compact
+            onClick={(e) => {
+              openerRef.current = e.currentTarget;
+              setOpen(true);
+            }}
+            ariaExpanded={locOpen}
+          />
+          {savedCity ? (
+            <div className="mt-1 text-xs text-[var(--ink-2)] truncate">
+              Delivering to <span className="font-medium">{savedCity}</span>
+            </div>
+          ) : null}
         </div>
       </div>
 
       <datalist id="hot-searches">
-        {hotSearches.map((s) => <option key={s} value={s} />)}
+        {hotSearches.map((s) => (
+          <option key={s} value={s} />
+        ))}
       </datalist>
 
       <LocaleSheet open={locOpen} onClose={() => setOpen(false)} />
@@ -306,7 +371,7 @@ function LocalePill({ onClick, compact = false, ariaExpanded = false }) {
     );
   }
 
-  const flag = { gh: "🇬🇭", ng: "🇳🇬", uk: "🇬🇧" }[country] || "🌐";
+  const flag = toFlag(country);
   const langText = langLabel(resolvedLanguage);
 
   return (
@@ -379,7 +444,6 @@ function SourcingDropdown({ cc }) {
           🧾 Sourcing
         </summary>
         <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--line)] bg-white shadow-lg p-1 z-50">
-          {/* callout top row */}
           <div className="mx-1 my-1 rounded-lg p-2 bg-gradient-to-r from-amber-50 to-violet-50 border border-[var(--line)] text-[13px]">
             Find buyers’ requests, send quotes, and earn commissions.
           </div>
@@ -442,10 +506,7 @@ function EarnDropdown({ cc }) {
 }
 
 /* ---------------------------------------------------------------------- */
-/* Unified Locale Sheet — hidden list + smart search + GB→UK              */
-/* ---------------------------------------------------------------------- */
-/* ---------------------------------------------------------------------- */
-/* Unified Locale Sheet — hidden list + smart search + GB→UK + close pop  */
+/* Unified Locale Sheet — hidden list + smart search + GB→UK + PDP fix    */
 /* ---------------------------------------------------------------------- */
 function LocaleSheet({ open, onClose }) {
   const {
@@ -463,64 +524,66 @@ function LocaleSheet({ open, onClose }) {
   useEffect(() => {
     let el = document.getElementById("loc-portal");
     let created = false;
-    if (!el) { el = document.createElement("div"); el.id = "loc-portal"; created = true; }
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "loc-portal";
+      created = true;
+    }
     document.body.appendChild(el);
     setPortalEl(el);
-    return () => { if (created && el.parentNode) el.parentNode.removeChild(el); };
+    return () => {
+      if (created && el.parentNode) el.parentNode.removeChild(el);
+    };
   }, []);
 
   // ---------- helpers ---------------------------------------------------
   const canonicalCc = (cc) =>
     (String(cc || "").toLowerCase() === "gb" ? "uk" : String(cc || "").toLowerCase());
 
+  // map GB→uk for routing
+  const toSlug = (cc) =>
+    (String(cc || "").toLowerCase() === "gb" ? "uk" : String(cc || "").toLowerCase());
 
-// map GB→uk for routing
-const toSlug = (cc) => (String(cc || "").toLowerCase() === "gb" ? "uk" : String(cc || "").toLowerCase());
+  // build the next URL with the new country slug, keeping the rest of the path + query
+  const buildCountryUrl = (slug) => {
+    const path = typeof window !== "undefined" ? window.location.pathname : "/";
+    const qs = typeof window !== "undefined" ? window.location.search : "";
+    const rest = path.replace(/^\/[a-z]{2}(?=\/|$)/i, ""); // strip existing /xx
+    const next = `/${toSlug(slug)}${rest || "/"}`;
+    return `${next}${qs}`;
+  };
 
-// build the next URL with the new country slug, keeping the rest of the path + query
-const buildCountryUrl = (slug) => {
-  const path = typeof window !== "undefined" ? window.location.pathname : "/";
-  const qs   = typeof window !== "undefined" ? window.location.search  : "";
-  const rest = path.replace(/^\/[a-z]{2}(?=\/|$)/i, ""); // strip existing /xx
-  const next = `/${toSlug(slug)}${rest || "/"}`;
-  return `${next}${qs}`;
-};
-
-
-  // IMPORTANT: use GB glyph for the UK flag, but keep 'uk' for routing/URL
-const toFlag = (cc) => {
-  const codeForFlag = String(cc || "").toLowerCase() === "uk" ? "gb" : String(cc || "");
-  const s = codeForFlag.slice(0, 2).toUpperCase();
-  if (s.length !== 2) return "🌐";
-  const pts = [...s].map((c) => 0x1F1E6 + (c.charCodeAt(0) - 65));
-  try { return String.fromCodePoint(...pts); } catch { return "🌐"; }
-};
+  // is the current path a PDP like /gh/my-product-slug ?
+  const isPdpPath = (p) => /^\/[a-z]{2}\/[^\/?#]+$/.test(p || "");
 
   const normCountry = (c) => {
-    const raw  = (c?.code || c?.iso || c?.slug || c?.id || "").toString();
+    const raw = (c?.code || c?.iso || c?.slug || c?.id || "").toString();
     const code = canonicalCc(raw);
-    const name = code === "uk" ? "United Kingdom" : (c?.name || c?.label || raw.toUpperCase());
+    const name = code === "uk" ? "United Kingdom" : c?.name || c?.label || raw.toUpperCase();
     return { code, name, flag: c?.flag || toFlag(code) };
   };
 
   // ---------- base options + local state --------------------------------
-  const baseCountries  = supported.countries  || [];
-  const baseLanguages  = supported.languages  || [];
+  const baseCountries = supported.countries || [];
+  const baseLanguages = supported.languages || [];
   const baseCurrencies = supported.currencies || [];
 
-  const [ccDraft, setCcDraft]   = useState(canonicalCc(country));
+  const [ccDraft, setCcDraft] = useState(canonicalCc(country));
   const [lngDraft, setLngDraft] = useState(language || "auto");
   const [curDraft, setCurDraft] = useState(currency || "auto");
-  const [city, setCity]         = useState("");
-  const [filter, setFilter]     = useState("");
-  const [showAll, setShowAll]   = useState(false);
+  const [city, setCity] = useState("");
+  const [filter, setFilter] = useState("");
+  const [showAll, setShowAll] = useState(false);
 
-  const [opts, setOpts]         = useState({
+  const [opts, setOpts] = useState({
     countries: baseCountries,
     languages: baseLanguages,
     currencies: baseCurrencies,
   });
   const [optsLoading, setOptsLoading] = useState(false);
+
+  // cache defaults for the draft country (used to set currency immediately on PDP)
+  const [nextDefaults, setNextDefaults] = useState({ language: null, currency: null });
 
   useEffect(() => {
     if (open) {
@@ -531,6 +594,7 @@ const toFlag = (cc) => {
       setFilter("");
       setShowAll(false);
       setOpts({ countries: baseCountries, languages: baseLanguages, currencies: baseCurrencies });
+      setNextDefaults({ language: null, currency: null });
     }
   }, [open, country, language, currency]); // eslint-disable-line
 
@@ -538,7 +602,12 @@ const toFlag = (cc) => {
     let cancelled = false;
     async function run() {
       if (!open || !ccDraft || canonicalCc(ccDraft) === canonicalCc(country)) {
-        setOpts({ countries: baseCountries, languages: baseLanguages, currencies: baseCurrencies });
+        setOpts({
+          countries: baseCountries,
+          languages: baseLanguages,
+          currencies: baseCurrencies,
+        });
+        setNextDefaults({ language: null, currency: null });
         return;
       }
       setOptsLoading(true);
@@ -546,9 +615,13 @@ const toFlag = (cc) => {
         const init = await fetchI18nInit(ccDraft);
         if (cancelled) return;
         setOpts({
-          countries:  init?.supported?.countries  || baseCountries,
-          languages:  init?.supported?.languages  || baseLanguages,
+          countries: init?.supported?.countries || baseCountries,
+          languages: init?.supported?.languages || baseLanguages,
           currencies: init?.supported?.currencies || baseCurrencies,
+        });
+        setNextDefaults({
+          language: init?.language || null,
+          currency: (init?.currency || "").toUpperCase() || null,
         });
         setLngDraft("auto");
         setCurDraft("auto");
@@ -557,7 +630,9 @@ const toFlag = (cc) => {
       }
     }
     run();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [ccDraft, open]); // eslint-disable-line
 
   // ---------- country data + smart search --------------------------------
@@ -568,20 +643,19 @@ const toFlag = (cc) => {
   }, [opts.countries]);
 
   const PINNED = ["gh", "ng", "uk"];
-  const pinned = PINNED.map((k) =>
-    allCountries.find((c) => c.code === k) ||
-    { code: k, name: ({ gh:"Ghana", ng:"Nigeria", uk:"United Kingdom" }[k]), flag: toFlag(k) }
-  );
+  const pinned =
+    PINNED.map((k) => allCountries.find((c) => c.code === k) || { code: k, name: { gh: "Ghana", ng: "Nigeria", uk: "United Kingdom" }[k], flag: toFlag(k) });
 
   const rank = (q, c) => {
     if (!q) return 0;
-    const code = c.code.toLowerCase(), name = c.name.toLowerCase();
+    const code = c.code.toLowerCase(),
+      name = c.name.toLowerCase();
     const bonus = PINNED.includes(code) ? -100 : 0;
     if (code === q || name === q) return bonus - 50;
     if (code.startsWith(q) || name.startsWith(q)) return bonus - 25;
     if (code.includes(q) || name.includes(q)) return bonus - 5;
     return 999;
-    };
+  };
 
   const aliases = {
     uk: ["gb", "britain", "great britain", "united kingdom", "u k", "uk"],
@@ -590,7 +664,7 @@ const toFlag = (cc) => {
   };
   const normalizeQuery = (s) => s.replace(/\./g, "").trim().toLowerCase();
   const qRaw = normalizeQuery(filter);
-  const q    = Object.entries(aliases).find(([, arr]) => arr.includes(qRaw))?.[0] || qRaw;
+  const q = Object.entries(aliases).find(([, arr]) => arr.includes(qRaw))?.[0] || qRaw;
 
   const filtered = useMemo(() => {
     if (!q) return [];
@@ -606,7 +680,9 @@ const toFlag = (cc) => {
   const suggestRef = useRef(null);
 
   useEffect(() => {
-    if (!open) { setShowSuggest(false); }
+    if (!open) {
+      setShowSuggest(false);
+    }
   }, [open]);
 
   useEffect(() => {
@@ -622,36 +698,63 @@ const toFlag = (cc) => {
   // ---------- apply + cookies -------------------------------------------
   const setCookie = (k, v, days = 180) => {
     try {
-      const d = new Date(); d.setTime(d.getTime() + days*24*60*60*1000);
+      const d = new Date();
+      d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
       document.cookie = `${k}=${encodeURIComponent(v)}; expires=${d.toUTCString()}; path=/; SameSite=Lax`;
     } catch {}
   };
 
-const apply = () => {
-  const cc = canonicalCc(ccDraft); // your existing gb→uk normalizer
+  const apply = async () => {
+    const cc = canonicalCc(ccDraft);
+    if (city) setCookie(`deliver_to_${cc}`, city);
 
-  if (city) setCookie(`deliver_to_${cc}`, city);
+    const path = typeof window !== "undefined" ? window.location.pathname : "/";
 
-  // If the country changed, push a URL that uses the *slug* (uk, gh, ng…)
-  if (cc !== canonicalCc(country)) {
-    const nextUrl = buildCountryUrl(cc); // guarantees /uk, not /gb
-    // NOTE: avoid setCountry here to prevent its /gb redirect; the page reload will hydrate the provider
-    window.location.assign(nextUrl);
-    return;
-  }
+    // Decide target currency now (avoid "AUTO" to prevent sticking to old default)
+    let targetCurrency = null;
+    if (curDraft) {
+      if (String(curDraft).toLowerCase() === "auto") {
+        targetCurrency = nextDefaults.currency;
+        if (!targetCurrency) {
+          try {
+            const init = await fetchI18nInit(cc);
+            targetCurrency = (init?.currency || "").toUpperCase() || null;
+          } catch {}
+        }
+      } else {
+        targetCurrency = String(curDraft).toUpperCase();
+      }
+    }
 
-  // Same-country updates: apply prefs without navigating
-  if (curDraft) setCurrency(curDraft === "auto" ? "AUTO" : curDraft);
-  if (lngDraft) setLanguage(lngDraft);
-  onClose();
-};
+    if (cc !== canonicalCc(country)) {
+      if (isPdpPath(path)) {
+        // PDP: keep URL; update in place
+        setCountry(cc, { navigate: false });
+        if (targetCurrency) setCurrency(targetCurrency);
+        if (lngDraft) setLanguage(lngDraft);
+        onClose();
+      } else {
+        // Non-PDP pages: safe to change the /cc/ in the URL
+        const nextUrl = buildCountryUrl(cc);
+        window.location.assign(nextUrl);
+      }
+      return;
+    }
+
+    // Same-country: just update prefs in place
+    if (targetCurrency) setCurrency(targetCurrency);
+    if (lngDraft) setLanguage(lngDraft);
+    onClose();
+  };
 
   // ---------- UI ---------------------------------------------------------
   const Sheet = (
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-[1100] bg-black/40 backdrop-blur-sm ${open ? "block" : "hidden"} ${open ? "" : "pointer-events-none"}`}
+        className={`fixed inset-0 z-[1100] bg-black/40 backdrop-blur-sm ${open ? "block" : "hidden"} ${
+          open ? "" : "pointer-events-none"
+        }`}
         onClick={onClose}
         aria-hidden="true"
       />
@@ -666,37 +769,52 @@ const apply = () => {
         hidden={!open}
       >
         <div className="mx-auto w-full max-w-2xl sm:max-w-3xl md:max-w-4xl">
-          <div className="rounded-t-2xl border-t border-[var(--line)] bg-white shadow-2xl
-                          max-h-[88vh] overflow-y-auto [padding-bottom:env(safe-area-inset-bottom)]">
+          <div
+            className="rounded-t-2xl border-t border-[var(--line)] bg-white shadow-2xl
+                        max-h-[88vh] overflow-y-auto [padding-bottom:env(safe-area-inset-bottom)]"
+          >
             {/* Header */}
             <div className="sticky top-0 bg-white border-b border-[var(--line)] px-4 pt-3 pb-3 rounded-t-2xl">
               <div className="mx-auto h-1.5 w-12 rounded-full bg-gray-300 mb-2" />
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                <h2 id="ls-title" className="text-lg font-semibold flex-1">Region & Preferences</h2>
+                <h2 id="ls-title" className="text-lg font-semibold flex-1">
+                  Region & Preferences
+                </h2>
 
                 {/* Search + suggestions */}
                 <div className="relative" ref={suggestRef}>
                   <input
                     value={filter}
-                    onChange={(e) => { setFilter(e.target.value); setShowSuggest(true); }}
+                    onChange={(e) => {
+                      setFilter(e.target.value);
+                      setShowSuggest(true);
+                    }}
                     onFocus={() => setShowSuggest(true)}
                     placeholder="Search country"
                     className="pl-9 pr-3 py-2 text-sm border rounded-xl min-w-[240px] w-[280px]"
                   />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">🔎</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    🔎
+                  </span>
 
                   {showSuggest && topSuggestions.length > 0 && (
                     <div className="absolute right-0 mt-1 w-[min(420px,90vw)] max-h-[50vh] overflow-y-auto rounded-xl border border-[var(--line)] bg-white shadow-xl z-[5]">
                       {topSuggestions.map((c) => (
                         <button
                           key={`sugg-${c.code}`}
-                          onMouseDown={(e) => e.preventDefault()} // keep input focus long enough to click
-                          onClick={() => { setCcDraft(c.code); setFilter(""); setShowSuggest(false); }}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setCcDraft(c.code);
+                            setFilter("");
+                            setShowSuggest(false);
+                          }}
                           className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-[var(--alt-surface)]"
                         >
                           <span>{c.flag}</span>
                           <span className="font-medium">{c.name}</span>
-                          <span className="ml-auto text-xs text-gray-500 uppercase">{c.code}</span>
+                          <span className="ml-auto text-xs text-gray-500 uppercase">
+                            {c.code}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -707,7 +825,7 @@ const apply = () => {
 
             {/* Content */}
             <div className="p-4 space-y-8">
-              {/* Quick pins only (full list hidden by default) */}
+              {/* Quick pins only */}
               <section className="space-y-2">
                 <div className="text-sm font-semibold">Deliver to</div>
                 <div className="flex flex-wrap gap-2">
@@ -716,31 +834,39 @@ const apply = () => {
                       key={`pin-${c.code}`}
                       label={`${c.flag} ${c.name}`}
                       checked={String(ccDraft).toLowerCase() === c.code}
-                      onChange={() => { setCcDraft(c.code); setShowSuggest(false); }}
+                      onChange={() => {
+                        setCcDraft(c.code);
+                        setShowSuggest(false);
+                      }}
                     />
                   ))}
                 </div>
               </section>
 
-              {/* Reveal the grid only if searching or user pressed "Browse all" */}
+              {/* Reveal grid when searching / show-all */}
               {(filter.trim() || showAll) && (
                 <section className="space-y-2">
                   <div className="text-xs text-gray-500">
                     {optsLoading ? "Loading country options…" : filter.trim() ? "Search results" : "All countries"}
                   </div>
-                  <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
-                    {(filter.trim()
-                      ? filtered
-                      : allCountries
-                    ).map((c) => (
+                  <div
+                    className="grid gap-2"
+                    style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}
+                  >
+                    {(filter.trim() ? filtered : allCountries).map((c) => (
                       <button
                         key={c.code}
                         type="button"
-                        onClick={() => { setCcDraft(c.code); setShowSuggest(false); }}
+                        onClick={() => {
+                          setCcDraft(c.code);
+                          setShowSuggest(false);
+                        }}
                         className={`px-3 py-2 w-full rounded-full border text-sm flex items-center gap-2 justify-between
-                          ${String(ccDraft).toLowerCase() === c.code
-                            ? "bg-[var(--brand-50,#EEF2FF)] border-[var(--brand-600)]"
-                            : "border-[var(--line)] hover:bg-[var(--alt-surface)]"}`}
+                          ${
+                            String(ccDraft).toLowerCase() === c.code
+                              ? "bg-[var(--brand-50,#EEF2FF)] border-[var(--brand-600)]"
+                              : "border-[var(--line)] hover:bg-[var(--alt-surface)]"
+                          }`}
                       >
                         <span className="flex items-center gap-2 min-w-0">
                           <span aria-hidden>{c.flag}</span>
@@ -774,9 +900,16 @@ const apply = () => {
                   className="w-full border rounded-xl px-3 py-2 text-sm"
                 >
                   <option value="auto">Auto (recommended)</option>
-                  {(Array.isArray(baseLanguages) ? (opts.languages || baseLanguages) : []).map((l) => {
+                  {(Array.isArray(baseLanguages)
+                    ? opts.languages || baseLanguages
+                    : []
+                  ).map((l) => {
                     const item = typeof l === "string" ? { code: l, label: l } : l;
-                    return <option key={item.code} value={item.code}>{item.label || item.code}</option>;
+                    return (
+                      <option key={item.code} value={item.code}>
+                        {item.label || item.code}
+                      </option>
+                    );
                   })}
                 </select>
               </section>
@@ -791,8 +924,12 @@ const apply = () => {
                 >
                   <option value="auto">Auto (recommended)</option>
                   {(opts.currencies || baseCurrencies || []).map((c) => {
-                    const code = typeof c === "string" ? c : (c?.code || "");
-                    return code ? <option key={code} value={code}>{code}</option> : null;
+                    const code = typeof c === "string" ? c : c?.code || "";
+                    return code ? (
+                      <option key={code} value={code}>
+                        {code}
+                      </option>
+                    ) : null;
                   })}
                 </select>
               </section>
@@ -806,14 +943,21 @@ const apply = () => {
                   onChange={(e) => setCity(e.target.value)}
                   className="w-full border rounded-xl px-3 py-2 text-sm"
                 />
-                <p className="mt-1 text-xs text-gray-500">We’ll remember this for delivery options.</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  We’ll remember this for delivery options.
+                </p>
               </section>
             </div>
 
             {/* Footer */}
             <div className="sticky bottom-0 bg-white border-t border-[var(--line)] px-4 py-3 flex items-center justify-end gap-2">
-              <button onClick={onClose} className="px-4 py-2 rounded-full border text-sm">Cancel</button>
-              <button onClick={apply} className="px-5 py-2 rounded-full text-sm text-white bg-[var(--brand-600)] hover:bg-[var(--brand-700)]">
+              <button onClick={onClose} className="px-4 py-2 rounded-full border text-sm">
+                Cancel
+              </button>
+              <button
+                onClick={apply}
+                className="px-5 py-2 rounded-full text-sm text-white bg-[var(--brand-600)] hover:bg-[var(--brand-700)]"
+              >
                 Apply
               </button>
             </div>
@@ -826,9 +970,6 @@ const apply = () => {
   if (!portalEl) return null;
   return createPortal(Sheet, portalEl);
 }
-
-
-
 
 /* small chip-like radio with keyboard support (unchanged) */
 function RadioChip({ label, checked, onChange }) {
@@ -872,7 +1013,11 @@ function MobileSidebar({ cc, categories = [], authed, onLogout }) {
     el.id = "drawer-portal";
     document.body.appendChild(el);
     bodyEl.current = el;
-    return () => { try { document.body.removeChild(el); } catch {} };
+    return () => {
+      try {
+        document.body.removeChild(el);
+      } catch {}
+    };
   }, []);
 
   useEffect(() => {
@@ -899,7 +1044,10 @@ function MobileSidebar({ cc, categories = [], authed, onLogout }) {
 
   const close = () => {
     const cb = cbRef.current;
-    if (cb) { cb.checked = false; setOpen(false); }
+    if (cb) {
+      cb.checked = false;
+      setOpen(false);
+    }
   };
 
   if (!mounted || !bodyEl.current) return null;
@@ -925,22 +1073,40 @@ function MobileSidebar({ cc, categories = [], authed, onLogout }) {
         } [padding-bottom:env(safe-area-inset-bottom)]`}
       >
         <div className="p-4 border-b border-[var(--line)] flex items-center justify-between">
-          <h2 id="mobile-menu-title" className="text-lg font-black">Menu</h2>
-          <button onClick={close} className="p-3 rounded-xl hover:bg-[var(--alt-surface)]" aria-label="Close menu">✕</button>
+          <h2 id="mobile-menu-title" className="text-lg font-black">
+            Menu
+          </h2>
+          <button
+            onClick={close}
+            className="p-3 rounded-xl hover:bg-[var(--alt-surface)]"
+            aria-label="Close menu"
+          >
+            ✕
+          </button>
         </div>
 
         {/* Auth block */}
         <div className="px-4 py-3 border-b border-[var(--line)]">
           {authed ? (
             <div className="flex gap-2">
- <Link href="/new-dashboard" className="flex-1 inline-flex items-center justify-center rounded-lg border px-3 py-2 text-sm hover:bg-[var(--alt-surface)]">
-   Account
-   {/* tiny red dot if there are notifications */}
-   <span id="m-notif-dot" className="ml-2 inline-block w-2 h-2 rounded-full bg-[var(--brand-600)]" style={{ display: "none" }} />
- </Link>
+              <Link
+                href="/new-dashboard"
+                className="flex-1 inline-flex items-center justify-center rounded-lg border px-3 py-2 text-sm hover:bg-[var(--alt-surface)]"
+                onClick={close}
+              >
+                Account
+                <span
+                  id="m-notif-dot"
+                  className="ml-2 inline-block w-2 h-2 rounded-full bg-[var(--brand-600)]"
+                  style={{ display: "none" }}
+                />
+              </Link>
               <button
                 type="button"
-                onClick={() => { onLogout?.(); close(); }}
+                onClick={() => {
+                  onLogout?.();
+                  close();
+                }}
                 className="flex-1 inline-flex items-center justify-center rounded-lg border px-3 py-2 text-sm hover:bg-[var(--alt-surface)]"
               >
                 Log out
@@ -948,10 +1114,18 @@ function MobileSidebar({ cc, categories = [], authed, onLogout }) {
             </div>
           ) : (
             <div className="flex gap-2">
-              <Link href="/login" onClick={close} className="flex-1 inline-flex items-center justify-center rounded-lg border px-3 py-2 text-sm hover:bg-[var(--alt-surface)]">
+              <Link
+                href="/login"
+                onClick={close}
+                className="flex-1 inline-flex items-center justify-center rounded-lg border px-3 py-2 text-sm hover:bg-[var(--alt-surface)]"
+              >
                 Log in
               </Link>
-              <Link href="/signup" onClick={close} className="flex-1 inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm bg-[var(--brand-600)] text-white hover:bg-[var(--brand-700)]">
+              <Link
+                href="/signup"
+                onClick={close}
+                className="flex-1 inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm bg-[var(--brand-600)] text-white hover:bg-[var(--brand-700)]"
+              >
                 Sign up
               </Link>
             </div>

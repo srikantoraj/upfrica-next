@@ -1,2 +1,3 @@
 // src/app/api/pdp/signals/route.js
-export { GET, runtime } from "../route";
+export const runtime = "nodejs"; // or "edge" if you truly need it
+export { POST } from "../route";

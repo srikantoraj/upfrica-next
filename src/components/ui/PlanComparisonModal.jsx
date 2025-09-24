@@ -115,7 +115,7 @@ export default function PlanComparisonModal({
             {/* Header */}
             <div className="flex items-start justify-between px-5 pt-4 pb-3">
               <div>
-                <Dialog.Title className="text-lg font-semibold">Compare Seller Plans</Dialog.Title>
+                <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-white">Compare Seller Plans</Dialog.Title>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
                   Review features across plans and pick what fits your shop best.
                 </p>

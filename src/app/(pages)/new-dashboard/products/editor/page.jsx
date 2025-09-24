@@ -10,7 +10,7 @@ import StepMedia from "@/components/products/ProductWizard/steps/StepMedia";
 import StepSEO from "@/components/products/ProductWizard/steps/StepSEO";
 import StepAttrVariants from "@/components/products/ProductWizard/steps/StepAttrVariants";
 import StepReview from "@/components/products/ProductWizard/steps/StepReview";
-import OverlayPageFrame from "@/components/ui/OverlayPageFrame";
+import OverlayPageFrame from "@/components/ui/OverlaySheet";
 
 const DRAFT_META_KEY = "upfrica:newProductDraftMeta";
 

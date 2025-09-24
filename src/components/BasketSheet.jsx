@@ -12,6 +12,10 @@ import { getCardImage } from '@/app/constants';
 import SafeImage, { fixDisplayUrl } from '@/components/common/SafeImage';
 import { pickProductImage, FALLBACK_IMAGE } from '@/lib/image';
 
+// ✅ NEW: localization + currency symbol
+import { useLocalization } from '@/contexts/LocalizationProvider';
+import { symbolFor } from '@/lib/pricing-mini';
+
 export default function BasketSheet({
   isOpen = false,
   open = undefined,
@@ -104,10 +108,59 @@ export default function BasketSheet({
     return toDisplayUrl(raw);
   };
 
-  /* ──────────────────────────────────────────────────────────────────── */
+  /* ──────────────────────────── FX helpers ──────────────────────────── */
 
+  // Old store (kept as a fallback only)
   const selectedCountry = useSelector(selectSelectedCountry);
-  const symbol = selectedCountry?.symbol ?? '₵';
+
+  // NEW: Deliver-to currency + converter + locale
+  const { currency: uiCurrency, convert, resolvedLanguage } = useLocalization();
+
+  // Display symbol must match the UI currency
+  const symbol = useMemo(
+    () =>
+      symbolFor(uiCurrency || 'USD', resolvedLanguage || 'en') ||
+      selectedCountry?.symbol ||
+      '₵',
+    [uiCurrency, resolvedLanguage, selectedCountry?.symbol]
+  );
+
+  // Safely convert a MAJOR amount from seller currency -> UI currency
+  const convMajorSafe = (major, fromCcy) => {
+    const n = Number(major || 0);
+    const src = (fromCcy || uiCurrency || 'USD').toUpperCase();
+    const dst = (uiCurrency || src).toUpperCase();
+    if (!convert || src === dst) return n;
+    const out = Number(convert(n, src, dst));
+    return Number.isFinite(out) && out >= 0 ? out : n;
+  };
+
+  // Best guess of a product/listing currency on a cart/suggestion item
+  const currencyOf = (p) =>
+    String(
+      p?.price_currency ??
+        p?.currency ??
+        p?.seller_currency ??
+        p?.sellerCurrency ??
+        p?.listing_currency ??
+        p?.ccy ??
+        uiCurrency ??
+        'USD'
+    ).toUpperCase();
+
+  // Compute unit price (MAJOR) in **UI currency**
+  const computeUnitPriceUI = (p) => {
+    const now = new Date();
+    const saleEnd = p?.sale_end_date ? new Date(p.sale_end_date) : null;
+    const isOnSale = Number(p?.sale_price_cents) > 0 && (!saleEnd || saleEnd > now);
+    const cents = Number(
+      isOnSale ? p?.sale_price_cents : p?.price_cents
+    );
+    const sellerMajor = (Number.isFinite(cents) ? cents : 0) / 100;
+    return convMajorSafe(sellerMajor, currencyOf(p));
+  };
+
+  /* ──────────────────────────────────────────────────────────────────── */
 
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [isViewBasketLoading, setIsViewBasketLoading] = useState(false);
@@ -236,20 +289,22 @@ export default function BasketSheet({
     router.push('/cart');
   };
 
-  const computeUnitPrice = (p) => {
-    const now = new Date();
-    const saleEnd = p.sale_end_date ? new Date(p.sale_end_date) : null;
-    const isOnSale = p.sale_price_cents > 0 && (!saleEnd || saleEnd > now);
-    const cents = isOnSale ? p.sale_price_cents : p.price_cents;
-    return (cents || 0) / 100;
-  };
+
+  
+  /* ─────────────────────────── totals (UI currency) ─────────────────────────── */
 
   const subtotal = useMemo(
-    () => (basket || []).reduce((s, p) => s + computeUnitPrice(p) * (p.quantity || 1), 0),
-    [basket]
+    () =>
+      (basket || []).reduce(
+        (s, p) => s + computeUnitPriceUI(p) * (p.quantity || 1),
+        0
+      ),
+    [basket, uiCurrency, convert] // recompute when deliver-to currency changes
   );
 
-  const checkoutLabel = isCheckoutLoading ? Loader : `Checkout • ${symbol}${subtotal.toFixed(2)}`;
+  const checkoutLabel = isCheckoutLoading
+    ? Loader
+    : `Checkout • ${symbol}${subtotal.toFixed(2)}`;
 
   const titleText = useMemo(() => {
     const n = basket?.length ?? 0;
@@ -260,18 +315,21 @@ export default function BasketSheet({
     if (e.target === e.currentTarget) onClose?.();
   };
 
-  const inc = (p) => {
-    navigator.vibrate?.(10);
-    onQuantityChange?.(p.id, p.sku, (p.quantity || 1) + 1);
-    setLiveMsg(`Increased quantity of ${p.title}`);
-  };
+const inc = (p) => {
+  navigator.vibrate?.(10);
+  const next = Math.max(1, (p.quantity || 1) + 1);
+  onQuantityChange?.({ id: p.id, sku: p.sku ?? null, quantity: next });
+  setLiveMsg(`Increased quantity of ${p.title}`);
+};
 
-  const dec = (p) => {
-    if ((p.quantity || 1) <= 1) return;
-    navigator.vibrate?.(10);
-    onQuantityChange?.(p.id, p.sku, (p.quantity || 1) - 1);
-    setLiveMsg(`Decreased quantity of ${p.title}`);
-  };
+const dec = (p) => {
+  const current = p.quantity || 1;
+  if (current <= 1) return;
+  navigator.vibrate?.(10);
+  const next = current - 1;
+  onQuantityChange?.({ id: p.id, sku: p.sku ?? null, quantity: next });
+  setLiveMsg(`Decreased quantity of ${p.title}`);
+};
 
   const doRemove = (p) => {
     onRemove?.({ id: p.id, sku: p.sku });
@@ -392,8 +450,9 @@ export default function BasketSheet({
             {basket?.length ? (
               <ul role="list" className="divide-y divide-neutral-200 dark:divide-neutral-800">
                 {basket.map((product) => {
-                  const unitPrice = computeUnitPrice(product);
-                  const lineTotal = (unitPrice * (product.quantity || 1)).toFixed(2);
+                  const unitPriceMajorUI = computeUnitPriceUI(product);
+                  const qty = product.quantity || 1;
+                  const lineTotalMajorUI = unitPriceMajorUI * qty;
                   const img = imageOfCartItem(product);
 
                   return (
@@ -441,7 +500,7 @@ export default function BasketSheet({
                               <HiMinus className="h-4 w-4" />
                             </button>
                             <span className="w-7 text-center text-sm font-medium tabular-nums" aria-live="polite">
-                              {product.quantity}
+                              {qty}
                             </span>
                             <button
                               type="button"
@@ -455,7 +514,7 @@ export default function BasketSheet({
 
                           {/* Line total */}
                           <div className="text-sm font-semibold whitespace-nowrap">
-                            {symbol}{lineTotal}
+                            {symbol}{lineTotalMajorUI.toFixed(2)}
                           </div>
                         </div>
 
@@ -491,6 +550,10 @@ export default function BasketSheet({
                       const cents = priceCentsOf(item);
                       const showPrice = Number.isFinite(cents) && cents > 0;
 
+                      // convert suggestion price to UI currency
+                      const sellerMajor = (showPrice ? cents : 0) / 100;
+                      const majorUI = convMajorSafe(sellerMajor, currencyOf(item));
+
                       return (
                         <div
                           key={item.id ?? item.seo_slug ?? item.slug}
@@ -519,7 +582,7 @@ export default function BasketSheet({
 
                           <div className="mt-1 flex items-center justify-between">
                             <div className="text-[12px] font-semibold">
-                              {showPrice ? `${symbol}${(cents / 100).toFixed(2)}` : 'Ask'}
+                              {showPrice ? `${symbol}${majorUI.toFixed(2)}` : 'Ask'}
                             </div>
                             <button
                               type="button"

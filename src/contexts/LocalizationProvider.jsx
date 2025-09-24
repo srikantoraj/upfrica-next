@@ -6,17 +6,18 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { convert as fxConvert, withMargin, fetchFx } from "../lib/fx";
 import { fetchI18nInit } from "../lib/i18n";
-import { withCountryPrefix } from "@/lib/locale-routing"; // .ts or .js, both work
 
 /* ------------------------------------------------------------------ */
 /* helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-const LS_KEY = "upfrica.locale"; // { country, currency, language("auto"|tag) }
+const LS_KEY = "upfrica.locale";            // { country, currency, language("auto"|tag) }
+const NOMARGIN_LS = "upfrica.fx.nomargin";  // "1"|"0" — mid-market toggle
 
 /** Sensible global fallback (only used if we cannot infer anything). */
 const FALLBACK = { country: "gb", currency: "GBP", language: "en-GB" };
@@ -48,19 +49,36 @@ function defaultsForSlug(slug) {
   return DEFAULTS_BY_SLUG[key] || FALLBACK;
 }
 
-function readLocalSafe() {
+/** Lightweight client-side cc canonicalizer (aligns with middleware behavior). */
+const CC_ALIASES = { uk: "gb" };
+function canonCc(x) {
+  // accept string or { code } / { country } objects
+  const raw =
+    typeof x === "string"
+      ? x
+      : x && typeof x === "object"
+      ? x.code || x.country || ""
+      : "";
+  const cc = String(raw).trim().toLowerCase();
+  if (!/^[a-z]{2}$/.test(cc)) return ""; // ignore non-2-letter inputs
+  return CC_ALIASES[cc] || cc;
+}
+
+function readLocalSafe(key = LS_KEY) {
   if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    const raw = localStorage.getItem(key);
+    return key === LS_KEY ? JSON.parse(raw || "{}") : raw;
   } catch {
-    return {};
+    return key === LS_KEY ? {} : null;
   }
 }
 
-function writeLocalSafe(obj) {
+function writeLocalSafe(objOrVal, key = LS_KEY) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify(obj));
+    if (key === LS_KEY) localStorage.setItem(LS_KEY, JSON.stringify(objOrVal));
+    else localStorage.setItem(key, String(objOrVal ?? ""));
   } catch {}
 }
 
@@ -83,6 +101,22 @@ function setCookie(k, v, days = 180) {
   } catch {}
 }
 
+/** Should we suppress margin (mid-market mode)? URL `?fx_nomargin=1` wins. */
+function readNoMarginFlag() {
+  if (typeof window === "undefined") return false;
+  try {
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.has("fx_nomargin")) {
+      const v = (sp.get("fx_nomargin") ?? "").toLowerCase();
+      return v === "" || v === "1" || v === "true";
+    }
+    const raw = (readLocalSafe(NOMARGIN_LS) ?? "").toLowerCase();
+    return raw === "1" || raw === "true";
+  } catch {
+    return false;
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* context hook                                                        */
 /* ------------------------------------------------------------------ */
@@ -103,6 +137,8 @@ export default function LocalizationProvider({ children, routeCc }) {
   // First paint defaults (route only) — prevents SSR mismatch.
   const routeDefaults = defaultsForSlug(routeSlug);
 
+  // NOTE: `country` is the DELIVERY country (mutable).
+  //       `routeSlug` is the BROWSING cc from the URL (read-only).
   const [country, setCountry] = useState(routeSlug);
   const [currency, setCurrency] = useState(routeDefaults.currency);
 
@@ -130,6 +166,12 @@ export default function LocalizationProvider({ children, routeCc }) {
 
   const [loading, setLoading] = useState(true);
 
+  // mid-market toggle state
+  const [noMargin, setNoMarginFlag] = useState(readNoMarginFlag());
+
+  // guard to avoid spamming backfill requests
+  const fxBackfillRef = useRef({ inFlight: false, lastKey: "" });
+
   /* --------------------------- mount bootstrap --------------------------- */
   useEffect(() => {
     let alive = true;
@@ -149,13 +191,14 @@ export default function LocalizationProvider({ children, routeCc }) {
           languages: init.supported?.languages || [],
         });
 
-        setFx({
+        const initFx = {
           base: init.fx?.base || "USD",
           rates: init.fx?.rates || {},
           asOf: init.fx?.as_of || null,
           margin_bps: Number(init.fx?.margin_bps || 0),
           stale: Boolean(init.fx?.stale),
-        });
+        };
+        setFx(initFx);
 
         // Currency: local override → server suggestion → route default → fallback
         setCurrency(
@@ -173,8 +216,26 @@ export default function LocalizationProvider({ children, routeCc }) {
           language: init.language || routeDefaults.language || FALLBACK.language,
           currency: init.currency || routeDefaults.currency || FALLBACK.currency,
         });
+
+        // If server FX is stale or older than ~4h, gently refresh in background
+        const t = initFx.asOf ? new Date(initFx.asOf).getTime() : NaN;
+        const ageHrs = Number.isFinite(t) ? (Date.now() - t) / 36e5 : Infinity; // hours
+        if (initFx.stale || ageHrs > 4) {
+          fetchFx({ base: initFx.base || "USD" })
+            .then((fresh) => {
+              if (!fresh || !alive) return;
+              setFx((prev) => ({
+                ...prev,
+                base: fresh.base || prev.base,
+                rates: { ...(prev.rates || {}), ...(fresh.rates || {}) },
+                asOf: fresh.asOf || prev.asOf,
+                stale: !fresh.asOf,
+              }));
+            })
+            .catch(() => {});
+        }
       } else {
-        // If init fails, fetch bare FX so price() still works.
+        // If init fails, fetch bare FX so price()/convert() still work.
         try {
           const fallbackFx = await fetchFx({ base: "USD" });
           if (!alive) return;
@@ -196,24 +257,101 @@ export default function LocalizationProvider({ children, routeCc }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // keep no-margin flag in sync if localStorage changes (other tabs)
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === NOMARGIN_LS) setNoMarginFlag(readNoMarginFlag());
+    };
+    window.addEventListener?.("storage", onStorage);
+    return () => window.removeEventListener?.("storage", onStorage);
+  }, []);
+
   /* ----------------------- persist user preferences ---------------------- */
   useEffect(() => {
     const current = readLocalSafe();
-    writeLocalSafe({
-      ...current,
-      country,
-      currency,
-      language,
-    });
+    writeLocalSafe(
+      { ...current, country, currency, language },
+      LS_KEY
+    );
     // SSR-friendly cookies (kept simple)
-    setCookie("upfrica_cc", country);
+    setCookie("upfrica_cc", routeSlug);         // browsing cc (from URL)
     setCookie("upfrica_currency", currency);
     setCookie("upfrica_lang", language);
-  }, [country, currency, language]);
+    setCookie("deliver_cc", country);           // delivery cc (kept separate)
+  }, [country, currency, language, routeSlug]);
+
+  /* ---------- soft-refresh defaults/FX when country changes (no nav) ----- */
+  useEffect(() => {
+    // If user changed country without navigation, refresh server suggestions/FX
+    if (country === routeSlug) return; // initial mount corresponds to route
+    let alive = true;
+    (async () => {
+      const init = await fetchI18nInit(country).catch(() => null);
+      if (!alive || !init) return;
+
+      // Update server-suggested defaults for the new deliver-to country
+      setDefaults((prev) => ({
+        language: init.language || prev.language,
+        currency: init.currency || prev.currency,
+      }));
+
+      // Merge FX (don’t drop anything we already have)
+      setFx((prev) => ({
+        base: init.fx?.base || prev.base,
+        rates: { ...(prev.rates || {}), ...(init.fx?.rates || {}) },
+        asOf: init.fx?.as_of || prev.asOf,
+        margin_bps: Number(init.fx?.margin_bps ?? prev.margin_bps ?? 0),
+        stale: Boolean(init.fx?.stale),
+      }));
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [country, routeSlug]);
 
   /* ----------------------------- memo context ---------------------------- */
   const value = useMemo(() => {
     const marginBps = Number(fx.margin_bps || 0);
+
+    const hasRate = (fxObj, ccy) => {
+      const C = String(ccy || "").toUpperCase();
+      if (!C) return false;
+      const base = String(fxObj?.base || "").toUpperCase();
+      const keys = fxObj?.rates ? Object.keys(fxObj.rates) : [];
+      return C === base || keys.includes(C);
+    };
+
+    // Fire-and-forget backfill for missing pairs; merges new rates into state
+    const ensureFxCoverage = (src, dst) => {
+      const s = String(src || "").toUpperCase();
+      const d = String(dst || "").toUpperCase();
+      if (!s || !d) return;
+      if (hasRate(fx, s) && hasRate(fx, d)) return;
+
+      const key = `${s}->${d}`;
+      if (fxBackfillRef.current.inFlight && fxBackfillRef.current.lastKey === key)
+        return;
+
+      fxBackfillRef.current.inFlight = true;
+      fxBackfillRef.current.lastKey = key;
+
+      fetchFx({ base: fx.base || "USD" })
+        .then((fresh) => {
+          if (!fresh) return;
+          setFx((prev) => ({
+            ...prev,
+            base: fresh.base || prev.base,
+            rates: { ...(prev.rates || {}), ...(fresh.rates || {}) },
+            asOf: fresh.asOf || prev.asOf,
+            stale: !fresh.asOf,
+          }));
+        })
+        .catch(() => {})
+        .finally(() => {
+          fxBackfillRef.current.inFlight = false;
+        });
+    };
 
     /** Use the **resolved language** for display formatting. */
     const resolvedLanguage =
@@ -243,42 +381,56 @@ export default function LocalizationProvider({ children, routeCc }) {
     /**
      * Low-level, **single-shot** converter.
      * - Only applies margin when a real currency change happens.
-     * - Returns `{ amount, converted }`, where `converted` is true iff we changed currency
-     *   and had a finite positive output.
+     * - Returns `{ amount, converted }` with margin optionally suppressed.
+     * - If required rates are missing, it will asynchronously backfill FX and
+     *   return the input amount for now (next render will convert).
      */
     const convertOnce = (amount, fromCurrency, toCurrency = currency) => {
       const src = String(fromCurrency || "").toUpperCase();
       const dst = String(toCurrency || "").toUpperCase();
       const a = Number(amount);
+
       if (!Number.isFinite(a) || a <= 0 || !src || !dst || !fx) {
         return { amount: a, converted: false, toCurrency: dst };
       }
       if (src === dst) {
         return { amount: a, converted: false, toCurrency: dst };
       }
+
+      if (!hasRate(fx, src) || !hasRate(fx, dst)) {
+        ensureFxCoverage(src, dst);
+        return { amount: a, converted: false, toCurrency: dst };
+      }
+
       try {
-        const raw = fxConvert(a, src, dst, fx);
+        const raw = fxConvert(a, src, dst, fx); // mid-market
         const ok = Number.isFinite(raw) && raw > 0;
-        if (!ok) return { amount: a, converted: false, toCurrency: dst };
-        const withM = withMargin(raw, marginBps);
-        return { amount: withM, converted: true, toCurrency: dst };
+        if (!ok) {
+          ensureFxCoverage(src, dst);
+          return { amount: a, converted: false, toCurrency: dst };
+        }
+        const out = noMargin ? raw : withMargin(raw, marginBps);
+        return { amount: out, converted: true, toCurrency: dst };
       } catch {
+        ensureFxCoverage(src, dst);
         return { amount: a, converted: false, toCurrency: dst };
       }
     };
 
-    /**
-     * High-level helper used by pricing code:
-     * - Attempts to convert to current UI currency.
-     * - If FX fails, **returns the original amount** (no margin).
-     * NOTE: Callers that need to know if conversion happened should use `convertOnce`.
-     */
+    /** price(): convert to current UI currency if possible; otherwise return input */
     const price = (amount, fromCurrency) => {
       const res = convertOnce(amount, fromCurrency, currency);
-      return res.amount; // number only (UI-major if converted; else seller-major)
+      return res.amount;
     };
 
-    /** Format full currency string (symbol+amount) for the given currency. */
+    /** Public converter with a stable 3-arg signature */
+    function convert(amount, fromCurrency, toCurrency) {
+      const dst = toCurrency || currency;
+      const res = convertOnce(amount, fromCurrency, dst);
+      return res.amount;
+    }
+
+    /** Formatters & symbol helpers */
     const format = (amount, ccy = currency, opts = {}) => {
       try {
         return new Intl.NumberFormat(resolvedLanguage || undefined, {
@@ -293,7 +445,6 @@ export default function LocalizationProvider({ children, routeCc }) {
       }
     };
 
-    /** Format amount-only (no symbol) for the given currency/locale. */
     const formatAmountOnly = (amount, ccy = currency, opts = {}) => {
       try {
         const parts = new Intl.NumberFormat(resolvedLanguage || undefined, {
@@ -314,7 +465,6 @@ export default function LocalizationProvider({ children, routeCc }) {
       }
     };
 
-    /** Extract just the localized currency symbol. */
     const symbolFor = (ccy = currency) => {
       try {
         const parts = new Intl.NumberFormat(resolvedLanguage || undefined, {
@@ -330,24 +480,55 @@ export default function LocalizationProvider({ children, routeCc }) {
     const isStale = (() => {
       if (typeof fx.stale === "boolean") return fx.stale;
       if (!fx.asOf) return true;
-      const ageHrs = (Date.now() - new Date(fx.asOf).getTime()) / 36e5;
+      const t = new Date(fx.asOf).getTime();
+      if (!Number.isFinite(t)) return true;
+      const ageHrs = (Date.now() - t) / 36e5;
       return ageHrs > 72;
     })();
 
-    /** Replace the **first** path segment if it’s a country; otherwise prepend. */
-    const changeCountry = (slug) => {
-      const next = String(slug || "").toLowerCase();
+    /** Country change helpers */
+
+    // By default: do NOT navigate (keeps PDP /cc/ unchanged).
+    // Accepts string or { code } object; normalizes via canonCc.
+    const changeCountry = (
+      nextCountry,
+      opts = { navigate: false, persistQuery: false, persistCookie: true }
+    ) => {
+      const next = canonCc(nextCountry);
       if (!next || next === country) return;
-      try {
-        const segs = window.location.pathname.split("/").filter(Boolean);
-        if (/^[a-z]{2}$/i.test(segs[0])) segs[0] = next;
-        else segs.unshift(next);
-        const newPath = "/" + segs.join("/");
-        window.location.assign(newPath + window.location.search);
-      } catch {
-        setCountry(next); // non-browser fallback
+
+      if (opts.navigate) {
+        try {
+          const segs = window.location.pathname.split("/").filter(Boolean);
+          if (/^[a-z]{2}$/i.test(segs[0])) segs[0] = next;
+          else segs.unshift(next);
+          const newPath = "/" + segs.join("/");
+          window.location.assign(newPath + window.location.search);
+          return;
+        } catch {
+          /* fall through */
+        }
       }
+
+      // No navigation → update state + persistence
+      setCountry(next);
+
+      // Optional: keep ?region=cc in the URL (helps middleware on next req)
+      if (opts.persistQuery) {
+        try {
+          const u = new URL(window.location.href);
+          u.searchParams.set("region", next);
+          window.history.replaceState({}, "", u.toString());
+        } catch {}
+      }
+
+      // Optional: write delivery cookie now (SSR-friendly)
+      if (opts.persistCookie) setCookie("deliver_cc", next);
     };
+
+    // Convenience alias when you DO want to change the URL segment
+    const navigateToCountry = (slug) =>
+      changeCountry(slug, { navigate: true, persistQuery: false });
 
     // Accept "AUTO" then resolve to defaults for current country
     const changeCurrency = (ccy) => {
@@ -359,20 +540,34 @@ export default function LocalizationProvider({ children, routeCc }) {
         String(lng || "").toLowerCase() === "auto" ? "auto" : String(lng || "")
       );
 
+    // Allow pages to toggle mid-market mode for demos/tests.
+    const setNoMargin = (on) => {
+      const flag = Boolean(on);
+      try {
+        writeLocalSafe(flag ? "1" : "0", NOMARGIN_LS);
+      } catch {}
+      setNoMarginFlag(flag);
+    };
+
     return {
+      // read-only browsing cc from URL (use this to build links)
+      routeCountry: routeSlug,
+
       // state
       loading,
-      country,
+      country,          // DELIVERY country (mutable)
       currency,
-      language, // preference: "auto" or explicit tag
+      language,         // preference: "auto" or explicit tag
       resolvedLanguage, // used by formatters/i18n
       supported,
-      defaults, // server suggestions for the current country
+      defaults,         // server suggestions for the current delivery country
       fx,
       stale: isStale,
+      noMargin,         // mid-market mode flag
 
       // helpers
       price,               // number (UI-major if converted; else seller-major)
+      convert,             // number; (amt, from[, to]) -> to || current UI ccy
       convertOnce,         // { amount, converted, toCurrency }
       format,              // "symbol + amount"
       formatAmountOnly,    // amount-only string
@@ -380,11 +575,23 @@ export default function LocalizationProvider({ children, routeCc }) {
       langLabel,           // human language name
 
       // actions
-      setCountry: changeCountry,
+      setCountry: changeCountry,     // does NOT navigate (and normalizes input)
+      navigateToCountry,             // use only if you want /cc/ to change
       setCurrency: changeCurrency,
       setLanguage: changeLanguage,
+      setNoMargin,                   // toggle mid-market mode
     };
-  }, [loading, country, currency, language, supported, defaults, fx]);
+  }, [
+    loading,
+    country,
+    currency,
+    language,
+    supported,
+    defaults,
+    fx,
+    noMargin,
+    routeSlug,
+  ]);
 
   return (
     <LocalizationContext.Provider value={value}>

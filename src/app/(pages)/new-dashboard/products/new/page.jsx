@@ -6,7 +6,11 @@ import PhotosSection from "@/components/PhotosSection";
 import CategoryField from "@/components/category/CategoryField";
 import BrandField from "@/components/brand/BrandField";
 import { useAuthSheet } from "@/components/auth/AuthSheetProvider";
-import OverlayPageFrame from "@/components/ui/OverlayPageFrame";
+import OverlayPageFrame from "@/components/ui/OverlaySheet";
+
+// ✅ bring in deliver-to currency + symbol
+import { useLocalization } from "@/contexts/LocalizationProvider";
+import { symbolFor } from "@/lib/pricing-mini";
 
 const DRAFT_META_KEY = "upfrica:newProductDraftMeta";
 const DRAFT_FORM_KEY = "upfrica:newProductDraftForm";
@@ -20,10 +24,17 @@ export default function NewProductPage() {
   const router = useRouter();
   const authSheet = (() => { try { return useAuthSheet?.(); } catch { return null; } })();
 
+  // ---------- localization (display only; no FX here) ----------
+  const { currency: uiCurrency, resolvedLanguage } = useLocalization() || {};
+  const priceSymbol = useMemo(
+    () => symbolFor(uiCurrency || "USD", resolvedLanguage || "en") || "₵",
+    [uiCurrency, resolvedLanguage]
+  );
+
   // ---------- basic form ----------
   const [title, setTitle] = useState("");
   const [priceMajor, setPriceMajor] = useState("");
-  const [currency, setCurrency] = useState("GHS");
+  const [currency, setCurrency] = useState("GHS"); // will sync to uiCurrency
   const [quantity, setQuantity] = useState(1);
 
   // ---------- condition ----------
@@ -82,6 +93,11 @@ export default function NewProductPage() {
     } catch {}
   }, []);
 
+  // ✅ always keep the listing currency in sync with the user’s local UI currency
+  useEffect(() => {
+    if (uiCurrency && uiCurrency !== currency) setCurrency(uiCurrency);
+  }, [uiCurrency]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ---------- persist ----------
   useEffect(() => {
     if (draftId) {
@@ -97,7 +113,7 @@ export default function NewProductPage() {
         priceMajor,
         quantity,
         condition,
-        currency,
+        currency,       // persists the *local* currency code we submit
         categoryId,
         brandInput,
         imageCount,
@@ -179,7 +195,7 @@ export default function NewProductPage() {
 
     if (priceMajor !== "" && priceMajor != null) {
       fd.append("price_major", String(priceMajor));
-      fd.append("price_currency", currency || "GHS");
+      fd.append("price_currency", currency || uiCurrency || "GHS"); // ✅ submit local currency
     }
 
     const condId = String(condition || "");
@@ -462,20 +478,35 @@ export default function NewProductPage() {
 
         {/* Details */}
         <div className="rounded-xl border bg-white dark:bg-gray-900 p-4 grid gap-4 md:grid-cols-2">
+          {/* Price */}
           <div>
             <label className="block text-sm font-medium mb-1">
               Price <span className="text-red-500">*</span>
             </label>
-            <input
-              className="w-full min-w-0 rounded-md border px-3 py-3 bg-white dark:bg-gray-800"
-              value={priceMajor}
-              onChange={(e) => setPriceMajor(e.target.value)}
-              onBlur={() => createOrUpdate(true)}
-              inputMode="decimal"
-              placeholder="0.00"
-            />
+            <div className="relative">
+              {/* left symbol adornment */}
+              <span
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                aria-hidden
+              >
+                {priceSymbol}
+              </span>
+              <input
+                className="w-full min-w-0 rounded-md border pl-8 pr-3 py-3 bg-white dark:bg-gray-800"
+                value={priceMajor}
+                onChange={(e) => setPriceMajor(e.target.value)}
+                onBlur={() => createOrUpdate(true)}
+                inputMode="decimal"
+                placeholder="0.00"
+                aria-label="Price"
+              />
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              All amounts are in your local currency ({uiCurrency || currency}). No conversion will be applied.
+            </p>
           </div>
 
+          {/* Quantity */}
           <div>
             <label className="block text-sm font-medium mb-1">
               Quantity <span className="text-red-500">*</span>

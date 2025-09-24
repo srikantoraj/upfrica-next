@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { cookies, headers as nextHeaders } from "next/headers";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs"; // must be a string literal
 
 const BACKEND =
   process.env.BACKEND_BASE ||
@@ -28,7 +29,6 @@ function stripLeadingRoots(p = "") {
   return s;
 }
 
-// ---- Same-origin check ----
 function isSameOrigin(req) {
   const h = nextHeaders();
   const origin = h.get("origin");
@@ -37,9 +37,15 @@ function isSameOrigin(req) {
     const o = new URL(origin);
     const u = new URL(req.url);
     return o.protocol === u.protocol && o.host === u.host;
-  } catch {
-    return false;
-  }
+  } catch { return false; }
+}
+
+// normalize deliver cc (accept “uk” → “gb”)
+const CC_ALIASES = { uk: "gb" };
+function canonCc(x) {
+  const v = String(x || "").trim().toLowerCase();
+  if (!/^[a-z]{2}$/.test(v)) return "";
+  return CC_ALIASES[v] || v;
 }
 
 // Read token from any historical cookie name
@@ -117,22 +123,50 @@ function computeAuthForUpstream(req, pathNoRoot) {
   };
 }
 
+// Build upstream headers, injecting currency/region/lang/tz from cookies when missing
 function buildForwardHeaders(req, { useAuthHeader, authHeaderValue } = {}) {
   const out = new Headers();
   const h = nextHeaders();
+  const jar = cookies();
 
+  // Client-provided (don’t over-write)
   out.set("Accept", h.get("accept") || "application/json");
-
-  const ct = h.get("content-type");
-  if (ct) out.set("Content-Type", ct);
-
-  const tz   = h.get("x-timezone");       if (tz)  out.set("X-Timezone", tz);
-  const xhr  = h.get("x-requested-with"); if (xhr) out.set("X-Requested-With", xhr);
-  const csrf = h.get("x-csrftoken");      if (csrf)out.set("X-CSRFToken", csrf);
+  const ct = h.get("content-type"); if (ct) out.set("Content-Type", ct);
+  const tzH = h.get("x-timezone"); if (tzH) out.set("X-Timezone", tzH);
+  const xhr = h.get("x-requested-with"); if (xhr) out.set("X-Requested-With", xhr);
+  const csrf = h.get("x-csrftoken"); if (csrf) out.set("X-CSRFToken", csrf);
+  const uiCcyH = h.get("x-ui-currency"); if (uiCcyH) out.set("X-UI-Currency", uiCcyH);
+  const deliverCcH = h.get("x-deliver-cc"); if (deliverCcH) out.set("X-Deliver-CC", deliverCcH);
+  const uiLangH = h.get("x-ui-language"); if (uiLangH) out.set("X-UI-Language", uiLangH);
 
   if (useAuthHeader && authHeaderValue) {
     out.set("Authorization", authHeaderValue);
   }
+
+  // Cookie fallbacks (only if not already set by headers)
+  if (!out.has("X-UI-Currency")) {
+    const ccyCookie = jar.get("upfrica_currency")?.value;
+    if (ccyCookie) out.set("X-UI-Currency", String(ccyCookie).toUpperCase());
+  }
+  if (!out.has("X-Deliver-CC")) {
+    const dccCookie = canonCc(jar.get("deliver_cc")?.value);
+    if (dccCookie) out.set("X-Deliver-CC", dccCookie); // 2-letter (gb, gh, ng…)
+  }
+  if (!out.has("X-UI-Language")) {
+    const langCookie = jar.get("upfrica_lang")?.value;
+    if (langCookie) out.set("X-UI-Language", langCookie);
+  }
+  if (!out.has("X-Timezone")) {
+    const tzCookie = jar.get("tz")?.value;
+    if (tzCookie) out.set("X-Timezone", tzCookie);
+  }
+
+  // (Optional) also pass browsing cc (from URL) for analytics/rules
+  if (!out.has("X-Browsing-CC")) {
+    const browseCc = canonCc(jar.get("cc")?.value);
+    if (browseCc) out.set("X-Browsing-CC", browseCc);
+  }
+
   return out;
 }
 
@@ -188,7 +222,8 @@ function jsonOk(obj) {
   });
 }
 
-export async function handler(req, ctx) {
+// ── entry ───────────────────────────────────────────────────────────────
+async function route(req, ctx) { // <— not exported; Next only sees method exports below
   const parts = Array.isArray(ctx?.params?.path) ? ctx.params.path : [];
   const raw = trimSlashes(parts.join("/")).replace(/,+/g, "/");
 
@@ -201,7 +236,6 @@ export async function handler(req, ctx) {
     if (mProd) u.searchParams.set("product_id", mProd[2]);
     if (mShop) u.searchParams.set("shop_slug", mShop[2]);
 
-    // Compute auth normally so cookie→Authorization still works (if needed)
     const auth = computeAuthForUpstream(req, "shipping/preview");
     const resp = await forward(req, u, { auth });
 
@@ -227,10 +261,10 @@ export async function handler(req, ctx) {
   return forward(req, url, { auth, publicHeaderKV: auth.publicHeaderKV });
 }
 
-export const GET     = handler;
-export const POST    = handler;
-export const PUT     = handler;
-export const PATCH   = handler;
-export const DELETE  = handler;
-export const OPTIONS = handler;
-export const HEAD    = handler;
+export const GET     = route;
+export const POST    = route;
+export const PUT     = route;
+export const PATCH   = route;
+export const DELETE  = route;
+export const OPTIONS = route;
+export const HEAD    = route;

@@ -2,9 +2,11 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useLocalization } from "../contexts/LocalizationProvider";
+import { setDeliverCc } from "@/lib/geo"; // persist delivery preference cookie
 
-// map UI slug <-> ISO for GB/UK
+// map UI slug <-> ISO for GB/UK (keep local to avoid coupling)
 const ISO_TO_SLUG = { GB: "uk" };
 const SLUG_TO_ISO = { uk: "GB" };
 
@@ -20,13 +22,23 @@ function slugFromIso(iso) {
 }
 
 export default function LocaleControl() {
+  const router = useRouter();
+
   const {
-    country,            // slug: gh/ng/uk
+    // Treat `country` here as the DELIVERY preference slug (gh/ng/uk)
+    country,
     currency,
     language,
-    supported,          // { countries: [{code,name,flag_emoji}], currencies: [{code}], languages: [] }
-    fx, stale,
-    setCountry, setCurrency, setLanguage,
+    supported, // { countries: [{code,name,flag_emoji}], currencies: [{code}], languages: [] }
+    fx,
+    stale,
+    // Use a dedicated delivery setter that DOES NOT rewrite /[cc]/… in the URL
+    setDeliverCountry,
+    // UI-only setters
+    setCurrency,
+    setLanguage,
+    // Legacy (do not use here; may trigger URL rewrites):
+    setCountry, // eslint-disable-line no-unused-vars
   } = useLocalization();
 
   const [open, setOpen] = useState(false);
@@ -41,7 +53,7 @@ export default function LocaleControl() {
   const currentIso = isoFromSlug(country);
   const countries = supported.countries || [];
   const currentCountry = useMemo(
-    () => countries.find(c => String(c.code).toUpperCase() === currentIso),
+    () => countries.find((c) => String(c.code).toUpperCase() === currentIso),
     [countries, currentIso]
   );
 
@@ -57,7 +69,7 @@ export default function LocaleControl() {
     const q = search.trim().toLowerCase();
     if (!q) return countries.slice(0, 24); // show first chunk
     return countries.filter(
-      c =>
+      (c) =>
         c.name?.toLowerCase().includes(q) ||
         c.code?.toLowerCase().includes(q) ||
         slugFromIso(c.code).includes(q)
@@ -66,7 +78,7 @@ export default function LocaleControl() {
 
   // Currency options (ensure current is present)
   const currencyOptions = useMemo(() => {
-    const list = (supported.currencies || []).map(c => c.code).filter(Boolean);
+    const list = (supported.currencies || []).map((c) => c.code).filter(Boolean);
     if (!list.includes(currency)) list.unshift(currency);
     // small fallback if bootstrap missing
     const fallback = ["USD", "EUR", "GBP", "GHS", "NGN", "ZAR", "CAD"];
@@ -91,11 +103,26 @@ export default function LocaleControl() {
   };
 
   const onSave = () => {
-    // Commit changes. Changing country triggers hard redirect (via provider).
-    if (pendingCountry !== country) setCountry(pendingCountry);
+    // Persist delivery preference WITHOUT changing the URL segment.
+    if (pendingCountry !== country) {
+      try {
+        setDeliverCc(pendingCountry); // cookie: deliver_cc (1yr, SameSite=Lax)
+        document.documentElement.setAttribute("data-deliver-cc", pendingCountry);
+      } catch {
+        /* ignore */
+      }
+      if (typeof setDeliverCountry === "function") {
+        setDeliverCountry(pendingCountry); // update UI context (no redirect)
+      }
+      // Do NOT call setCountry here; some implementations rewrite /[cc]/…
+    }
+
     if (pendingCurrency !== currency) setCurrency(pendingCurrency);
     if (pendingLanguage !== language) setLanguage(pendingLanguage);
+
     setOpen(false);
+    // Revalidate SSR bits that read cookies or server data
+    router.refresh();
   };
 
   return (

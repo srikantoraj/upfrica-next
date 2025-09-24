@@ -1,13 +1,16 @@
-// src/components/new-dashboard/products/ProductLisTable.jsx
+// src/components/new-dashboard/products/ProductListTable.jsx
 "use client";
 
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { BASE_API_URL } from "@/app/constants";
 import { getCardImage } from "@/app/constants";
 import axiosInstance from "@/lib/axiosInstance";
+import { hasFeature, featureEnabled } from "@/lib/plan-features-checker";
+
 
 import {
   Eye,
@@ -36,6 +39,8 @@ import {
   Download,
   ListFilter,
   Clock,
+  DollarSign,
+  Lock,
 } from "lucide-react";
 
 /* ---- metrics batch refresh (uses /api/metrics/summary/) ---- */
@@ -62,6 +67,18 @@ async function fetchMetricsSummary(ids = [], opts = {}) {
   }
   return data || {};
 }
+
+// bulk price update (gated to price plan)
+const BulkPriceModal = dynamic(
+  () => import("@/components/products/BulkPriceModal"),
+  { ssr: false }
+);
+
+// plan comparison (upsell)
+const PlanComparisonModal = dynamic(
+  () => import("@/components/ui/PlanComparisonModal"),
+  { ssr: false }
+);
 
 // header sort button (shows active state)
 function SortBtn({ label, k, alignRight = false, sort, setSort }) {
@@ -250,7 +267,11 @@ const toMajor = (cents = 0, exp = 2) =>
   (Number(cents || 0) / Math.pow(10, exp)).toFixed(exp);
 
 const statusLabel = (s) =>
-  s === 1 ? "Published" : s === 0 ? "Draft" : s === 2 ? "Under review" : "—";
+  s === 1 ? "Published"
+: s === 0 ? "Draft"
+: s === 2 ? "Under review"
+: s === 5 ? "Archived"
+: "—";
 
 function fmtFriendly(val) {
   if (!val) return "—";
@@ -547,12 +568,14 @@ function CapBottomSheet({ open, onClose, ctx, onAutofix }) {
   const cap = (ctx.server && ctx.server.meta) || ctx.cap || {};
   const max = cap?.max ?? null;
   const used = cap?.used ?? null;
-  const remaining =
-    cap?.remaining ?? (max != null && used != null ? Math.max(0, max - used) : null);
+const remaining =
+  cap?.remaining ?? (max != null && used != null ? Math.max(0, max - used) : null);
   const pct =
     max && used != null ? Math.min(100, Math.round((used / max) * 100)) : null;
 
-  const isCap = ctx.server?.code === "cap_reached" || ctx.mode === "publish";
+const isCap =
+  ctx.server?.code === "cap_reached" ||
+  (typeof remaining === "number" && remaining <= 0);
   const isPlanNoSchedule =
     ctx.server?.code === "plan_no_schedule" || ctx.reason === "plan_no_schedule";
 
@@ -1081,6 +1104,94 @@ export default function ProductListTable({
   const [capOpen, setCapOpen] = useState(false);
   const [capCtx, setCapCtx] = useState(null);
 
+
+
+
+
+
+// bulk price update
+const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
+
+// plan/features + gating
+const [features, setFeatures] = useState(null);      // account-level features
+const [planModalOpen, setPlanModalOpen] = useState(false);
+const [planIntent, setPlanIntent] = useState(null);  // "bulk_price" | "schedule" | null
+const accountCanSchedule = hasFeature(features, "schedule");
+
+// Fetch features once (works with either api/users/me/entitlements):
+useEffect(() => {
+  let alive = true;
+  (async () => {
+    try {
+      // preferred: entitlements endpoint
+      const { data } = await axiosInstance.get("/api/users/me/entitlements", {
+        params: { full: 1 },
+      });
+
+      // normalize a few possible shapes -> { bulk_price_update: true, schedule: true, ... }
+      const map =
+        data?.features ??
+        data?.plan_features ??
+        (Array.isArray(data?.entitlements)
+          ? Object.fromEntries(
+              data.entitlements.map((x) => [x?.code ?? x, true])
+            )
+          : null);
+
+      if (alive) setFeatures(map);
+    } catch {
+      try {
+        // fallback: users/me
+        const { data } = await axiosInstance.get("/api/users/me/");
+        if (alive) setFeatures(data?.features ?? data?.plan_features ?? null);
+      } catch {
+        if (alive) setFeatures(null); // will fall back to per-product flags
+      }
+    }
+  })();
+  return () => { alive = false; };
+}, []);
+
+
+
+
+
+// Compute permission for Bulk Price via plan-features-checker
+const canBulkPrice = useMemo(() => {
+  const v = hasFeature(features, "bulk_price_update");
+  if (v !== undefined) return v;
+  return products.some(p => featureEnabled(p, "bulk_price_update", false));
+}, [features, products]);
+
+
+
+
+
+
+// helpers
+function openPlanCompare(intent) {
+  setPlanIntent(intent ?? null);
+  setPlanModalOpen(true);
+}
+function openBulkPrice() {
+  if (!selected.size) return;
+  if (canBulkPrice) setBulkPriceOpen(true);
+  else openPlanCompare("bulk_price");
+}
+
+// listen for a backend hard-gate signal from the BulkPrice modal (optional)
+useEffect(() => {
+  const handlePlanGate = (e) => {
+    openPlanCompare(e?.detail?.feature ?? "bulk_price");
+  };
+  window.addEventListener("upfrica:plan-gate", handlePlanGate);
+  return () => window.removeEventListener("upfrica:plan-gate", handlePlanGate);
+}, []);
+
+
+
+
+
   // Column visibility manager
   const [colMenuOpen, setColMenuOpen] = useState(false);
   const colMenuRef = useRef(null);
@@ -1542,48 +1653,52 @@ export default function ProductListTable({
     return `${h}h ago`;
   }, [lastStatsAt]);
 
-  function exportCSV() {
-    const rows = sorted;
-    const header = [
-      "id","title","status","is_live","is_paused","qty","price_cents","currency",
-      "views","clicks","whatsapp_clicks","phone_clicks","contacts","ctr","contact_ctr","url",
-    ];
-    const lines = [header.join(",")];
-    for (const p of rows) {
-      const qty = qtyOfSafe(p);
-      const v = viewsOf(p);
-      const c = clicksOf(p);
-      const w = whatsappClicksOf(p);
-      const ph = phoneClicksOf(p);
-      const cc = contactClicksOf(p);
-      const line = [
-        p.id,
-        `"${(p.title || "").replace(/"/g, '""')}"`,
-        statusLabel(p.status),
-        p.is_live ? 1 : 0,
-        p.is_paused ? 1 : 0,
-        qty,
-        Number(p.price_cents || 0),
-        p.price_currency || "",
-        v,
-        c,
-        w,
-        ph,
-        cc,
-        typeof ctrOf(p) === "string" ? ctrOf(p) : "",
-        typeof contactCtrOf(p) === "string" ? contactCtrOf(p) : "",
-        viewHrefAbsolute(p),
-      ].join(",");
-      lines.push(line);
-    }
-    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "products.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+
+function exportCSV() {
+  const rows = sorted;
+  const header = [
+    "id","title","status","is_live","is_paused","qty","price_cents","currency",
+    "views","clicks","whatsapp_clicks","phone_clicks","contacts","ctr","contact_ctr","url",
+  ];
+  const lines = [header.join(",")];
+  for (const p of rows) {
+    const qty = qtyOfSafe(p);
+    const v = viewsOf(p);
+    const c = clicksOf(p);
+    const w = whatsappClicksOf(p);
+    const ph = phoneClicksOf(p);
+    const cc = contactClicksOf(p);
+
+    const line = [
+      p.id,
+      // ⬇️ replace your existing title cell with this one
+      `"${(p.title || "").replace(/\r?\n/g, " ").replace(/"/g, '""')}"`,
+      statusLabel(p.status),
+      p.is_live ? 1 : 0,
+      p.is_paused ? 1 : 0,
+      qty,
+      Number(p.price_cents || 0),
+      p.price_currency || "",
+      v,
+      c,
+      w,
+      ph,
+      cc,
+      typeof ctrOf(p) === "string" ? ctrOf(p) : "",
+      typeof contactCtrOf(p) === "string" ? contactCtrOf(p) : "",
+      viewHrefAbsolute(p),
+    ].join(",");
+
+    lines.push(line);
   }
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "products.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 //optional onMeta prop and report whenever things change
   useEffect(() => {
@@ -1624,6 +1739,7 @@ const useCards = useMemo(() => {
         </div>
 
         <div className="flex flex-wrap gap-2 items-center">
+          
           {/* columns */}
           <div className="relative" ref={colMenuRef}>
             <button
@@ -1657,6 +1773,32 @@ const useCards = useMemo(() => {
             <Wrench className="w-4 h-4" />
             Auto-Fix
           </button>
+
+
+<button
+  onClick={openBulkPrice}
+  disabled={selected.size === 0}
+  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+  title={
+    selected.size === 0
+      ? "Select products first"
+      : canBulkPrice
+      ? "Bulk price update"
+      : "Available on Growth and Pro plans"
+  }
+>
+  {canBulkPrice ? (
+    <>
+      <DollarSign className="w-4 h-4" /> Bulk Price
+    </>
+  ) : (
+    <>
+      <Lock className="w-4 h-4" /> Bulk Price
+    </>
+  )}
+</button>
+
+
 
           <button
             onClick={exportCSV}
@@ -2174,20 +2316,16 @@ const useCards = useMemo(() => {
                                 <div className="text-xs font-semibold mb-2">
                                   Schedule
                                 </div>
-                                <ScheduleEditor
-                                  product={p}
-                                  canSchedule={p?.can_schedule !== false}
-                                  onBlocked={() =>
-                                    setCapCtx({
-                                      product: p,
-                                      mode: "publish",
-                                      reason: "plan_no_schedule",
-                                    })
-                                  }
-                                  onSave={(payload) =>
-                                    patchProduct(p.id, payload, "schedule")
-                                  }
-                                />
+
+<ScheduleEditor
+  product={p}
+  canSchedule={
+    accountCanSchedule ??
+    featureEnabled(p, "schedule", p?.can_schedule !== false)
+  }
+  onBlocked={() => openPlanCompare("schedule")}
+  onSave={(payload) => patchProduct(p.id, payload, "schedule")}
+/>
                               </div>
 
                               <div className="rounded-lg border p-3 dark:border-gray-700">
@@ -2308,6 +2446,25 @@ const useCards = useMemo(() => {
           >
             Clear
           </button>
+
+<button
+  onClick={openBulkPrice}
+  disabled={batchBusy}
+  className="px-2 py-1 rounded text-sm
+             border border-black/10 hover:bg-black/15
+             dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
+  title={canBulkPrice ? "Bulk price update" : "Available on Growth and Pro plans"}
+>
+  <span className="inline-flex items-center gap-1">
+    {canBulkPrice ? (
+      <DollarSign className="w-3.5 h-3.5" />
+    ) : (
+      <Lock className="w-3.5 h-3.5" />
+    )}
+    Price Update
+  </span>
+</button>
+
         </div>
       )}
 
@@ -2344,6 +2501,43 @@ const useCards = useMemo(() => {
         push={push}
       />
 
+{/* Bulk Price Update modal */}
+{bulkPriceOpen && (
+  <BulkPriceModal
+    productIds={Array.from(selected)}
+    onClose={() => setBulkPriceOpen(false)}
+    onDone={async () => {
+      setBulkPriceOpen(false);
+      await fetchProducts(1, { silent: true }); // refresh prices
+      push({
+        type: "success",
+        title: "Prices updated",
+        message: `${selected.size} item${selected.size === 1 ? "" : "s"} updated.`,
+      });
+      setSelected(new Set());
+    }}
+  />
+)}
+
+{/* Plan comparison (upsell) */}
+<PlanComparisonModal
+  open={planModalOpen}
+  onOpenChange={setPlanModalOpen}
+  hideTrigger
+  onPick={async (planId) => {
+    try {
+      // or call your upgrade API here
+      router.push(
+        `/account/billing?plan=${encodeURIComponent(planId)}&intent=${encodeURIComponent(planIntent ?? "")}`
+      );
+    } finally {
+      setPlanModalOpen(false);
+    }
+  }}
+/>
+
+
+
       {/* Quick modals */}
       {qtyTarget && (
         <QuickQtyModal
@@ -2368,9 +2562,6 @@ const useCards = useMemo(() => {
     </div>
   );
 }
-
-
-
 
 
 

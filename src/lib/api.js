@@ -64,6 +64,17 @@ function ensureTrailingSlash(pathname = "") {
   return looksLikeFile(clean) || clean.endsWith("/") ? clean : `${clean}/`;
 }
 
+
+// --- add near the top ---
+function readClientCookie(name) {
+  if (typeof document === "undefined") return null;
+  try {
+    const m = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+    return m ? decodeURIComponent(m[1]) : null;
+  } catch { return null; }
+}
+
+
 // 🔧 Strip any accidental leading proxy bits *and* a single "api/" if present.
 function stripProxyPrefixes(p = "") {
   let out = trimSlashes(p);
@@ -136,6 +147,17 @@ export async function api(path, opts = {}) {
   if (tz && !hasHeader(headers, "X-Timezone")) {
     headers.set("X-Timezone", tz);
   }
+
+    // Seed currency/region headers from cookies (client-side).
+  // These are written by LocalizationProvider on change.
+  if (typeof document !== "undefined") {
+    const ccy = readClientCookie("upfrica_currency");
+    const deliverCc = readClientCookie("deliver_cc");
+    if (ccy && !hasHeader(headers, "x-ui-currency")) headers.set("x-ui-currency", ccy);
+    if (deliverCc && !hasHeader(headers, "x-deliver-cc")) headers.set("x-deliver-cc", deliverCc);
+  }
+
+  
 
   let url = String(path || "");
 

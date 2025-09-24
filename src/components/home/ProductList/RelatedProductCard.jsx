@@ -5,10 +5,11 @@ import React from "react";
 import Link from "next/link";
 import { AiOutlineShoppingCart } from "react-icons/ai";
 import { FaBolt, FaHeart } from "react-icons/fa";
-import { useDispatch, useSelector } from "react-redux";
-import { convertPrice } from "@/app/utils/utils";
-import { selectSelectedCountry } from "@/app/store/slices/countrySlice";
+import { useDispatch } from "react-redux";
 import { fixImageUrl, FALLBACK_IMAGE, pickProductImage } from "@/lib/image";
+import { useLocalization } from "@/contexts/LocalizationProvider";
+import { symbolFor } from "@/lib/pricing-mini";
+import { withCountryPrefix } from "@/lib/locale-routing";
 
 /* ---------- image resolver ---------- */
 function resolveCardImage(p) {
@@ -32,13 +33,41 @@ function resolveCardImage(p) {
   return fixImageUrl(first || FALLBACK_IMAGE);
 }
 
-const fmt2 = (n) =>
-  Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/* ---------- FX helpers (same pattern as Basket/DirectBuy) ---------- */
+const currencyOf = (p) =>
+  String(
+    p?.price_currency ??
+      p?.currency ??
+      p?.seller_currency ??
+      p?.sellerCurrency ??
+      "USD"
+  ).toUpperCase();
+
+const convMajorSafe = (major, fromCcy, convert, toCcy) => {
+  const n = Number(major || 0);
+  const src = String(fromCcy || "USD").toUpperCase();
+  const dst = String(toCcy || src).toUpperCase();
+  if (!convert || src === dst) return n;
+  const out = Number(convert(n, src, dst));
+  return Number.isFinite(out) && out >= 0 ? out : n;
+};
+
+const amountOnly = (n, currency, locale = "en") => {
+  try {
+    const parts = new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).formatToParts(Number(n || 0));
+    return parts.filter((p) => p.type !== "currency").map((p) => p.value).join("").trim();
+  } catch {
+    return Number(n || 0).toFixed(2);
+  }
+};
 
 export default function RelatedProductCard({ product }) {
   const dispatch = useDispatch();
-  const selectedCountry = useSelector(selectSelectedCountry);
-  const exchangeRates = useSelector((s) => s.exchangeRates.rates);
 
   const {
     id,
@@ -52,31 +81,29 @@ export default function RelatedProductCard({ product }) {
     sku,
   } = product || {};
 
-  // URL + currency context
-  const countryPath = (
-    selectedCountry?.cc ||
-    selectedCountry?.country_code ||
-    selectedCountry?.countryCode ||
-    "gh"
-  )
-    .toString()
-    .toLowerCase();
+  // Deliver-to context (currency + locale + cc for URLs)
+  const { country: uiCountry, currency: uiCurrency, convert, resolvedLanguage } = useLocalization() || {};
+  const cc = String(uiCountry || "gh").toLowerCase();
+  const symbol = symbolFor(uiCurrency || "USD", resolvedLanguage || "en") || "₵";
 
-  const currencyCode = selectedCountry?.currency || selectedCountry?.code || "GHS";
-  const currencySym = selectedCountry?.symbol || "₵";
-
-  // prices (display)
+  // prices (seller)
+  const sellerCcy = currencyOf(product);
   const baseMajor = typeof price_cents === "number" ? price_cents / 100 : undefined;
-  const convertedPrice =
-    baseMajor != null ? convertPrice(baseMajor, price_currency, currencyCode, exchangeRates) : null;
 
   const saleActive =
     sale_end_date && new Date(sale_end_date) > new Date() && Number(sale_price_cents) > 0;
 
+  const saleMajor =
+    saleActive && typeof sale_price_cents === "number"
+      ? sale_price_cents / 100
+      : undefined;
+
+  // convert to UI currency
+  const convertedPrice =
+    baseMajor != null ? convMajorSafe(baseMajor, sellerCcy, convert, uiCurrency) : null;
+
   const convertedSale =
-    saleActive && sale_price_cents
-      ? convertPrice(sale_price_cents / 100, price_currency, currencyCode, exchangeRates)
-      : null;
+    saleMajor != null ? convMajorSafe(saleMajor, sellerCcy, convert, uiCurrency) : null;
 
   // image
   const [imgSrc, setImgSrc] = React.useState(() => resolveCardImage(product));
@@ -106,12 +133,11 @@ export default function RelatedProductCard({ product }) {
         price_cents: cents,
         quantity: 1,
         sku,
-        __resolved_image: imgSrc,           // BasketSheet reads this first
-        image: [{ image_url: imgSrc }],     // legacy shape still supported
+        __resolved_image: imgSrc,
+        image: [{ image_url: imgSrc }],
       },
     });
 
-    // Nudge PDP to open its BasketSheet (listener added there)
     try {
       window.dispatchEvent(new CustomEvent("open-basket-sheet"));
     } catch {}
@@ -119,18 +145,37 @@ export default function RelatedProductCard({ product }) {
     setTimeout(() => setAdding(false), 400);
   };
 
+  const priceBlock =
+    saleActive && convertedSale != null ? (
+      <>
+        <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+          {symbol}
+          {amountOnly(convertedSale, uiCurrency, resolvedLanguage)}
+        </span>
+        {convertedPrice != null && (
+          <span className="text-xs text-gray-500 line-through">
+            {amountOnly(convertedPrice, uiCurrency, resolvedLanguage)}
+          </span>
+        )}
+      </>
+    ) : convertedPrice != null ? (
+      <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+        {symbol}
+        {amountOnly(convertedPrice, uiCurrency, resolvedLanguage)}
+      </span>
+    ) : (
+      <span className="text-sm text-gray-500">Ask for price</span>
+    );
+
+  const href = withCountryPrefix(cc, `/${seo_slug || slug}/`);
+
   return (
     <article
       data-card
       className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col h-[370px] hover:shadow-md transition-shadow focus-within:ring-2 focus-within:ring-violet-300"
     >
       {/* image / link */}
-      <Link
-        prefetch={false}
-        href={`/${countryPath}/${seo_slug || slug}/`}
-        className="relative block w-full h-[230px]"
-        aria-label={title || "View product"}
-      >
+      <Link prefetch={false} href={href} className="relative block w-full h-[230px]" aria-label={title || "View product"}>
         <img
           src={imgSrc}
           alt={title || "Product image"}
@@ -181,26 +226,7 @@ export default function RelatedProductCard({ product }) {
       {/* price & CTA */}
       <div className="border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between px-3 py-2.5">
-          <div className="flex items-baseline gap-2">
-            {saleActive && convertedSale != null ? (
-              <>
-                <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                  {currencySym} {fmt2(convertedSale)}
-                </span>
-                {convertedPrice != null && (
-                  <span className="text-xs text-gray-500 line-through">
-                    {fmt2(convertedPrice)}
-                  </span>
-                )}
-              </>
-            ) : convertedPrice != null ? (
-              <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                {currencySym} {fmt2(convertedPrice)}
-              </span>
-            ) : (
-              <span className="text-sm text-gray-500">Ask for price</span>
-            )}
-          </div>
+          <div className="flex items-baseline gap-2">{priceBlock}</div>
 
           <button
             type="button"

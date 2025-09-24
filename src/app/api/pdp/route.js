@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import redis from "@/lib/redis";
 
-export const runtime = "nodejs";
+export const runtime = "nodejs"; // or "edge"
 
 // hour bucket used for counters
 function bucketKey(id, kind, d) {

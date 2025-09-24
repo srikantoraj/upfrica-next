@@ -4,14 +4,16 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useDispatch, useSelector } from 'react-redux';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useSaleCountdown } from '@/hooks/useSaleCountdown';
+
+import ShippingPreview from "@/components/pdp/ShippingPreview";
+
+
 
 import axios from '@/lib/axiosInstance';
 import { b } from '@/lib/api-path';
 import * as pm from '@/lib/product-metrics';
-
-import { pickProductImage } from '@/lib/image';
 
 import {
   FaHeart, FaRegHeart, FaEdit, FaTrash, FaEnvelope, FaWhatsapp, FaEyeSlash, FaMapMarkerAlt,
@@ -35,20 +37,20 @@ import Breadcrumbs from './Breadcrumbs';
 import ContactSellerCard from '../ContactSellerCard';
 
 import SimplePrice from '@/components/SimplePrice';
+//import Money from '@/components/common/Money';
 
 import {
   fetchReviewsStart, fetchReviewsSuccess, fetchReviewsFailure,
 } from '@/app/store/slices/reviewsSlice';
-import { getCleanToken } from '@/lib/getCleanToken';
+//import { getCleanToken } from '@/lib/getCleanToken';
 import { canDisplaySellerContact, pickShopPhone, whatsappUrl } from '@/lib/seller-contact';
-import { fixImageUrl, FALLBACK_IMAGE } from '@/lib/image';
+import { pickProductImage, fixImageUrl, FALLBACK_IMAGE } from '@/lib/image';
 import { useLocalization } from '@/contexts/LocalizationProvider';
 import { buildPricing as buildPricingMini, symbolFor } from '@/lib/pricing-mini';
 import { withCountryPrefix } from '@/lib/locale-routing';
+import { canonCc } from '@/lib/geo';
 
-const DEBUG =
-  typeof window !== 'undefined' &&
-  new URLSearchParams(window.location.search).has('debug');
+
 
 const CONTACT_REASON_COPY = {
   missing_entitlement: 'Seller plan doesn’t include public phone yet.',
@@ -87,12 +89,21 @@ function readCookie(name) {
 
 function openLocaleSheetSafe() {
   try {
-    const btn = document.querySelector('button[aria-label="Open region & preferences"]');
+    const selectors = [
+      'button[aria-label*="Region"]',
+      'button[aria-label*="region"]',
+      'button[aria-label*="preferences"]',
+      '[data-locale-control]',
+    ];
+
+    const btn = document.querySelector(selectors.join(','));
     if (btn) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => btn.click(), 200);
     }
-  } catch {}
+  } catch {
+    // silently ignore errors
+  }
 }
 
 /* ---------------- image resolver ---------------- */
@@ -140,18 +151,8 @@ function resolveRelatedImage(item) {
   };
 
   const arrayishKeys = [
-    'product_images',
-    'images',
-    'photos',
-    'image_objects',
-    'imageObjects',
-    'gallery',
-    'pictures',
-    'thumbnails',
-    'media',
-    'assets',
-    'primary_media',
-    'image_urls',
+    'product_images','images','photos','image_objects','imageObjects','gallery','pictures',
+    'thumbnails','media','assets','primary_media','image_urls',
   ];
   for (const k of arrayishKeys) {
     const arr = toArray(item[k]);
@@ -177,19 +178,8 @@ function resolveRelatedImage(item) {
   }
 
   const singleKeys = [
-    'product_image_url',
-    'product_image',
-    'thumbnail_url',
-    'thumbnail',
-    'primary_image_url',
-    'main_image',
-    'seo_image',
-    'image_url',
-    'image',
-    'picture_url',
-    'picture',
-    'cover_image',
-    'preview',
+    'product_image_url','product_image','thumbnail_url','thumbnail','primary_image_url','main_image',
+    'seo_image','image_url','image','picture_url','picture','cover_image','preview',
   ];
   for (const k of singleKeys) {
     const v = item[k];
@@ -213,35 +203,22 @@ function normalizeShopPhones(shop) {
     updated_at: shop.updated_at,
   };
   if (typeof scn === 'string')
-    return [
-      {
-        ...base,
-        e164: scn,
-        number: scn,
-        display: scn,
-        national: scn,
-        local: scn,
-      },
-    ];
+    return [{ ...base, e164: scn, number: scn, display: scn, national: scn, local: scn }];
   if (typeof scn === 'object') {
     const e = scn.e164 || scn.number || scn.display || scn.national || scn.local || '';
-    return [
-      {
-        ...base,
-        e164: e,
-        number: scn.number || e,
-        display: scn.display || scn.national || scn.local || e,
-        national: scn.national,
-        local: scn.local,
-        uses: Array.isArray(scn.uses)
-          ? Array.from(new Set([...scn.uses, 'shop_public']))
-          : ['shop_public'],
-        is_primary: scn.is_primary ?? base.is_primary,
-        is_verified: scn.is_verified ?? base.is_verified,
-        updated_at: scn.updated_at || base.updated_at,
-        id: scn.id || base.id,
-      },
-    ];
+    return [{
+      ...base,
+      e164: e,
+      number: scn.number || e,
+      display: scn.display || scn.national || scn.local || e,
+      national: scn.national,
+      local: scn.local,
+      uses: Array.isArray(scn.uses) ? Array.from(new Set([...scn.uses, 'shop_public'])) : ['shop_public'],
+      is_primary: scn.is_primary ?? base.is_primary,
+      is_verified: scn.is_verified ?? base.is_verified,
+      updated_at: scn.updated_at || base.updated_at,
+      id: scn.id || base.id,
+    }];
   }
   return [];
 }
@@ -271,9 +248,7 @@ function legacyPhoneFromSellerContact(scn, shopUpdatedAt, isVerified) {
       display: scn.display || scn.national || scn.local || e,
       national: scn.national,
       local: scn.local,
-      uses: Array.isArray(scn.uses)
-        ? Array.from(new Set([...scn.uses, 'shop_public']))
-        : ['shop_public'],
+      uses: Array.isArray(scn.uses) ? Array.from(new Set([...scn.uses, 'shop_public'])) : ['shop_public'],
       is_primary: scn.is_primary ?? base.is_primary,
       is_verified: scn.is_verified ?? base.is_verified,
       updated_at: scn.updated_at || base.updated_at,
@@ -298,16 +273,10 @@ const SignalsPills = ({ views24h = 0, baskets24h = 0, wishlistsTotal = 0 }) => (
 
 /* ---------- contact click tracking ---------- */
 function hasFiredContactFor(slug) {
-  try {
-    return sessionStorage.getItem(`ccf:${slug}`) === '1';
-  } catch {
-    return false;
-  }
+  try { return sessionStorage.getItem(`ccf:${slug}`) === '1'; } catch { return false; }
 }
 function markFiredContactFor(slug) {
-  try {
-    sessionStorage.setItem(`ccf:${slug}`, '1');
-  } catch {}
+  try { sessionStorage.setItem(`ccf:${slug}`, '1'); } catch {}
 }
 function getOrCreateSessionId() {
   try {
@@ -318,9 +287,7 @@ function getOrCreateSessionId() {
       localStorage.setItem(k, id);
     }
     return id;
-  } catch {
-    return '';
-  }
+  } catch { return ''; }
 }
 async function postContactClick(slug, source = 'pdp') {
   const url = b(`products/${slug}/event/`);
@@ -343,78 +310,72 @@ async function postContactClick(slug, source = 'pdp') {
   } catch {}
 }
 
+
+
+
 /* ---------------- PDP ---------------- */
 export default function ProductDetailSection({ product, signals }) {
+
+
   const dispatch = useDispatch();
   const router = useRouter();
   const currentPath = usePathname();
 
+  // ROUTING cc must come from URL (keeps product URL stable when "Deliver to" changes)
+  const browseCc = useMemo(() => {
+    const seg1 = (currentPath || '/').split('/')[1] || '';
+    return /^[a-z]{2}$/i.test(seg1) ? canonCc(seg1) : 'gh';
+  }, [currentPath]);
+
   const containerRef = React.useRef(null);
 
+  // --- metrics ping helper ---
+  const mark = useCallback(async (kind, delta = 1) => {
+    if (!product?.id) return;
+    const sid = getOrCreateSessionId();
+    const url = `${b('pdp')}?id=${encodeURIComponent(product.id)}&kind=${encodeURIComponent(kind)}&delta=${delta}&sid=${encodeURIComponent(sid)}`;
+    try {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(url, new Blob(['1'], { type: 'text/plain' }));
+      } else {
+        await fetch(url, {
+          method: 'POST',
+          keepalive: true,
+          headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Session-Id': sid },
+        });
+      }
+    } catch {}
+  }, [product?.id]);
 
-  // --- Add these inside ProductDetailSection component (near other hooks) ---
-const mark = useCallback(async (kind, delta = 1) => {
-  if (!product?.id) return;
-  const sid = getOrCreateSessionId();
-  const url = `${b('pdp')}?id=${encodeURIComponent(product.id)}&kind=${encodeURIComponent(kind)}&delta=${delta}&sid=${encodeURIComponent(sid)}`;
-  try {
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(url, new Blob(["1"], { type: "text/plain" }));
-    } else {
-      await fetch(url, {
-        method: "POST",
-        keepalive: true,
-        headers: {
-          "X-Requested-With": "XMLHttpRequest",
-          "X-Session-Id": sid,
-        },
-      });
-    }
-  } catch {}
-}, [product?.id]);
+  useEffect(() => {
+    if (!product?.id || !containerRef.current) return;
+    const onceKey = `pv:${product.id}:seen`;
+    if (sessionStorage.getItem(onceKey) === '1') return;
 
-useEffect(() => {
-  if (!product?.id || !containerRef.current) return;
+    const cb = (entries, obs) => {
+      if (entries.some(e => e.isIntersecting)) {
+        sessionStorage.setItem(onceKey, '1');
+        mark('views', 1);
+        obs.disconnect();
+      }
+    };
+    const io = new IntersectionObserver(cb, { threshold: 0, rootMargin: '100px' });
+    io.observe(containerRef.current);
+    return () => io.disconnect();
+  }, [product?.id, mark]);
 
-  const onceKey = `pv:${product.id}:seen`;
-  if (sessionStorage.getItem(onceKey) === '1') return;
+  // Localization (DELIVERY prefs)
+  const { country: uiCountry, currency: uiCurrency, convert, resolvedLanguage } = useLocalization();
 
-  const cb = (entries, obs) => {
-    if (entries.some(e => e.isIntersecting)) {
-      sessionStorage.setItem(onceKey, '1');
-      mark('views', 1);
-      obs.disconnect();
-    }
-  };
-
-  // <-- here
-  const io = new IntersectionObserver(cb, { threshold: 0, rootMargin: '100px' });
-  io.observe(containerRef.current);
-
-  return () => io.disconnect();
-}, [product?.id, mark]);
-
-
-
-
-  const { country: uiCountry, currency: uiCurrency, price: conv, resolvedLanguage } =
-    useLocalization();
-
+  // safe FX conversion that actually converts when "Deliver to" changes
   const convSafe = useCallback(
     (amount, fromCurrency) => {
       if (amount == null) return null;
-      if (!conv || !uiCurrency || uiCurrency === fromCurrency) return amount;
-      try {
-        const out = Number(conv(amount, fromCurrency));
-        if (!Number.isFinite(out) || out <= 0) return amount;
-        const ratio = out / amount;
-        if (ratio > 10 || ratio < 0.1) return amount;
-        return out;
-      } catch {
-        return amount;
-      }
+      if (!convert || !uiCurrency || uiCurrency === fromCurrency) return amount;
+      const out = Number(convert(amount, fromCurrency, uiCurrency));
+      return Number.isFinite(out) && out > 0 ? out : amount;
     },
-    [conv, uiCurrency]
+    [convert, uiCurrency]
   );
 
   const amountOnly = useCallback(
@@ -426,11 +387,7 @@ useEffect(() => {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         }).formatToParts(n);
-        return parts
-          .filter((p) => p.type !== 'currency')
-          .map((p) => p.value)
-          .join('')
-          .trim();
+        return parts.filter((p) => p.type !== 'currency').map((p) => p.value).join('').trim();
       } catch {
         return Number(n || 0).toFixed(2);
       }
@@ -438,16 +395,13 @@ useEffect(() => {
     [resolvedLanguage]
   );
 
-
   useEffect(() => {
-    try {
-      document.documentElement.setAttribute('lang', resolvedLanguage || 'en');
-    } catch {}
+    try { document.documentElement.setAttribute('lang', resolvedLanguage || 'en'); } catch {}
   }, [resolvedLanguage]);
 
-  const {
-    id, title, product_images, shop, user, variants, is_published,
-  } = product || {};
+  // keep your existing line:
+  const { id, title, product_images, shop, user, variants, is_published } = product || {};
+
 
   const { token, user: currentUser } = useSelector((s) => s.auth);
   const basket = useSelector((s) => s.basket.items) || [];
@@ -469,11 +423,7 @@ useEffect(() => {
     },
     [shop?.contact_display_state, shop?.storefront_state]
   );
-  const gate = canDisplaySellerContact({
-    entitlements: sellerEntitlements,
-    stateOf,
-    fallbackIfUnknown: false,
-  });
+  const gate = canDisplaySellerContact({ entitlements: sellerEntitlements, stateOf, fallbackIfUnknown: false });
 
   const phonesFromShop = normalizeShopPhones(shop);
   const legacyPhone = legacyPhoneFromSellerContact(
@@ -515,9 +465,7 @@ useEffect(() => {
     markFiredContactFor(slug);
     postContactClick(slug, 'pdp');
   }, [product?.slug, isOwnerOrStaff]);
-  useEffect(() => {
-    if (contactRevealed) fireContactOnce();
-  }, [contactRevealed, fireContactOnce]);
+  useEffect(() => { if (contactRevealed) fireContactOnce(); }, [contactRevealed, fireContactOnce]);
 
   const [copied, setCopied] = useState(false);
   const rawDisplay = useMemo(() => {
@@ -533,17 +481,15 @@ useEffect(() => {
     const n = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
     const s = src || {};
     return {
-      views24h:       n(s.views24h ?? s.views_24h ?? s.views_last_24h ?? s.views),
-      baskets24h:     n(s.baskets24h ?? s.baskets_24h ?? s.added_to_basket_24h ?? s.baskets),
+      views24h: n(s.views24h ?? s.views_24h ?? s.views_last_24h ?? s.views),
+      baskets24h: n(s.baskets24h ?? s.baskets_24h ?? s.added_to_basket_24h ?? s.baskets),
       wishlistsTotal: n(s.wishlistsTotal ?? s.wishlists_total ?? s.wishlist_total ?? s.wishlists),
     };
   }, []);
 
   const [sig, setSig] = useState(() => normalizeSignals(signals));
 
-  useEffect(() => {
-    setSig(normalizeSignals(signals));
-  }, [signals, normalizeSignals]);
+  useEffect(() => { setSig(normalizeSignals(signals)); }, [signals, normalizeSignals]);
 
   useEffect(() => {
     if (!product?.id) return;
@@ -552,10 +498,7 @@ useEffect(() => {
     const refresh = async () => {
       try {
         const url = `${b('pdp/signals')}?id=${encodeURIComponent(product.id)}`;
-        const res = await fetch(url, {
-          cache: 'no-store',
-          headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        });
+        const res = await fetch(url, { cache: 'no-store', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         if (!res.ok) return;
         const data = await res.json();
         if (!cancelled) setSig(normalizeSignals(data));
@@ -565,7 +508,6 @@ useEffect(() => {
     refresh();
     const catchPing = setTimeout(refresh, 1200);
     const iv = setInterval(refresh, 15000);
-
     return () => { cancelled = true; clearTimeout(catchPing); clearInterval(iv); };
   }, [product?.id, normalizeSignals]);
 
@@ -584,7 +526,36 @@ useEffect(() => {
     } catch {}
   }, [rawDisplay, telDigits, fireContactOnce]);
 
-  /* ---------------- related + reviews state ---------------- */
+
+
+//basket
+const handleRemoveProduct = React.useCallback(
+  (arg) => {
+    if (!arg) return;
+
+    let id, sku = null;
+
+    if (typeof arg === "object" && arg !== null) {
+      id = arg.id;
+      sku = arg.sku ?? arg.sku_id ?? null;
+    } else {
+      id = arg;
+    }
+
+    if (!id) return; // no-op if nothing to remove
+
+    dispatch({
+      type: "basket/removeFromBasket",
+      payload: { id, sku },
+    });
+  },
+  [dispatch]
+);
+
+
+
+
+    /* ---------------- related + reviews state ---------------- */
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [reviewStats, setReviewStats] = useState({
     average_rating: 0,
@@ -594,7 +565,7 @@ useEffect(() => {
 
   /* ---------------- Related products (proxied) ---------------- */
   useEffect(() => {
-    if (!product?.slug || !uiCountry) return;
+    if (!product?.slug) return;
 
     const parseSlug = (slug) => {
       const parts = String(slug).split('-');
@@ -606,7 +577,7 @@ useEffect(() => {
     };
 
     const { base_slug, condition: cond, city } = parseSlug(product.slug);
-    const countryCode = (uiCountry || 'gh').toLowerCase();
+    const countryCode = (browseCc || 'gh').toLowerCase(); // routing cc from URL
     const finalSlug = `${base_slug}-${cond}-${city}`;
 
     (async () => {
@@ -624,7 +595,7 @@ useEffect(() => {
         }
       } catch {}
     })();
-  }, [product?.slug, uiCountry]);
+  }, [product?.slug, browseCc]);
 
   /* ---------------- Reviews (single effect via proxy) ---------------- */
   useEffect(() => {
@@ -646,8 +617,7 @@ useEffect(() => {
 
         const results = data.results ?? data.reviews ?? [];
 
-        const countsFromApi =
-          data.rating_counts ?? data.rating_count ?? data.counts ?? null;
+        const countsFromApi = data.rating_counts ?? data.rating_count ?? data.counts ?? null;
         let ratingPercent = data.rating_percent ?? data.rating_distribution ?? null;
 
         if (!ratingPercent) {
@@ -690,9 +660,7 @@ useEffect(() => {
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [dispatch, id]);
 
   /* Variants selection */
@@ -710,14 +678,22 @@ useEffect(() => {
   const pricing = useMemo(
     () =>
       buildPricingMini(product, {
-        uiCurrency,
+        uiCurrency,                 // delivery currency (changes on "Deliver to")
         locale: resolvedLanguage || 'en',
-        conv: convSafe,
+        conv: convSafe,             // conversion function reacts to FX/currency changes
       }),
     [product, uiCurrency, resolvedLanguage, convSafe]
   );
   const priceSymbol = pricing.display.symbol;
   const saleActive = pricing.saleActive;
+
+  // show ≈ if we're converting from sellerCurrency to UI/display currency
+  const isFxConverted = useMemo(() => {
+    const sellerCcy = pricing.sellerCurrency || 'USD';
+    return pricing.display?.currency && pricing.display.currency !== sellerCcy;
+  }, [pricing.display?.currency, pricing.sellerCurrency]);
+
+  const approxPrefix = isFxConverted ? '≈ ' : '';
 
   // ---- SKUs (combo rows) ----
   const [skus, setSkus] = useState([]);
@@ -827,6 +803,18 @@ useEffect(() => {
     return baseActiveMajor + addonMajor;
   }, [selectedSku, saleActive, baseActiveMajor, addonMajor]);
 
+  // near other derived flags
+// near other derived flags
+const normCc = (v, fb = 'gh') => {
+  const raw = String(v || fb).trim();
+  return canonCc(raw); // canonCc already handles casing + validity
+};
+
+const originCc =
+  normCc(product?.seller_country_code || product?.listing_country_code || 'gh');
+const deliverCc = normCc(uiCountry || 'gh');
+const isCrossBorder = originCc !== deliverCc;
+
   const selectedOriginalSellerMajor = useMemo(
     () => baseOriginalMajor + addonMajor,
     [baseOriginalMajor, addonMajor]
@@ -845,7 +833,7 @@ useEffect(() => {
 
   const activeDisplayMajor = useMemo(
     () => toDisplayMajorNumber(selectedActiveSellerMajor),
-  [toDisplayMajorNumber, selectedActiveSellerMajor]
+    [toDisplayMajorNumber, selectedActiveSellerMajor]
   );
 
   const originalDisplayMajor = useMemo(
@@ -855,14 +843,15 @@ useEffect(() => {
 
   const activeAmountOnly = useMemo(
     () => amountOnly(activeDisplayMajor, pricing.display.currency),
-    [activeDisplayMajor, pricing.display.currency]
+    [activeDisplayMajor, pricing.display.currency, amountOnly]
   );
 
   const originalAmountOnly = useMemo(
-    () => (originalDisplayMajor != null
-      ? amountOnly(originalDisplayMajor, pricing.display.currency)
-      : null),
-    [originalDisplayMajor, pricing.display.currency]
+    () =>
+      originalDisplayMajor != null
+        ? amountOnly(originalDisplayMajor, pricing.display.currency)
+        : null,
+    [originalDisplayMajor, pricing.display.currency, amountOnly]
   );
 
   const savedDisplayMajor = useMemo(() => {
@@ -878,48 +867,61 @@ useEffect(() => {
   }, [savedDisplayMajor, originalDisplayMajor]);
 
   /* Wishlist (proxied) */
-// --- Replace your handleToggleWishlist with this ---
-const handleToggleWishlist = async () => {
-  const authed = await verifyAuth();
-  if (!authed) {
-    router.push(`/login?next=${encodeURIComponent(currentPath)}`);
-    return;
-  }
-
-  setLoading(true);
-  try {
-    if (isWishlisted) {
-      await fetch(b(`wishlist/${id}/`), {
-        method: 'DELETE',
+  const verifyAuth = useCallback(async () => {
+    try {
+      const r = await fetch(b('users/me'), {
         credentials: 'include',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          ...(token ? { Authorization: `Token ${token}` } : {}),
-        },
+        cache: 'no-store',
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       });
-      setIsWishlisted(false);
-      // decrement wishlists
-      mark('wishlists', -1);
-    } else {
-      await fetch(b('wishlist/'), {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          ...(token ? { Authorization: `Token ${token}` } : {}),
-        },
-        body: JSON.stringify({ product_id: id, note: '' }),
-      });
-      setIsWishlisted(true);
-      // increment wishlists
-      mark('wishlists', 1);
+      if (!r.ok) return false;
+      const j = await r.json().catch(() => ({}));
+      return Boolean(j?.id || j?.email || j?.username || j?.is_authenticated);
+    } catch {
+      return false;
     }
-  } catch {
-  } finally {
-    setLoading(false);
-  }
-};
+  }, []);
+
+
+
+
+
+    const handleToggleWishlist = async () => {
+    const authed = await verifyAuth();
+    if (!authed) {
+      router.push(`/login?next=${encodeURIComponent(currentPath)}`);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (isWishlisted) {
+        await fetch(b(`wishlist/${id}/`), {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: { 'X-Requested-With': 'XMLHttpRequest', ...(token ? { Authorization: `Token ${token}` } : {}) },
+        });
+        setIsWishlisted(false);
+        mark('wishlists', -1);
+      } else {
+        await fetch(b('wishlist/'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            ...(token ? { Authorization: `Token ${token}` } : {}),
+          },
+          body: JSON.stringify({ product_id: id, note: '' }),
+        });
+        setIsWishlisted(true);
+        mark('wishlists', 1);
+      }
+    } catch {
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /* Admin actions (proxied) */
   const handleDelete = async () => {
@@ -928,10 +930,7 @@ const handleToggleWishlist = async () => {
       await fetch(b(`products/${id}/`), {
         method: 'DELETE',
         credentials: 'include',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          ...(token ? { Authorization: `Token ${token}` } : {}),
-        },
+        headers: { 'X-Requested-With': 'XMLHttpRequest', ...(token ? { Authorization: `Token ${token}` } : {}) },
       });
       router.back();
     } catch {}
@@ -953,163 +952,242 @@ const handleToggleWishlist = async () => {
   };
 
   // ---- Shipping preview (min fee + availability, proxied) ----
-  const [shipPreview, setShipPreview] = useState({
+  const [shipPreview, setShipPreview] = React.useState({
     available: null,
     minFeeCents: null,
     currency: pricing.sellerCurrency || 'USD',
     method: null,
+    eta: null,
   });
+  const [deliveryState, setDeliveryState] = React.useState({ loading: true, deliverable: null });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchPreview() {
-      if (!product?.id) return;
-
-      const cc = uiCountry || 'gh';
-      const city = typeof document !== 'undefined' ? readCookie(`deliver_to_${cc}`) || '' : '';
-
-      const paths = [
-        `products/${product.id}/shipping/preview/?cc=${encodeURIComponent(cc)}&city=${encodeURIComponent(city)}`,
-        `product/${product.id}/shipping/preview/?cc=${encodeURIComponent(cc)}&city=${encodeURIComponent(city)}`,
-      ];
-      if (shop?.slug) {
-        paths.push(
-          `shops/${shop.slug}/shipping/preview/?cc=${encodeURIComponent(cc)}&city=${encodeURIComponent(city)}`,
-          `shop/${shop.slug}/shipping/preview/?cc=${encodeURIComponent(cc)}&city=${encodeURIComponent(city)}`
-        );
-      }
-
-      let ok = false;
-      for (const path of paths) {
-        try {
-          const t = getCleanToken();
-          const res = await fetch(b(path), {
-            credentials: 'include',
-            headers: {
-              'X-Requested-With': 'XMLHttpRequest',
-              ...(t ? { Authorization: `Token ${t}` } : {}),
-            },
-          });
-          if (!res.ok) continue;
-          const d = await res.json();
-
-          const opts = Array.isArray(d.options) ? d.options.filter((o) => o && o.enabled !== false) : [];
-          const min = opts.reduce((best, cur) => (best && best.fee_cents <= cur.fee_cents ? best : cur), null);
-
-          if (!cancelled) {
-            setShipPreview({
-              available: d.available === false ? false : opts.length > 0 ? true : null,
-              minFeeCents: min ? Number(min.fee_cents || 0) : opts.length ? 0 : null,
-              currency: d.currency || pricing.sellerCurrency || 'USD',
-              method: min?.method || null,
-            });
-          }
-          ok = true;
-          break;
-        } catch {}
-      }
-
-      if (!ok && !cancelled) {
-        setShipPreview((prev) => ({
-          ...prev,
-          available: null,
-          minFeeCents: null,
-          currency: pricing.sellerCurrency || prev.currency,
-        }));
-      }
-    }
-
-    fetchPreview();
-    return () => {
-      cancelled = true;
-    };
-  }, [product?.id, shop?.slug, uiCountry, pricing.sellerCurrency]);
-
-  const postageSymbol = useMemo(
-    () =>
-      symbolFor(shipPreview.currency || pricing.sellerCurrency || 'USD', resolvedLanguage || 'en'),
-    [shipPreview.currency, pricing.sellerCurrency, resolvedLanguage]
+  // deliver-city memo + keying
+  const deliverCityCookieKey = useMemo(
+    () => `deliver_to_${String(uiCountry || 'gh').toLowerCase()}`,
+    [uiCountry]
+  );
+  const deliverCity = useMemo(
+    () => readCookie(deliverCityCookieKey) || '',
+    [deliverCityCookieKey]
   );
 
-  const shipBlocked = shipPreview.available === false;
-  const shipOrStockBlocked = shipBlocked || outOfStock;
+  // reset stale state whenever context changes
+  useEffect(() => {
+    setDeliveryState({ loading: true, deliverable: null });
+    setShipPreview({
+      available: null,
+      minFeeCents: null,
+      currency: pricing.sellerCurrency || 'USD',
+      method: null,
+      eta: null,
+    });
+  }, [id, uiCountry, deliverCity, pricing.sellerCurrency]);
+
+  // hook up ShippingPreview → PDP local state (min fee + gating)
+// --- helper just above onShipState (or inside it) ---
+const toTriBool = (v) => {
+  if (v === true || v === 'true' || v === 1) return true;
+  if (v === false || v === 'false' || v === 0) return false;
+  return null;
+};
+
+// hook up ShippingPreview → PDP local state (min fee + gating)
+const onShipState = useCallback(
+  (s) => {
+const pickMinor = (obj) => {
+  if (!obj) return null;
+
+  // 1. Prefer explicit minor fields
+  const cand =
+    obj.feeMinor ??
+    obj.fee_minor ??
+    obj.feeCents ??
+    obj.fee_cents ??
+    obj.cents ??
+    obj.minor ??
+    null;
+
+  const n = Number(cand);
+  if (Number.isFinite(n)) return n;
+
+  // 2. Fallback: some APIs send fee in major units
+  const major = Number(obj.fee);
+  if (Number.isFinite(major)) return Math.round(major * 100);
+
+  return null;
+};
+
+    setDeliveryState({
+      loading: false,
+      deliverable: toTriBool(s?.deliverable),
+    });
+
+    setShipPreview((prev) => ({
+      available: toTriBool(s?.deliverable),
+      minFeeCents: s?.cheapest ? pickMinor(s.cheapest) : null,
+      currency:
+        s?.cheapest?.currency ||
+        s?.currency ||
+        prev.currency ||
+        pricing.sellerCurrency ||
+        'USD',
+      method: s?.fastest?.label || s?.cheapest?.label || s?.best?.label || null,
+      eta:
+        Number.isFinite(s?.fastest?.etaMin) && Number.isFinite(s?.fastest?.etaMax)
+          ? `${s.fastest.etaMin}–${s.fastest.etaMax} days`
+          : null,
+    }));
+  },
+  [pricing.sellerCurrency]
+);
+
+
+
+  // Prefer live widget; fall back to synthesized preview
+const effectivePostageCents = useMemo(() => {
+  const live = Number(shipPreview.minFeeCents);
+  return Number.isFinite(live) ? live : null;
+}, [shipPreview.minFeeCents]);
+
+
+
+  // Convert postage to the UI currency (so the line matches the price currency)
+const postageUI = useMemo(() => {
+  // normalize the source fee to integer cents (or undefined if unknown)
+  const baseCentsRaw = Number(effectivePostageCents);
+  const baseCents = Number.isFinite(baseCentsRaw)
+    ? Math.max(0, Math.round(baseCentsRaw))
+    : undefined;
+
+  // currencies
+  const baseCcy = (shipPreview.currency || pricing.sellerCurrency || 'USD').toUpperCase();
+  const uiCcy   = (pricing.display?.currency || baseCcy).toUpperCase();
+
+  // always show the symbol for the UI currency (to match the price line)
+  const sym = symbolFor(uiCcy, resolvedLanguage || 'en');
+
+  // unknown fee → return only the symbol; do NOT imply "free"
+  if (baseCents === undefined) {
+    return { cents: undefined, symbol: sym };
+  }
+
+  // same currency or no converter → keep cents as-is
+  if (!convert || uiCcy === baseCcy) {
+    return { cents: baseCents, symbol: sym };
+  }
+
+  // safe conversion
+  const major = baseCents / 100;
+  const convMajor = Number(convert(major, baseCcy, uiCcy));
+  if (Number.isFinite(convMajor) && convMajor >= 0) {
+    return { cents: Math.max(0, Math.round(convMajor * 100)), symbol: sym };
+  }
+
+  // failed conversion & different currencies — avoid showing mismatched currency/amount
+  return { cents: undefined, symbol: sym };
+}, [
+  effectivePostageCents,
+  shipPreview.currency,
+  pricing.sellerCurrency,
+  pricing.display?.currency,
+  convert,
+  resolvedLanguage,
+]);
+
+// ---------- availability + gating (explicit-only) ----------
+// We only trust explicit YES/NO from the live preview.
+// This prevents "Free delivery" from showing optimistically.
+const explicitlyNo =
+  deliveryState.deliverable === false || shipPreview.available === false;
+
+
+const explicitlyYes =
+  deliveryState.deliverable === true ||
+  shipPreview.available === true;
+
+const shipAvail = explicitlyNo ? false : explicitlyYes ? true : null;
+
+// Block actions only when we are certain it's not deliverable
+const shipBlocked = shipAvail === false;
+const shipOrStockBlocked = (shipAvail === false) || outOfStock;
+
+// Never pass postage to SimplePrice unless deliverability is explicitly true
+const simplePricePostageProps =
+  shipAvail === true && postageUI.cents !== undefined
+    ? { postageCents: postageUI.cents, postageSymbol: postageUI.symbol }
+    : {};
+
+
+
+
+
 
   const { timeRemaining, progressPct: saleProgressPct } =
     useSaleCountdown(product?.sale_start_date, product?.sale_end_date);
 
   const showCountdown = Boolean(saleActive && product?.sale_end_date);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const open = () => setIsModalVisible(true);
     window.addEventListener('open-basket-sheet', open);
     return () => window.removeEventListener('open-basket-sheet', open);
   }, []);
 
   /* Basket */
-// --- Replace your handleAddToBasket with this ---
-const handleAddToBasket = () => {
-  if (shipOrStockBlocked) return;
+  const handleAddToBasket = () => {
+    if (shipOrStockBlocked) return;
+    mark('baskets', 1);
 
-  // record "added to basket"
-  mark('baskets', 1);
+    const basketPriceCents = Math.round(selectedActiveSellerMajor * 100);
 
-  // keep your existing analytics if you want
-  // pm.markAddToBasket(product.slug, { source: 'pdp' });
-
-  const basketPriceCents = Math.round(selectedActiveSellerMajor * 100);
-
-  dispatch({
-    type: 'basket/addToBasket',
-    payload: {
-      id,
-      title,
-      price_cents: basketPriceCents,
-      quantity,
-      image: product_images,
-      postage_fee: product?.postage_fee_cents || 0,
-      secondary_postage_fee: product?.secondary_postage_fee_cents || 0,
-      variants: selectedVariants,
-      sku_id: selectedSku?.id || null,
-      options_key: selectedKey,
-      value_ids: selectedValueIds,
-      sku:
-        selectedSku?.sku ||
-        ('SKU-' +
-          Object.values(selectedVariants)
-            .map((o) => o.value.replace(/\s+/g, '-').toUpperCase())
-            .join('-')),
-    },
-  });
-  setIsModalVisible(true);
-};
-
+    dispatch({
+      type: 'basket/addToBasket',
+      payload: {
+        id,
+        title,
+        price_cents: basketPriceCents,
+        quantity,
+        image: product_images,
+        postage_fee: product?.postage_fee_cents || 0,
+        secondary_postage_fee: product?.secondary_postage_fee_cents || 0,
+        variants: selectedVariants,
+        sku_id: selectedSku?.id || null,
+        options_key: selectedKey,
+        value_ids: selectedValueIds,
+        sku:
+          selectedSku?.sku ||
+          ('SKU-' +
+            Object.values(selectedVariants)
+              .map((o) => o.value.replace(/\s+/g, '-').toUpperCase())
+              .join('-')),
+      },
+    });
+    setIsModalVisible(true);
+  };
 
   const handleCloseModal = () => setIsModalVisible(false);
-  const handleQuantityChange = (pid, q) =>
-    dispatch({ type: 'basket/updateQuantity', payload: { id: pid, quantity: q } });
-  const handleRemoveProduct = (pid) =>
-    dispatch({ type: 'basket/removeFromBasket', payload: pid });
+const handleQuantityChange = (arg, q) => {
+  // Supports both old `(id, qty)` and new `({ id, sku, quantity })` shapes
+  let id, sku, quantity;
+
+  if (typeof arg === "object" && arg !== null) {
+    ({ id, sku, quantity } = arg);
+  } else {
+    id = arg;
+    sku = null;
+    quantity = q;
+  }
+
+  dispatch({
+    type: "basket/updateQuantity",
+    payload: { id, sku, quantity },
+  });
+};
 
   /* Multi-buy */
   const [selectedMultiBuyTier, setSelectedMultiBuyTier] = useState(null);
   const handleTierSelect = useCallback((tier) => {
     setSelectedMultiBuyTier((prev) => (prev?.minQuantity === tier.minQuantity ? prev : tier));
-  }, []);
-
-  const verifyAuth = useCallback(async () => {
-    try {
-      const r = await fetch(b('users/me'), {
-        credentials: 'include',
-        cache: 'no-store',
-        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-      });
-      if (!r.ok) return false;
-      const j = await r.json().catch(() => ({}));
-      return Boolean(j?.id || j?.email || j?.username || j?.is_authenticated);
-    } catch {
-      return false;
-    }
   }, []);
 
   const handleDirectBuyNow = async (arg) => {
@@ -1122,9 +1200,7 @@ const handleAddToBasket = () => {
 
     const authed = await verifyAuth();
     if (!authed) {
-      const next = typeof window !== 'undefined'
-        ? location.pathname + location.search + location.hash
-        : '/';
+      const next = typeof window !== 'undefined' ? location.pathname + location.search + location.hash : '/';
       router.push(`/login?next=${encodeURIComponent(next)}`);
       return;
     }
@@ -1163,9 +1239,9 @@ const handleAddToBasket = () => {
   const relatedHref = useCallback(
     (seoSlug) => {
       const clean = String(seoSlug || '').replace(/^\/?[a-z]{2}\//i, '');
-      return withCountryPrefix(uiCountry || 'gh', `/${clean}`);
+      return withCountryPrefix(browseCc || 'gh', `/${clean}`); // use routing cc from URL
     },
-    [uiCountry]
+    [browseCc]
   );
 
   /* ---------------- Addresses (proxied via axiosInstance) ---------------- */
@@ -1173,7 +1249,11 @@ const handleAddToBasket = () => {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [isAddressLoading, setIsAddressLoading] = useState(true);
 
-  useEffect(() => {
+
+
+
+
+    useEffect(() => {
     let cancelled = false;
 
     const asList = (payload) =>
@@ -1238,9 +1318,7 @@ const handleAddToBasket = () => {
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [token]);
 
   const handleNewAddressSubmit = async (vals, { setSubmitting, resetForm }) => {
@@ -1286,10 +1364,7 @@ const handleAddToBasket = () => {
 
       setAddresses((prev) => [
         ...prev,
-        {
-          id: data.id,
-          value: `${data.address_data.street}, ${data.address_data.city}, ${data.address_data.country}`,
-        },
+        { id: data.id, value: `${data.address_data.street}, ${data.address_data.city}, ${data.address_data.country}` },
       ]);
       setSelectedAddressId(data.id);
       resetForm();
@@ -1322,11 +1397,7 @@ const handleAddToBasket = () => {
               wishlistsTotal={sig.wishlistsTotal}
             />
 
-            {DEBUG && (
-              <pre className="text-[10px] opacity-70 select-text">
-                signals(live): {JSON.stringify(sig)}
-              </pre>
-            )}
+
 
             {/* image slider (mobile full-bleed + desktop) */}
             <div className="block md:hidden relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
@@ -1342,6 +1413,11 @@ const handleAddToBasket = () => {
                 <h1 className="text-base md:text-lg lg:text-xl font-bold text-gray-800 dark:text-neutral-100">
                   {title}
                 </h1>
+
+
+
+
+
                 <SellerCard
                   shop={shop}
                   user={user}
@@ -1398,39 +1474,36 @@ const handleAddToBasket = () => {
                   </section>
                 )}
 
-                <SimplePrice
-                  symbol={priceSymbol}
-                  activeAmountOnly={activeAmountOnly}
-                  originalAmountOnly={originalAmountOnly}
-                  saleActive={saleActive}
-                  postageCents={shipPreview.minFeeCents}
-                  postageSymbol={postageSymbol}
-                  shipAvailable={shipPreview.available}
-                />
+<SimplePrice
+  symbol={`${approxPrefix}${priceSymbol}`}
+  activeAmountOnly={activeAmountOnly}
+  originalAmountOnly={originalAmountOnly}
+  saleActive={saleActive}
+  shipAvailable={shipAvail}
+  deliverCc={deliverCc}
+  {...simplePricePostageProps}
+/>
 
                 {saleActive && originalAmountOnly && (
                   <div className="mt-1 text-xs text-green-700 dark:text-green-300">
-                    You save <strong>{priceSymbol}{amountOnly(savedDisplayMajor, pricing.display.currency)}</strong>
+                    You save <strong>{approxPrefix}{priceSymbol}{amountOnly(savedDisplayMajor, pricing.display.currency)}</strong>
                     {typeof discountPct === 'number' ? ` (${discountPct}% off)` : null}
                   </div>
                 )}
-
-                {/* Cheapest method label + change location */}
-                <div className="mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
-                  <span>
-                    {shipPreview.method && shipPreview.minFeeCents !== null
-                      ? <>via <strong>{shipPreview.method}</strong></>
-                      : <>Shipping fees shown at checkout</>}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={openLocaleSheetSafe}
-                    className="inline-flex items-center gap-1 text-[var(--violet-600,#7c3aed)] hover:underline"
-                  >
-                    <FaMapMarkerAlt aria-hidden /> Change location
-                  </button>
-                </div>
               </div>
+
+              {/* shipping status (fetch and use for desktop)  mobile */}
+
+<ShippingPreview
+  key={`${id}-${uiCountry}-${deliverCity}`}
+  productId={product?.id}
+  sellerId={product?.user?.id || null}
+  shopSlug={shop?.slug || null}
+  deliverCc={deliverCc.toUpperCase()}
+  deliverCity={deliverCity || undefined}   // << don't send empty string
+  onState={onShipState}
+  onChangeLocation={openLocaleSheetSafe}
+/>
 
               <div className="grid gap-2">
                 <button
@@ -1458,9 +1531,7 @@ const handleAddToBasket = () => {
 
                 <button
                   type="button"
-                  onMouseDown={() =>
-                    pm.markWishlistToggle(product.slug, !isWishlisted, { source: 'pdp' })
-                  }
+                  onMouseDown={() => pm.markWishlistToggle(product.slug, !isWishlisted, { source: 'pdp' })}
                   onClick={handleToggleWishlist}
                   aria-pressed={!!isWishlisted}
                   aria-label={isWishlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}
@@ -1516,6 +1587,8 @@ const handleAddToBasket = () => {
               />
             </section>
 
+            {/*  end of mobile section */}
+
             <DetailsTabs
               specificsContent={
                 <>
@@ -1542,13 +1615,9 @@ const handleAddToBasket = () => {
           {/* RIGHT (sticky) */}
           <aside className="order-2 hidden xl:block xl:col-span-5 pl-8">
             <div className="sticky top-0 p-5 px-0 space-y-4">
-              {((currentUser?.username && currentUser?.username === user?.username) ||
-                currentUser?.admin) && (
+              {((currentUser?.username && currentUser?.username === user?.username) || currentUser?.admin) && (
                 <div className="flex items-center gap-2 mb-2">
-                  <Link
-                    href={`/products/edit/${product?.slug}`}
-                    className="flex items-center gap-1 text-sm hover:underline"
-                  >
+                  <Link href={`/products/edit/${product?.slug}`} className="flex items-center gap-1 text-sm hover:underline">
                     <FaEdit /> Edit
                   </Link>
                   {currentUser?.admin && (
@@ -1587,6 +1656,12 @@ const handleAddToBasket = () => {
                 <h1 className="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-gray-100 leading-snug">
                   {title}
                 </h1>
+
+
+
+
+
+
                 <SellerCard
                   shop={shop}
                   user={user}
@@ -1663,75 +1738,64 @@ const handleAddToBasket = () => {
                   </section>
                 )}
 
-                {variants?.map((variant) =>
-                  variant.values?.length ? (
-                    <div key={variant.id} className="mb-3">
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        {variant.label}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {variant.values.map((val) => {
-                          const nextSel = { ...selectedVariants, [variant.id]: val };
-                          const nextIds = Object.values(nextSel).map((v) => v.id);
-                          const disabled = !containsSubset(nextIds);
-                          const addSellerMajor = (val.additional_price_cents || 0) / 100;
-
-                          return (
-                            <button
-                              key={val.id}
-                              onClick={() => !disabled && setSelectedVariants(nextSel)}
-                              disabled={disabled}
-                              className={`px-4 ${val.additional_price_cents === 0 && 'py-2'} border rounded-full text-sm
-                                ${selectedVariants[variant.id]?.id === val.id
-                                  ? 'border-black dark:border-white font-semibold'
-                                  : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200'}
-                                ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-                            >
-                              {val.value}
-                              {val.additional_price_cents > 0 && (
-                                <div className="text-gray-900 dark:text-gray-100 text-[10px]">
-                                  +{formatAddonInDisplayCurrency(addSellerMajor)}
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : null
-                )}
-
                 <div className="mt-2">
-                  <SimplePrice
-                    symbol={priceSymbol}
-                    activeAmountOnly={activeAmountOnly}
-                    originalAmountOnly={originalAmountOnly}
-                    saleActive={saleActive}
-                    postageCents={shipPreview.minFeeCents}
-                    postageSymbol={postageSymbol}
-                    shipAvailable={shipPreview.available}
-                  />
+<SimplePrice
+  symbol={`${approxPrefix}${priceSymbol}`}
+  activeAmountOnly={activeAmountOnly}
+  originalAmountOnly={originalAmountOnly}
+  saleActive={saleActive}
+  shipAvailable={shipAvail}
+  deliverCc={deliverCc}
+  {...simplePricePostageProps}
+/>
+
+
                   {saleActive && originalAmountOnly && (
                     <div className="mt-1 text-xs text-green-700 dark:text-green-300">
-                      You save <strong>{priceSymbol}{amountOnly(savedDisplayMajor, pricing.display.currency)}</strong>
+                      You save <strong>{approxPrefix}{priceSymbol}{amountOnly(savedDisplayMajor, pricing.display.currency)}</strong>
                       {typeof discountPct === 'number' ? ` (${discountPct}% off)` : null}
                     </div>
                   )}
-                  <div className="mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
-                    <span>
-                      {shipPreview.method && shipPreview.minFeeCents !== null
-                        ? <>via <strong>{shipPreview.method}</strong></>
-                        : <>Shipping fees shown at checkout</>}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={openLocaleSheetSafe}
-                      className="inline-flex items-center gap-1 text-[var(--violet-600,#7c3aed)] hover:underline"
-                    >
-                      <FaMapMarkerAlt aria-hidden /> Change location
-                    </button>
-                  </div>
                 </div>
+              </div>
+
+              {/* headless shipping fetcher for desktop (hydrates deliveryState/shipPreview) */}
+              <div className="hidden xl:block sr-only" aria-hidden="true">
+<ShippingPreview
+  key={`${id}-${uiCountry}-${deliverCity}`}
+  productId={product?.id}
+  sellerId={product?.user?.id || null}
+  shopSlug={shop?.slug || null}
+  deliverCc={deliverCc.toUpperCase()}
+  deliverCity={deliverCity || undefined}   // << don't send empty string
+  onState={onShipState}
+  onChangeLocation={openLocaleSheetSafe}
+/>
+              </div>
+
+              {/* desktop shipping status (read-only; no fetch) */}
+              <div className="mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-gray-300" aria-live="polite">
+                <span>
+{deliveryState.loading ? (
+  'Checking delivery options…'
+) : shipPreview.method ? (
+  <>
+    via <strong>{shipPreview.method}</strong>
+    {shipPreview.eta && <> • {shipPreview.eta}</>}
+  </>
+) : shipAvail === true && !isCrossBorder ? (
+  `Local delivery in ${deliverCc.toUpperCase()}`
+) : (
+  'Likely deliverable — get a shipping quote.'
+)}
+                </span>
+                <button
+                  type="button"
+                  onClick={openLocaleSheetSafe}
+                  className="inline-flex items-center gap-1 text-[var(--violet-600,#7c3aed)] hover:underline"
+                >
+                  <FaMapMarkerAlt aria-hidden /> Change location
+                </button>
               </div>
 
               <div className="flex items-center gap-4">
@@ -1801,9 +1865,7 @@ const handleAddToBasket = () => {
 
                 <button
                   type="button"
-                  onMouseDown={() =>
-                    pm.markWishlistToggle(product.slug, !isWishlisted, { source: 'pdp' })
-                  }
+                  onMouseDown={() => pm.markWishlistToggle(product.slug, !isWishlisted, { source: 'pdp' })}
                   onClick={handleToggleWishlist}
                   aria-pressed={!!isWishlisted}
                   aria-label={isWishlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}
@@ -1839,13 +1901,13 @@ const handleAddToBasket = () => {
             </div>
           </aside>
 
-          <BasketSheet
-            isOpen={isModalVisible}
-            onClose={handleCloseModal}
-            basket={basket}
-            onQuantityChange={handleQuantityChange}
-            onRemove={handleRemoveProduct}
-            onUndoRemove={(item) => dispatch({ type: 'basket/addToBasket', payload: item })}
+<BasketSheet
+  isOpen={isModalVisible}
+  onClose={handleCloseModal}
+  basket={basket}
+  onQuantityChange={handleQuantityChange}
+  onRemove={handleRemoveProduct}   // now defined ✅
+  onUndoRemove={(item) => dispatch({ type: 'basket/addToBasket', payload: item })}
             relatedProducts={relatedProducts}
             onAddSuggested={(item) => {
               const raw =
@@ -1977,9 +2039,11 @@ const handleAddToBasket = () => {
       )}
 
       <StickyPriceBar
-        symbol={priceSymbol}
-        activePrice={activeAmountOnly}
+        symbol={priceSymbol}                 // plain symbol, no prefix
+        activeAmountOnly={activeAmountOnly}  // same amount-only string SimplePrice shows
+        approx={isFxConverted}               // adds "≈ " if FX converted
         onBuyNow={() => handleDirectBuyNow('sticky_bar')}
+        disabled={shipOrStockBlocked}
       />
     </section>
   );

@@ -1,6 +1,6 @@
 //Per country (simple): app/(pages)/[cc]/sitemap.js
-import { ccToISO } from "@/src/lib/cc";
-import { api } from "@/src/lib/api";
+import { ccToISO } from "@/lib/cc";
+import { api } from "@/lib/api";
 
 export default async function sitemap({ params: { cc } }) {
   const base = "https://www.upfrica.com";

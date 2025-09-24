@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 /* ---------- helpers ---------- */
 const cls = (...a) => a.filter(Boolean).join(" ");
@@ -61,12 +61,12 @@ export default function SearchAutosuggest({
   useBackdrop = true,
   ctaMode = "auto",          // "auto" | "never" | "always"
   ctaText = "Find for me",   // CTA button label
-  /* NEW: scoped search */
   scopes = ["products", "requests", "shops"],
   defaultScope = "products",
   showScope = true,
 }) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const [scope, setScope] = useState(
     scopes.includes(defaultScope) ? defaultScope : "products"
@@ -104,17 +104,21 @@ export default function SearchAutosuggest({
     })();
   }, [_cc]);
 
+  /* Close dropdown when route changes */
+  useEffect(() => {
+    setOpen(false);
+    setIdx(-1);
+  }, [pathname]);
+
   /* debounced fetch (only for product scope) */
   useEffect(() => {
     let active = true;
     const query = (q || "").trim();
 
-    // Disable network suggest when not searching products
     if (scope !== "products") {
       setSuggest({ queries: [], brands: [], categories: [], products: [] });
       return;
     }
-
     if (query.length < 2) {
       setSuggest({ queries: [], brands: [], categories: [], products: [] });
       return;
@@ -132,8 +136,9 @@ export default function SearchAutosuggest({
             products: (data?.products || []).filter((p) => !hideNo || p?.meta?.availability !== "no"),
           });
         }
-      } catch {}
-      finally { active && setLoading(false); }
+      } catch {} finally {
+        active && setLoading(false);
+      }
     }, DEBOUNCE);
 
     return () => { active = false; clearTimeout(handle); };
@@ -172,18 +177,26 @@ export default function SearchAutosuggest({
   const onBlur = async () => { await sleep(80); setOpen(false); setIdx(-1); };
 
   /* actions */
+  const closeDropdown = () => {
+    setOpen(false);
+    setIdx(-1);
+    try { inputRef.current?.blur(); } catch {}
+  };
+
   const gotoSearch = useCallback((value) => {
     const text = (value || q || "").trim();
     if (!text) return;
     addRecent(text);
+    closeDropdown();
     const dt = _deliverTo ? `&deliver_to=${encodeURIComponent(_deliverTo)}` : "";
-    const path = scopeToPath(scope);
+    const path = scopeToPath("products"); // 🔹 ALWAYS go to product search
     router.push(`/${_cc}/${path}?q=${encodeURIComponent(text)}${dt}`);
-  }, [router, _cc, _deliverTo, q, scope]);
+  }, [router, _cc, _deliverTo, q]);
 
   const gotoSourcing = useCallback((intent) => {
     const text = (intent || q || "").trim();
     if (!text) return;
+    closeDropdown();
     const dt = _deliverTo ? `&deliver_to=${encodeURIComponent(_deliverTo)}` : "";
     router.push(`/${_cc}/sourcing?intent=${encodeURIComponent(text)}${dt}`);
   }, [router, _cc, _deliverTo, q]);
@@ -203,8 +216,10 @@ export default function SearchAutosuggest({
   const onKeyDown = (e) => {
     if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp")) setOpen(true);
     if (e.key === "Enter") {
-      if (idx === -1) showCta ? gotoSourcing(q) : gotoSearch(q);
-      else {
+      if (idx === -1) {
+        // 🔹 Always perform a normal search on Enter
+        gotoSearch(q);
+      } else {
         const row = rows[idx];
         handleRowClick(row);
       }
@@ -232,14 +247,16 @@ export default function SearchAutosuggest({
   const handleRowClick = (row) => {
     if (!row) return;
     if (row.type === "empty") return; // handled by CTA block
+
     if (row.type === "product" && row.product?.frontend_url) {
-      router.push(row.product.frontend_url); return;
+      closeDropdown();                 // 🔹 close before navigating
+      router.push(row.product.frontend_url);
+      return;
     }
     const text = row.text || "";
     if (text) gotoSearch(text);
   };
 
-  /* presence of the special empty card */
   const hasEmptyRow = rows.some((r) => r.type === "empty");
 
   return (
@@ -255,7 +272,7 @@ export default function SearchAutosuggest({
       )}
 
       <div className="flex min-w-0 relative z-[80]">
-        {/* NEW: scope selector (desktop) */}
+        {/* Scope selector (desktop) */}
         {showScope && (
           <select
             value={scope}
@@ -297,7 +314,7 @@ export default function SearchAutosuggest({
             buttonClassName
           )}
           onMouseDown={(e) => e.preventDefault()}
-          onClick={() => (showCta ? gotoSourcing(q) : gotoSearch())}
+          onClick={() => gotoSearch(q)}   // 🔹 always go to search results
         >
           Search
         </button>
@@ -316,7 +333,7 @@ export default function SearchAutosuggest({
                 );
               }
 
-              // --- Bold empty state with sourcing CTA (ENTIRE CARD CLICKABLE) ---
+              // Bold empty state with sourcing CTA
               if (row.type === "empty") {
                 const toTitle = (s) =>
                   (s || "").trim().replace(/\s+/g, " ")
@@ -364,7 +381,6 @@ export default function SearchAutosuggest({
                   </li>
                 );
               }
-              // ------------------------------------------------------------------
 
               const selected = i === idx;
               const text = row.text || (row.product?.title ?? "");
@@ -421,7 +437,6 @@ export default function SearchAutosuggest({
             )}
           </ul>
 
-          {/* quick controls/status bar (hide ‘ships elsewhere’ toggle when not products) */}
           <div className="flex items-center justify-between px-3 py-1.5 text-[11px] text-[var(--ink-3,#6b7280)] dark:text-gray-400 border-t dark:border-gray-800">
             {scope === "products" ? (
               <label className="inline-flex items-center gap-2">

@@ -16,7 +16,7 @@ import {
 import { SITE_BASE_URL, API_BASE, COUNTRY_ALIAS } from "@/app/constants";
 
 export const revalidate = 300;
-export const dynamic = "force-static";
+export const dynamic = "auto"; // or remove
 
 /* ---------- helpers to map ISO <-> slug (GB <-> uk) ---------- */
 const isoToSlug = (iso) =>
@@ -133,6 +133,7 @@ const HERO_FALLBACK = {
   gh: "https://images.unsplash.com/photo-1560393464-5c69a73c5770?q=80&w=2400&auto=format&fit=crop",
   ng: "https://images.unsplash.com/photo-1590648938591-6fc4f1a6391c?q=80&w=2400&auto=format&fit=crop",
   uk: "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=2400&auto=format&fit=crop",
+  gb: "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=2400&auto=format&fit=crop",
 };
 const heroImage = (cc) => HERO_FALLBACK[cc] || HERO_FALLBACK.gh;
 
@@ -155,10 +156,13 @@ function heroCurvedFromCMS(section, cc, meta) {
       : COUNTRY_META[cc]?.cities || ["Your City"];
   const city = cityList[0];
 
-  const normalizeHref = (href) => {
-    if (!href || typeof href !== "string" || !href.startsWith("/")) return href;
-    return href.replace(/^\/(gh|ng|uk)(?=\/|$)/i, `/${cc}`);
-  };
+const normalizeHref = (href) => {
+  if (!href || typeof href !== "string") return href;
+  // Leave absolute/external URLs unchanged
+  if (!href.startsWith("/")) return href;
+  // Rewrite internal paths that start with a country prefix
+  return href.replace(/^\/(gh|ng|uk|gb)(?=\/|$)/i, `/${cc}`);
+};
 
   const defaults = [
     { title: "Today’s Deals", href: `/${cc}/deals` },

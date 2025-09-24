@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   MonitorSmartphone,
   SlidersHorizontal,
+  Loader2,
 } from "lucide-react";
 import axios from "@/lib/axiosInstance";
 
@@ -59,6 +60,22 @@ function useClickAway(onAway) {
     };
   }, [onAway]);
   return ref;
+}
+
+function timeAgo(d) {
+  if (!d) return "—";
+  try {
+    const t = typeof d === "string" ? new Date(d) : d;
+    const s = Math.max(0, Math.floor((Date.now() - t.getTime()) / 1000));
+    if (s < 10) return "just now";
+    if (s < 60) return `${s}s ago`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    return `${h}h ago`;
+  } catch {
+    return "—";
+  }
 }
 
 export default function ProductsHeader({
@@ -391,7 +408,23 @@ export default function ProductsHeader({
       </div>
 
       {/* Meta line on mobile */}
-
+      <div
+        className="sm:hidden px-4 sm:px-5 pb-3 text-xs text-gray-600 dark:text-gray-300"
+        aria-live="polite"
+      >
+        <span>{meta?.count ?? 0} in view</span>
+        <span className="mx-1.5">•</span>
+        <span className="inline-flex items-center gap-1">
+          Metrics{" "}
+          {meta?.statsBusy ? (
+            <>
+              updating… <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            </>
+          ) : (
+            <>updated {timeAgo(meta?.updatedAt)}</>
+          )}
+        </span>
+      </div>
     </div>
   );
 }

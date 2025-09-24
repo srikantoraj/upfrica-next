@@ -1,10 +1,12 @@
-// components/home/ProductRail.jsx
 import Link from "next/link";
 import RailCard from "./RailCard";
 import { fetchProducts } from "@/lib/home";
-import { fixDisplayUrl } from "@/components/common/SafeImage";
+import { fixImageUrl as fixDisplayUrl } from "@/lib/image";   // ⬅️ server-safe helper
+import { symbolFor } from "@/lib/pricing-mini";
 
-/* ----------------------- normalization helpers ----------------------- */
+/* ----------------------- small utils ----------------------- */
+const MAX_ITEMS_PER_RAIL = 18;
+
 function truthyStr(v) {
   return typeof v === "string" && v.trim().length > 0;
 }
@@ -15,10 +17,10 @@ function first(vals) {
   }
   return null;
 }
-
-/* Robust image picking (skips placeholders & non-images) */
 const URLish = (s) =>
-  typeof s === "string" && !!s.trim() && (/^https?:\/\//i.test(s) || s.startsWith("/") || /^data:image\//i.test(s));
+  typeof s === "string" &&
+  !!s.trim() &&
+  (/^https?:\/\//i.test(s) || s.startsWith("/") || /^data:image\//i.test(s));
 
 const isNotImageExt = (s = "") =>
   /\.(mp4|mov|m4v|webm|avi|mkv|mp3|wav|m4a|aac|ogg|flac|pdf|zip|rar|7z|tar|gz|docx?|xlsx?|pptx?)($|[?#])/i.test(s);
@@ -28,6 +30,7 @@ const isPlaceholder = (s = "") =>
     s
   );
 
+/* ----------------------- media / images ----------------------- */
 function pickRawImage(r) {
   if (!r || typeof r !== "object") return null;
 
@@ -58,7 +61,7 @@ function pickRawImage(r) {
   // Normalize, dedupe, and filter to a real image
   const seen = new Set();
   const cleaned = candidates
-    .map((u) => (u ? fixDisplayUrl(String(u)) : ""))
+    .map((u) => (u ? fixDisplayUrl(String(u)) : ""))  // ⬅️ now server-safe
     .filter(Boolean)
     .filter((u) => !seen.has(u) && seen.add(u))
     .filter((u) => URLish(u) && !isNotImageExt(u) && !isPlaceholder(u));
@@ -66,6 +69,7 @@ function pickRawImage(r) {
   return cleaned[0] || null;
 }
 
+/* ----------------------- price / currency ----------------------- */
 function priceFromRaw(r) {
   const saleC = Number.isFinite(r?.sale_price_cents) && r.sale_price_cents > 0 ? r.sale_price_cents : null;
   const baseC = Number.isFinite(r?.price_cents) && r.price_cents > 0 ? r.price_cents : null;
@@ -85,19 +89,23 @@ function compareAtFromRaw(r) {
   return Number.isFinite(num) ? num : null;
 }
 
-/* ------------------------------ currency ------------------------------ */
 const CC_CURRENCY = { gh: "GHS", ng: "NGN", uk: "GBP", gb: "GBP" };
 function currencyForCc(cc) {
   return CC_CURRENCY[String(cc || "").toLowerCase()] || "USD";
 }
 function currencyFromRaw(r, cc) {
-  const guesses = [r?.currency, r?.price_currency, r?.sale_price_currency, r?.list_currency, r?.compare_at_currency, r?.ccy].filter(
-    truthyStr
-  );
+  const guesses = [
+    r?.currency,
+    r?.price_currency,
+    r?.sale_price_currency,
+    r?.list_currency,
+    r?.compare_at_currency,
+    r?.ccy,
+  ].filter(truthyStr);
   return (guesses[0] || currencyForCc(cc)).toUpperCase();
 }
 
-/* ----------------------------- href/city ------------------------------ */
+/* ----------------------- links / city ----------------------- */
 function normalizeCountryPath(path, cc) {
   if (!path) return null;
   let p = path.replace(/^https?:\/\/[^/]+/i, "");
@@ -115,28 +123,15 @@ function cityFromRaw(r) {
   return r?.city || r?.seller_city || r?.seller_town || r?.seller_info?.town || r?.cached_town_slug || r?.shipping_from || "";
 }
 
-/* ------------------------------ normalize ----------------------------- */
+/* ----------------------- normalization ----------------------- */
 function normalizeItem(item, cc) {
-  // Already mapped?
-  if (
-    truthyStr(item?.title) &&
-    (truthyStr(item?.image) || "image" in item) &&
-    (Number.isFinite(item?.price) || "price" in item)
-  ) {
+  if (truthyStr(item?.title) && (truthyStr(item?.image) || "image" in item) && (Number.isFinite(item?.price) || "price" in item)) {
     const href = hrefFromRaw(item, cc);
     const city = cityFromRaw(item);
     const sourceCurrency = item.sourceCurrency || item.currency || currencyFromRaw(item._raw || {}, cc);
-    return {
-      ...item,
-      image: fixDisplayUrl(item.image || ""),
-      href,
-      city,
-      sourceCurrency,
-      _raw: item._raw ?? null,
-    };
+    return { ...item, image: fixDisplayUrl(item.image || ""), href, city, sourceCurrency, _raw: item._raw ?? null };
   }
 
-  // Treat as raw serializer object
   const img = pickRawImage(item);
   const price = priceFromRaw(item);
   return {
@@ -154,34 +149,24 @@ function normalizeItem(item, cc) {
   };
 }
 
-/* ---------------- strict frontpage-ready gate (toggleable) -------------- */
-const STRICT = {
-  requireTitle: false,
-  requireImage: false,
-  requirePrice: false,
-  requireCondition: false,
-  requireCategory: false,
-};
+/* ----------------------- gating / safety ----------------------- */
+const STRICT = { requireTitle: false, requireImage: false, requirePrice: false, requireCondition: false, requireCategory: false };
+
 function hasCategoryRaw(r) {
   if (!r || r.category == null) return false;
   const c = r.category;
   if (typeof c === "object") return Boolean(c.id || c.slug || c.name);
   return truthyStr(String(c));
 }
-function hasConditionRaw(r) {
-  return r && truthyStr(String(r.condition || ""));
-}
+function hasConditionRaw(r) { return r && truthyStr(String(r.condition || "")); }
 function hasPriceRaw(r) {
-  const cents = [r?.sale_price_cents, r?.price_cents, r?.wholesale_price_cents, r?.list_price_cents, r?.compare_at_cents].find(
-    (v) => Number.isFinite(v) && v > 0
-  );
+  const cents = [r?.sale_price_cents, r?.price_cents, r?.wholesale_price_cents, r?.list_price_cents, r?.compare_at_cents]
+    .find((v) => Number.isFinite(v) && v > 0);
   if (Number.isFinite(cents)) return true;
   const nums = [r?.sale_price, r?.price].find((v) => Number.isFinite(v) && v > 0);
   return Number.isFinite(nums);
 }
-function hasImageRaw(r) {
-  return Boolean(pickRawImage(r));
-}
+function hasImageRaw(r) { return Boolean(pickRawImage(r)); }
 
 const STRICT_BY_RAIL = {
   featured: { requireImage: true, requirePrice: true },
@@ -204,21 +189,49 @@ function frontpageReady(n, railKey) {
   return true;
 }
 
-/* --------------------------- fallback params ----------------------------- */
+function dedupeItems(items) {
+  const seen = new Set();
+  const out = [];
+  for (const it of items) {
+    const key = [it?.id ?? "", it?.href ?? "", it?.image ?? "", it?.title ?? "", it?.price ?? ""].join("|");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(it);
+  }
+  return out;
+}
+function hasSafeHref(n) { return truthyStr(n.href) && n.href.startsWith("/"); }
+
 function defaultParamsForRail(railKey) {
   switch (railKey) {
-    case "trending_near_you":
-      return { ordering: "-created_at", page_size: "18" };
-    case "for_you":
-      return { ordering: "-created_at", page_size: "18" };
-    case "verified_sellers":
-      return { page_size: "18" };
-    default:
-      return { page_size: "18" };
+    case "trending_near_you": return { ordering: "-created_at", page_size: String(MAX_ITEMS_PER_RAIL) };
+    case "for_you":           return { ordering: "-created_at", page_size: String(MAX_ITEMS_PER_RAIL) };
+    case "verified_sellers":  return { page_size: String(MAX_ITEMS_PER_RAIL) };
+    default:                  return { page_size: String(MAX_ITEMS_PER_RAIL) };
   }
 }
 
-/* -------------------------------- component ------------------------------ */
+function railLink(cc, key) {
+  const base = `/${cc}`;
+  switch (key) {
+    case "featured":         return `${base}/featured`;
+    case "same_day":         return `${base}/search?delivery=same-day`;
+    case "verified_sellers": return `${base}/search?seller=verified`;
+    case "wholesale":        return `${base}/wholesale`;
+    case "seasonal":         return `${base}/deals?tag=seasonal`;
+    case "for_you":          return `${base}/for-you`;
+    case "trending_near_you":
+    default:                 return `${base}/search?sort=trending`;
+  }
+}
+function stableKey(n, i) {
+  if (n?.id != null) return `p-${n.id}`;
+  if (truthyStr(n?.href)) return `h-${n.href}`;
+  if (truthyStr(n?.image)) return `i-${n.image}-${i}`;
+  return `idx-${i}`;
+}
+
+/* ----------------------- component ----------------------- */
 export default async function ProductRail({
   railKey,
   cc,
@@ -233,26 +246,26 @@ export default async function ProductRail({
   const shouldFallback = !provided || provided.length === 0;
 
   const effectiveParams = params && Object.keys(params).length > 0 ? params : defaultParamsForRail(railKey);
-
   const sourceItems = shouldFallback ? await fetchProducts({ cc, params: effectiveParams }) : provided;
 
   const normalized = (sourceItems || []).map((it) => normalizeItem(it, cc));
-  const safeItems = normalized.filter((n) => frontpageReady(n, railKey));
+  const gated = normalized.filter((n) => frontpageReady(n, railKey)).filter(hasSafeHref);
+  const safeItems = dedupeItems(gated).slice(0, MAX_ITEMS_PER_RAIL);
 
   if (!safeItems.length) return null;
+
+  const headingId = `rail-${railKey || "default"}-title`;
+  const effectiveCurrency = (currency || currencyForCc(cc)).toUpperCase();
+  const effectiveSymbol = currencySymbol || symbolFor(effectiveCurrency, "en");
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8" data-rail={railKey}>
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="text-lg md:text-xl font-bold">{title}</h2>
+          <h2 id={headingId} className="text-lg md:text-xl font-bold">{title}</h2>
           {subtitle && <p className="text-[var(--ink-2)] text-sm mt-1">{subtitle}</p>}
         </div>
-        <Link
-          href={railLink(cc, railKey)}
-          className="text-[var(--violet-500,#A435F0)] text-sm hover:underline"
-          aria-label={`View all ${title}`}
-        >
+        <Link href={railLink(cc, railKey)} className="text-[var(--violet-500,#A435F0)] text-sm hover:underline" aria-label={`View all ${title}`} prefetch>
           View all
         </Link>
       </div>
@@ -262,37 +275,21 @@ export default async function ProductRail({
           className="flex gap-3 lg:gap-4 snap-x snap-mandatory scroll-p-4 overflow-x-auto no-scrollbar scroll-fade-right"
           role="list"
           aria-roledescription="carousel"
-          aria-label={title}
+          aria-labelledby={headingId}
+          aria-label={!subtitle ? title : undefined}
         >
           {safeItems.map((p, i) => (
-            <li key={p.id} className="snap-start" data-pos={i} data-id={p.id}>
-              <RailCard cc={cc} item={p} currency={currency} currencySymbol={currencySymbol} />
+            <li key={stableKey(p, i)} className="snap-start" data-pos={i} data-id={p?.id ?? ""}>
+              <RailCard
+                cc={cc}
+                item={p}
+                currency={effectiveCurrency}
+                currencySymbol={effectiveSymbol}
+              />
             </li>
           ))}
         </ul>
       </div>
     </section>
   );
-}
-
-/* ----------------------------- helpers ---------------------------------- */
-function railLink(cc, key) {
-  const base = `/${cc}`;
-  switch (key) {
-    case "featured":
-      return `${base}/featured`;
-    case "same_day":
-      return `${base}/search?delivery=same-day`;
-    case "verified_sellers":
-      return `${base}/search?seller=verified`;
-    case "wholesale":
-      return `${base}/wholesale`;
-    case "seasonal":
-      return `${base}/deals?tag=seasonal`;
-    case "for_you":
-      return `${base}/for-you`;
-    case "trending_near_you":
-    default:
-      return `${base}/search?sort=trending`;
-  }
 }

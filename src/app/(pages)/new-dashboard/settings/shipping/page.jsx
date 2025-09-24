@@ -1,13 +1,16 @@
-// src/app/(pages)/new-dashboard/settings/shipping/page.jsx
+//src/app/(pages)/new-dashboard/settings/shipping/page.jsx
 'use client';
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   MapPin, Truck, CreditCard, Clock, Sparkles, Info, Search, X,
-  Loader2, Trash2, CheckCircle2, AlertTriangle
+  Loader2, Trash2, CheckCircle2, AlertTriangle, Lock
 } from "lucide-react";
 import { api as request, apiJSON } from "@/lib/api";
 import { b } from "@/lib/api-path";
+// Reuse site-wide localization + pricing helpers (fallbacks inside if not provided)
+import { useLocalization } from "@/contexts/LocalizationProvider";
+import { symbolFor } from "@/lib/pricing-mini";
 
 /* ------------------------------
    Helpers (fetch + utils)
@@ -27,15 +30,26 @@ function cleanErr(e) {
   return s.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 300);
 }
 
-// Build the proxy convenience path your API route.js supports
 function previewPath({ productId, shopSlug }) {
-  if (productId) return `product/${productId}/shipping/preview`;
-  if (shopSlug) return `shop/${shopSlug}/shipping/preview`;
-  // last-ditch fallback (kept for devs that have /shipping/options/)
-  return EP.deliveryOptions;
+  const paths = [];
+
+  if (productId) {
+    paths.push(
+      `products/${productId}/shipping/preview`,
+      `product/${productId}/shipping/preview`
+    );
+  }
+
+  if (shopSlug) {
+    paths.push(
+      `shops/${shopSlug}/shipping/preview`,
+      `shop/${shopSlug}/shipping/preview`
+    );
+  }
+
+  return paths.length > 0 ? paths : [EP.deliveryOptions];
 }
 
-/* ---------- fetch helpers with robust fallbacks ---------- */
 function cleanedParams(params = {}) {
   return Object.fromEntries(
     Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== "")
@@ -43,50 +57,34 @@ function cleanedParams(params = {}) {
 }
 const ensureSlash = (p = "") => (p && !p.endsWith("/") ? `${p}/` : p);
 const toErrorString = (e) => (e && (e.message || String(e))) || "Error";
-
-/** Treat 404s consistently (status, message, django "Not Found", etc.) */
 const is404 = (e) => {
   const status = e?.status ?? e?.response?.status;
   const s = toErrorString(e);
   return status === 404 || /\b404\b/.test(s) || /not\s*found/i.test(s);
 };
-
-/** Try each path candidate with AND without a trailing slash */
 function expandCandidates(paths) {
   const base = Array.isArray(paths) ? paths : [paths];
   const expanded = base.flatMap((p) => [p, ensureSlash(p)]);
-  // de-dupe while preserving order
   return Array.from(new Set(expanded));
 }
-
 async function apiGet(pathOrPaths, params) {
   const candidates = expandCandidates(pathOrPaths);
   let lastErr;
   for (const p of candidates) {
-    try {
-      return await request(b(p, cleanedParams(params)));
-    } catch (e) {
-      if (!is404(e)) throw e;
-      lastErr = e;
-    }
+    try { return await request(b(p, cleanedParams(params))); }
+    catch (e) { if (!is404(e)) throw e; lastErr = e; }
   }
   throw lastErr || new Error("All GET candidates failed");
 }
-
 async function apiPost(pathOrPaths, body) {
   const candidates = expandCandidates(pathOrPaths);
   let lastErr;
   for (const p of candidates) {
-    try {
-      return await apiJSON(b(p), body);
-    } catch (e) {
-      if (!is404(e)) throw e;
-      lastErr = e;
-    }
+    try { return await apiJSON(b(p), body); }
+    catch (e) { if (!is404(e)) throw e; lastErr = e; }
   }
   throw lastErr || new Error("All POST candidates failed");
 }
-
 async function apiDelete(pathOrPaths, { id } = {}) {
   const candidates = expandCandidates(pathOrPaths);
   let lastErr;
@@ -95,32 +93,37 @@ async function apiDelete(pathOrPaths, { id } = {}) {
       const path = id != null ? `${ensureSlash(p)}${String(id)}/` : p;
       await request(b(path), { method: "DELETE" });
       return true;
-    } catch (e) {
-      if (!is404(e)) throw e;
-      lastErr = e;
-    }
+    } catch (e) { if (!is404(e)) throw e; lastErr = e; }
   }
   throw lastErr || new Error("All DELETE candidates failed");
 }
 
+// Prefix padding helper: ≥2 chars needs a bit more room
+function padClassForSymbol(sym) {
+  return String(sym || "").length >= 2 ? "pl-12" : "pl-8";
+}
 
+/* ------------------------------
+   Cookies
+--------------------------------*/
+// helper to set a cookie for 1 year
+function setCookie(name, value) {
+  try {
+    document.cookie = `${name}=${encodeURIComponent(String(value))}; path=/; max-age=31536000; samesite=lax`;
+  } catch {}
+}
 
-
-// --- helper: hydrate zones/methods by id when configs only have *_id fields ---
+/* ------------------------------
+   Hydration helpers
+--------------------------------*/
+// --- hydrate zones/methods by id when configs only have *_id fields ---
 async function hydrateFromConfigIds(cfgList) {
-  const zoneIds = Array.from(
-    new Set(cfgList.map(c => c.zone?.id ?? c.zone_id).filter(Boolean))
-  );
-  const methodIds = Array.from(
-    new Set(cfgList.map(c => c.shipping_method?.id ?? c.shipping_method_id).filter(Boolean))
-  );
+  const zoneIds = Array.from(new Set(cfgList.map(c => c.zone?.id ?? c.zone_id).filter(Boolean)));
+  const methodIds = Array.from(new Set(cfgList.map(c => c.shipping_method?.id ?? c.shipping_method_id).filter(Boolean)));
 
-  // Find singular detail endpoints from your EP candidates
   const zoneDetailBases = (EP.zones || []).filter(p => /shippingzone\b/i.test(p));
   const methodDetailBases = (EP.methods || []).filter(p => /shippingmethod\b/i.test(p));
-
-  const fetchOne = (id, bases) =>
-    apiGet(bases.map(base => `${ensureSlash(base)}${id}/`)).catch(() => null);
+  const fetchOne = (id, bases) => apiGet(bases.map(base => `${ensureSlash(base)}${id}/`)).catch(() => null);
 
   const [zonesRes, methodsRes] = await Promise.all([
     Promise.all(zoneIds.map(id => fetchOne(id, zoneDetailBases))),
@@ -130,64 +133,78 @@ async function hydrateFromConfigIds(cfgList) {
   const zones = zonesRes.filter(Boolean);
   const methods = methodsRes.filter(Boolean);
 
-  const zoneById = Object.fromEntries(zones.map(z => [z.id, z]));
-  const methodById = Object.fromEntries(methods.map(m => [m.id, m]));
-
-  return { zones, methods, zoneById, methodById };
+  return {
+    zones,
+    methods,
+    zoneById: Object.fromEntries(zones.map(z => [z.id, z])),
+    methodById: Object.fromEntries(methods.map(m => [m.id, m])),
+  };
 }
-
-
-
-
 
 /* ------------------------------
    API endpoints (with fallbacks)
 --------------------------------*/
 const EP = {
   countries: ["countries"],
-
-  // Prefer DRF model resources first, then legacy/plural paths
-  zones: [
-    "core/shippingzone",
-    "shippingzone",
-    "shipping/zones",
-    "core/shipping/zones",
-  ],
-  methods: [
-    "core/shippingmethod",
-    "shippingmethod",
-    "shipping/methods",
-    "core/shipping/methods",
-  ],
-
+  zones: ["core/shippingzone", "shippingzone", "shipping/zones", "core/shipping/zones"],
+  methods: ["core/shippingmethod", "shippingmethod", "shipping/methods", "core/shipping/methods"],
   sellerZoneConfigs: [
     "core/shipping/seller-zone-configs",
     "shipping/seller-zone-configs",
     "core/shipping/seller-zone-config",
     "shipping/seller-zone-config",
   ],
-
   deliveryOptions: ["shipping/options", "core/shipping/options"],
 };
 
 /* ------------------------------
-   Small utilities
+   Money + dates
 --------------------------------*/
-const cx = (...a) => a.filter(Boolean).join(" ");
-function money(val, ccy) {
-  if (val == null) return `${ccy} 0.00`;
-  if ((typeof val === "string" && val.includes(".")) || (typeof val === "number" && !Number.isInteger(val))) {
-    const n = Number(val);
-    return `${ccy} ${Number.isFinite(n) ? n.toFixed(2) : String(val)}`;
-  }
-  const n = Number(val);
-  return `${ccy} ${Number.isFinite(n) ? (n / 100).toFixed(2) : String(val)}`;
+const CCY_BY_COUNTRY = { GH: "GHS", NG: "NGN", KE: "KES", ZA: "ZAR", UG: "UGX", TZ: "TZS", RW: "RWF", GB: "GBP", EU: "EUR", US: "USD", CA: "CAD", AU: "AUD" };
+const CCY_SYMBOLS = { GHS: "GH₵", NGN: "₦", KES: "KSh", ZAR: "R", UGX: "USh", TZS: "TSh", RWF: "FRw", GBP: "£", EUR: "€", USD: "$", CAD: "C$", AUD: "A$" };
+const inferCurrencyFromCountry = (code) => CCY_BY_COUNTRY[String(code || "").toUpperCase()] || "USD";
+const ccySymbol = (ccy) => CCY_SYMBOLS[String(ccy || "").toUpperCase()] || String(ccy || "").toUpperCase();
+
+function moneyFromMinor(minor, ccy) {
+  const v = Number(minor);
+  const p = Number.isFinite(v) ? (v / 100).toFixed(2) : "0.00";
+  return `${ccySymbol(ccy)} ${p}`;
 }
-const toMinor = (o) => {
-  if (o == null) return 0;
+function toMinor(o) {
+  if (o == null || o === "" || Number.isNaN(Number(o))) return 0;
   const n = Number(o);
-  return Number.isFinite(n) ? Math.round(n * 100) : 0;
-};
+  return Math.round(n * 100);
+}
+function addDays(date, days) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+function etaDateRange(minDays, maxDays) {
+  const fmt = new Intl.DateTimeFormat(undefined, { weekday: "short" });
+  const start = addDays(new Date(), Math.max(0, minDays || 0));
+  const end = addDays(new Date(), Math.max(0, (maxDays ?? minDays) || 0));
+  const same = start.toDateString() === end.toDateString();
+  return same ? fmt.format(start) : `${fmt.format(start)}–${fmt.format(end)}`;
+}
+
+//seller-currency helpe
+function sellerCurrencyFromCtx(loc) {
+  const candidates = [
+    loc?.seller?.currency?.code,
+    loc?.seller?.currency_code,
+    loc?.shop?.currency?.code,
+    loc?.shop?.currency_code,
+    loc?.currency?.code,
+    loc?.currencyCode,
+  ].map(x => (x ? String(x).toUpperCase() : "")).filter(Boolean);
+  return candidates[0] || null;
+}
+
+
+/* ------------------------------
+   Zone matching + synth preview
+--------------------------------*/
 const countryCodeOf = (z) => (z?.country_code || z?.country?.code || "").toUpperCase();
 const isAllZone = (z) => {
   const name = String(z?.name || "").toLowerCase();
@@ -195,49 +212,72 @@ const isAllZone = (z) => {
   const region = String(z?.region_code || "").toUpperCase();
   return /(^|\s|\()all(\)|\s|$)/i.test(name) || code.endsWith("_ALL") || region === "ALL";
 };
-
-/* ---- extra helpers used for fallbacks ---- */
-const uniqueBy = (arr, getKey = (x) => x?.id) => {
-  const seen = new Set();
-  return arr.filter((x) => {
-    const k = getKey(x);
-    if (k == null || seen.has(k)) return false;
-    seen.add(k);
-    return true;
-  });
-};
-const CCY_BY_COUNTRY = { GH: "GHS", NG: "NGN", KE: "KES", ZA: "ZAR", UG: "UGX", TZ: "TZS", RW: "RWF", GB: "GBP", EU: "EUR", US: "USD", CA: "CAD", AU: "AUD" };
-const inferCurrencyFromCountry = (code) => CCY_BY_COUNTRY[String(code || "").toUpperCase()] || "USD";
 const zoneCountry = (z) => (z?.country_code || z?.country?.code || "").toUpperCase();
-const zoneMatches = (z, { country, city }) => {
+function zoneMatches(z, { country, city }) {
   if (zoneCountry(z) !== String(country || "").toUpperCase()) return false;
   const name = String(z?.name || "").toLowerCase();
   const isAll = isAllZone(z);
   if (!city) return true;
   return isAll || name.includes(String(city).toLowerCase());
-};
+}
+
+/** Build options from configs, prefer most specific zone when duplicates exist */
+/** Build options from configs.
+ *  - If a city is provided, we keep one option per method (prefer more specific zone over ALL).
+ *  - If NO city is provided, we return **all** matching zone configs for that country.
+ */
 function computeOptionsFromConfigs(cfgs, { country, city }) {
-  const active = (cfgs || []).filter((c) => c?.is_active && zoneMatches(c?.zone, { country, city }));
-  return active.map((c) => {
+  const active = (cfgs || []).filter(
+    (c) => (c?.is_active ?? true) && zoneMatches(c?.zone, { country, city })
+  );
+
+  // helper to normalize a config into an option
+  const toOption = (c) => {
     const cc = zoneCountry(c.zone);
     const etaMin = (c.handling_min_days || 0) + (c.transit_min_days || 0);
     const etaMax =
       ((c.handling_max_days ?? c.handling_min_days) || 0) +
-      ((c.transit_max_days ?? c.transit_min_days) || 0); // ← parens for old Next
+      ((c.transit_max_days ?? c.transit_min_days) || 0);
     return {
-      method_code: c.shipping_method?.code || String(c.shipping_method?.id ?? ""),
-      method_label: c.shipping_method?.label || "Shipping",
+      method_code:
+        c.shipping_method?.code ||
+        String(c.shipping_method?.id ?? c.shipping_method_id ?? ""),
+      method_label: c.shipping_method?.label || c.method_label || "Shipping",
+      fee_minor: Number.isFinite(c.fee_minor) ? c.fee_minor : toMinor(c.fee),
       fee: c.fee,
-      fee_minor: toMinor(c.fee),
       currency: c.currency || inferCurrencyFromCountry(cc),
       eta_min_days: etaMin,
       eta_max_days: etaMax,
-      allowed_payment_codes: c.allowed_payment_codes || c.shipping_method?.allowed_payment_codes || [],
+      allowed_payment_codes:
+        c.allowed_payment_codes ||
+        c.shipping_method?.allowed_payment_codes ||
+        [],
       tracking_required: !!c.shipping_method?.tracking_required,
       zone_code: c.zone?.code || "",
+      zone_name: c.zone?.name || "",
     };
-  });
+  };
+
+  if (!city) {
+    // No city: return every applicable config (don’t collapse)
+    return active.map(toOption);
+  }
+
+  // With a city: collapse to one config per method (prefer specific zone > ALL)
+  const byMethod = new Map();
+  for (const c of active) {
+    const key = String(c.shipping_method?.id ?? c.shipping_method_id);
+    const current = byMethod.get(key);
+    const thisIsAll = isAllZone(c.zone);
+    if (!current || (isAllZone(current.zone) && !thisIsAll)) {
+      byMethod.set(key, c);
+    }
+  }
+
+  return Array.from(byMethod.values()).map(toOption);
 }
+
+
 
 /* ------------------------------
    Tiny toast
@@ -256,24 +296,54 @@ function useToast() {
   return { show, node };
 }
 
-
-
-
-
-
-
-
+/* ------------------------------
+   Entitlements / plan gating
+--------------------------------*/
+function useEntitlements() {
+  const [state, setState] = useState({ canBulkApply: true, multiCountry: true });
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("upfrica.entitlements");
+      if (raw) {
+        const v = JSON.parse(raw);
+        setState({
+          canBulkApply: !!v.canBulkApply,
+          multiCountry: !!v.multiCountry,
+        });
+      }
+    } catch {}
+  }, []);
+  return state;
+}
 
 
 
 
 /* =========================================
-   Deliver-To chip
+   Deliver-To chip (seller-first default)
 ========================================= */
-function DeliverToChip({ defaultCountry = "GB" }) {
+function DeliverToChip() {
+  const loc = typeof useLocalization === "function" ? useLocalization() : null;
+
+  // Best-effort extraction of a seller/user country code from the localization context
+  const sellerCountryFromCtx = useMemo(() => {
+    const candidates = [
+      loc?.seller?.country_code,
+      loc?.seller?.country?.code,
+      loc?.profile?.country_code,
+      loc?.profile?.country?.code,
+      loc?.country?.code,
+      loc?.countryCode,
+      loc?.locale?.country?.code,
+    ]
+      .map((x) => (x ? String(x).toUpperCase() : ""))
+      .filter(Boolean);
+    return candidates[0] || null;
+  }, [loc]);
+
   const [open, setOpen] = useState(false);
   const [countries, setCountries] = useState([]);
-  const [country, setCountry] = useState(""); // let URL/localStorage win first
+  const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
   const [postcode, setPostcode] = useState("");
 
@@ -281,6 +351,17 @@ function DeliverToChip({ defaultCountry = "GB" }) {
     apiGet(EP.countries).then(setCountries).catch(() => setCountries([]));
   }, []);
 
+  // Helper to read a cookie (for site_cc fallback)
+  const readCookie = (name) => {
+    try {
+      const m = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+      return m ? decodeURIComponent(m[1]) : "";
+    } catch {
+      return "";
+    }
+  };
+
+  // Initialize from URL/localStorage; then seller country; then cookie; then "GB"
   useEffect(() => {
     try {
       const url = new URL(window.location.href);
@@ -300,10 +381,12 @@ function DeliverToChip({ defaultCountry = "GB" }) {
       if (!postcode && vPost) setPostcode(vPost);
     } catch {}
 
-    // final fallback
-    if (!country) setCountry(defaultCountry);
+    if (!country) {
+      const fromCookie = (readCookie("site_cc") || "").toUpperCase();
+      setCountry((sellerCountryFromCtx || fromCookie || "GB").toUpperCase());
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [sellerCountryFromCtx]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -315,15 +398,22 @@ function DeliverToChip({ defaultCountry = "GB" }) {
         if (postcode) url.searchParams.set("postcode", postcode); else url.searchParams.delete("postcode");
         window.history.replaceState({}, "", url);
       } catch {}
+
+      const ccLower = String(country || "").toLowerCase();
+      if (ccLower) setCookie("site_cc", ccLower);
+      if (city) setCookie(`deliver_to_${ccLower}`, city);
+      if (postcode) setCookie(`deliver_to_postcode_${ccLower}`, postcode);
+
       window.dispatchEvent(new CustomEvent("upfrica:deliverTo"));
+      try { window.dispatchEvent(new CustomEvent("locale:changed")); } catch {}
     }
   }, [country, city, postcode]);
 
   const selected = useMemo(() => {
     const c = countries.find((x) => x.code === country);
     const name = c?.name || country;
-    const loc = [city, postcode].filter(Boolean).join(" · ");
-    return loc ? `${name} — ${loc}` : name;
+    const locText = [city, postcode].filter(Boolean).join(" · ");
+    return locText ? `${name} — ${locText}` : name;
   }, [countries, country, city, postcode]);
 
   return (
@@ -357,9 +447,7 @@ function DeliverToChip({ defaultCountry = "GB" }) {
                   className="w-full rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-3 py-2"
                 >
                   {countries.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.name}
-                    </option>
+                    <option key={c.code} value={c.code}>{c.name}</option>
                   ))}
                 </select>
               </div>
@@ -397,14 +485,24 @@ function DeliverToChip({ defaultCountry = "GB" }) {
   );
 }
 
+
+
+
+
+
+
+
+
 /* =========================================
    PDP delivery widget (read-only list)
 ========================================= */
 function PDPDeliveryWidget({ productId, sellerId }) {
   const [opts, setOpts] = useState(null);
   const [err, setErr] = useState(null);
+  const [reasons, setReasons] = useState(null);
   const [deliverTo, setDeliverTo] = useState({ country: "GB", city: "", postcode: "" });
 
+  // Read + listen to DeliverTo and config changes
   useEffect(() => {
     const read = () => {
       try {
@@ -420,65 +518,175 @@ function PDPDeliveryWidget({ productId, sellerId }) {
     const onChange = () => read();
     window.addEventListener("storage", onChange);
     window.addEventListener("upfrica:deliverTo", onChange);
+    window.addEventListener("upfrica:shippingConfigChanged", onChange);
     return () => {
       window.removeEventListener("storage", onChange);
       window.removeEventListener("upfrica:deliverTo", onChange);
+      window.removeEventListener("upfrica:shippingConfigChanged", onChange);
     };
   }, []);
+
+  // --- NEW: hydrate configs so zone/method objects exist ---
+  async function getHydratedConfigs() {
+    const cfgs = asList(await apiGet(EP.sellerZoneConfigs));
+    if (!cfgs.length) return [];
+    if (cfgs[0]?.zone && cfgs[0]?.shipping_method) return cfgs; // already hydrated
+    try {
+      const { zoneById, methodById } = await hydrateFromConfigIds(cfgs);
+      return cfgs.map((c) => ({
+        ...c,
+        zone: c.zone || zoneById[c.zone_id],
+        shipping_method: c.shipping_method || methodById[c.shipping_method_id],
+      }));
+    } catch {
+      return cfgs; // best-effort
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setErr(null);
+      setReasons(null);
       setOpts(null);
 
       const base = cleanedParams({
         product_id: productId,
         seller_id: sellerId,
-        country: deliverTo.country || "GB",
-        city: deliverTo.city || "",
-        postcode: deliverTo.postcode || "",
+        deliver_cc: String(deliverTo.country || "GB").toUpperCase(),
+        deliver_to_city: deliverTo.city?.trim() || "",
+        deliver_to_postcode: deliverTo.postcode?.trim() || "",
         include_payments: true,
       });
 
-      try {
-        // Try preview first
-        let data = await apiGet(previewPath({ productId, shopSlug: null }), base);
-        let list = asList(data);
 
-        if (!sellerId && list.length === 0) {
-          try {
-            const cfgs = asList(await apiGet(EP.sellerZoneConfigs));
-            const fallbackSeller = cfgs?.[0]?.seller ?? cfgs?.[0]?.seller_id ?? null;
-            if (fallbackSeller) {
-              data = await apiGet(previewPath({ productId, shopSlug: null }), { ...base, seller_id: fallbackSeller });
-              list = asList(data);
-            }
-          } catch {}
-        }
-        if (!cancelled) setOpts(list);
-      } catch (e) {
-        // Fallback: synthesise from configs
+try {
+  // Try backend preview first
+  let data = await apiGet(previewPath({ productId, shopSlug: null }), base);
+  let list = asList(data);
+
+  // Fallback: try with any seller we can find from hydrated configs
+  if (!sellerId && list.length === 0) {
+    try {
+      const cfgs = await getHydratedConfigs();
+
+      // collect all possible seller IDs from hydrated configs
+      const sellerIds = Array.from(
+        new Set(
+          cfgs
+            .map((c) => c.seller?.id || c.seller_id)
+            .filter(Boolean)
+        )
+      );
+
+      for (const sid of sellerIds) {
         try {
-          const cfgs = asList(await apiGet(EP.sellerZoneConfigs));
-          const synthesized = computeOptionsFromConfigs(cfgs, {
-            country: deliverTo.country,
-            city: deliverTo.city,
+          const data = await apiGet(previewPath({ productId, shopSlug: null }), {
+            ...base,
+            seller_id: sid,
           });
-          if (!cancelled) setOpts(synthesized);
-          if (!synthesized.length && !cancelled) setErr(cleanErr(e));
-        } catch {
-          if (!cancelled) {
-            setErr(cleanErr(e));
-            setOpts([]);
+          const candidate = asList(data);
+          if (candidate.length > 0) {
+            list = candidate;
+            break; // stop after the first seller that returns options
           }
+        } catch {
+          // ignore and try the next seller
         }
       }
+    } catch {
+      // swallow errors quietly
+    }
+  }
+
+
+
+  // If buyer hasn't set a city, prefer the synthesized list so we show ALL
+// zone matches within the selected country (not just one per method).
+if (!deliverTo.city) {
+  try {
+    const cfgsAll = await getHydratedConfigs();
+    const synthAll = computeOptionsFromConfigs(cfgsAll, {
+      country: deliverTo.country,
+      city: "", // explicitly empty to trigger all-zone branch
+    });
+
+    if (Array.isArray(synthAll) && synthAll.length > 0) {
+      list = synthAll;
+    }
+  } catch (err) {
+    // keep silent in production, but useful during dev
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("computeOptionsFromConfigs failed (all-zone)", err);
+    }
+  }
+}
+
+
+  // NEW: if still empty, synthesize from configs so the right side shows something
+  if (list.length === 0) {
+    const cfgs = await getHydratedConfigs();
+    const synthesized = computeOptionsFromConfigs(cfgs, {
+      country: deliverTo.country,
+      city: deliverTo.city,
+    });
+
+    if (synthesized.length > 0) {
+      list = synthesized;
+    } else {
+      // explain why (now that we have hydrated cfgs)
+      const anyCountry = cfgs.filter(
+        (c) =>
+          (c.zone?.country_code || c.zone?.country?.code || "").toUpperCase() ===
+          (deliverTo.country || "").toUpperCase()
+      );
+      if (anyCountry.length === 0) {
+        setReasons(`No active configs for ${deliverTo.country}.`);
+      } else {
+        const anyActive = anyCountry.some((c) => (c.is_active ?? true));
+        const anyCity = anyCountry.some((c) =>
+          zoneMatches(c.zone, { country: deliverTo.country, city: deliverTo.city })
+        );
+        if (!anyActive) {
+          setReasons(`Shipping is disabled for ${deliverTo.country}. Turn on “Active” for a method.`);
+        } else if (!anyCity && deliverTo.city) {
+          setReasons(`No zone matching “${deliverTo.city}”. Try removing the city filter.`);
+        }
+      }
+    }
+  }
+
+  if (!cancelled) setOpts(list);
+} catch (e) {
+  // (unchanged) Fallback: synthesize from hydrated configs on request failure
+  try {
+    const cfgs = await getHydratedConfigs();
+    const synthesized = computeOptionsFromConfigs(cfgs, {
+      country: deliverTo.country,
+      city: deliverTo.city,
+    });
+    if (!cancelled) {
+      if (!synthesized.length)
+        setReasons("No active shipping methods match the selected location.");
+      setOpts(synthesized);
+    }
+  } catch {
+    if (!cancelled) {
+      setErr(cleanErr(e));
+      setOpts([]);
+    }
+  }
+}
+
+
+
+
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [productId, sellerId, deliverTo.country, deliverTo.city, deliverTo.postcode]);
 
-  // comparator: fastest (eta_max) → cheaper → tighter (eta_min)
   function compareOptions(a, b) {
     const aEtaMax = a.eta_max_days ?? 9999;
     const bEtaMax = b.eta_max_days ?? 9999;
@@ -490,20 +698,20 @@ function PDPDeliveryWidget({ productId, sellerId }) {
     const bEtaMin = b.eta_min_days ?? 9999;
     return aEtaMin - bEtaMin;
   }
-
-  const sortedOpts = useMemo(() => (Array.isArray(opts) ? [...opts].sort(compareOptions) : opts), [opts]);
+  const sortedOpts = useMemo(
+    () => (Array.isArray(opts) ? [...opts].sort(compareOptions) : opts),
+    [opts]
+  );
 
   return (
-    <div className="rounded-2xl border dark:border-neutral-800 bg-white dark:bg-neutral-900">
+    <div className="rounded-2xl border dark:border-neutral-800 bg-white dark:bg-neutral-900" aria-live="polite">
       <div className="p-4 border-b dark:border-neutral-800 flex items-center gap-2">
         <Truck className="h-4 w-4" />
         <div className="font-medium">Delivery options</div>
       </div>
 
       {sortedOpts === null && !err && (
-        <div className="p-4 text-sm text-neutral-500 dark:text-neutral-400" aria-live="polite">
-          Loading delivery options…
-        </div>
+        <div className="p-4 text-sm text-neutral-500 dark:text-neutral-400">Loading delivery options…</div>
       )}
 
       {err && (
@@ -515,7 +723,7 @@ function PDPDeliveryWidget({ productId, sellerId }) {
 
       {Array.isArray(sortedOpts) && sortedOpts.length === 0 && !err && (
         <div className="p-4 text-sm text-neutral-500 dark:text-neutral-400">
-          No delivery options yet.
+          No delivery options yet.{reasons ? ` ${reasons}` : ""}
         </div>
       )}
 
@@ -523,7 +731,8 @@ function PDPDeliveryWidget({ productId, sellerId }) {
         <div className="p-4 space-y-3">
           {(() => {
             const cheapest = sortedOpts.reduce(
-              (m, x) => ((x.fee_minor ?? toMinor(x.fee)) < (m.fee_minor ?? toMinor(m.fee)) ? x : m),
+              (m, x) =>
+                (x.fee_minor ?? toMinor(x.fee)) < (m.fee_minor ?? toMinor(m.fee)) ? x : m,
               sortedOpts[0]
             );
             const fastest = sortedOpts[0];
@@ -531,10 +740,14 @@ function PDPDeliveryWidget({ productId, sellerId }) {
             return sortedOpts.map((o) => {
               const isCheapest = o === cheapest;
               const isFastest = o === fastest;
-              const cutoff = o.cutoff || (o.order_cutoff_time ? String(o.order_cutoff_time).slice(0, 5) : null);
               const payments = o.allowed_payment_codes || o.allowed_payments || [];
               const feeMinor = o.fee_minor ?? toMinor(o.fee);
               const isFree = feeMinor === 0;
+              const etaDays =
+                o.eta_min_days === o.eta_max_days
+                  ? `${o.eta_min_days} day${o.eta_min_days === 1 ? "" : "s"}`
+                  : `${o.eta_min_days}–${o.eta_max_days} days`;
+              const etaDates = etaDateRange(o.eta_min_days, o.eta_max_days);
 
               return (
                 <div key={`${o.method_code}-${o.zone_code}`} className="flex items-center justify-between rounded-xl border dark:border-neutral-800 p-3">
@@ -543,6 +756,9 @@ function PDPDeliveryWidget({ productId, sellerId }) {
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <div className="font-medium">{o.method_label}</div>
+                        {o.zone_name && (
+                          <span className="text-xs text-neutral-500 dark:text-neutral-400">Using: {o.zone_name}</span>
+                        )}
                         {isFastest && (
                           <span className="inline-flex items-center gap-1 text-xs rounded-lg px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800">
                             <Sparkles className="h-3 w-3" /> Fastest
@@ -561,11 +777,7 @@ function PDPDeliveryWidget({ productId, sellerId }) {
                       </div>
                       <div className="text-sm text-neutral-600 dark:text-neutral-400 flex flex-wrap items-center gap-2">
                         <Clock className="h-3 w-3" />
-                        Arrives in{" "}
-                        {o.eta_min_days === o.eta_max_days
-                          ? `${o.eta_min_days} day${o.eta_min_days === 1 ? "" : "s"}`
-                          : `${o.eta_min_days}–${o.eta_max_days} days`}
-                        {cutoff ? ` • order by ${cutoff}` : ""}
+                        Arrives {etaDates} <span className="text-neutral-400">({etaDays})</span>
                       </div>
                       {!!payments.length && (
                         <div className="mt-1 flex flex-wrap gap-1 text-xs text-neutral-500 dark:text-neutral-400">
@@ -582,7 +794,7 @@ function PDPDeliveryWidget({ productId, sellerId }) {
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-semibold">
-                      {isFree ? "Free" : money(feeMinor ?? o.fee, o.currency)}
+                      {isFree ? "Free" : moneyFromMinor(feeMinor, o.currency)}
                     </div>
                     {o.tracking_required && (
                       <div className="text-xs text-neutral-500 dark:text-neutral-400">Tracking required</div>
@@ -601,22 +813,20 @@ function PDPDeliveryWidget({ productId, sellerId }) {
 
 
 
-
-
-
-
-
-
 /* =========================================
    Seller matrix (configure per-zone fees)
 ========================================= */
 function ShippingSettingsMatrix() {
+  const { canBulkApply } = useEntitlements();
   const [zones, setZones] = useState([]);
   const [methods, setMethods] = useState([]);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingIdx, setSavingIdx] = useState(null);
   const [deletingIdx, setDeletingIdx] = useState(null);
+  const [errors, setErrors] = useState({}); // per-row validation messages
+  const [dirtySet, setDirtySet] = useState(new Set()); // indices with unsaved edits
+  const autosaveTimers = useRef({}); // index -> timeout
   const { show, node: toast } = useToast();
 
   // bulk panel
@@ -624,93 +834,116 @@ function ShippingSettingsMatrix() {
   const [zoneQuery, setZoneQuery] = useState("");
   const [bulk, setBulk] = useState({ zoneIds: [], methods: {} });
 
+  //localization + seller currency: 
+  const loc = typeof useLocalization === "function" ? useLocalization() : null;
+  const sellerCcy = useMemo(() => {
+  const fromCtx = sellerCurrencyFromCtx(loc);
+  if (fromCtx) return fromCtx;
+  const sellerCountry =
+    loc?.seller?.country_code ||
+    loc?.country?.code ||
+    loc?.countryCode;
+  return inferCurrencyFromCountry(sellerCountry || "US");
+}, [loc]);
+
+// Currency for the Bulk panel: prefer selected zone's country, else seller's currency.
+const bulkCcy = useMemo(() => {
+  const firstSelectedZone = zones.find(z => bulk.zoneIds.includes(z.id));
+  const zoneCountry = firstSelectedZone ? countryCodeOf(firstSelectedZone) : null;
+  return (zoneCountry && inferCurrencyFromCountry(zoneCountry)) || sellerCcy || "USD";
+}, [bulk.zoneIds, zones, sellerCcy]);
+
   useEffect(() => {
-  async function loadAll() {
-    setLoading(true);
-    try {
-      const [z, m, cfgs] = await Promise.allSettled([
-        apiGet(EP.zones),
-        apiGet(EP.methods),
-        apiGet(EP.sellerZoneConfigs),
-      ]);
+    async function loadAll() {
+      setLoading(true);
+      try {
+        const [z, m, cfgs] = await Promise.allSettled([
+          apiGet(EP.zones),
+          apiGet(EP.methods),
+          apiGet(EP.sellerZoneConfigs),
+        ]);
 
-      const cfgList = cfgs.status === "fulfilled" ? asList(cfgs.value) : [];
+        const cfgList = cfgs.status === "fulfilled" ? asList(cfgs.value) : [];
 
-      let zonesList = z.status === "fulfilled" ? asList(z.value) : [];
-      let methodsList = m.status === "fulfilled" ? asList(m.value) : [];
+        let zonesList = z.status === "fulfilled" ? asList(z.value) : [];
+        let methodsList = m.status === "fulfilled" ? asList(m.value) : [];
 
-      // If backend didn't embed zone/method objects in configs, hydrate by IDs.
-      if ((!zonesList.length || !methodsList.length) && cfgList.length) {
-        // First try embedded objects (if present on the configs)
-        if (!zonesList.length) {
-          const embeddedZones = uniqueBy(cfgList.map(c => c.zone).filter(Boolean));
-          zonesList = embeddedZones;
+        // Hydrate if needed
+        if ((!zonesList.length || !methodsList.length) && cfgList.length) {
+          if (!zonesList.length) zonesList = cfgList.map((c) => c.zone).filter(Boolean);
+          if (!methodsList.length)
+            methodsList = cfgList.map((c) => c.shipping_method).filter(Boolean);
+          if (!zonesList.length || !methodsList.length) {
+            const hydrated = await hydrateFromConfigIds(cfgList);
+            if (!zonesList.length) zonesList = hydrated.zones;
+            if (!methodsList.length) methodsList = hydrated.methods;
+          }
         }
-        if (!methodsList.length) {
-          const embeddedMethods = uniqueBy(cfgList.map(c => c.shipping_method).filter(Boolean));
-          methodsList = embeddedMethods;
-        }
-        // If still empty, fetch details by id (singular endpoints)
-        if (!zonesList.length || !methodsList.length) {
-          const hydrated = await hydrateFromConfigIds(cfgList);
-          if (!zonesList.length) zonesList = hydrated.zones;
-          if (!methodsList.length) methodsList = hydrated.methods;
-        }
+
+        // lookups
+        const zoneById = Object.fromEntries((zonesList || []).map((z) => [z.id, z]));
+        const methodById = Object.fromEntries((methodsList || []).map((m) => [m.id, m]));
+
+        // rows
+        setRows(
+          cfgList.map((c) => {
+            const zObj = c.zone || zoneById[c.zone_id];
+            const mObj = c.shipping_method || methodById[c.shipping_method_id];
+            const cc = countryCodeOf(zObj);
+            const currency = c.currency || sellerCcy || inferCurrencyFromCountry(cc);
+            return {
+              id: c.id,
+              zoneId: zObj?.id ?? c.zone_id,
+              zoneName: zObj ? `${zObj.name} (${cc})` : `Zone #${c.zone_id ?? "?"}`,
+              zoneCountry: cc,
+              methodId: mObj?.id ?? c.shipping_method_id,
+              methodLabel:
+                mObj?.label ?? c.method_label ?? `Method #${c.shipping_method_id ?? "?"}`,
+              fee: String(c.fee ?? "0.00"),
+              handling: c.handling_min_days ?? 0,
+              transit: c.transit_min_days ?? 0,
+              active: !!c.is_active,
+              currency,
+            };
+          })
+        );
+        setZones(zonesList);
+        setMethods(methodsList);
+        setDirtySet(new Set());
+      } finally {
+        setLoading(false);
       }
-
-      setZones(zonesList);
-      setMethods(methodsList);
-
-      // Build quick lookups to enrich rows even if configs lack embedded objects
-      const zoneById = Object.fromEntries((zonesList || []).map(z => [z.id, z]));
-      const methodById = Object.fromEntries((methodsList || []).map(m => [m.id, m]));
-
-      setRows(
-        cfgList.map((c) => {
-          const zObj = c.zone || zoneById[c.zone_id];
-          const mObj = c.shipping_method || methodById[c.shipping_method_id];
-          return {
-            id: c.id,
-            zoneId: zObj?.id ?? c.zone_id,
-            zoneName: zObj
-              ? `${zObj.name} (${zObj.country_code || zObj.country?.code || ""})`
-              : `Zone #${c.zone_id ?? "?"}`,
-            methodId: mObj?.id ?? c.shipping_method_id,
-            methodLabel: mObj?.label ?? c.method_label ?? `Method #${c.shipping_method_id ?? "?"}`,
-            fee: String(c.fee ?? "0.00"),
-            handling: c.handling_min_days ?? 0,
-            transit: c.transit_min_days ?? 0,
-            active: !!c.is_active,
-          };
-        })
-      );
-    } finally {
-      setLoading(false);
     }
-  }
-  loadAll();
-}, []);
+    loadAll();
+  }, []);
 
+  // --- filtering + selection (bulk) ---
   const filteredZones = useMemo(() => {
     const q = zoneQuery.trim().toLowerCase();
     const matches = zones.filter((z) => {
       const code = countryCodeOf(z).toLowerCase();
-      return String(z.name || "").toLowerCase().includes(q)
-        || String(z.code || "").toLowerCase().includes(q)
-        || code.includes(q);
+      return (
+        String(z.name || "").toLowerCase().includes(q) ||
+        String(z.code || "").toLowerCase().includes(q) ||
+        code.includes(q)
+      );
     });
     return matches.sort((a, b) => {
-      const ca = countryCodeOf(a), cb = countryCodeOf(b);
+      const ca = countryCodeOf(a),
+        cb = countryCodeOf(b);
       if (ca !== cb) return ca.localeCompare(cb);
-      const aAll = isAllZone(a) ? 0 : 1, bAll = isAllZone(b) ? 0 : 1;
+      const aAll = isAllZone(a) ? 0 : 1,
+        bAll = isAllZone(b) ? 0 : 1;
       if (aAll !== bAll) return aAll - bAll;
-      const an = String(a.name || "").toUpperCase(), bn = String(b.name || "").toUpperCase();
+      const an = String(a.name || "").toUpperCase(),
+        bn = String(b.name || "").toUpperCase();
       return an.localeCompare(bn, undefined, { numeric: true });
     });
   }, [zoneQuery, zones]);
 
-  const allFilteredSelected = filteredZones.length > 0 && filteredZones.every((z) => bulk.zoneIds.includes(z.id));
-
+  const allFilteredSelected =
+    filteredZones.length > 0 &&
+    filteredZones.every((z) => bulk.zoneIds.includes(z.id));
   function toggleSelectAllFiltered() {
     setBulk((b) => ({
       ...b,
@@ -730,7 +963,13 @@ function ShippingSettingsMatrix() {
     });
   }
   const updateMethodField = (mid, field, value) =>
-    setBulk((b) => ({ ...b, methods: { ...b.methods, [String(mid)]: { ...b.methods[String(mid)], [field]: value } } }));
+    setBulk((b) => ({
+      ...b,
+      methods: {
+        ...b.methods,
+        [String(mid)]: { ...b.methods[String(mid)], [field]: value },
+      },
+    }));
   function copyFirstToAll() {
     const ids = Object.keys(bulk.methods);
     if (!ids.length) return;
@@ -742,11 +981,39 @@ function ShippingSettingsMatrix() {
     });
   }
 
-  const updateRow = (i, patch) => setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  // --- validation ---
+  function validateRow(r) {
+    const errs = {};
+    const feeNum = Number(r.fee);
+    if (Number.isNaN(feeNum) || feeNum < 0) errs.fee = "Fee must be a number ≥ 0";
+    if (r.handling < 0) errs.handling = "Must be ≥ 0";
+    if (r.transit < 0) errs.transit = "Must be ≥ 0";
+    setErrors((prev) => ({ ...prev, [r.id ?? `tmp-${r.zoneId}-${r.methodId}`]: errs }));
+    return Object.keys(errs).length === 0;
+  }
 
-  async function saveRow(i) {
+
+  // --- mutators + autosave ---
+  const markDirty = (i) => {
+    setDirtySet((prev) => new Set(prev).add(i));
+  };
+
+  const scheduleAutosave = (i) => {
+    clearTimeout(autosaveTimers.current[i]);
+    autosaveTimers.current[i] = setTimeout(() => saveRow(i, { silentToast: true }), 600);
+  };
+
+  const updateRow = (i, patch) => {
+    setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+    markDirty(i);
+    scheduleAutosave(i);
+  };
+
+  async function saveRow(i, { silentToast = false } = {}) {
     setSavingIdx(i);
     const r = rows[i];
+    if (!validateRow(r)) { setSavingIdx(null); return; }
+
     try {
       const payload = {
         zone_id: r.zoneId,
@@ -758,9 +1025,23 @@ function ShippingSettingsMatrix() {
         transit_max_days: Number(r.transit || 0),
         is_active: Boolean(r.active),
       };
+      // conflict guard: if another row has same (zone, method), skip creating duplicate
+      const dupIdx = rows.findIndex((x, idx) => idx !== i && x.zoneId === r.zoneId && x.methodId === r.methodId);
+      if (dupIdx >= 0) {
+        // merge into the existing one locally; rely on next reload to reconcile ids
+        setRows((prev) => prev.filter((_, idx) => idx !== i));
+        setDirtySet((prev) => { const n = new Set(prev); n.delete(i); return n; });
+        if (!silentToast) show("Merged duplicate config");
+        window.dispatchEvent(new CustomEvent("upfrica:shippingConfigChanged"));
+        setSavingIdx(null);
+        return;
+      }
+
       const saved = await apiPost(EP.sellerZoneConfigs, payload);
-      updateRow(i, { id: saved.id });
-      show("Saved");
+      setRows((prev) => prev.map((r2, idx) => (idx === i ? { ...r2, id: saved.id } : r2)));
+      setDirtySet((prev) => { const n = new Set(prev); n.delete(i); return n; });
+      if (!silentToast) show("Saved");
+      window.dispatchEvent(new CustomEvent("upfrica:shippingConfigChanged"));
     } finally {
       setSavingIdx(null);
     }
@@ -768,26 +1049,38 @@ function ShippingSettingsMatrix() {
 
   async function deleteRow(i) {
     const r = rows[i];
+    const methodText = methods.find((m) => String(m.id) === String(r.methodId))?.label || r.methodLabel;
+    const ok = confirm(`Remove shipping config?\n\n${r.zoneName}\n${methodText}`);
+    if (!ok) return;
+
     if (!r.id) {
       setRows((prev) => prev.filter((_, idx) => idx !== i));
+      setDirtySet((prev) => { const n = new Set(prev); n.delete(i); return n; });
       return;
     }
-    if (!confirm("Remove this shipping config? Existing orders are unaffected.")) return;
     setDeletingIdx(i);
     try {
       await apiDelete(EP.sellerZoneConfigs, { id: r.id });
       setRows((prev) => prev.filter((_, idx) => idx !== i));
+      setDirtySet((prev) => { const n = new Set(prev); n.delete(i); return n; });
       show("Removed");
+      window.dispatchEvent(new CustomEvent("upfrica:shippingConfigChanged"));
     } finally {
       setDeletingIdx(null);
     }
   }
 
   async function applyBulk() {
+    if (!canBulkApply) return;
     const targets = zones.filter((z) => bulk.zoneIds.includes(z.id));
     const methodEntries = Object.entries(bulk.methods);
+
     for (const z of targets) {
       for (const [mid, cfg] of methodEntries) {
+        // skip duplicates (conflict guard)
+        const exists = rows.some(r => r.zoneId === z.id && String(r.methodId) === String(mid));
+        if (exists) continue;
+
         const payload = {
           zone_id: z.id,
           shipping_method_id: Number(mid),
@@ -803,38 +1096,69 @@ function ShippingSettingsMatrix() {
     }
     setBulkOpen(false);
     const cfgs = asList(await apiGet(EP.sellerZoneConfigs));
+    const zoneById = Object.fromEntries(zones.map(z => [z.id, z]));
+    const methodById = Object.fromEntries(methods.map(m => [m.id, m]));
     setRows(
-      cfgs.map((c) => ({
-        id: c.id,
-        zoneId: c.zone?.id ?? c.zone_id,
-        zoneName: c.zone
-          ? `${c.zone.name} (${c.zone.country_code || c.zone.country?.code || ""})`
-          : `Zone #${c.zone_id ?? "?"}`,
-        methodId: c.shipping_method?.id ?? c.shipping_method_id,
-        methodLabel: c.shipping_method?.label ?? c.method_label ?? `Method #${c.shipping_method_id ?? "?"}`,
-        fee: String((c.fee ?? "0.00")),
-        handling: c.handling_min_days ?? 0,
-        transit: c.transit_min_days ?? 0,
-        active: !!c.is_active,
-      }))
+      cfgs.map((c) => {
+        const zObj = c.zone || zoneById[c.zone_id];
+        const mObj = c.shipping_method || methodById[c.shipping_method_id];
+        const cc = countryCodeOf(zObj);
+        return {
+          id: c.id,
+          zoneId: zObj?.id ?? c.zone_id,
+          zoneName: zObj ? `${zObj.name} (${cc})` : `Zone #${c.zone_id ?? "?"}`,
+          zoneCountry: cc,
+          methodId: mObj?.id ?? c.shipping_method_id,
+          methodLabel: mObj?.label ?? c.method_label ?? `Method #${c.shipping_method_id ?? "?"}`,
+          fee: String(c.fee ?? "0.00"),
+          handling: c.handling_min_days ?? 0,
+          transit: c.transit_min_days ?? 0,
+          active: !!c.is_active,
+          currency: c.currency || inferCurrencyFromCountry(cc),
+        };
+      })
     );
     show("Applied");
+    window.dispatchEvent(new CustomEvent("upfrica:shippingConfigChanged"));
   }
 
   const selectedMethodIds = Object.keys(bulk.methods);
-  const canApply = bulk.zoneIds.length > 0 && selectedMethodIds.length > 0;
+  const canApply = canBulkApply && bulk.zoneIds.length > 0 && selectedMethodIds.length > 0;
+
+  const unsavedCount = dirtySet.size;
 
   return (
     <div className="space-y-4">
       {toast}
 
+      {/* Unsaved badge */}
+      {unsavedCount > 0 && (
+        <div className="flex items-center justify-between rounded-xl border dark:border-neutral-800 p-2 bg-amber-50 dark:bg-neutral-900/40">
+          <div className="text-sm">• Unsaved changes ({unsavedCount})</div>
+          <button
+            onClick={() => Array.from(dirtySet).forEach((i) => saveRow(i))}
+            className="rounded-lg bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-1.5 text-sm"
+          >
+            Save all
+          </button>
+        </div>
+      )}
+
       {/* Bulk apply + configured count */}
       <div className="flex items-center justify-between">
-        <button onClick={() => setBulkOpen((v) => !v)} className="rounded-xl bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-2 text-sm inline-flex items-center gap-2">
-          <Sparkles className="h-4 w-4" />
+        <button
+          onClick={() => setBulkOpen((v) => !v)}
+          className={`rounded-xl px-3 py-2 text-sm inline-flex items-center gap-2 ${canBulkApply ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900" : "bg-neutral-200 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400 cursor-not-allowed"}`}
+          title={canBulkApply ? "Apply to many zones at once" : "Upgrade plan to use Bulk apply"}
+        >
+          {canBulkApply ? <Sparkles className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
           Bulk apply
         </button>
-        {!!rows.length && <div className="text-xs text-neutral-500 dark:text-neutral-400">{rows.length} configured {rows.length === 1 ? "row" : "rows"}</div>}
+        {!!rows.length && (
+          <div className="text-xs text-neutral-500 dark:text-neutral-400">
+            {rows.length} configured {rows.length === 1 ? "row" : "rows"}
+          </div>
+        )}
       </div>
 
       {/* Bulk panel */}
@@ -887,7 +1211,7 @@ function ShippingSettingsMatrix() {
                     />
                     <span className="truncate">{z.name}</span>
                     {isAllZone(z) && <span className="text-xxs rounded-lg px-2 py-0.5 bg-neutral-200 dark:bg-neutral-800">ALL</span>}
-                    <span className={cx("text-xxs rounded-lg px-2 py-0.5", z.is_remote ? "bg-neutral-200 dark:bg-neutral-800" : "bg-neutral-100 dark:bg-neutral-700")}>
+                    <span className="text-xxs rounded-lg px-2 py-0.5 bg-neutral-100 dark:bg-neutral-700">
                       {z.country?.code || z.country_code}
                     </span>
                   </label>
@@ -933,33 +1257,35 @@ function ShippingSettingsMatrix() {
                     <div className="text-sm font-medium">{m?.label || `Method ${mid}`}</div>
                     <div className="space-y-1">
                       <label className="text-xs">Fee</label>
-                      <input
-                        value={cfg.fee}
-                        onChange={(e) => updateMethodField(mid, "fee", e.target.value)}
-                        className="w-full rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-3 py-2"
-                        placeholder="e.g. 3.99"
-                      />
+                      <div className="relative">
+<span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">
+  {ccySymbol(bulkCcy)}
+</span>
+<input
+  type="number"
+  inputMode="decimal"
+  step="0.01"
+  min={0}
+  value={cfg.fee ?? ""}
+  onChange={(e) => updateMethodField(mid, "fee", e.target.value)}
+  className={`w-full rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 ${padClassForSymbol(
+    ccySymbol(bulkCcy)
+  )} pr-2 py-2`}
+  placeholder="e.g. 3.99"
+/>
+                      </div>
+                      {Number(cfg.fee) === 0 && (
+                        <div className="text-xs text-neutral-500">Customers will see <strong>Free shipping</strong>.</div>
+                      )}
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="text-xs">Handling (days)</label>
-                        <input
-                          type="number"
-                          min={0}
-                          value={cfg.handling}
-                          onChange={(e) => updateMethodField(mid, "handling", Number(e.target.value))}
-                          className="w-full rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-3 py-2"
-                        />
+                        <input type="number" min={0} value={cfg.handling} onChange={(e) => updateMethodField(mid, "handling", Number(e.target.value))} className="w-full rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-3 py-2" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs">Transit (days)</label>
-                        <input
-                          type="number"
-                          min={0}
-                          value={cfg.transit}
-                          onChange={(e) => updateMethodField(mid, "transit", Number(e.target.value))}
-                          className="w-full rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-3 py-2"
-                        />
+                        <input type="number" min={0} value={cfg.transit} onChange={(e) => updateMethodField(mid, "transit", Number(e.target.value))} className="w-full rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-3 py-2" />
                       </div>
                     </div>
                   </div>
@@ -969,10 +1295,8 @@ function ShippingSettingsMatrix() {
               <button
                 onClick={applyBulk}
                 disabled={!canApply}
-                className={cx(
-                  "rounded-xl px-3 py-2 text-sm",
-                  !canApply ? "bg-neutral-200 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400 cursor-not-allowed" : "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-                )}
+                className={`${!canApply ? "bg-neutral-200 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400 cursor-not-allowed" : "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"} rounded-xl px-3 py-2 text-sm`}
+                title={canBulkApply ? undefined : "Upgrade plan to use Bulk apply"}
               >
                 Apply to selected
               </button>
@@ -989,13 +1313,14 @@ function ShippingSettingsMatrix() {
         {loading ? (
           <div className="p-4 text-neutral-500">Loading…</div>
         ) : rows.length === 0 ? (
-          <div className="p-4 text-neutral-500">
-            No configs yet. Use <em>Bulk apply</em> to start fast.
-          </div>
+          <div className="p-4 text-neutral-500">No configs yet. Use <em>Bulk apply</em> to start fast.</div>
         ) : (
           rows.map((r, i) => {
             const saving = savingIdx === i;
             const deleting = deletingIdx === i;
+            const rowKey = r.id ?? `tmp-${r.zoneId}-${r.methodId}`;
+            const rowErrs = errors[rowKey] || {};
+            const isFree = Number(r.fee) === 0 && r.active;
             return (
               <div key={`${r.zoneId}-${r.methodId}-${i}`} className="rounded-2xl border dark:border-neutral-800 p-3">
                 <div className="mb-2 text-sm font-medium">
@@ -1007,15 +1332,28 @@ function ShippingSettingsMatrix() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="text-xs">Fee</label>
-                    <input value={r.fee} onChange={(e) => updateRow(i, { fee: e.target.value })} className="w-full rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-3 py-2" />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">{ccySymbol(r.currency)}</span>
+                      <input
+                        value={r.fee}
+                        onChange={(e) => updateRow(i, { fee: e.target.value })}
+                        className="w-full rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 pl-[50px] py-2"
+                        min={0}
+                        aria-invalid={!!rowErrs.fee}
+                      />
+                    </div>
+                    {rowErrs.fee && <div className="text-xs text-red-600">{rowErrs.fee}</div>}
+                    {isFree && <div className="text-xs text-neutral-500">Customers will see <strong>Free shipping</strong>.</div>}
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs">Handling (days)</label>
-                    <input type="number" min={0} value={r.handling} onChange={(e) => updateRow(i, { handling: Number(e.target.value) })} className="w-full rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-3 py-2" />
+                    <input type="number" min={0} value={r.handling} onChange={(e) => updateRow(i, { handling: Number(e.target.value) })} className="w-full rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-3 py-2" aria-invalid={!!rowErrs.handling} />
+                    {rowErrs.handling && <div className="text-xs text-red-600">{rowErrs.handling}</div>}
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs">Transit (days)</label>
-                    <input type="number" min={0} value={r.transit} onChange={(e) => updateRow(i, { transit: Number(e.target.value) })} className="w-full rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-3 py-2" />
+                    <input type="number" min={0} value={r.transit} onChange={(e) => updateRow(i, { transit: Number(e.target.value) })} className="w-full rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-3 py-2" aria-invalid={!!rowErrs.transit} />
+                    {rowErrs.transit && <div className="text-xs text-red-600">{rowErrs.transit}</div>}
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs">Active</label>
@@ -1031,7 +1369,7 @@ function ShippingSettingsMatrix() {
                       {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Remove
                     </button>
                   )}
-                  <button onClick={() => saveRow(i)} disabled={saving} className="rounded-xl bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-1.5 text-sm inline-flex items-center gap-2">
+                  <button onClick={() => saveRow(i)} disabled={saving || !dirtySet.has(i)} className="rounded-xl bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-1.5 text-sm inline-flex items-center gap-2">
                     {saving && <Loader2 className="h-4 w-4 animate-spin" />} Save
                   </button>
                 </div>
@@ -1064,18 +1402,41 @@ function ShippingSettingsMatrix() {
               rows.map((r, i) => {
                 const saving = savingIdx === i;
                 const deleting = deletingIdx === i;
+                const rowKey = r.id ?? `tmp-${r.zoneId}-${r.methodId}`;
+                const rowErrs = errors[rowKey] || {};
+                const isFree = Number(r.fee) === 0 && r.active;
                 return (
                   <tr key={`${r.zoneId}-${r.methodId}-${i}`} className="border-t dark:border-neutral-800">
                     <td className="p-3 font-medium">{r.zoneName}</td>
                     <td className="p-3">{methods.find((m) => String(m.id) === String(r.methodId))?.label || r.methodLabel}</td>
                     <td className="p-3">
-                      <input value={r.fee} onChange={(e) => updateRow(i, { fee: e.target.value })} className="w-28 rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-2 py-1.5" />
+                      <div className="relative w-32">
+<span className="absolute left-2 top-1/2 -translate-y-1/2 text-neutral-500">
+  {ccySymbol(r.currency)}
+</span>
+<input
+  type="number"
+  inputMode="decimal"
+  step="0.01"
+  min={0}
+  value={r.fee ?? ""}
+  onChange={(e) => updateRow(i, { fee: e.target.value })}
+  className={`w-32 rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 ${padClassForSymbol(
+    ccySymbol(r.currency)
+  )} pr-2 py-1.5`}
+  aria-invalid={!!rowErrs.fee}
+/>
+                      </div>
+                      {rowErrs.fee && <div className="text-xs text-red-600 mt-1">{rowErrs.fee}</div>}
+                      {isFree && <div className="text-xs text-neutral-500 mt-1">Free shipping</div>}
                     </td>
                     <td className="p-3">
-                      <input type="number" min={0} value={r.handling} onChange={(e) => updateRow(i, { handling: Number(e.target.value) })} className="w-24 rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-2 py-1.5" />
+                      <input type="number" min={0} value={r.handling} onChange={(e) => updateRow(i, { handling: Number(e.target.value) })} className="w-24 rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-2 py-1.5" aria-invalid={!!rowErrs.handling} />
+                      {rowErrs.handling && <div className="text-xs text-red-600 mt-1">{rowErrs.handling}</div>}
                     </td>
                     <td className="p-3">
-                      <input type="number" min={0} value={r.transit} onChange={(e) => updateRow(i, { transit: Number(e.target.value) })} className="w-24 rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-2 py-1.5" />
+                      <input type="number" min={0} value={r.transit} onChange={(e) => updateRow(i, { transit: Number(e.target.value) })} className="w-24 rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-800 px-2 py-1.5" aria-invalid={!!rowErrs.transit} />
+                      {rowErrs.transit && <div className="text-xs text-red-600 mt-1">{rowErrs.transit}</div>}
                     </td>
                     <td className="p-3">
                       <input type="checkbox" checked={!!r.active} onChange={(e) => updateRow(i, { active: e.target.checked })} />
@@ -1086,7 +1447,12 @@ function ShippingSettingsMatrix() {
                           {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 inline" />} Remove
                         </button>
                       )}
-                      <button onClick={() => saveRow(i)} disabled={saving} className="rounded-xl bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-1.5">
+                      <button
+                        onClick={() => saveRow(i)}
+                        disabled={saving || !dirtySet.has(i)}
+                        className="rounded-xl bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-1.5"
+                        title={!dirtySet.has(i) ? "No changes" : "Save changes"}
+                      >
                         {saving ? <Loader2 className="h-4 w-4 animate-spin inline" /> : "Save"}
                       </button>
                     </td>
@@ -1139,6 +1505,7 @@ export default function ShippingSettingsPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <ShippingSettingsMatrix />
         <div className="space-y-4 md:sticky md:top-4 self-start">
+          {/* productId provided for preview; sellerId optional */}
           <PDPDeliveryWidget productId={123} />
         </div>
       </div>

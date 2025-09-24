@@ -4,6 +4,7 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import {
   Eye,
   MousePointerClick,
@@ -17,8 +18,22 @@ import {
   MoreVertical,
   X,
   Loader2,
+  Lock,
+  DollarSign,
+  CheckCircle2,
 } from "lucide-react";
 import axiosInstance from "@/lib/axiosInstance";
+import { hasFeature, featureEnabled } from "@/lib/plan-features-checker";
+
+/* ---------- modals (code-split) ---------- */
+const BulkPriceModal = dynamic(
+  () => import("@/components/products/BulkPriceModal"),
+  { ssr: false }
+);
+const PlanComparisonModal = dynamic(
+  () => import("@/components/ui/PlanComparisonModal"),
+  { ssr: false }
+);
 
 /* ---------- tiny helpers ---------- */
 const nfmt = (n) => new Intl.NumberFormat().format(Number(n || 0));
@@ -53,6 +68,13 @@ function textMatch(p, terms) {
   if (!terms.length) return true;
   const hay = `${(p.title || "").toLowerCase()} ${(p.slug || "").toLowerCase()}`;
   return terms.every((t) => hay.includes(t));
+}
+function viewUrl(p) {
+  return (
+    p.frontend_url ||
+    (p.slug ? `/product/${p.slug}` : `/product/${p.id}`) ||
+    "#"
+  );
 }
 
 function StatusPill({ status }) {
@@ -251,6 +273,59 @@ export default function ProductListCards({ filter, query, onMeta }) {
   const [priceTarget, setPriceTarget] = useState(null);
   const [savingId, setSavingId] = useState(null);
 
+  // ===== Bulk price gating & modal =====
+  const [features, setFeatures] = useState(null);
+  const [planOpen, setPlanOpen] = useState(false);
+  const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
+
+  // selection mode (mobile)
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState(new Set());
+
+  // entitlement fetch
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const { data } = await axiosInstance.get("/api/users/me/entitlements", {
+          params: { full: 1 },
+        });
+        const map =
+          data?.features ??
+          data?.plan_features ??
+          (Array.isArray(data?.entitlements)
+            ? Object.fromEntries((data.entitlements || []).map((x) => [x?.code ?? x, true]))
+            : null);
+        if (alive) setFeatures(map);
+      } catch {
+        try {
+          const { data } = await axiosInstance.get("/api/users/me/");
+          if (alive) setFeatures(data?.features ?? data?.plan_features ?? null);
+        } catch {
+          if (alive) setFeatures(null);
+        }
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // allow via account feature or any per-product flag
+  const canBulkPrice = useMemo(() => {
+    const v = hasFeature(features, "bulk_price_update");
+    if (v !== undefined) return v;
+    return products.some((p) => featureEnabled(p, "bulk_price_update", false));
+  }, [features, products]);
+
+  // listen for a backend hard-gate signal from the BulkPrice modal (optional)
+  useEffect(() => {
+    const handlePlanGate = () => setPlanOpen(true);
+    window.addEventListener("upfrica:plan-gate", handlePlanGate);
+    return () => window.removeEventListener("upfrica:plan-gate", handlePlanGate);
+  }, []);
+
+  // data fetch
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -273,7 +348,6 @@ export default function ProductListCards({ filter, query, onMeta }) {
         }
       } catch (e) {
         if (alive) setErr("Failed to load products.");
-        // eslint-disable-next-line no-console
         console.error("❌ products fetch", e);
       } finally {
         if (alive) setLoading(false);
@@ -326,7 +400,6 @@ export default function ProductListCards({ filter, query, onMeta }) {
       setProducts((p) => p.map((x) => (x.id === id ? { ...x, ...data } : x)));
       setLoadedAt(new Date()); // reflect quick edit in header meta
     } catch (e) {
-      // revert
       if (prev) setProducts((p) => p.map((x) => (x.id === id ? prev : x)));
       throw e;
     } finally {
@@ -334,166 +407,269 @@ export default function ProductListCards({ filter, query, onMeta }) {
     }
   }
 
+  // ----- selection helpers -----
+  const toggleSelect = (id) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const clearSelection = () => setSelected(new Set());
+
+  function openBulkPrice() {
+    if (selected.size === 0) return; // hard-block client-side
+    if (canBulkPrice) setBulkPriceOpen(true);
+    else setPlanOpen(true);
+  }
+
   if (err) {
     return <p className="text-red-500 dark:text-red-400 text-center mt-4">{err}</p>;
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-      {loading && products.length === 0
-        ? Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
-        : null}
+    <>
+      {/* Select toggle (mobile-first) */}
+      <div className="sm:hidden mb-2 flex items-center justify-end">
+        <button
+          type="button"
+          onClick={() => {
+            setSelectMode((v) => !v);
+            clearSelection();
+          }}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm"
+        >
+          {selectMode ? "Cancel" : "Select"}
+        </button>
+      </div>
 
-      {filtered.map((p) => {
-        const img = thumbOf(p);
-        const qty = Number(p.product_quantity ?? p.quantity ?? p.stock ?? 0);
-        const out = qty <= 0;
-        const priceStr = `${(p.price_currency || "").toUpperCase()} ${major(
-          p.price_cents
-        )}`;
-        const busy = savingId === p.id;
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+        {loading && products.length === 0
+          ? Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
+          : null}
 
-        return (
-          <div
-            key={p.id}
-            className="group rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 shadow-sm hover:shadow-md transition"
-          >
-            {/* top row */}
-            <div className="flex items-start gap-3">
-              {/* image */}
-              <Link
-                href={p.frontend_url || `/product/${p.slug || p.id}`}
-                className="relative w-20 h-20 shrink-0 rounded-xl overflow-hidden ring-1 ring-gray-200 dark:ring-gray-700"
-                aria-label={`Open ${p.title || `product #${p.id}`}`}
-              >
-                <Image
-                  src={img}
-                  alt={p.title || "image"}
-                  fill
-                  sizes="(max-width: 640px) 80px, 100px"
-                  className="object-cover"
-                />
-              </Link>
+        {filtered.map((p) => {
+          const img = thumbOf(p);
+          const qty = Number(p.product_quantity ?? p.quantity ?? p.stock ?? 0);
+          const out = qty <= 0;
+          const priceStr = `${(p.price_currency || "").toUpperCase()} ${major(
+            p.price_cents
+          )}`;
+          const busy = savingId === p.id;
+          const isSelected = selected.has(p.id);
 
-              {/* title + badges */}
-              <div className="min-w-0 flex-1">
-                <Link
-                  href={p.frontend_url || `/product/${p.slug || p.id}`}
-                  className="block font-semibold text-[15px] leading-snug text-gray-900 dark:text-white hover:underline line-clamp-2"
+          return (
+            <div
+              key={p.id}
+              className={`group relative rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 shadow-sm hover:shadow-md transition ${
+                isSelected ? "ring-2 ring-emerald-400/60" : ""
+              }`}
+              onClick={(e) => {
+                if (!selectMode) return;
+                e.preventDefault();
+                toggleSelect(p.id);
+              }}
+            >
+              {/* selection checkbox overlay */}
+              {selectMode && (
+                <button
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleSelect(p.id);
+                  }}
+                  className={`absolute -top-2 -right-2 z-10 rounded-full border p-1.5 shadow bg-white dark:bg-gray-900 ${
+                    isSelected
+                      ? "text-emerald-600 border-emerald-300"
+                      : "text-gray-500 border-gray-300 dark:border-gray-700"
+                  }`}
+                  title={isSelected ? "Deselect" : "Select"}
                 >
-                  {p.title || `#${p.id}`}
-                </Link>
+                  <CheckCircle2 className="w-5 h-5" />
+                </button>
+              )}
 
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <StatusPill status={p.status} />
-                  <LivePill is_live={p.is_live} is_paused={p.is_paused} />
+              {/* top row */}
+              <div className="flex items-start gap-3">
+                {/* image */}
+                <a
+                  href={viewUrl(p)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="relative w-20 h-20 shrink-0 rounded-xl overflow-hidden ring-1 ring-gray-200 dark:ring-gray-700"
+                  aria-label={`Open ${p.title || `product #${p.id}`}`}
+                  onClick={(e) => selectMode && e.preventDefault()}
+                >
+                  <Image
+                    src={img}
+                    alt={p.title || "image"}
+                    fill
+                    sizes="(max-width: 640px) 80px, 100px"
+                    className="object-cover"
+                  />
+                </a>
 
-                  {/* qty is clickable -> opens qty modal */}
+                {/* title + badges */}
+                <div className="min-w-0 flex-1">
+                  <a
+                    href={viewUrl(p)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block font-semibold text-[15px] leading-snug text-gray-900 dark:text-white hover:underline line-clamp-2"
+                    onClick={(e) => selectMode && e.preventDefault()}
+                  >
+                    {p.title || `#${p.id}`}
+                  </a>
+
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <StatusPill status={p.status} />
+                    <LivePill is_live={p.is_live} is_paused={p.is_paused} />
+
+                    {/* qty is clickable -> opens qty modal */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setQtyTarget(p);
+                      }}
+                      className={`inline-flex items-center gap-1 text-[11px] rounded-full px-2 py-0.5 border ${
+                        out
+                          ? "border-rose-300 text-rose-600 dark:text-rose-400"
+                          : "border-emerald-300 text-emerald-700 dark:text-emerald-400"
+                      }`}
+                      title="Quick edit quantity"
+                    >
+                      {out ? "Out of stock" : `In stock (${qty})`}
+                    </button>
+                  </div>
+                </div>
+
+                {/* quick actions */}
+                <div className="flex gap-1 self-start sm:opacity-0 sm:group-hover:opacity-100 transition">
+                  <Link
+                    href={{
+                      pathname: "/new-dashboard/products/editor",
+                      query: { id: p.id, step: "basics" },
+                    }}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm"
+                    prefetch
+                    onClick={(e) => selectMode && e.preventDefault()}
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Edit
+                  </Link>
                   <button
                     type="button"
-                    onClick={() => setQtyTarget(p)}
-                    className={`inline-flex items-center gap-1 text-[11px] rounded-full px-2 py-0.5 border ${
-                      out
-                        ? "border-rose-300 text-rose-600 dark:text-rose-400"
-                        : "border-emerald-300 text-emerald-700 dark:text-emerald-400"
-                    }`}
-                    title="Quick edit quantity"
+                    className="p-1.5 rounded-md border hover:bg-rose-50 dark:hover:bg-rose-900/30"
+                    title="Archive / Delete"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    {out ? "Out of stock" : `In stock (${qty})`}
+                    <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                  </button>
+                  <button
+                    type="button"
+                    className="p-1.5 rounded-md border hover:bg-gray-50 dark:hover:bg-gray-800"
+                    title="More"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreVertical className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
-              {/* quick actions */}
-              <div className="flex gap-1 self-start sm:opacity-0 sm:group-hover:opacity-100 transition">
+              {/* price (click to quick edit) */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPriceTarget(p);
+                }}
+                className="mt-3 w-full text-left text-lg font-bold text-gray-900 dark:text-white rounded-lg border border-transparent hover:border-gray-200 dark:hover:border-gray-700 px-2 py-1 inline-flex items-center gap-2"
+                title="Quick edit price"
+              >
+                {busy && <Loader2 className="w-4 h-4 animate-spin" />}
+                <span>{priceStr}</span>
+              </button>
+
+              {/* metrics */}
+              <div className="mt-1 flex flex-wrap items-center gap-3 text-[12px] text-gray-600 dark:text-gray-300">
+                <span className="inline-flex items-center gap-1">
+                  <Eye className="w-4 h-4" />
+                  {nfmt(p.views ?? p.impressions ?? 0)}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <MousePointerClick className="w-4 h-4" />
+                  {nfmt(p.clicks ?? p.clicks_count ?? p.outbound_clicks ?? 0)}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Phone className="w-4 h-4" />
+                  {nfmt(p.phone_clicks ?? p.call_clicks ?? 0)}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <MessageCircle className="w-4 h-4" />
+                  {nfmt(p.whatsapp_clicks ?? p.contact_whatsapp_clicks ?? 0)}
+                </span>
+              </div>
+
+              {/* footer buttons (touch) */}
+              <div className="mt-3 sm:hidden flex gap-2">
                 <Link
-                  href={{
-                    pathname: "/new-dashboard/products/editor",
-                    query: { id: p.id, step: "basics" },
-                  }}
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm"
+                  href={{ pathname: "/new-dashboard/products/editor", query: { id: p.id, step: "basics" } }}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm"
                   prefetch
+                  onClick={(e) => selectMode && e.preventDefault()}
                 >
                   <Pencil className="w-4 h-4" />
                   Edit
                 </Link>
-                <button
-                  type="button"
-                  className="p-1.5 rounded-md border hover:bg-rose-50 dark:hover:bg-rose-900/30"
-                  title="Archive / Delete"
+                <a
+                  href={viewUrl(p)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm"
+                  onClick={(e) => selectMode && e.preventDefault()}
                 >
-                  <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                </button>
-                <button
-                  type="button"
-                  className="p-1.5 rounded-md border hover:bg-gray-50 dark:hover:bg-gray-800"
-                  title="More"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </button>
+                  <Eye className="w-4 h-4" />
+                  View
+                </a>
               </div>
             </div>
+          );
+        })}
 
-            {/* price (click to quick edit) */}
-            <button
-              type="button"
-              onClick={() => setPriceTarget(p)}
-              className="mt-3 w-full text-left text-lg font-bold text-gray-900 dark:text-white rounded-lg border border-transparent hover:border-gray-200 dark:hover:border-gray-700 px-2 py-1 inline-flex items-center gap-2"
-              title="Quick edit price"
-            >
-              {busy && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>{priceStr}</span>
-            </button>
-
-            {/* metrics */}
-            <div className="mt-1 flex flex-wrap items-center gap-3 text-[12px] text-gray-600 dark:text-gray-300">
-              <span className="inline-flex items-center gap-1">
-                <Eye className="w-4 h-4" />
-                {nfmt(p.views ?? p.impressions ?? 0)}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <MousePointerClick className="w-4 h-4" />
-                {nfmt(p.clicks ?? p.clicks_count ?? p.outbound_clicks ?? 0)}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Phone className="w-4 h-4" />
-                {nfmt(p.phone_clicks ?? p.call_clicks ?? 0)}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <MessageCircle className="w-4 h-4" />
-                {nfmt(p.whatsapp_clicks ?? p.contact_whatsapp_clicks ?? 0)}
-              </span>
-            </div>
-
-            {/* footer buttons (touch) */}
-            <div className="mt-3 sm:hidden flex gap-2">
-              <Link
-                href={{ pathname: "/new-dashboard/products/editor", query: { id: p.id, step: "basics" } }}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm"
-                prefetch
-              >
-                <Pencil className="w-4 h-4" />
-                Edit
-              </Link>
-              <a
-                href={p.frontend_url || "#"}
-                target="_blank"
-                rel="noreferrer"
-                className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm"
-              >
-                <Eye className="w-4 h-4" />
-                View
-              </a>
-            </div>
+        {!loading && filtered.length === 0 ? (
+          <div className="col-span-full rounded-xl border border-dashed p-8 text-center text-sm text-gray-500 dark:border-gray-700">
+            No listings matched your filters.
           </div>
-        );
-      })}
+        ) : null}
+      </div>
 
-      {!loading && filtered.length === 0 ? (
-        <div className="col-span-full rounded-xl border border-dashed p-8 text-center text-sm text-gray-500 dark:border-gray-700">
-          No listings matched your filters.
+      {/* Bulk price bottom bar (appears when selected) */}
+      {selected.size > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[1000] rounded-xl bg-gray-900 text-white px-3 py-2 shadow-lg flex items-center gap-2">
+          <span className="text-sm opacity-80">{selected.size} selected</span>
+          <button
+            onClick={openBulkPrice}
+            className="px-2 py-1 rounded bg-white/10 hover:bg-white/15 text-sm inline-flex items-center gap-1"
+            title={canBulkPrice ? "Bulk price update" : "Available on Growth and Pro plans"}
+          >
+            {canBulkPrice ? (
+              <DollarSign className="w-3.5 h-3.5" />
+            ) : (
+              <Lock className="w-3.5 h-3.5" />
+            )}
+            Price Update
+          </button>
+          <button
+            onClick={clearSelection}
+            className="ml-1 px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-sm"
+            title="Clear"
+          >
+            Clear
+          </button>
         </div>
-      ) : null}
+      )}
 
       {/* Quick modals */}
       {qtyTarget && (
@@ -515,6 +691,39 @@ export default function ProductListCards({ filter, query, onMeta }) {
           }}
         />
       )}
-    </div>
+
+      {/* Bulk Price Update modal */}
+      {bulkPriceOpen && (
+        <BulkPriceModal
+          productIds={Array.from(selected)}
+          onClose={() => setBulkPriceOpen(false)}
+          onDone={async () => {
+            setBulkPriceOpen(false);
+            // refresh prices quickly
+            try {
+              const { data } = await axiosInstance.get("/api/products/mine/", {
+                params: { page_size: 60 },
+              });
+              const rows = Array.isArray(data?.results)
+                ? data.results
+                : Array.isArray(data)
+                ? data
+                : [];
+              setProducts(rows);
+              setLoadedAt(new Date());
+            } catch {}
+            setSelected(new Set());
+          }}
+        />
+      )}
+
+      {/* Plan comparison (upsell) */}
+      <PlanComparisonModal
+        open={planOpen}
+        onOpenChange={setPlanOpen}
+        hideTrigger
+        onPick={() => setPlanOpen(false)}
+      />
+    </>
   );
 }

@@ -1,8 +1,8 @@
-// app/(pages)/[cc]/search/page.jsx
 import Link from "next/link";
 import { Suspense } from "react";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import SearchFacets from "@/components/search/SearchFacets";
+import SafeImage from "@/components/common/SafeImage";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -34,12 +34,20 @@ function absoluteUrl(path) {
 }
 
 /* ---------------- data fetch (server) ---------------- */
-async function fetchSearch({ cc, searchParams }) {
-  // Ensure country defaults to the route’s cc
-  const params = { country: cc, ...searchParams };
-  const qs = buildQS(params);
+async function fetchSearch({ cc, searchParams, cookieDefaults }) {
+  // Merge defaults for cross-border UX
+  const merged = {
+    country: cc,
+    // respect explicit include_global=1; otherwise default deliverable=1
+    ...(searchParams.include_global === "1"
+      ? {}
+      : { deliverable: searchParams.deliverable ?? "1" }),
+    // if we know a city, pass it to improve ETA/filtering
+    ...(cookieDefaults.deliver_to ? { deliver_to: cookieDefaults.deliver_to } : {}),
+    ...searchParams,
+  };
 
-  // Single canonical endpoint through the unified proxy.
+  const qs = buildQS(merged);
   const url = absoluteUrl(`/api/products/search${qs}`);
 
   const res = await fetch(url, {
@@ -60,19 +68,33 @@ async function fetchSearch({ cc, searchParams }) {
 }
 
 /* ---------------- UI bits ---------------- */
+function pickImage(p) {
+  return (
+    p.thumbnail ||
+    (Array.isArray(p.image_objects) && p.image_objects[0]?.url) ||
+    p.image_url ||
+    (Array.isArray(p.product_images) && p.product_images[0]?.url) ||
+    "/placeholder.png"
+  );
+}
+
 function ResultCard({ p }) {
+  const href = p.frontend_url || `/${p.country || "gh"}/${p.slug || "#"}`;
+  const img = pickImage(p);
   return (
     <Link
-      href={p.frontend_url || `/${p.country || "gh"}/${p.slug || "#"}`}
+      href={href}
       className="group block rounded-xl border border-[var(--line)] overflow-hidden hover:shadow-md bg-white"
     >
-      <div className="aspect-square bg-[var(--alt-surface)] overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={p.thumbnail || p.image_url || "/placeholder.png"}
+      <div className="aspect-square bg-[var(--alt-surface)] overflow-hidden relative">
+        <SafeImage
+          src={img}
           alt={p.title || "Product"}
-          className="h-full w-full object-cover group-hover:scale-[1.02] transition"
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          className="object-cover group-hover:scale-[1.02] transition"
           loading="lazy"
+          quality={75}
         />
       </div>
       <div className="p-3">
@@ -158,8 +180,22 @@ function Empty({ cc, q }) {
 /* ---------------- page ---------------- */
 export default async function SearchPage({ params, searchParams }) {
   const cc = params?.cc || "gh";
+
+  // Cookie-defaults for discovery alignment
+  const ck = cookies();
+  const deliverCC = (ck.get("deliver_cc")?.value || cc).toLowerCase();
+  const deliverCity =
+    ck.get(`deliver_to_${deliverCC}`)?.value ||
+    ck.get("deliver_to")?.value ||
+    "";
+
+  const data = await fetchSearch({
+    cc,
+    searchParams,
+    cookieDefaults: { deliver_to: deliverCity },
+  });
+
   const { q = "" } = searchParams || {};
-  const data = await fetchSearch({ cc, searchParams });
   const results = data?.results || [];
   const facets = data?.facets || {};
 

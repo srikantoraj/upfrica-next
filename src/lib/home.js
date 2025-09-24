@@ -1,19 +1,7 @@
-// lib/home.js
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:8000/api";
+// src/lib/home.js
+import { api } from "@/lib/api";
 
 export const REVALIDATE_SECONDS = 300;
-
-async function getJSON(url, init = {}) {
-  const res = await fetch(url, {
-    ...init,
-    next: { revalidate: REVALIDATE_SECONDS, ...(init.next || {}) },
-  });
-  if (!res.ok) throw new Error(`Fetch failed ${res.status}: ${url}`);
-  return res.json();
-}
 
 /* ----------------------- country helpers ----------------------- */
 const COUNTRY_ALIAS = { uk: "gb" };
@@ -79,20 +67,19 @@ function deriveCcFromFields(raw) {
  * Priority:
  *   1) explicit country fields / URL prefix must equal page cc
  *   2) if unknown, use a city hint: if it suggests a different country → reject
- *   3) if still unknown → reject (strict)
+ *   3) if still unknown → accept (strict, but allows unknowns)
  */
 function acceptForCountry(raw, pageCc) {
   const want = normCc(pageCc);
-  if (!want) return false;
+  if (!want) return true;
 
   const cc = deriveCcFromFields(raw);
-  if (cc) return cc === want;
+  if (cc) return cc === want;      // explicit country must match
 
   const hint = cityHint(raw);
-  if (hint && hint !== want) return false;
+  if (hint && hint !== want) return false; // conflicting hint → reject
 
-  // Strict mode: unknown origin → don’t show
-  return false;
+  return true; // unknown origin → accept
 }
 
 /* ----------------------- image helpers ------------------------ */
@@ -139,12 +126,20 @@ function mapRailProduct(p, cc) {
   };
 }
 
-/* ------------------------ fetchers ------------------------------ */
+/* ------------------------ fetchers (via proxy) ------------------------------ */
+async function getJSONViaProxy(pathWithQuery, init = {}) {
+  // Goes through /api proxy → your route injects X-UI-Currency / X-Deliver-CC, auth, tz, etc.
+  return api(pathWithQuery, {
+    ...init,
+    method: init.method || "GET",
+    next: { revalidate: REVALIDATE_SECONDS, ...(init.next || {}) },
+  });
+}
+
 export async function fetchProducts({ cc, params = {} }) {
   const ccn = normCc(cc);
   const qs = new URLSearchParams({ country: ccn, page_size: "24", ...params });
-  const url = `${API_BASE}/products/?${qs.toString()}`;
-  const data = await getJSON(url).catch(() => null);
+  const data = await getJSONViaProxy(`products/?${qs.toString()}`).catch(() => null);
 
   const results = Array.isArray(data?.results)
     ? data.results
@@ -163,8 +158,7 @@ export async function fetchProducts({ cc, params = {} }) {
 
 export async function fetchCategories(cc) {
   const ccn = normCc(cc);
-  const url = `${API_BASE}/categories/?country=${ccn}&page_size=60`;
-  const data = await getJSON(url).catch(() => null);
+  const data = await getJSONViaProxy(`categories/?country=${ccn}&page_size=60`).catch(() => null);
   const items = Array.isArray(data?.results)
     ? data.results
     : Array.isArray(data)
