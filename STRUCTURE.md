@@ -7,8 +7,9 @@ upfrica/
 │   │   ├── icon-192x192.png
 │   │   └── icon-512x512.png
 │   ├── media/
+│   ├── debug-auth.html
 │   ├── placeholder.png
-│   ├── robots.txt
+│   ├── r-robots.txt
 │   └── site.webmanifest
 ├── scripts/
 │   ├── gen-structure.mjs
@@ -23,7 +24,9 @@ upfrica/
 │   │   │   │   │   │   └── page.jsx
 │   │   │   │   │   ├── write-review/
 │   │   │   │   │   │   └── page.jsx
+│   │   │   │   │   ├── ClientTrackView.jsx
 │   │   │   │   │   ├── PriceBlock.jsx
+│   │   │   │   │   ├── SignalsBadge.jsx
 │   │   │   │   │   ├── page.jsx
 │   │   │   │   │   └── text.jsx
 │   │   │   │   ├── find-for-me/
@@ -64,6 +67,7 @@ upfrica/
 │   │   │   │   │   └── page.jsx
 │   │   │   │   ├── RegionSetter.jsx
 │   │   │   │   ├── UserProfile.jsx
+│   │   │   │   ├── head.jsx
 │   │   │   │   ├── layout.jsx
 │   │   │   │   ├── page.jsx
 │   │   │   │   └── sitemap.js
@@ -316,8 +320,8 @@ upfrica/
 │   │   │   │   │   │   └── page.jsx
 │   │   │   │   │   ├── new/
 │   │   │   │   │   │   └── page.jsx
-│   │   │   │   │   ├── page.jsx
-│   │   │   │   │   └── page1.jsx
+│   │   │   │   │   ├── oldpage1.jsx
+│   │   │   │   │   └── page.jsx
 │   │   │   │   ├── profile-settings/
 │   │   │   │   │   ├── address-book/
 │   │   │   │   │   │   └── page.jsx
@@ -489,6 +493,12 @@ upfrica/
 │   │   │   ├── b/
 │   │   │   │   └── [...path]/
 │   │   │   │       └── route.js
+│   │   │   ├── pdp/
+│   │   │   │   ├── mark/
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── signals/
+│   │   │   │   │   └── route.js
+│   │   │   │   └── route.js
 │   │   │   ├── revalidate/
 │   │   │   │   └── route.js
 │   │   │   ├── sourcing/
@@ -497,20 +507,20 @@ upfrica/
 │   │   │   ├── suggest/
 │   │   │   │   └── route.js
 │   │   │   └── products.js
-│   │   ├── debug-auth/
-│   │   │   └── page.jsx
+│   │   ├── dev/
+│   │   │   └── shipping-test/
+│   │   │       └── page.jsx
 │   │   ├── fonts/
 │   │   │   ├── GeistMonoVF.woff
 │   │   │   └── GeistVF.woff
+│   │   ├── fx-test/
+│   │   │   └── page.jsx
 │   │   ├── image/
 │   │   │   └── signin.svg
 │   │   ├── landing/
 │   │   │   └── page.js
 │   │   ├── password/
 │   │   │   └── new/
-│   │   │       └── page.jsx
-│   │   ├── reviews/
-│   │   │   └── [reviewToken]/
 │   │   │       └── page.jsx
 │   │   ├── sandbox/
 │   │   │   └── price/
@@ -552,7 +562,6 @@ upfrica/
 │   │   ├── globals.css
 │   │   ├── layout.js
 │   │   ├── loading.jsx
-│   │   ├── page.js
 │   │   ├── providers.jsx
 │   │   ├── sitemap.js
 │   │   └── theme.txt
@@ -681,8 +690,10 @@ upfrica/
 │   │   │   ├── AccessDeniedScreen.jsx
 │   │   │   ├── AccountTypeBadge.jsx
 │   │   │   ├── ConfirmModal.jsx
+│   │   │   ├── ImageSkeleton.jsx
 │   │   │   ├── LangDomSync.jsx
 │   │   │   ├── Money.jsx
+│   │   │   ├── SafeImage.jsx
 │   │   │   └── StarRating.jsx
 │   │   ├── dashboard/
 │   │   │   ├── Dashboard.jsx
@@ -733,10 +744,13 @@ upfrica/
 │   │   │   ├── Header.jsx
 │   │   │   ├── HeroCarousel.jsx
 │   │   │   ├── HeroCurved.jsx
+│   │   │   ├── LocalizationProvider.jsx
 │   │   │   ├── NavCategories.jsx
+│   │   │   ├── PersonalizedRails.server.jsx
 │   │   │   ├── ProductRail.jsx
 │   │   │   ├── PromoTiles.jsx
 │   │   │   ├── RailCard.jsx
+│   │   │   ├── RailScroller.client.jsx
 │   │   │   ├── StickyPriceBar.jsx
 │   │   │   ├── TopBar.jsx
 │   │   │   └── ValuePills.jsx
@@ -859,6 +873,9 @@ upfrica/
 │   │   │   ├── recentUsers.js
 │   │   │   ├── socialStats.js
 │   │   │   └── summaryCards.js
+│   │   ├── pdp/
+│   │   │   ├── ShippingBadges.jsx
+│   │   │   └── ShippingPreview.jsx
 │   │   ├── priceFiter/
 │   │   │   ├── LeftFilter.jsx
 │   │   │   └── PopularShoppingIdeas.jsx
@@ -869,9 +886,19 @@ upfrica/
 │   │   │   ├── VariantGroup.jsx
 │   │   │   └── VariantOption.jsx
 │   │   ├── products/
+│   │   │   ├── ProductWizard/
+│   │   │   │   ├── steps/
+│   │   │   │   │   ├── StepAttrVariants.jsx
+│   │   │   │   │   ├── StepBasics.jsx
+│   │   │   │   │   ├── StepMedia.jsx
+│   │   │   │   │   ├── StepReview.jsx
+│   │   │   │   │   └── StepSEO.jsx
+│   │   │   │   └── WizardShell.jsx
+│   │   │   ├── BulkPriceModal.jsx
 │   │   │   ├── ProductEditorStepper.jsx
 │   │   │   ├── ProductListTable.jsx
-│   │   │   └── QuickListDrawer.jsx
+│   │   │   ├── QuickListDrawer.jsx
+│   │   │   └── ShippingPreview.jsx
 │   │   ├── review/
 │   │   │   ├── DisplayReviews.jsx
 │   │   │   ├── ProductRatingLine.jsx
@@ -917,6 +944,7 @@ upfrica/
 │   │   │   ├── InfoTooltip.jsx
 │   │   │   ├── Input.jsx
 │   │   │   ├── Loading.jsx
+│   │   │   ├── OverlaySheet.jsx
 │   │   │   ├── PasswordInput.jsx
 │   │   │   ├── PlanCheckoutModal.jsx
 │   │   │   ├── PlanComparisonModal.jsx
@@ -1006,6 +1034,7 @@ upfrica/
 │   │   └── 5e77cec29a2d83c77498eed4_hero-illustration.svg
 │   ├── lib/
 │   │   ├── api/
+│   │   │   ├── fetchers.js
 │   │   │   ├── search.js
 │   │   │   └── suggest.js
 │   │   ├── auth/
@@ -1029,6 +1058,7 @@ upfrica/
 │   │   ├── cdn-image-loader.js
 │   │   ├── credit.js
 │   │   ├── currency.js
+│   │   ├── fetchJson.js
 │   │   ├── fx.js
 │   │   ├── geo.js
 │   │   ├── getCleanToken.js
@@ -1039,12 +1069,22 @@ upfrica/
 │   │   ├── locale-routing.js
 │   │   ├── money.js
 │   │   ├── notifications.js
+│   │   ├── pdp-shipping-preview.js
+│   │   ├── pdp-signals-server.js
+│   │   ├── plan-features-checker.js
 │   │   ├── pricing-mini.js
 │   │   ├── pricing.js
+│   │   ├── product-events.js
+│   │   ├── product-metrics.js
 │   │   ├── rails.js
+│   │   ├── redis.js
 │   │   ├── seller-contact.js
+│   │   ├── shipping-client.js
+│   │   ├── shipping.js
 │   │   ├── socialLoginUrl.js
 │   │   ├── upload.js
+│   │   ├── useCurrencyAwareFetch.js
+│   │   ├── useSellerPreview.js
 │   │   └── utils.js
 │   └── public/
 │       ├── icon/
