@@ -372,7 +372,7 @@ const ProductVariantForm = ({ params }) => {
         console.log("Payload for variant", i, ":", payload);
 
         const resp = await fetch(
-          `https://media.upfrica.com/api/products/${id}/variants/`,
+          `https://api.upfrica.com/api/products/${id}/variants/`,
           {
             method: "POST",
             headers: {

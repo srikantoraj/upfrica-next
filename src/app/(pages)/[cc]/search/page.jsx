@@ -88,7 +88,7 @@ function ResultCard({ p }) {
     >
       <div className="aspect-square bg-[var(--alt-surface)] overflow-hidden relative">
         <SafeImage
-          src={img}
+          src={p.image}
           alt={p.title || "Product"}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

@@ -37,7 +37,7 @@ export default function Shopping() {
 
   // Fetch featured articles on mount (only used when searchQuery is empty)
   useEffect(() => {
-    fetch("https://media.upfrica.com/api/helpblogs/")
+    fetch("https://api.upfrica.com/api/helpblogs/")
       .then((res) => res.json())
       .then((data) => {
         setPosts(data);
@@ -65,7 +65,7 @@ export default function Shopping() {
     // Set a new debounce: 400ms delay
     debounceTimeout.current = setTimeout(() => {
       const encodedQuery = encodeURIComponent(searchQuery.trim());
-      fetch(`https://media.upfrica.com/api/helpblogs/search/?q=${encodedQuery}`)
+      fetch(`https://api.upfrica.com/api/helpblogs/search/?q=${encodedQuery}`)
         .then((response) => response.json())
         .then((data) => {
           setSearchResults(data);

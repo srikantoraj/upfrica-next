@@ -35,7 +35,7 @@ export default function DashboardPage() {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const base = "https://media.upfrica.com/api/seller/products";
+        const base = "https://api.upfrica.com/api/seller/products";
         const url = searchQuery
           ? `${base}/search/?q=${encodeURIComponent(searchQuery)}&page=${currentPage}`
           : `${base}/?page=${currentPage}`;
@@ -78,7 +78,7 @@ export default function DashboardPage() {
     setDeletingId(id);
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/seller/products/${id}/`,
+        `https://api.upfrica.com/api/seller/products/${id}/`,
         {
           method: "DELETE",
           headers: { Authorization: `Token ${token}` },
@@ -126,11 +126,10 @@ export default function DashboardPage() {
       {/* ALERT BANNER */}
       {alert.message && (
         <div
-          className={`mb-4 px-4 py-3 border rounded ${
-            alert.type === "success"
+          className={`mb-4 px-4 py-3 border rounded ${alert.type === "success"
               ? "bg-green-100 border-green-400 text-green-700"
               : "bg-red-100 border-red-400 text-red-700"
-          }`}
+            }`}
         >
           <span>{alert.message}</span>
           <button
@@ -247,11 +246,10 @@ export default function DashboardPage() {
                     <button
                       onClick={() => handleDelete(p.id)}
                       disabled={deletingId === p.id}
-                      className={`${
-                        deletingId === p.id
+                      className={`${deletingId === p.id
                           ? "text-gray-400 cursor-not-allowed"
                           : "text-red-600 hover:underline"
-                      }`}
+                        }`}
                     >
                       {deletingId === p.id ? "Deleting…" : "Delete"}
                     </button>
@@ -306,7 +304,7 @@ export default function DashboardPage() {
 // //     useEffect(() => {
 // //         if (!token) return;
 // //         setLoading(true);
-// //         fetch(`https://media.upfrica.com/api/seller/products/?page=${currentPage}`, {
+// //         fetch(`https://api.upfrica.com/api/seller/products/?page=${currentPage}`, {
 // //             method: 'GET',
 // //             headers: { Authorization: `Token ${token}` },
 // //         })
@@ -330,7 +328,7 @@ export default function DashboardPage() {
 
 // //         try {
 // //             const res = await fetch(
-// //                 `https://media.upfrica.com/api/seller/products/${id}/`,
+// //                 `https://api.upfrica.com/api/seller/products/${id}/`,
 // //                 {
 // //                     method: 'DELETE',
 // //                     headers: { Authorization: `Token ${token}` },
@@ -541,7 +539,7 @@ export default function DashboardPage() {
 //             setLoading(true);
 //             try {
 //                 // Choose the correct endpoint
-//                 const base = 'https://media.upfrica.com/api/seller/products';
+//                 const base = 'https://api.upfrica.com/api/seller/products';
 //                 const url = searchQuery
 //                     ? `${base}/search/?q=${encodeURIComponent(searchQuery)}&page=${currentPage}`
 //                     : `${base}/?page=${currentPage}`;
@@ -585,7 +583,7 @@ export default function DashboardPage() {
 //         setDeletingId(id);
 //         try {
 //             const res = await fetch(
-//                 `https://media.upfrica.com/api/seller/products/${id}/`,
+//                 `https://api.upfrica.com/api/seller/products/${id}/`,
 //                 {
 //                     method: 'DELETE',
 //                     headers: { Authorization: `Token ${token}` },

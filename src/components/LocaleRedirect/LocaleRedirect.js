@@ -9,7 +9,7 @@ export default function LocaleRedirect() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("https://media.upfrica.com/api/user-country/");
+        const res = await fetch("https://api.upfrica.com/api/user-country/");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const { country_code } = await res.json();
         if (country_code) {

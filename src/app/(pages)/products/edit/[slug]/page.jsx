@@ -113,7 +113,7 @@ export default function EditProductPage({ params }) {
     async function fetchProduct() {
       try {
         const res = await fetch(
-          `https://media.upfrica.com/api/products/${slug}/`,
+          `https://api.upfrica.com/api/products/${slug}/`,
         );
         const data = await res.json();
         // let tiers = [];
@@ -286,7 +286,7 @@ export default function EditProductPage({ params }) {
 
       try {
         const res = await fetch(
-          `https://media.upfrica.com/api/product/${product.id}/`,
+          `https://api.upfrica.com/api/product/${product.id}/`,
           {
             method: "PATCH",
             headers: { Authorization: `Token ${token}` },

@@ -43,7 +43,7 @@ const AllBlogs = () => {
         };
 
         const response = await fetch(
-          "https://media.upfrica.com/api/helpblogs/",
+          "https://api.upfrica.com/api/helpblogs/",
           requestOptions,
         );
         const data = await response.json();
@@ -90,7 +90,7 @@ const AllBlogs = () => {
         redirect: "follow",
       };
 
-      const url = `https://media.upfrica.com/api/admin/helpblogs/${id}/`;
+      const url = `https://api.upfrica.com/api/admin/helpblogs/${id}/`;
       const response = await fetch(url, requestOptions);
       if (!response.ok) {
         throw new Error(`Server responded with status ${response.status}`);

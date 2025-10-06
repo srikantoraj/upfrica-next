@@ -10,7 +10,7 @@ const Price = dynamic(() => import("../Price"), { ssr: false });
 
 export default async function MenFashion({ title }) {
   const res = await fetch(
-    //'https://media.upfrica.com/api/product-list/men/',
+    //'https://api.upfrica.com/api/product-list/men/',
     "/api/product-list/men/",
     { next: { revalidate: 120 } },
   );

@@ -37,7 +37,7 @@ const CreateReves = ({ slug }) => {
 
     try {
       const response = await fetch(
-        `https://media.upfrica.com/api/products/${slug}/reviews/`,
+        `https://api.upfrica.com/api/products/${slug}/reviews/`,
         {
           method: "POST",
           headers: {

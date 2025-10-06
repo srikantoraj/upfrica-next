@@ -32,7 +32,7 @@
 
 //             try {
 //                 const res = await fetch(
-//                     'https://media.upfrica.com/api/update-profile/',
+//                     'https://api.upfrica.com/api/update-profile/',
 //                     {
 //                         method: 'PUT', // অথবা PATCH
 //                         headers: {
@@ -178,7 +178,7 @@ const UpdateProfilePage = () => {
       setLoading(true);
       try {
         const res = await fetch(
-          "https://media.upfrica.com/api/update-profile/",
+          "https://api.upfrica.com/api/update-profile/",
           {
             method: "PUT", // অথবা PATCH
             headers: {
@@ -338,11 +338,10 @@ const UpdateProfilePage = () => {
               <button
                 type="submit"
                 disabled={loading || formik.isSubmitting}
-                className={`w-full py-2 rounded text-white transition ${
-                  loading
+                className={`w-full py-2 rounded text-white transition ${loading
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-purple-600 hover:bg-purple-700"
-                }`}
+                  }`}
               >
                 {loading ? "Updating..." : "Save Changes"}
               </button>

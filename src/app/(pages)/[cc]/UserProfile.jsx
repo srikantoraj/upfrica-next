@@ -37,7 +37,7 @@ export default function User() {
 
     async function fetchProfile(token) {
       try {
-        const res = await fetch("https://media.upfrica.com/api/view-profile/", {
+        const res = await fetch("https://api.upfrica.com/api/view-profile/", {
           method: "GET",
           headers: {
             Authorization: `Token ${token}`,

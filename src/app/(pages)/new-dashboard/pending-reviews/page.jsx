@@ -30,7 +30,7 @@
 //       setLoading(true);
 //       try {
 //         const res = await fetch(
-//           `https://media.upfrica.com/api/products-reviews/pending/?page=${currentPage}`,
+//           `https://api.upfrica.com/api/products-reviews/pending/?page=${currentPage}`,
 //           {
 //             method: 'GET',
 //             headers: { Authorization: `Token ${token}` },
@@ -55,7 +55,7 @@
 //     setApprovingId(id);
 //     try {
 //       const res = await fetch(
-//         `https://media.upfrica.com/api/reviews/${id}/approve/`,
+//         `https://api.upfrica.com/api/reviews/${id}/approve/`,
 //         {
 //           method: 'POST',
 //           headers: {
@@ -264,7 +264,7 @@ export default function PendingReviewsPage() {
       setLoading(true);
       try {
         const res = await fetch(
-          `https://media.upfrica.com/api/products-reviews/pending/?page=${currentPage}`,
+          `https://api.upfrica.com/api/products-reviews/pending/?page=${currentPage}`,
           {
             method: "GET",
             headers: { Authorization: `Token ${token}` },
@@ -288,7 +288,7 @@ export default function PendingReviewsPage() {
     if (!window.confirm("Approve this review?")) return;
     setApprovingId(id);
     try {
-      await fetch(`https://media.upfrica.com/api/reviews/${id}/approve/`, {
+      await fetch(`https://api.upfrica.com/api/reviews/${id}/approve/`, {
         method: "POST",
         headers: {
           Authorization: `Token ${token}`,
@@ -311,7 +311,7 @@ export default function PendingReviewsPage() {
     setDeletingId(r.id);
     try {
       await fetch(
-        `https://media.upfrica.com/api/products/${r.product.slug}/reviews/${r.id}/`,
+        `https://api.upfrica.com/api/products/${r.product.slug}/reviews/${r.id}/`,
         {
           method: "DELETE",
           headers: {
@@ -442,11 +442,10 @@ export default function PendingReviewsPage() {
                 <LoaderButton
                   loading={approvingId === r.id}
                   onClick={() => handleApprove(r.id)}
-                  className={`flex items-center px-4 py-2 rounded-full font-semibold ${
-                    approvingId === r.id
+                  className={`flex items-center px-4 py-2 rounded-full font-semibold ${approvingId === r.id
                       ? "bg-green-300 text-white"
                       : "bg-green-400 hover:bg-green-600 text-white"
-                  }`}
+                    }`}
                 >
                   <FiCheck className="mr-2" />
                   Approve
@@ -454,11 +453,10 @@ export default function PendingReviewsPage() {
                 <LoaderButton
                   loading={deletingId === r.id}
                   onClick={() => handleDelete(r)}
-                  className={`flex items-center px-4 py-2 rounded-full font-semibold ${
-                    deletingId === r.id
+                  className={`flex items-center px-4 py-2 rounded-full font-semibold ${deletingId === r.id
                       ? "bg-red-100 text-white"
                       : "bg-red-400 hover:bg-red-600 text-white"
-                  }`}
+                    }`}
                 >
                   <FiTrash className="mr-2" />
                   Delete

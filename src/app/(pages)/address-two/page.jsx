@@ -16,7 +16,7 @@
 //       setError(null);
 
 //       try {
-//         const res = await fetch("https://media.upfrica.com/api/addresses/", {
+//         const res = await fetch("https://api.upfrica.com/api/addresses/", {
 //           headers: {
 //             "Content-Type": "application/json",
 //             Authorization: `Token ${token}`,
@@ -144,7 +144,7 @@ const AddressTwo = () => {
       setError(null);
 
       try {
-        const res = await fetch("https://media.upfrica.com/api/addresses/", {
+        const res = await fetch("https://api.upfrica.com/api/addresses/", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Token ${token}`,

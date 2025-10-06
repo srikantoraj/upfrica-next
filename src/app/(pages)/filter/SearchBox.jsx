@@ -56,7 +56,7 @@ export default function SearchBox() {
       }
       try {
         const res = await fetch(
-          `https://media.upfrica.com/api/products/search/?q=${encodeURIComponent(debouncedSearchText)}`,
+          `https://api.upfrica.com/api/products/search/?q=${encodeURIComponent(debouncedSearchText)}`,
         );
         const json = await res.json();
         const items = json.results || [];

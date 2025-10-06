@@ -12,7 +12,7 @@ const useCategories = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          "https://media.upfrica.com/api/categories/",
+          "https://api.upfrica.com/api/categories/",
         ); // তোমার API URL এখানে
         const data = await response.json();
         setCategories(data.results); // ক্যাটেগরির ডেটা সেট করা
@@ -27,7 +27,7 @@ const useCategories = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          "https://media.upfrica.com/api/conditions/",
+          "https://api.upfrica.com/api/conditions/",
         ); // তোমার API URL এখানে
         const data = await response.json();
         setConditions(data); // কন্ডিশনের ডেটা সেট করা

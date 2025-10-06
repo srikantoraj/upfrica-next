@@ -43,7 +43,7 @@ export default function AddressBookPage() {
   useEffect(() => {
     if (!token) return;
     setLoading(true);
-    fetch("https://media.upfrica.com/api/addresses/", {
+    fetch("https://api.upfrica.com/api/addresses/", {
       method: "GET",
       headers: { Authorization: `Token ${token}` },
     })
@@ -95,7 +95,7 @@ export default function AddressBookPage() {
     setEditError("");
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/addresses/${editingId}/`,
+        `https://api.upfrica.com/api/addresses/${editingId}/`,
         {
           method: "PATCH",
           headers: {
@@ -139,7 +139,7 @@ export default function AddressBookPage() {
     if (!confirm("Are you sure you want to delete this address?")) return;
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/addresses/${id}/`,
+        `https://api.upfrica.com/api/addresses/${id}/`,
         {
           method: "DELETE",
           headers: { Authorization: `Token ${token}` },

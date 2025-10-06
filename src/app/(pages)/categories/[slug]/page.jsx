@@ -27,7 +27,7 @@ const DetelsCategories = () => {
       const fetchCategoryData = async () => {
         try {
           const response = await fetch(
-            `https://media.upfrica.com/api/categories/${slug}/products/`,
+            `https://api.upfrica.com/api/categories/${slug}/products/`,
           );
           const data = await response.json();
           setCategoryData(data.results || []);
@@ -55,11 +55,11 @@ const DetelsCategories = () => {
           <div className="grid grid-cols-1 space-y-8 ">
             {loading
               ? Array.from({ length: 4 }).map((_, index) => (
-                  <SkeletonLoader key={index} />
-                ))
+                <SkeletonLoader key={index} />
+              ))
               : categoryData.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
+                <ProductCard key={product.id} product={product} />
+              ))}
           </div>
         </div>
       </div>

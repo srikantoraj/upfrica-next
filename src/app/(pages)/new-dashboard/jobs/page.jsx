@@ -62,7 +62,7 @@ export default function JobListings() {
   // Fetch all jobs on mount
   useEffect(() => {
     setLoading(true);
-    fetch("https://media.upfrica.com/api/jobs/", {
+    fetch("https://api.upfrica.com/api/jobs/", {
       credentials: "include",
     })
       .then((res) => res.json())
@@ -84,7 +84,7 @@ export default function JobListings() {
     setSearchLoading(true);
     debounceTimeout.current = setTimeout(() => {
       fetch(
-        `https://media.upfrica.com/api/jobs/search/?q=${encodeURIComponent(
+        `https://api.upfrica.com/api/jobs/search/?q=${encodeURIComponent(
           searchQuery.trim(),
         )}`,
         {
@@ -113,7 +113,7 @@ export default function JobListings() {
     setDeleteLoadingId(id);
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/admin/jobs/${id}/`,
+        `https://api.upfrica.com/api/admin/jobs/${id}/`,
         {
           method: "DELETE",
           headers: {

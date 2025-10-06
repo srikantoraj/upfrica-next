@@ -26,7 +26,7 @@
 //     useEffect(() => {
 //         if (!token) return;
 //         setLoading(true);
-//         fetch(`https://media.upfrica.com/api/products/${productId}/variants/`, {
+//         fetch(`https://api.upfrica.com/api/products/${productId}/variants/`, {
 //             headers: { Authorization: `Token ${token}` },
 //         })
 //             .then((res) => {
@@ -75,7 +75,7 @@
 //         if (!confirm('Are you sure you want to delete this variant?')) return;
 //         try {
 //             const res = await fetch(
-//                 `https://media.upfrica.com/api/products/${productId}/variants/${variantId}/`,
+//                 `https://api.upfrica.com/api/products/${productId}/variants/${variantId}/`,
 //                 {
 //                     method: 'DELETE',
 //                     headers: { Authorization: `Token ${token}` },
@@ -129,7 +129,7 @@
 //                 })),
 //             };
 
-//             const urlBase = `https://media.upfrica.com/api/products/${productId}/variants/`;
+//             const urlBase = `https://api.upfrica.com/api/products/${productId}/variants/`;
 //             const url = isEditing ? `${urlBase}${formData.id}/` : urlBase;
 //             const method = isEditing ? 'PATCH' : 'POST';
 
@@ -383,7 +383,7 @@ export default function ProductVariantsPage({ params }) {
   useEffect(() => {
     if (!token) return;
     setLoading(true);
-    fetch(`https://media.upfrica.com/api/products/${productId}/variants/`, {
+    fetch(`https://api.upfrica.com/api/products/${productId}/variants/`, {
       headers: { Authorization: `Token ${token}` },
     })
       .then((res) => {
@@ -432,7 +432,7 @@ export default function ProductVariantsPage({ params }) {
     if (!confirm("Are you sure you want to delete this variant?")) return;
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/products/${productId}/variants/${variantId}/`,
+        `https://api.upfrica.com/api/products/${productId}/variants/${variantId}/`,
         {
           method: "DELETE",
           headers: { Authorization: `Token ${token}` },
@@ -488,7 +488,7 @@ export default function ProductVariantsPage({ params }) {
         })),
       };
 
-      const urlBase = `https://media.upfrica.com/api/products/${productId}/variants/`;
+      const urlBase = `https://api.upfrica.com/api/products/${productId}/variants/`;
       const url = isEditing ? `${urlBase}${formData.id}/` : urlBase;
       const method = isEditing ? "PATCH" : "POST";
 
@@ -552,44 +552,44 @@ export default function ProductVariantsPage({ params }) {
           <tbody>
             {loading
               ? Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="px-4 py-3">
-                      <div className="h-4 bg-gray-200 rounded w-3/4" />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="h-4 bg-gray-200 rounded w-5/6" />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="h-4 bg-gray-200 rounded w-1/2" />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="h-4 bg-gray-200 rounded w-1/3" />
-                    </td>
-                  </tr>
-                ))
+                <tr key={i} className="animate-pulse">
+                  <td className="px-4 py-3">
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 bg-gray-200 rounded w-5/6" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 bg-gray-200 rounded w-1/3" />
+                  </td>
+                </tr>
+              ))
               : variants.map((v) => (
-                  <tr key={v.id} className="border-t">
-                    <td className="px-4 py-3">{v.label}</td>
-                    <td className="px-4 py-3">
-                      {(v.variant ?? []).map((o) => o.value).join(", ") || "—"}
-                    </td>
-                    <td className="px-4 py-3">{v.active ? "Yes" : "No"}</td>
-                    <td className="px-4 py-3 space-x-3">
-                      <button
-                        onClick={() => handleEdit(v)}
-                        className="inline-flex items-center px-3 py-1 bg-violet-700 hover:bg-violet-800 text-white rounded-full"
-                      >
-                        <FaEdit />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(v.id)}
-                        className="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-full"
-                      >
-                        <FaTrashAlt />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                <tr key={v.id} className="border-t">
+                  <td className="px-4 py-3">{v.label}</td>
+                  <td className="px-4 py-3">
+                    {(v.variant ?? []).map((o) => o.value).join(", ") || "—"}
+                  </td>
+                  <td className="px-4 py-3">{v.active ? "Yes" : "No"}</td>
+                  <td className="px-4 py-3 space-x-3">
+                    <button
+                      onClick={() => handleEdit(v)}
+                      className="inline-flex items-center px-3 py-1 bg-violet-700 hover:bg-violet-800 text-white rounded-full"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(v.id)}
+                      className="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-full"
+                    >
+                      <FaTrashAlt />
+                    </button>
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
@@ -644,9 +644,8 @@ export default function ProductVariantsPage({ params }) {
               {formData.options.map((opt, i) => (
                 <div
                   key={i}
-                  className={`mb-4 border border-gray-200 rounded-full p-4 ${
-                    opt.active ? "bg-gray-100" : "bg-white"
-                  }`}
+                  className={`mb-4 border border-gray-200 rounded-full p-4 ${opt.active ? "bg-gray-100" : "bg-white"
+                    }`}
                 >
                   <div className="flex gap-2 items-center">
                     <input

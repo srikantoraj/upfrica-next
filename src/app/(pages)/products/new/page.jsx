@@ -187,7 +187,7 @@ const AddNewProducts = () => {
       headers.append("Authorization", `Token ${token}`);
       try {
         const response = await fetch(
-          "https://media.upfrica.com/api/product/create/",
+          "https://api.upfrica.com/api/product/create/",
           { method: "POST", headers, body: formData },
         );
         const result = await response.json();

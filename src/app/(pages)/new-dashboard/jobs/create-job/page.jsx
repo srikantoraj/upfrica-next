@@ -66,7 +66,7 @@ export default function CreateJobPage() {
           onSubmit={async (values, { setSubmitting, resetForm }) => {
             setSubmitError("");
             try {
-              const res = await fetch("https://media.upfrica.com/api/jobs/", {
+              const res = await fetch("https://api.upfrica.com/api/jobs/", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",

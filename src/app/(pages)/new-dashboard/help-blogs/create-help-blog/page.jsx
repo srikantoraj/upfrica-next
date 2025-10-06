@@ -61,7 +61,7 @@
 //             const myHeaders = new Headers();
 //             myHeaders.append("Authorization", `Token ${token}`);
 //             myHeaders.append("Content-Type", "application/json");
-//             fetch("https://media.upfrica.com/api/admin/helpblogs/", {
+//             fetch("https://api.upfrica.com/api/admin/helpblogs/", {
 //               method: "POST",
 //               headers: myHeaders,
 //               body: JSON.stringify(values),
@@ -602,7 +602,7 @@ export default function CreateHelpBlogPage() {
   // Fetch available blog categories for the multi-select
   useEffect(() => {
     if (!token) return;
-    fetch("https://media.upfrica.com/api/blog-categories/", {
+    fetch("https://api.upfrica.com/api/blog-categories/", {
       headers: { Authorization: `Token ${token}` },
     })
       .then((res) => {
@@ -628,7 +628,7 @@ export default function CreateHelpBlogPage() {
             headers.append("Authorization", `Token ${token}`);
             headers.append("Content-Type", "application/json");
 
-            fetch("https://media.upfrica.com/api/admin/helpblogs/", {
+            fetch("https://api.upfrica.com/api/admin/helpblogs/", {
               method: "POST",
               headers,
               body: JSON.stringify(values),
@@ -848,21 +848,21 @@ export default function CreateHelpBlogPage() {
                           {["paragraph", "highlight"].includes(
                             section.sectionType,
                           ) && (
-                            <div className="mt-2">
-                              <label className="block text-gray-700 font-bold mb-1">
-                                Content
-                              </label>
-                              <textarea
-                                name={`sections[${secIndex}].sectionContent`}
-                                value={section.sectionContent}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                placeholder="Enter content"
-                                rows="4"
-                                className="w-full border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
-                              />
-                            </div>
-                          )}
+                              <div className="mt-2">
+                                <label className="block text-gray-700 font-bold mb-1">
+                                  Content
+                                </label>
+                                <textarea
+                                  name={`sections[${secIndex}].sectionContent`}
+                                  value={section.sectionContent}
+                                  onChange={handleChange}
+                                  onBlur={handleBlur}
+                                  placeholder="Enter content"
+                                  rows="4"
+                                  className="w-full border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
+                                />
+                              </div>
+                            )}
 
                           {/* Bullet List */}
                           {section.sectionType === "bullet" && (
@@ -1151,9 +1151,8 @@ export default function CreateHelpBlogPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`text-xl px-4 py-2 bg-[#A435F0] text-white rounded-md font-bold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                  isSubmitting ? "opacity-50" : ""
-                }`}
+                className={`text-xl px-4 py-2 bg-[#A435F0] text-white rounded-md font-bold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 ${isSubmitting ? "opacity-50" : ""
+                  }`}
               >
                 {isSubmitting ? (
                   <div className="flex space-x-2 justify-center items-center h-6">

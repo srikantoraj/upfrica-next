@@ -26,7 +26,7 @@
 //         onSubmit: async (values, { resetForm }) => {
 //             setLoading(true);
 //             try {
-//                 const response = await fetch('https://media.upfrica.com/api/update-password/', {
+//                 const response = await fetch('https://api.upfrica.com/api/update-password/', {
 //                     method: 'POST',
 //                     headers: {
 //                         'Content-Type': 'application/json',
@@ -157,7 +157,7 @@ const UpdatePasswordPage = () => {
       setLoading(true);
       try {
         const res = await fetch(
-          "https://media.upfrica.com/api/update-password/",
+          "https://api.upfrica.com/api/update-password/",
           {
             method: "POST",
             headers: {
@@ -293,11 +293,10 @@ const UpdatePasswordPage = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full py-2 rounded text-white transition ${
-                  loading
+                className={`w-full py-2 rounded text-white transition ${loading
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-purple-600 hover:bg-purple-700"
-                }`}
+                  }`}
               >
                 {loading ? "Updating..." : "Update Password"}
               </button>

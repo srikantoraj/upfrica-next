@@ -38,7 +38,7 @@
 //   // Fetch addresses & pick default
 //   useEffect(() => {
 //     if (!token) return;
-//     fetch("https://media.upfrica.com/api/addresses/", {
+//     fetch("https://api.upfrica.com/api/addresses/", {
 //       headers: { Authorization: `Token ${token}` },
 //     })
 //       .then((r) => r.json())
@@ -98,7 +98,7 @@
 //     setIsLoading(true);
 //     try {
 //       const res = await fetch(
-//         "https://media.upfrica.com/api/cart/checkout/",
+//         "https://api.upfrica.com/api/cart/checkout/",
 //         {
 //           method: "POST",
 //           headers: {
@@ -391,7 +391,7 @@
 //               onSubmit={async (vals, { setSubmitting, resetForm }) => {
 //                 try {
 //                   const res = await fetch(
-//                     "https://media.upfrica.com/api/addresses/",
+//                     "https://api.upfrica.com/api/addresses/",
 //                     {
 //                       method: "POST",
 //                       headers: {
@@ -517,7 +517,7 @@ const Checkout = () => {
   // fetch addresses
   useEffect(() => {
     if (!token) return;
-    fetch("https://media.upfrica.com/api/addresses/", {
+    fetch("https://api.upfrica.com/api/addresses/", {
       headers: { Authorization: `Token ${token}` },
     })
       .then((r) => r.json())
@@ -579,7 +579,7 @@ const Checkout = () => {
     if (!selectedAddress || !paymentMethod || !cartId) return;
     setIsLoading(true);
     try {
-      const res = await fetch("https://media.upfrica.com/api/cart/checkout/", {
+      const res = await fetch("https://api.upfrica.com/api/cart/checkout/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -749,11 +749,10 @@ const Checkout = () => {
                 disabled={!selectedAddress || !paymentMethod || isLoading}
                 className={`
                     w-full py-3 text-white font-semibold rounded-lg
-                    ${
-                      !selectedAddress || !paymentMethod || isLoading
-                        ? "bg-indigo-300 cursor-not-allowed"
-                        : "btn-primary"
-                    }
+                    ${!selectedAddress || !paymentMethod || isLoading
+                    ? "bg-indigo-300 cursor-not-allowed"
+                    : "btn-primary"
+                  }
     `}
               >
                 {isLoading ? <LoadingDots color="white" /> : "Place Order"}
@@ -767,11 +766,10 @@ const Checkout = () => {
                 disabled={!selectedAddress || !paymentMethod || isLoading}
                 className={`
       w-full py-3 text-white font-semibold rounded-lg
-      ${
-        !selectedAddress || !paymentMethod || isLoading
-          ? "bg-indigo-300 cursor-not-allowed"
-          : "btn-primary"
-      }
+      ${!selectedAddress || !paymentMethod || isLoading
+                    ? "bg-indigo-300 cursor-not-allowed"
+                    : "btn-primary"
+                  }
     `}
               >
                 {isLoading ? <LoadingDots color="white" /> : "Place Order"}
@@ -802,11 +800,10 @@ const Checkout = () => {
                     setSelectedAddress(a.id);
                     setShowChangeModal(false);
                   }}
-                  className={`p-4 border rounded-lg text-left hover:border-indigo-400 ${
-                    selectedAddress === a.id
+                  className={`p-4 border rounded-lg text-left hover:border-indigo-400 ${selectedAddress === a.id
                       ? "border-indigo-600"
                       : "border-gray-200"
-                  }`}
+                    }`}
                 >
                   <p className="font-medium">
                     {a.address_data.street}, {a.address_data.city}
@@ -846,7 +843,7 @@ const Checkout = () => {
               onSubmit={async (vals, { setSubmitting, resetForm }) => {
                 try {
                   const res = await fetch(
-                    "https://media.upfrica.com/api/addresses/",
+                    "https://api.upfrica.com/api/addresses/",
                     {
                       method: "POST",
                       headers: {

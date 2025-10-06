@@ -9,7 +9,7 @@ import { AiOutlineHeart, AiOutlineShoppingCart } from "react-icons/ai";
 import { SITE_BASE_URL, BASE_API_URL } from "@/app/constants";
 
 const IMAGE_BASE =
-  process.env.NEXT_PUBLIC_IMAGE_BASE_URL // e.g. https://media.upfrica.com
+  process.env.NEXT_PUBLIC_IMAGE_BASE_URL // e.g. https://api.upfrica.com
   || SITE_BASE_URL                       // e.g. https://www.upfrica.com
   || BASE_API_URL;                       // e.g. http://127.0.0.1:8000
 

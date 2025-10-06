@@ -34,7 +34,7 @@ const SignUp = () => {
       const { terms_of_service, ...payload } = values;
 
       try {
-        const response = await fetch("https://media.upfrica.com/api/signup/", {
+        const response = await fetch("https://api.upfrica.com/api/signup/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -101,7 +101,7 @@ const SignUp = () => {
             {/* Social Buttons */}
             <div className="mt-4 flex space-x-4">
               <a
-                href="https://media.upfrica.com/accounts/google/login/"
+                href="https://api.upfrica.com/accounts/google/login/"
                 className="flex-1 flex items-center justify-center border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition"
               >
                 <FcGoogle className="text-2xl" />
@@ -111,7 +111,7 @@ const SignUp = () => {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  // router.push('https://media.upfrica.com/accounts/facebook/signup/')
+                  // router.push('https://api.upfrica.com/accounts/facebook/signup/')
                 }}
                 className="flex-1 flex items-center justify-center border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition"
               >

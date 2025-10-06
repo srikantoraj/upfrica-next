@@ -64,7 +64,7 @@ export default function SearchBox() {
       }
       try {
         const res = await fetch(
-          `https://media.upfrica.com/api/products/search/?q=${encodeURIComponent(debouncedSearchText)}`,
+          `https://api.upfrica.com/api/products/search/?q=${encodeURIComponent(debouncedSearchText)}`,
         );
         const data = await res.json();
         setResults(data.results || []);
@@ -162,11 +162,11 @@ export default function SearchBox() {
                 const sale =
                   saleActive && sale_price_cents
                     ? convertPrice(
-                        sale_price_cents / 100,
-                        price_currency,
-                        selectedCountry?.code,
-                        exchangeRates,
-                      )
+                      sale_price_cents / 100,
+                      price_currency,
+                      selectedCountry?.code,
+                      exchangeRates,
+                    )
                     : null;
 
                 return (

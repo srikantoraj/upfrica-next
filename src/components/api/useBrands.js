@@ -10,7 +10,7 @@ const useBrands = () => {
     const fetchBrands = async () => {
       setLoading(true);
       try {
-        const response = await fetch("https://media.upfrica.com/api/brands/"); // তোমার ব্র্যান্ড API URL
+        const response = await fetch("https://api.upfrica.com/api/brands/"); // তোমার ব্র্যান্ড API URL
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

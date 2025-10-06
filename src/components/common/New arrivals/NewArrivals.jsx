@@ -11,7 +11,7 @@ const Price = dynamic(() => import("../../Price"), { ssr: false });
 
 export default async function NewArrivals({ title }) {
   const res = await fetch(
-    //'https://media.upfrica.com/api/product-list/recent/',
+    //'https://api.upfrica.com/api/product-list/recent/',
     "/api/product-list/recent/",
     { next: { revalidate: 120 } },
   );

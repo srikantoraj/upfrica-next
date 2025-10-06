@@ -54,7 +54,7 @@ export default function ProductList() {
       redirect: "follow",
     };
 
-    const base = "https://media.upfrica.com/api/seller/products";
+    const base = "https://api.upfrica.com/api/seller/products";
     const params = new URLSearchParams({
       page: String(currentPage),
       page_size: String(perPage),
@@ -95,7 +95,7 @@ export default function ProductList() {
     setDeletingId(id);
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/seller/products/${id}/`,
+        `https://api.upfrica.com/api/seller/products/${id}/`,
         {
           method: "DELETE",
           headers: { Authorization: `Token ${token}` },
@@ -136,11 +136,10 @@ export default function ProductList() {
         {/* Alert */}
         {alert.message && (
           <div
-            className={`mb-4 px-4 py-3 border rounded ${
-              alert.type === "success"
+            className={`mb-4 px-4 py-3 border rounded ${alert.type === "success"
                 ? "bg-green-100 border-green-400 text-green-700"
                 : "bg-red-100 border-red-400 text-red-700"
-            }`}
+              }`}
           >
             <span>{alert.message}</span>
             <button
@@ -258,11 +257,10 @@ export default function ProductList() {
                         onClick={() => handleDelete(p.id)}
                         disabled={deletingId === p.id}
                         title="Delete"
-                        className={`transition duration-300 ${
-                          deletingId === p.id
+                        className={`transition duration-300 ${deletingId === p.id
                             ? "opacity-50 cursor-not-allowed"
                             : ""
-                        }`}
+                          }`}
                       >
                         <FaTrash className="h-4 w-4 text-[#2B3F6C]" />
                       </button>

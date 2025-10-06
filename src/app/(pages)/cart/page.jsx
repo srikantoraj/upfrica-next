@@ -58,7 +58,7 @@ const Cart = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch("https://media.upfrica.com/api/cart/add/", {
+      const response = await fetch("https://api.upfrica.com/api/cart/add/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -149,10 +149,10 @@ const Cart = () => {
                 <div className="flex-shrink-0 w-24 h-24 lg:w-28 lg:h-28">
                   <img
                     src={
-                  
-                  product.image?.[0]?.image_url ||
-                  product.image?.[0]?.url ||
-                  "/placeholder.png"
+
+                      product.image?.[0]?.image_url ||
+                      product.image?.[0]?.url ||
+                      "/placeholder.png"
                     }
                     alt={product.title}
                     className="w-full h-full object-contain rounded-md"
@@ -327,11 +327,10 @@ const Cart = () => {
             <button
               onClick={handleCheckout}
               disabled={basket.length === 0 || isLoading || !agreed}
-              className={`mt-4 w-full justify-center items-center py-3 text-lg font-semibold btn-primary rounded ${
-                basket.length === 0 || isLoading || !agreed
+              className={`mt-4 w-full justify-center items-center py-3 text-lg font-semibold btn-primary rounded ${basket.length === 0 || isLoading || !agreed
                   ? "opacity-50 cursor-not-allowed"
                   : "btn-primary"
-              }`}
+                }`}
             >
               {isLoading ? (
                 <div className="flex space-x-2 justify-center py-3">
@@ -355,11 +354,10 @@ const Cart = () => {
         <button
           onClick={handleCheckout}
           disabled={basket.length === 0 || isLoading || !agreed}
-          className={`py-3 px-4 text-sm font-semibold text-white bg-indigo-600 rounded ${
-            basket.length === 0 || isLoading || !agreed
+          className={`py-3 px-4 text-sm font-semibold text-white bg-indigo-600 rounded ${basket.length === 0 || isLoading || !agreed
               ? "opacity-50 cursor-not-allowed"
               : "hover:bg-indigo-700"
-          }`}
+            }`}
         >
           {isLoading ? (
             <div className="flex space-x-2">

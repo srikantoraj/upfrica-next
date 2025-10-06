@@ -24,7 +24,7 @@ export default function PaymentSuccess({ searchParams }) {
     async function loadOrder() {
       try {
         const res = await fetch(
-          `https://media.upfrica.com/api/buyer/orders/${orderId}/`,
+          `https://api.upfrica.com/api/buyer/orders/${orderId}/`,
           {
             headers: {
               Authorization: `Token ${token}`,

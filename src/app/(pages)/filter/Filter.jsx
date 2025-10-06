@@ -47,21 +47,21 @@ export default function Filter() {
   const [brands, setBrands] = useState([]);
 
   useEffect(() => {
-    fetch("https://media.upfrica.com/api/categories/")
+    fetch("https://api.upfrica.com/api/categories/")
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then((data) => setCategories(data.results ?? data))
       .catch((err) => console.error("Failed to load categories:", err));
   }, []);
 
   useEffect(() => {
-    fetch("https://media.upfrica.com/api/conditions/")
+    fetch("https://api.upfrica.com/api/conditions/")
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then((data) => setConditions(data.results ?? data))
       .catch((err) => console.error("Failed to load conditions:", err));
   }, []);
 
   useEffect(() => {
-    fetch("https://media.upfrica.com/api/brands/")
+    fetch("https://api.upfrica.com/api/brands/")
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then((data) => setBrands(data.results ?? data))
       .catch((err) => console.error("Failed to load brands:", err));

@@ -43,7 +43,7 @@ const VerifyAccountPage = () => {
 
       try {
         const response = await fetch(
-          "https://media.upfrica.com/api/verify-account/",
+          "https://api.upfrica.com/api/verify-account/",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -115,11 +115,10 @@ const VerifyAccountPage = () => {
                 onChange={formik.handleChange}
                 value={formik.values.email}
                 placeholder="you@example.com"
-                className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                  formik.touched.email && formik.errors.email
+                className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${formik.touched.email && formik.errors.email
                     ? "border-red-500 ring-red-200"
                     : "border-gray-300 focus:ring-purple-500 focus:border-purple-500"
-                }`}
+                  }`}
               />
               {formik.touched.email && formik.errors.email && (
                 <p className="text-red-500 text-sm mt-1">
@@ -145,11 +144,10 @@ const VerifyAccountPage = () => {
                 onChange={formik.handleChange}
                 value={formik.values.token}
                 placeholder="123456"
-                className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                  formik.touched.token && formik.errors.token
+                className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${formik.touched.token && formik.errors.token
                     ? "border-red-500 ring-red-200"
                     : "border-gray-300 focus:ring-purple-500 focus:border-purple-500"
-                }`}
+                  }`}
               />
               {formik.touched.token && formik.errors.token && (
                 <p className="text-red-500 text-sm mt-1">

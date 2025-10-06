@@ -27,7 +27,7 @@ export default function OrdersPage() {
     if (!token) return;
 
     setLoading(true);
-    fetch(`https://media.upfrica.com/api/buyer/orders/?page=${pageParam}`, {
+    fetch(`https://api.upfrica.com/api/buyer/orders/?page=${pageParam}`, {
       headers: {
         Authorization: `Token ${token}`,
         "Content-Type": "application/json",
@@ -83,8 +83,8 @@ export default function OrdersPage() {
   const displayItems = searchQuery
     ? searchResults
     : orders.flatMap((order) =>
-        order.order_items.map((item) => ({ ...item, order })),
-      );
+      order.order_items.map((item) => ({ ...item, order })),
+    );
 
   return (
     <div className="p-0 bg-gray-100 min-h-screen text-black font-sans">

@@ -67,7 +67,7 @@ export default function HelpBlogDrafts() {
 
   // Fetch drafts on mount
   useEffect(() => {
-    fetch("https://media.upfrica.com/api/admin/help-blogs/drafts/", {
+    fetch("https://api.upfrica.com/api/admin/help-blogs/drafts/", {
       method: "GET",
       headers: { Authorization: `Token ${token}` },
     })
@@ -103,7 +103,7 @@ export default function HelpBlogDrafts() {
     setPublishLoadingId(id);
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/admin/helpblogs/${id}/publish/`,
+        `https://api.upfrica.com/api/admin/helpblogs/${id}/publish/`,
         {
           method: "PATCH",
           headers: {
@@ -130,7 +130,7 @@ export default function HelpBlogDrafts() {
     setDeleteLoadingId(id);
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/admin/helpblogs/${id}/`,
+        `https://api.upfrica.com/api/admin/helpblogs/${id}/`,
         {
           method: "DELETE",
           headers: { Authorization: `Token ${token}` },

@@ -74,7 +74,7 @@ export default function LoginForm() {
   const googleHref = useMemo(() => {
     const base =
       process.env.NODE_ENV === "production"
-        ? "https://media.upfrica.com/accounts/google/login/?process=login"
+        ? "https://api.upfrica.com/accounts/google/login/?process=login"
         : "http://127.0.0.1:8000/accounts/google/login/?process=login";
     const n = ensureResume(nextSafe || draftNext, hasDraft);
     return n ? `${base}&next=${encodeURIComponent(n)}` : base;

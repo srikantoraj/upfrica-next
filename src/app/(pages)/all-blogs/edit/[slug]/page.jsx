@@ -37,7 +37,7 @@ const UpdateHelpBlogPage = ({ params }) => {
           redirect: "follow",
         };
         const response = await fetch(
-          `https://media.upfrica.com/api/helpblogs/${slug}`,
+          `https://api.upfrica.com/api/helpblogs/${slug}`,
           requestOptions,
         );
         const data = await response.json();
@@ -51,17 +51,17 @@ const UpdateHelpBlogPage = ({ params }) => {
             data.sections && data.sections.length > 0
               ? data.sections
               : [
-                  {
-                    sectionType: "",
-                    sectionTitle: "",
-                    sectionContent: "",
-                    bulletItems: [],
-                    tableHeaders: [],
-                    tableRows: [],
-                    files: [],
-                    links: [],
-                  },
-                ],
+                {
+                  sectionType: "",
+                  sectionTitle: "",
+                  sectionContent: "",
+                  bulletItems: [],
+                  tableHeaders: [],
+                  tableRows: [],
+                  files: [],
+                  links: [],
+                },
+              ],
         });
       } catch (error) {
         console.error("Error fetching blog:", error);
@@ -98,7 +98,7 @@ const UpdateHelpBlogPage = ({ params }) => {
             myHeaders.append("Authorization", `Token aSJ36UapeFH5YARFamDTYhnJ`);
             myHeaders.append("Content-Type", "application/json");
 
-            fetch(`https://media.upfrica.com/api/helpblogs/${slug}/update/`, {
+            fetch(`https://api.upfrica.com/api/helpblogs/${slug}/update/`, {
               method: "PUT", // Use PATCH if your API requires it.
               headers: myHeaders,
               body: JSON.stringify(values),
@@ -331,37 +331,37 @@ const UpdateHelpBlogPage = ({ params }) => {
                             {["paragraph", "highlight"].includes(
                               section.sectionType,
                             ) && (
-                              <div className="mt-2">
-                                <label className="block text-gray-700 font-bold mb-1">
-                                  Content
-                                </label>
-                                <Editor
-                                  apiKey="cly2l2971z9pgqhfjufgnqbl1h4nomfzmiqbjositk620gut" // তোমার TinyMCE API Key
-                                  value={section.sectionContent || ""}
-                                  init={{
-                                    height: 250,
-                                    menubar: false,
-                                    plugins: [
-                                      "advlist autolink lists link charmap preview anchor",
-                                      "searchreplace visualblocks code fullscreen",
-                                      "insertdatetime media table paste help wordcount",
-                                    ],
-                                    toolbar:
-                                      "undo redo | formatselect | bold italic underline forecolor | " +
-                                      "alignleft aligncenter alignright alignjustify | " +
-                                      "bullist numlist outdent indent | removeformat | help",
-                                    content_style:
-                                      "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
-                                  }}
-                                  onEditorChange={(content) => {
-                                    setFieldValue(
-                                      `sections[${secIndex}].sectionContent`,
-                                      content,
-                                    );
-                                  }}
-                                />
-                              </div>
-                            )}
+                                <div className="mt-2">
+                                  <label className="block text-gray-700 font-bold mb-1">
+                                    Content
+                                  </label>
+                                  <Editor
+                                    apiKey="cly2l2971z9pgqhfjufgnqbl1h4nomfzmiqbjositk620gut" // তোমার TinyMCE API Key
+                                    value={section.sectionContent || ""}
+                                    init={{
+                                      height: 250,
+                                      menubar: false,
+                                      plugins: [
+                                        "advlist autolink lists link charmap preview anchor",
+                                        "searchreplace visualblocks code fullscreen",
+                                        "insertdatetime media table paste help wordcount",
+                                      ],
+                                      toolbar:
+                                        "undo redo | formatselect | bold italic underline forecolor | " +
+                                        "alignleft aligncenter alignright alignjustify | " +
+                                        "bullist numlist outdent indent | removeformat | help",
+                                      content_style:
+                                        "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+                                    }}
+                                    onEditorChange={(content) => {
+                                      setFieldValue(
+                                        `sections[${secIndex}].sectionContent`,
+                                        content,
+                                      );
+                                    }}
+                                  />
+                                </div>
+                              )}
 
                             {section.sectionType === "bullet" && (
                               <div className="mt-2">
@@ -733,7 +733,7 @@ export default UpdateHelpBlogPage;
 //     useEffect(() => {
 //         async function fetchBlog() {
 //             try {
-//                 const response = await fetch(`https://media.upfrica.com/api/helpblogs/${slug}`, {
+//                 const response = await fetch(`https://api.upfrica.com/api/helpblogs/${slug}`, {
 //                     method: "GET",
 //                     redirect: "follow"
 //                 });
@@ -791,7 +791,7 @@ export default UpdateHelpBlogPage;
 //                         myHeaders.append("Authorization", `Token ${token}`);
 //                         myHeaders.append("Content-Type", "application/json");
 
-//                         fetch(`https://media.upfrica.com/api/helpblogs/${slug}/update/`, {
+//                         fetch(`https://api.upfrica.com/api/helpblogs/${slug}/update/`, {
 //                             method: "PUT",
 //                             headers: myHeaders,
 //                             body: JSON.stringify(values),

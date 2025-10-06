@@ -41,7 +41,7 @@ const ProductSpecificsForm = ({ params }) => {
       }));
 
       const resp = await fetch(
-        `https://media.upfrica.com/api/products/${id}/properties/bulk/`,
+        `https://api.upfrica.com/api/products/${id}/properties/bulk/`,
         {
           method: "POST",
           headers: {

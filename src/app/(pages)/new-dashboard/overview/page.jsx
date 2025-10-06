@@ -34,7 +34,7 @@ const DashboardPage = () => {
     const fetchStats = async () => {
       try {
         const res = await fetch(
-          "https://media.upfrica.com/api/seller/dashboard-summary/",
+          "https://api.upfrica.com/api/seller/dashboard-summary/",
           {
             method: "GET",
             headers: {

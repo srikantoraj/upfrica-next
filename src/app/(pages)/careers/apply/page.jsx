@@ -55,7 +55,7 @@ export default function CareerWithUs() {
 
     try {
       const res = await fetch(
-        "https://media.upfrica.com/api/jobs/submit-application/",
+        "https://api.upfrica.com/api/jobs/submit-application/",
         {
           method: "POST",
           body: data,
@@ -269,11 +269,10 @@ export default function CareerWithUs() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`w-full py-3 text-white font-medium rounded-md transition ${
-              isSubmitting
+            className={`w-full py-3 text-white font-medium rounded-md transition ${isSubmitting
                 ? "bg-violet-400 cursor-not-allowed"
                 : "bg-violet-700 hover:bg-violet-800"
-            }`}
+              }`}
           >
             {isSubmitting ? "Submitting…" : "Submit"}
           </button>

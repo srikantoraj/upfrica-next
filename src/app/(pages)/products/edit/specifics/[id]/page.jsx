@@ -39,7 +39,7 @@ export default function ProductSpecificsPage({ params }) {
       }));
 
       const res = await fetch(
-        `https://media.upfrica.com/api/products/${productId}/properties/bulk/`,
+        `https://api.upfrica.com/api/products/${productId}/properties/bulk/`,
         {
           method: "POST",
           headers: {

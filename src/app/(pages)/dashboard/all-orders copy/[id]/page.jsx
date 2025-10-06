@@ -19,7 +19,7 @@ export default function OrderDetailsPage() {
       setLoading(true);
       try {
         const res = await fetch(
-          `https://media.upfrica.com/api/buyer/orders/${id}/`,
+          `https://api.upfrica.com/api/buyer/orders/${id}/`,
           {
             headers: {
               Authorization: `Token ${token}`,

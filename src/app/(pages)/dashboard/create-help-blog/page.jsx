@@ -58,7 +58,7 @@ export default function CreateHelpBlogPage() {
             const myHeaders = new Headers();
             myHeaders.append("Authorization", `Token ${token}`);
             myHeaders.append("Content-Type", "application/json");
-            fetch("https://media.upfrica.com/api/admin/helpblogs/", {
+            fetch("https://api.upfrica.com/api/admin/helpblogs/", {
               method: "POST",
               headers: myHeaders,
               body: JSON.stringify(values),
@@ -251,21 +251,21 @@ export default function CreateHelpBlogPage() {
                           {["paragraph", "highlight"].includes(
                             section.sectionType,
                           ) && (
-                            <div className="mt-2">
-                              <label className="block text-gray-700 font-bold mb-1">
-                                Content
-                              </label>
-                              <textarea
-                                name={`sections[${secIndex}].sectionContent`}
-                                value={section.sectionContent}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                placeholder="Enter content"
-                                rows="4"
-                                className="w-full border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
-                              />
-                            </div>
-                          )}
+                              <div className="mt-2">
+                                <label className="block text-gray-700 font-bold mb-1">
+                                  Content
+                                </label>
+                                <textarea
+                                  name={`sections[${secIndex}].sectionContent`}
+                                  value={section.sectionContent}
+                                  onChange={handleChange}
+                                  onBlur={handleBlur}
+                                  placeholder="Enter content"
+                                  rows="4"
+                                  className="w-full border border-violet-700 rounded px-4 py-2 focus:ring-2 focus:ring-violet-700"
+                                />
+                              </div>
+                            )}
 
                           {section.sectionType === "bullet" && (
                             <div className="mt-2">

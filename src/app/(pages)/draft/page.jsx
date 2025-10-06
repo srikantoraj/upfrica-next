@@ -27,7 +27,7 @@ const DrafPage = () => {
         };
 
         const response = await fetch(
-          "https://media.upfrica.com/api/products/draft/",
+          "https://api.upfrica.com/api/products/draft/",
           requestOptions,
         );
         const result = await response.json();
@@ -70,7 +70,7 @@ const DrafPage = () => {
         redirect: "follow",
       };
 
-      const url = `https://media.upfrica.com/api/products/draft/${productId}/`;
+      const url = `https://api.upfrica.com/api/products/draft/${productId}/`;
       const response = await fetch(url, requestOptions);
 
       if (!response.ok) {
@@ -168,95 +168,95 @@ const DrafPage = () => {
           {loading
             ? renderSkeletonRows()
             : products?.map((product) => (
-                <tr
-                  key={product.id}
-                  className="text-base tracking-wide cursor-pointer"
-                >
-                  <td className="border border-gray-300 px-6 py-2 md:py-8">
-                    {product.id}
-                  </td>
-                  <td className="border border-gray-300 px-4">
-                    <div className="md:flex justify-between items-center space-x-2">
-                      {/* Status Dropdown */}
-                      <div className="relative">
-                        <button
-                          onClick={() => handleDropdownToggle(product.id)}
-                          className="bg-[#F3E8FF] text-[#8710D8] font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-[#E0C9FF] transition-all duration-300 ease-in-out cursor-pointer"
-                        >
-                          {statuses[product.id]}
-                        </button>
-                        {openDropdownId === product.id && (
-                          <div className="absolute left-0 mb-10 w-32 bg-white border border-gray-300 rounded-lg shadow-xl z-10">
-                            <ul className="py-1">
-                              <li
-                                className="px-8 py-2 text-gray-700 hover:bg-[#F3E8FF] hover:text-[#8710D8] transition-all duration-300 ease-in-out cursor-pointer"
-                                onClick={() =>
-                                  handleStatusSelect(product.id, "Draft")
-                                }
-                              >
-                                Draft
-                              </li>
-                              <li
-                                className="px-8 py-2 text-gray-700 hover:bg-[#F3E8FF] hover:text-[#8710D8] transition-all duration-300 ease-in-out cursor-pointer"
-                                onClick={() =>
-                                  handleStatusSelect(product.id, "Published")
-                                }
-                              >
-                                Published
-                              </li>
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Edit Button */}
-                      <Link
-                        href={`/products/new/${product.id}`}
-                        className="text-[#AF35F0] font-semibold cursor-pointer hover:underline flex items-center gap-2"
+              <tr
+                key={product.id}
+                className="text-base tracking-wide cursor-pointer"
+              >
+                <td className="border border-gray-300 px-6 py-2 md:py-8">
+                  {product.id}
+                </td>
+                <td className="border border-gray-300 px-4">
+                  <div className="md:flex justify-between items-center space-x-2">
+                    {/* Status Dropdown */}
+                    <div className="relative">
+                      <button
+                        onClick={() => handleDropdownToggle(product.id)}
+                        className="bg-[#F3E8FF] text-[#8710D8] font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-[#E0C9FF] transition-all duration-300 ease-in-out cursor-pointer"
                       >
-                        <span>
-                          <CiEdit className="h-5 w-5" />
-                        </span>
-                        Edit
-                      </Link>
+                        {statuses[product.id]}
+                      </button>
+                      {openDropdownId === product.id && (
+                        <div className="absolute left-0 mb-10 w-32 bg-white border border-gray-300 rounded-lg shadow-xl z-10">
+                          <ul className="py-1">
+                            <li
+                              className="px-8 py-2 text-gray-700 hover:bg-[#F3E8FF] hover:text-[#8710D8] transition-all duration-300 ease-in-out cursor-pointer"
+                              onClick={() =>
+                                handleStatusSelect(product.id, "Draft")
+                              }
+                            >
+                              Draft
+                            </li>
+                            <li
+                              className="px-8 py-2 text-gray-700 hover:bg-[#F3E8FF] hover:text-[#8710D8] transition-all duration-300 ease-in-out cursor-pointer"
+                              onClick={() =>
+                                handleStatusSelect(product.id, "Published")
+                              }
+                            >
+                              Published
+                            </li>
+                          </ul>
+                        </div>
+                      )}
+                    </div>
 
-                      {/* Delete Button */}
-                      <span className="flex items-center space-x-1 text-blue-500 cursor-pointer hover:text-blue-700">
-                        <MdDelete className="h-6 w-6" />
-                        <span className="font-semibold">Delete</span>
+                    {/* Edit Button */}
+                    <Link
+                      href={`/products/new/${product.id}`}
+                      className="text-[#AF35F0] font-semibold cursor-pointer hover:underline flex items-center gap-2"
+                    >
+                      <span>
+                        <CiEdit className="h-5 w-5" />
                       </span>
-                    </div>
-                  </td>
+                      Edit
+                    </Link>
 
-                  <td className="border border-gray-300 px-6 py-4 text-base flex gap-5">
-                    <div className="space-y-2">
-                      <p>{product?.title}</p>
-                      <p className="flex gap-4 items-center">
-                        <span>Price: ${product?.price?.cents}</span>
-                        <span>Delivery: Free</span>
-                      </p>
-                      <p className="flex items-center space-x-2">
-                        <span>
-                          <FaLocationPin className="text-gray-400" />
-                        </span>
-                        <span>
-                          {product?.user?.town}, {product?.user?.country}
-                        </span>
-                        <span>{product?.user?.first_name}</span> |{" "}
-                        <span className="hover:text-red-500">
-                          {product?.user?.username}
-                        </span>{" "}
-                        | <span className="hover:text-red-500"> Whatsap </span>{" "}
-                        |{" "}
-                        <span className="hover:text-red-500">
-                          {product?.user?.email}
-                        </span>
-                      </p>
-                      <p>3 days ago</p>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    {/* Delete Button */}
+                    <span className="flex items-center space-x-1 text-blue-500 cursor-pointer hover:text-blue-700">
+                      <MdDelete className="h-6 w-6" />
+                      <span className="font-semibold">Delete</span>
+                    </span>
+                  </div>
+                </td>
+
+                <td className="border border-gray-300 px-6 py-4 text-base flex gap-5">
+                  <div className="space-y-2">
+                    <p>{product?.title}</p>
+                    <p className="flex gap-4 items-center">
+                      <span>Price: ${product?.price?.cents}</span>
+                      <span>Delivery: Free</span>
+                    </p>
+                    <p className="flex items-center space-x-2">
+                      <span>
+                        <FaLocationPin className="text-gray-400" />
+                      </span>
+                      <span>
+                        {product?.user?.town}, {product?.user?.country}
+                      </span>
+                      <span>{product?.user?.first_name}</span> |{" "}
+                      <span className="hover:text-red-500">
+                        {product?.user?.username}
+                      </span>{" "}
+                      | <span className="hover:text-red-500"> Whatsap </span>{" "}
+                      |{" "}
+                      <span className="hover:text-red-500">
+                        {product?.user?.email}
+                      </span>
+                    </p>
+                    <p>3 days ago</p>
+                  </div>
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>

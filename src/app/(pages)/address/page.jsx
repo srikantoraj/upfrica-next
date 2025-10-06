@@ -22,7 +22,7 @@ const useFetchAddresses = () => {
     const fetchAddresses = async () => {
       setLoading(true);
       try {
-        const res = await fetch("https://media.upfrica.com/api/addresses/", {
+        const res = await fetch("https://api.upfrica.com/api/addresses/", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Token ${token}`,
@@ -67,7 +67,7 @@ const EditModal = ({ address, onClose, onSaved, onDeleted }) => {
   const handleSave = async () => {
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/addresses/${address.id}/`,
+        `https://api.upfrica.com/api/addresses/${address.id}/`,
         {
           method: "PATCH",
           headers: {
@@ -103,7 +103,7 @@ const EditModal = ({ address, onClose, onSaved, onDeleted }) => {
     if (!confirm("Are you sure you want to delete this address?")) return;
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/addresses/${address.id}/`,
+        `https://api.upfrica.com/api/addresses/${address.id}/`,
         {
           method: "DELETE",
           headers: { Authorization: `Token ${token}` },

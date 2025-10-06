@@ -140,7 +140,7 @@
 //   useEffect(() => {
 //     if (!token) return
 //     setLoading(true)
-//     fetch(`https://media.upfrica.com/api/buyer/orders/?page=${pageParam}`, {
+//     fetch(`https://api.upfrica.com/api/buyer/orders/?page=${pageParam}`, {
 //       headers: { Authorization: `Token ${token}` },
 //     })
 //       .then((res) => {
@@ -214,7 +214,7 @@
 //         // send PATCH for each item
 //         const requests = items.map((item) =>
 //           fetch(
-//             `https://media.upfrica.com/api/buyer/order-item/${item.id}/`,
+//             `https://api.upfrica.com/api/buyer/order-item/${item.id}/`,
 //             {
 //               method: 'PATCH',
 //               headers: myHeaders,
@@ -606,7 +606,7 @@
 //   useEffect(() => {
 //     if (!token) return
 //     setLoading(true)
-//     fetch(`https://media.upfrica.com/api/buyer/orders/?page=${pageParam}`, {
+//     fetch(`https://api.upfrica.com/api/buyer/orders/?page=${pageParam}`, {
 //       headers: { Authorization: `Token ${token}` },
 //     })
 //       .then((res) => {
@@ -662,7 +662,7 @@
 //       await Promise.all(
 //         items.map((it) =>
 //           fetch(
-//             `https://media.upfrica.com/api/buyer/order-item/${it.id}/`,
+//             `https://api.upfrica.com/api/buyer/order-item/${it.id}/`,
 //             { method: 'PATCH', headers, body }
 //           ).then((r) => {
 //             if (!r.ok) throw new Error(`Item ${it.id} failed`)

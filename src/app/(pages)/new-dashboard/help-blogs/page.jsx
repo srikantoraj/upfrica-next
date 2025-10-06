@@ -67,7 +67,7 @@ export default function HelpBlogs() {
 
   // fetch all posts
   useEffect(() => {
-    fetch("https://media.upfrica.com/api/helpblogs/")
+    fetch("https://api.upfrica.com/api/helpblogs/")
       .then((res) => res.json())
       .then((data) => {
         setPosts(data);
@@ -89,7 +89,7 @@ export default function HelpBlogs() {
     setSearchLoading(true);
     debounceTimeout.current = setTimeout(() => {
       fetch(
-        `https://media.upfrica.com/api/helpblogs/search/?q=${encodeURIComponent(
+        `https://api.upfrica.com/api/helpblogs/search/?q=${encodeURIComponent(
           searchQuery.trim(),
         )}`,
       )
@@ -116,7 +116,7 @@ export default function HelpBlogs() {
     setDeleteLoadingId(id);
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/admin/helpblogs/${id}/`,
+        `https://api.upfrica.com/api/admin/helpblogs/${id}/`,
         {
           method: "DELETE",
           headers: {

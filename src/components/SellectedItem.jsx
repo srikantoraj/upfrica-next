@@ -3,7 +3,7 @@
 
 // const SellectedItem = async () => {
 //   try {
-//     const res = await fetch("https://media.upfrica.com/api/product-list/trending-machines/", {
+//     const res = await fetch("https://api.upfrica.com/api/product-list/trending-machines/", {
 //       next: { revalidate: 120 }, // Revalidate every 2 minutes
 //     });
 
@@ -84,7 +84,7 @@ import { IoIosArrowRoundForward } from "react-icons/io";
 
 const SellectedItem = async () => {
   try {
-    //const res = await fetch("https://media.upfrica.com/api/product-list/trending-machines/", {
+    //const res = await fetch("https://api.upfrica.com/api/product-list/trending-machines/", {
     const res = await fetch(
       "/api/product-list/trending-machines/",
       {

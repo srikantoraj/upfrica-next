@@ -98,7 +98,7 @@ export default function OrderDetails({ params }) {
       setLoading(true);
       try {
         const res = await fetch(
-          `https://media.upfrica.com/api/buyer/orders/${id}/`,
+          `https://api.upfrica.com/api/buyer/orders/${id}/`,
           { headers: { Authorization: `Token ${token}` } },
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -145,7 +145,7 @@ export default function OrderDetails({ params }) {
       const body = JSON.stringify({ receive_status: 1 });
       await Promise.all(
         items.map((it) =>
-          fetch(`https://media.upfrica.com/api/buyer/order-item/${it.id}/`, {
+          fetch(`https://api.upfrica.com/api/buyer/order-item/${it.id}/`, {
             method: "PATCH",
             headers,
             body,
@@ -239,11 +239,10 @@ export default function OrderDetails({ params }) {
                       statuses[item.product.user] === STATUSES.length - 1 ||
                       loadingReceive[item.product.user]
                     }
-                    className={`px-4 py-2 rounded-full font-medium transition ${
-                      statuses[item.product.user] === STATUSES.length - 1
+                    className={`px-4 py-2 rounded-full font-medium transition ${statuses[item.product.user] === STATUSES.length - 1
                         ? "bg-gray-300 text-gray-600 cursor-default"
                         : "bg-violet-600 text-white hover:bg-violet-700"
-                    }`}
+                      }`}
                   >
                     {loadingReceive[item.product.user]
                       ? "Receiving…"
@@ -262,11 +261,10 @@ export default function OrderDetails({ params }) {
                 {STATUSES.map((_, i) => (
                   <div key={i} className="flex flex-col items-center">
                     <div
-                      className={`w-8 h-8 flex items-center justify-center rounded-full ${
-                        i <= idx
+                      className={`w-8 h-8 flex items-center justify-center rounded-full ${i <= idx
                           ? "bg-violet-600 text-white"
                           : "bg-gray-200 text-gray-400"
-                      }`}
+                        }`}
                     >
                       {i <= idx && <MdCheck />}
                     </div>

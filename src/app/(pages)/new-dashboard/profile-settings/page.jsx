@@ -80,7 +80,7 @@ export default function ProfilePage() {
       };
 
       const response = await fetch(
-        "https://media.upfrica.com/api/update-profile/",
+        "https://api.upfrica.com/api/update-profile/",
         requestOptions,
       );
       if (!response.ok) {

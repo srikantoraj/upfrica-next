@@ -109,7 +109,7 @@ export default function HelpCenterPage({ slug }) {
       },
     };
 
-    fetch(`https://media.upfrica.com/api/helpblogs/${slug}/`, requestOptions)
+    fetch(`https://api.upfrica.com/api/helpblogs/${slug}/`, requestOptions)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
@@ -149,7 +149,7 @@ export default function HelpCenterPage({ slug }) {
     // Set debounce delay: 400ms
     debounceTimeout.current = setTimeout(() => {
       const encodedQuery = encodeURIComponent(searchQuery.trim());
-      fetch(`https://media.upfrica.com/api/helpblogs/search/?q=${encodedQuery}`)
+      fetch(`https://api.upfrica.com/api/helpblogs/search/?q=${encodedQuery}`)
         .then((response) => response.json())
         .then((data) => {
           setSearchResults(data);

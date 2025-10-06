@@ -21,7 +21,7 @@ const ForgotPassword = () => {
       setErrorMessage(null);
       try {
         const response = await fetch(
-          "https://media.upfrica.com/api/forgot-password/",
+          "https://api.upfrica.com/api/forgot-password/",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -37,7 +37,7 @@ const ForgotPassword = () => {
         } else {
           setErrorMessage(
             data.message ||
-              "রিসেট টোকেন পাঠানো ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
+            "রিসেট টোকেন পাঠানো ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
           );
         }
       } catch (error) {
@@ -84,9 +84,8 @@ const ForgotPassword = () => {
                 placeholder="you@example.com"
                 onChange={formik.handleChange}
                 value={formik.values.email}
-                className={`mt-1 block w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                  formik.errors.email ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`mt-1 block w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 ${formik.errors.email ? "border-red-500" : "border-gray-300"
+                  }`}
               />
               {formik.errors.email && (
                 <p className="text-red-500 text-sm mt-1">

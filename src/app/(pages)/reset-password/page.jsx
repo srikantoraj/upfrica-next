@@ -35,7 +35,7 @@ const ResetPasswordPage = () => {
 
       try {
         const response = await fetch(
-          "https://media.upfrica.com/api/reset-password/",
+          "https://api.upfrica.com/api/reset-password/",
           {
             method: "POST",
             headers: {
@@ -117,11 +117,10 @@ const ResetPasswordPage = () => {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.email}
-                className={`mt-1 block w-full rounded-md border px-4 py-2 shadow-sm focus:outline-none focus:ring-2 ${
-                  formik.errors.email
+                className={`mt-1 block w-full rounded-md border px-4 py-2 shadow-sm focus:outline-none focus:ring-2 ${formik.errors.email
                     ? "border-red-500 focus:ring-red-300"
                     : "border-gray-300 focus:ring-purple-500"
-                }`}
+                  }`}
               />
               {formik.touched.email && formik.errors.email && (
                 <p className="text-sm text-red-500 mt-1">
@@ -145,11 +144,10 @@ const ResetPasswordPage = () => {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.token}
-                className={`mt-1 block w-full rounded-md border px-4 py-2 shadow-sm focus:outline-none focus:ring-2 ${
-                  formik.errors.token
+                className={`mt-1 block w-full rounded-md border px-4 py-2 shadow-sm focus:outline-none focus:ring-2 ${formik.errors.token
                     ? "border-red-500 focus:ring-red-300"
                     : "border-gray-300 focus:ring-purple-500"
-                }`}
+                  }`}
               />
               {formik.touched.token && formik.errors.token && (
                 <p className="text-sm text-red-500 mt-1">
@@ -173,11 +171,10 @@ const ResetPasswordPage = () => {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.new_password}
-                className={`mt-1 block w-full rounded-md border px-4 py-2 shadow-sm focus:outline-none focus:ring-2 ${
-                  formik.errors.new_password
+                className={`mt-1 block w-full rounded-md border px-4 py-2 shadow-sm focus:outline-none focus:ring-2 ${formik.errors.new_password
                     ? "border-red-500 focus:ring-red-300"
                     : "border-gray-300 focus:ring-purple-500"
-                }`}
+                  }`}
               />
               {formik.touched.new_password && formik.errors.new_password && (
                 <p className="text-sm text-red-500 mt-1">
@@ -201,11 +198,10 @@ const ResetPasswordPage = () => {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.confirm_password}
-                className={`mt-1 block w-full rounded-md border px-4 py-2 shadow-sm focus:outline-none focus:ring-2 ${
-                  formik.errors.confirm_password
+                className={`mt-1 block w-full rounded-md border px-4 py-2 shadow-sm focus:outline-none focus:ring-2 ${formik.errors.confirm_password
                     ? "border-red-500 focus:ring-red-300"
                     : "border-gray-300 focus:ring-purple-500"
-                }`}
+                  }`}
               />
               {formik.touched.new_password &&
                 formik.errors.confirm_password && (

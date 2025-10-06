@@ -27,7 +27,7 @@
 //     // Fetch categories once (when token is available)
 //     useEffect(() => {
 //         if (!token) return
-//         fetch('https://media.upfrica.com/api/blog-categories/', { headers: header })
+//         fetch('https://api.upfrica.com/api/blog-categories/', { headers: header })
 //             .then((res) => {
 //                 if (!res.ok) throw new Error(`Status ${res.status}`)
 //                 return res.json()
@@ -67,7 +67,7 @@
 //         setUpdateLoading(true)
 //         try {
 //             const res = await fetch(
-//                 `https://media.upfrica.com/api/admin/blog-categories/${currentCat.id}/`,
+//                 `https://api.upfrica.com/api/admin/blog-categories/${currentCat.id}/`,
 //                 {
 //                     method: 'PUT',
 //                     headers: header,
@@ -96,7 +96,7 @@
 //         setDeleteLoadingId(id)
 //         try {
 //             const res = await fetch(
-//                 `https://media.upfrica.com/api/admin/blog-categories/${id}/`,
+//                 `https://api.upfrica.com/api/admin/blog-categories/${id}/`,
 //                 {
 //                     method: 'DELETE',
 //                     headers: header,
@@ -278,7 +278,7 @@ export default function BlogCategoriesPage() {
   // Fetch categories
   useEffect(() => {
     if (!token) return;
-    fetch("https://media.upfrica.com/api/blog-categories/", { headers })
+    fetch("https://api.upfrica.com/api/blog-categories/", { headers })
       .then((res) => {
         if (!res.ok) throw new Error(`Status ${res.status}`);
         return res.json();
@@ -327,7 +327,7 @@ export default function BlogCategoriesPage() {
     setCreateLoading(true);
     try {
       const res = await fetch(
-        "https://media.upfrica.com/api/blog-categories/",
+        "https://api.upfrica.com/api/blog-categories/",
         {
           method: "POST",
           headers,
@@ -376,7 +376,7 @@ export default function BlogCategoriesPage() {
     setUpdateLoading(true);
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/blog-categories/${currentCat.id}/`,
+        `https://api.upfrica.com/api/blog-categories/${currentCat.id}/`,
         {
           method: "PUT",
           headers,
@@ -403,7 +403,7 @@ export default function BlogCategoriesPage() {
     setDeleteLoadingId(id);
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/blog-categories/${id}/`,
+        `https://api.upfrica.com/api/blog-categories/${id}/`,
         { method: "DELETE", headers },
       );
       if (!res.ok) throw new Error(`Status ${res.status}`);

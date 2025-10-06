@@ -30,7 +30,7 @@
 //   useEffect(() => {
 //     if (!token) return;
 //     setLoading(true);
-//     fetch(`https://media.upfrica.com/api/buyer/orders/?page=${pageParam}`, {
+//     fetch(`https://api.upfrica.com/api/buyer/orders/?page=${pageParam}`, {
 //       headers: {
 //         Authorization: `Token ${token}`,
 //         "Content-Type": "application/json",

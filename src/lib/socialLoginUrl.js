@@ -8,7 +8,7 @@ export function buildSocialUrl(provider = "google", opts = {}) {
   // Prefer explicit env var if you set it; otherwise pick by host.
   const AUTH_ORIGIN =
     process.env.NEXT_PUBLIC_AUTH_BASE_URL ||
-    (onLocalhost ? "http://127.0.0.1:8000" : "https://media.upfrica.com");
+    (onLocalhost ? "http://127.0.0.1:8000" : "https://api.upfrica.com");
 
   // After Allauth completes, we send users to your SSO bridge
   // (set in Django: LOGIN_REDIRECT_URL = "/sso/complete/").

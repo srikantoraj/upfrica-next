@@ -117,7 +117,7 @@
 //             setLoading(true);
 //             try {
 //                 const res = await fetch(
-//                     `https://media.upfrica.com/api/products/?search=${encodeURIComponent(q)}&page=${currentPage}`
+//                     `https://api.upfrica.com/api/products/?search=${encodeURIComponent(q)}&page=${currentPage}`
 //                 );
 //                 const json = await res.json();
 //                 setProducts(json.results ?? []);
@@ -274,9 +274,8 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
           <button
             key={idx}
             onClick={() => handlePageClick(page)}
-            className={`px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100 ${
-              page === currentPage ? "bg-violet-700 text-white" : ""
-            }`}
+            className={`px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100 ${page === currentPage ? "bg-violet-700 text-white" : ""
+              }`}
           >
             {page}
           </button>
@@ -325,7 +324,7 @@ export default function SearchPage() {
 
       setLoading(true);
       try {
-        const url = new URL("https://media.upfrica.com/api/products/search/");
+        const url = new URL("https://api.upfrica.com/api/products/search/");
         url.searchParams.set("q", q);
         url.searchParams.set("page", currentPage);
         if (category) url.searchParams.set("category", category);

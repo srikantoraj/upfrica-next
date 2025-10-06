@@ -42,7 +42,7 @@ const CreateReviews = ({ slug }) => {
 
     try {
       const response = await fetch(
-        "https://media.upfrica.com/api/products/redmi-power-bank-18w-fast-power-charger/reviews/",
+        "https://api.upfrica.com/api/products/redmi-power-bank-18w-fast-power-charger/reviews/",
         {
           method: "POST",
           headers: {

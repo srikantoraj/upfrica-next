@@ -30,7 +30,7 @@ function useJobs() {
 
       setLoading(true);
       try {
-        const res = await fetch("https://media.upfrica.com/api/jobs/", {
+        const res = await fetch("https://api.upfrica.com/api/jobs/", {
           method: "GET",
           credentials: "include", // send cookies if needed
         });
@@ -201,7 +201,7 @@ export default function JobDetails() {
         <div className="container mx-auto px-4 py-16 space-y-16">
           {loading
             ? // show two skeletons while loading
-              [1, 2].map((n) => <JobSkeleton key={n} />)
+            [1, 2].map((n) => <JobSkeleton key={n} />)
             : jobs.map((job) => <JobCard key={job.id} job={job} user={user} />)}
         </div>
         <Footer />

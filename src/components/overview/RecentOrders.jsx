@@ -27,7 +27,7 @@
 //             setLoading(true);
 //             try {
 //                 const res = await fetch(
-//                     `https://media.upfrica.com/api/seller/order-items/?page=${currentPage}`,
+//                     `https://api.upfrica.com/api/seller/order-items/?page=${currentPage}`,
 //                     { method: 'GET', headers: { Authorization: `Token ${token}` } }
 //                 );
 //                 if (!res.ok) throw new Error('Failed to fetch');
@@ -50,7 +50,7 @@
 //         setDeletingId(id);
 //         try {
 //             const res = await fetch(
-//                 `https://media.upfrica.com/api/seller/order-items/${id}/`,
+//                 `https://api.upfrica.com/api/seller/order-items/${id}/`,
 //                 { method: 'DELETE', headers: { Authorization: `Token ${token}` } }
 //             );
 //             if (!res.ok) throw new Error('Delete failed');
@@ -452,11 +452,10 @@ export default function RecentOrdersPage() {
                       <button
                         onClick={() => handleDelete(item.id)}
                         disabled={deletingId === item.id}
-                        className={`p-2 rounded-full font-bold ${
-                          deletingId === item.id
+                        className={`p-2 rounded-full font-bold ${deletingId === item.id
                             ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                             : "bg-gray-100 hover:bg-red-200 hover:text-red-700"
-                        }`}
+                          }`}
                         aria-label="Delete"
                       >
                         <MdDelete size={20} />

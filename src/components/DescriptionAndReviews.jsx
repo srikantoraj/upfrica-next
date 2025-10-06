@@ -13,7 +13,7 @@ import { FaEdit, FaHeart, FaRegHeart } from "react-icons/fa";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE?.replace(/\/+$/, "") ||
-  "https://media.upfrica.com";
+  "https://api.upfrica.com";
 
 const decodeIfEscaped = (s) => {
   if (typeof s !== "string") return s;
@@ -316,14 +316,12 @@ export default function DescriptionAndReviews({
               ) : (
                 <>
                   {React.createElement(isFollowing ? FaHeart : FaRegHeart, {
-                    className: `h-5 w-5 ${
-                      isFollowing ? "text-violet-700" : "text-gray-600"
-                    }`,
+                    className: `h-5 w-5 ${isFollowing ? "text-violet-700" : "text-gray-600"
+                      }`,
                   })}
                   <span
-                    className={`ml-2 ${
-                      isFollowing ? "text-violet-700" : "text-gray-600"
-                    }`}
+                    className={`ml-2 ${isFollowing ? "text-violet-700" : "text-gray-600"
+                      }`}
                   >
                     {isFollowing ? "Followed" : "Not Followed"}
                   </span>

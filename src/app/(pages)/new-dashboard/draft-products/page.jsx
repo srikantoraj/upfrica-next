@@ -24,7 +24,7 @@ export default function DraftProductsPage() {
     (async () => {
       try {
         const res = await fetch(
-          "https://media.upfrica.com/api/products/draft/",
+          "https://api.upfrica.com/api/products/draft/",
           { headers: { Authorization: `Token ${token}` } },
         );
         const json = await res.json();
@@ -41,7 +41,7 @@ export default function DraftProductsPage() {
   async function updateStatus(product, statusValue) {
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/products/draft/${product.id}/`,
+        `https://api.upfrica.com/api/products/draft/${product.id}/`,
         {
           method: "POST",
           headers: {
@@ -75,7 +75,7 @@ export default function DraftProductsPage() {
   async function deleteProduct(product) {
     try {
       const res = await fetch(
-        `https://media.upfrica.com/api/products/${product.id}/`,
+        `https://api.upfrica.com/api/products/${product.id}/`,
         {
           method: "DELETE",
           headers: { Authorization: `Token ${token}` },
@@ -240,64 +240,63 @@ export default function DraftProductsPage() {
       <div className="bg-white rounded-lg shadow divide-y">
         {loading
           ? // show 5 skeleton rows while loading
-            Array.from({ length: 5 }).map((_, i) => (
-              <SkeletonDraftCard key={i} />
-            ))
+          Array.from({ length: 5 }).map((_, i) => (
+            <SkeletonDraftCard key={i} />
+          ))
           : // once loaded, show real products
-            products.map((p) => (
-              <div key={p.id} className="flex items-center p-4">
-                {/* Image */}
-                <img
-                  src={p.product_images[0]}
-                  alt={p.title}
-                  className="w-24 h-24 object-cover rounded"
-                />
+          products.map((p) => (
+            <div key={p.id} className="flex items-center p-4">
+              {/* Image */}
+              <img
+                src={p.product_images[0]}
+                alt={p.title}
+                className="w-24 h-24 object-cover rounded"
+              />
 
-                {/* Details */}
-                <div className="flex-1 px-4">
-                  <h2 className="text-lg font-semibold">{p.title}</h2>
-                  <p className="text-gray-700 mt-1">
-                    {(p.price_cents / 100).toFixed(2)} {p.price_currency}
-                  </p>
-                  <p className="text-gray-500 text-sm mt-2 flex items-center">
-                    <FaLocationPin className="mr-1" />
-                    {p.user?.town || "—"}, {p.user?.country || "—"}
-                  </p>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() =>
-                      setModal({
-                        open: true,
-                        type: "status",
-                        product: p,
-                        newStatus: p.status === 0 ? 1 : 0,
-                      })
-                    }
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      p.status === 0
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-green-100 text-green-800"
-                    }`}
-                  >
-                    {p.status === 0 ? "Draft" : "Published"}
-                  </button>
-
-                  <Link href={`/products/edit/${p.slug}`}>
-                    <CiEdit className="h-6 w-6 text-blue-600 hover:text-blue-800" />
-                  </Link>
-
-                  <MdDelete
-                    onClick={() =>
-                      setModal({ open: true, type: "delete", product: p })
-                    }
-                    className="h-6 w-6 text-red-600 hover:text-red-800 cursor-pointer"
-                  />
-                </div>
+              {/* Details */}
+              <div className="flex-1 px-4">
+                <h2 className="text-lg font-semibold">{p.title}</h2>
+                <p className="text-gray-700 mt-1">
+                  {(p.price_cents / 100).toFixed(2)} {p.price_currency}
+                </p>
+                <p className="text-gray-500 text-sm mt-2 flex items-center">
+                  <FaLocationPin className="mr-1" />
+                  {p.user?.town || "—"}, {p.user?.country || "—"}
+                </p>
               </div>
-            ))}
+
+              {/* Actions */}
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() =>
+                    setModal({
+                      open: true,
+                      type: "status",
+                      product: p,
+                      newStatus: p.status === 0 ? 1 : 0,
+                    })
+                  }
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${p.status === 0
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-green-100 text-green-800"
+                    }`}
+                >
+                  {p.status === 0 ? "Draft" : "Published"}
+                </button>
+
+                <Link href={`/products/edit/${p.slug}`}>
+                  <CiEdit className="h-6 w-6 text-blue-600 hover:text-blue-800" />
+                </Link>
+
+                <MdDelete
+                  onClick={() =>
+                    setModal({ open: true, type: "delete", product: p })
+                  }
+                  className="h-6 w-6 text-red-600 hover:text-red-800 cursor-pointer"
+                />
+              </div>
+            </div>
+          ))}
       </div>
 
       {/* Confirm Modal */}

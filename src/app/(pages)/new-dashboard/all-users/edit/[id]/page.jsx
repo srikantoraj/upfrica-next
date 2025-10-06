@@ -21,7 +21,7 @@ export default function EditUserPage({ params }) {
     if (!token) return;
     setLoading(true);
 
-    fetch(`https://media.upfrica.com/api/users/${id}/`, {
+    fetch(`https://api.upfrica.com/api/users/${id}/`, {
       headers: { Authorization: `Token ${token}` },
     })
       .then((res) => {
@@ -59,7 +59,7 @@ export default function EditUserPage({ params }) {
 
     setSaving(true);
     try {
-      const res = await fetch(`https://media.upfrica.com/api/users/${id}/`, {
+      const res = await fetch(`https://api.upfrica.com/api/users/${id}/`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -108,11 +108,10 @@ export default function EditUserPage({ params }) {
 
         {alert.message && (
           <div
-            className={`mb-4 px-4 py-3 border rounded ${
-              alert.type === "success"
+            className={`mb-4 px-4 py-3 border rounded ${alert.type === "success"
                 ? "bg-green-100 border-green-400 text-green-700"
                 : "bg-red-100 border-red-400 text-red-700"
-            }`}
+              }`}
           >
             <span>{alert.message}</span>
             <button
@@ -193,11 +192,10 @@ export default function EditUserPage({ params }) {
           <button
             type="submit"
             disabled={saving}
-            className={`w-full flex justify-center items-center py-2 rounded-full text-white ${
-              saving
+            className={`w-full flex justify-center items-center py-2 rounded-full text-white ${saving
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-violet-600 hover:bg-violet-700"
-            }`}
+              }`}
           >
             <FaSave className="mr-2" />
             {saving ? "Saving…" : "Save Changes"}

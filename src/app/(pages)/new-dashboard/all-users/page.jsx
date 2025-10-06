@@ -49,9 +49,9 @@ export default function UserList() {
     let url;
 
     if (searchQuery) {
-      url = `https://media.upfrica.com/api/users/search?q=${encodeURIComponent(searchQuery)}&page=${currentPage}&page_size=${perPage}`;
+      url = `https://api.upfrica.com/api/users/search?q=${encodeURIComponent(searchQuery)}&page=${currentPage}&page_size=${perPage}`;
     } else {
-      url = `https://media.upfrica.com/api/user-list/?page=${currentPage}&page_size=${perPage}`;
+      url = `https://api.upfrica.com/api/user-list/?page=${currentPage}&page_size=${perPage}`;
     }
 
     fetch(url, {
@@ -86,7 +86,7 @@ export default function UserList() {
     setDeletingId(id);
 
     try {
-      const res = await fetch(`https://media.upfrica.com/api/users/${id}/`, {
+      const res = await fetch(`https://api.upfrica.com/api/users/${id}/`, {
         method: "DELETE",
         headers: { Authorization: `Token ${token}` },
       });
@@ -132,11 +132,10 @@ export default function UserList() {
         {/* Alert */}
         {alert.message && (
           <div
-            className={`mb-4 px-4 py-3 border rounded ${
-              alert.type === "success"
+            className={`mb-4 px-4 py-3 border rounded ${alert.type === "success"
                 ? "bg-green-100 border-green-400 text-green-700"
                 : "bg-red-100 border-red-400 text-red-700"
-            }`}
+              }`}
           >
             <span>{alert.message}</span>
             <button
@@ -211,11 +210,10 @@ export default function UserList() {
                         onClick={() => handleDelete(u.id)}
                         disabled={deletingId === u.id}
                         title="Delete"
-                        className={`transition duration-300 ${
-                          deletingId === u.id
+                        className={`transition duration-300 ${deletingId === u.id
                             ? "opacity-50 cursor-not-allowed"
                             : ""
-                        }`}
+                          }`}
                       >
                         <FaTrash className="h-4 w-4 text-[#2B3F6C]" />
                       </button>

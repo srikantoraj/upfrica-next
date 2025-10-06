@@ -109,7 +109,7 @@ export default function HelpCenterPage({ params }) {
       redirect: "follow",
     };
 
-    fetch(`https://media.upfrica.com/api/helpblogs/${slug}`, requestOptions)
+    fetch(`https://api.upfrica.com/api/helpblogs/${slug}`, requestOptions)
       .then((response) => response.json())
       .then((result) => {
         setData(result);
@@ -145,7 +145,7 @@ export default function HelpCenterPage({ params }) {
     debounceTimeout.current = setTimeout(() => {
       const encodedQuery = encodeURIComponent(searchQuery.trim());
       fetch(
-        `https://media.upfrica.com/api/help-blogs/search/?q=${encodedQuery}`,
+        `https://api.upfrica.com/api/help-blogs/search/?q=${encodedQuery}`,
       )
         .then((response) => response.json())
         .then((data) => {

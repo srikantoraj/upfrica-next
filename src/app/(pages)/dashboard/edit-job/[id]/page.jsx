@@ -32,7 +32,7 @@ export default function EditJobPage({ params }) {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    fetch(`https://media.upfrica.com/api/jobs/${id}/`, {
+    fetch(`https://api.upfrica.com/api/jobs/${id}/`, {
       method: "GET",
     })
       .then((res) => res.json())
@@ -90,7 +90,7 @@ export default function EditJobPage({ params }) {
             setSubmitError("");
             try {
               const res = await fetch(
-                `https://media.upfrica.com/api/jobs/${id}/`,
+                `https://api.upfrica.com/api/jobs/${id}/`,
                 {
                   method: "PUT",
                   headers: {
