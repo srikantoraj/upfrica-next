@@ -4,7 +4,7 @@
 import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { CheckCircle, XCircle, Star, Award, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import axiosInstance from "@/lib/axiosInstance";
 import InfoTooltip from "@/components/ui/InfoTooltip";
 import infoRegistry from "@/constants/infoRegistry";

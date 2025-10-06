@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { Star, Eye, BadgeCheck, Circle } from "lucide-react";
 
 const FILTERS = [
@@ -61,10 +61,10 @@ export default function PlanToggleFilter({ plans = [], setFilteredPlans }) {
                 "dark:focus-visible:ring-purple-400 dark:focus-visible:ring-offset-gray-900",
                 isActive
                   ? // active chip
-                    "bg-purple-600 text-white hover:bg-purple-700 dark:bg-purple-600 dark:text-white dark:hover:bg-purple-500"
+                  "bg-purple-600 text-white hover:bg-purple-700 dark:bg-purple-600 dark:text-white dark:hover:bg-purple-500"
                   : // inactive chip (light & dark)
-                    "border border-gray-300 text-gray-800 hover:bg-gray-100 " +
-                    "dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800/70",
+                  "border border-gray-300 text-gray-800 hover:bg-gray-100 " +
+                  "dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800/70",
               ].join(" ")}
               title={label}
             >

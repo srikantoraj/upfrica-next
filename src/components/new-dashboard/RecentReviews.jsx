@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { BASE_API_URL } from "@/app/constants";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 
 export default function RecentReviews({ token }) {
   const [reviews, setReviews] = useState([]);

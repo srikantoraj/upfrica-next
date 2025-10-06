@@ -2,7 +2,7 @@
 import React from "react";
 import FormInput from "@/components/ui/FormInput";
 import Checkbox from "@/components/ui/Checkbox";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 const UserEdit = () => {
   return (
     <div className="w-full bg-white shadow-2xl rounded-md space-y-4 md:p-10 p-2">

@@ -8,7 +8,7 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import axiosInstance from "@/lib/axiosInstance";
 import InfoTooltip from "@/components/ui/InfoTooltip";
 import infoRegistry from "@/constants/infoRegistry";

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 
 export default function PlanCheckoutModal({ open, onClose, planId, billing }) {

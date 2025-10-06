@@ -6,7 +6,7 @@ import { parsePhoneNumberFromString, getCountryCallingCode } from 'libphonenumbe
 import { BASE_API_URL } from '@/app/constants';
 import GoogleAddressInput from '@/components/addresses/GoogleAddressInput';
 import GoogleMapsLoader from '@/components/GoogleMapsLoader';
-import PhoneInput from '@/components/input/phoneInput';
+import PhoneInput from '@/components/input/PhoneInput';
 
 export default function AddressForm({
   token,
@@ -138,7 +138,7 @@ export default function AddressForm({
         } else {
           setPhoneIso(code || toIso2(defaultCountry) || 'GH');
         }
-      } catch {}
+      } catch { }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, initialData, countries.length, defaultCountry, kind]);
@@ -206,16 +206,15 @@ export default function AddressForm({
     }
     // Fallback so the dropdown isn't blank before /api/countries loads
     return [
-      { code: 'GH', name: 'Ghana',          flag_emoji: '🇬🇭' },
-      { code: 'NG', name: 'Nigeria',        flag_emoji: '🇳🇬' },
+      { code: 'GH', name: 'Ghana', flag_emoji: '🇬🇭' },
+      { code: 'NG', name: 'Nigeria', flag_emoji: '🇳🇬' },
       { code: 'GB', name: 'United Kingdom', flag_emoji: '🇬🇧' },
-      { code: 'US', name: 'United States',  flag_emoji: '🇺🇸' },
+      { code: 'US', name: 'United States', flag_emoji: '🇺🇸' },
     ];
   }, [sortedCountries]);
 
   const inputClass = (field) =>
-    `w-full p-2 rounded border ${
-      errors[field] ? 'border-red-500' : 'border-gray-300'
+    `w-full p-2 rounded border ${errors[field] ? 'border-red-500' : 'border-gray-300'
     } bg-white dark:bg-gray-900 dark:border-gray-700`;
 
   const handleChange = (e) => {
@@ -238,7 +237,7 @@ export default function AddressForm({
       if (!s0.startsWith('+') && digits.startsWith(cc)) {
         digits = digits.slice(cc.length);
       }
-    } catch {}
+    } catch { }
 
     const min = SOFT_MIN_DIGITS[ccISO] ?? 7;
     if (digits.length < min) return { state: 'typing' };
@@ -260,8 +259,8 @@ export default function AddressForm({
   const minLen = SOFT_MIN_DIGITS[toIso2(phoneIso || formData.country || defaultCountry)] ?? 7;
 
   const showError = !hasFocus && (touched || submitted) && digits.length >= minLen && v.state === 'invalid';
-  const showHint  =  hasFocus && digits.length > 0 && digits.length <  minLen;
-  const phoneOk   = v.state === 'valid';
+  const showHint = hasFocus && digits.length > 0 && digits.length < minLen;
+  const phoneOk = v.state === 'valid';
 
   /* --------- postcode/Ghana GPS helpers (unchanged) --------- */
   const handlePostcodeChange = async (e) => {
@@ -279,7 +278,7 @@ export default function AddressForm({
             state_or_region: data.result.region || prev.state_or_region || '',
           }));
         }
-      } catch {}
+      } catch { }
     }
 
     if (formData.country === 'GH' && isGhanaGps(value)) {
@@ -301,7 +300,7 @@ export default function AddressForm({
             country: prev.country || 'GH',
           }));
         }
-      } catch {}
+      } catch { }
     }
   };
 
@@ -327,7 +326,7 @@ export default function AddressForm({
             country: prev.country || 'GH',
           }));
         }
-      } catch {}
+      } catch { }
     })();
   }, [formData.address_line_1, formData.country, token]);
 

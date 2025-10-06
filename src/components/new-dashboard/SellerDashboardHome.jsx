@@ -15,7 +15,7 @@ import {
   Package, Clock, AlertCircle, TrendingUp, CircleCheck, Info,
 } from "lucide-react";
 import { parsePhoneNumberFromString, getCountryCallingCode } from "libphonenumber-js/min";
-import PhoneInput from "@/components/input/phoneInput";
+import PhoneInput from "@/components/input/PhoneInput";
 import SellerReviewsSummaryCard from "@/components/new-dashboard/SellerReviewsSummaryCard";
 import PlanComparisonModal from "@/components/ui/PlanComparisonModal";
 
@@ -28,8 +28,8 @@ export const humanizeUses = (uses) => {
   const arr = Array.isArray(uses)
     ? uses
     : typeof uses === "string"
-    ? uses.split(",").map((x) => x.trim()).filter(Boolean)
-    : [];
+      ? uses.split(",").map((x) => x.trim()).filter(Boolean)
+      : [];
   if (!arr.length) return "";
   const sorted = [...arr].sort((a, b) => (USE_ORDER[a] ?? 99) - (USE_ORDER[b] ?? 99));
   return [...new Set(sorted.map((u) => USE_LABELS[u] ?? startCase(u)))].join(", ");
@@ -63,8 +63,8 @@ export default function SellerDashboardHome() {
   const roles = Array.isArray(user?.account_type)
     ? user.account_type
     : user?.account_type
-    ? [user.account_type]
-    : [];
+      ? [user.account_type]
+      : [];
   const isSeller = roles.some(isSellerRole);
 
   const userHasPlan = !!(user?.seller_plan && (user?.seller_plan.id ?? user?.seller_plan));
@@ -629,7 +629,7 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
     try {
       const cc = getCountryCallingCode(ccISO);
       if (!s0.startsWith("+") && digits.startsWith(cc)) digits = digits.slice(cc.length);
-    } catch {}
+    } catch { }
 
     const min = SOFT_MIN_DIGITS[ccISO] ?? 7;
     if (digits.length < min) return { state: "typing" };
@@ -708,7 +708,7 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
       const needsUpdate = [...want].some((u) => !have.has(u));
 
       if (needsUpdate) {
-        await apiJSON(`users/me/phones/${existing.id}`, { uses: [...new Set([...have, ...want])] }, { method: "PATCH" }).catch(() => {});
+        await apiJSON(`users/me/phones/${existing.id}`, { uses: [...new Set([...have, ...want])] }, { method: "PATCH" }).catch(() => { });
       }
 
       if (asPrimary && !existing.is_primary) {
@@ -737,7 +737,7 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
       });
 
       if (asPrimary && created?.id) {
-        await api(`users/me/phones/${created.id}/set_primary`, { method: "POST" }).catch(() => {});
+        await api(`users/me/phones/${created.id}/set_primary`, { method: "POST" }).catch(() => { });
       }
 
       toast.success("Contact added.");
@@ -791,7 +791,7 @@ function AddSellerContactSheet({ open, onClose, onHasPrimaryChange }) {
         const promoteId = promoteTarget?.id;
         if (promoteId) {
           setPhones((prev) => prev.map((p) => ({ ...p, is_primary: p.id === promoteId })));
-          await api(`users/me/phones/${promoteId}/set_primary`, { method: "POST" }).catch(() => {});
+          await api(`users/me/phones/${promoteId}/set_primary`, { method: "POST" }).catch(() => { });
           toast("Primary moved to the next contact.", { icon: "⭐" });
         }
       }

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { BASE_API_URL } from "@/app/constants";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 
 const accountTypes = [
   {
@@ -132,11 +132,10 @@ export default function OnboardingPage() {
         {accountTypes.map((type) => (
           <div
             key={type.key}
-            className={`relative cursor-pointer border rounded-2xl p-6 text-center transition ${
-              selectedRole === type.key
+            className={`relative cursor-pointer border rounded-2xl p-6 text-center transition ${selectedRole === type.key
                 ? "border-purple-500 bg-purple-50"
                 : "hover:bg-gray-50"
-            }`}
+              }`}
             onClick={() => {
               setSelectedRole(type.key);
               setSelectedPlan(null);
@@ -169,11 +168,10 @@ export default function OnboardingPage() {
               {sellerPlans.map((plan) => (
                 <div
                   key={plan.id}
-                  className={`relative border p-4 rounded-xl cursor-pointer transition ${
-                    selectedPlan?.id === plan.id
+                  className={`relative border p-4 rounded-xl cursor-pointer transition ${selectedPlan?.id === plan.id
                       ? "border-purple-500 bg-purple-50"
                       : "hover:bg-gray-50"
-                  }`}
+                    }`}
                   onClick={() => setSelectedPlan(plan)}
                 >
                   <h4 className="font-semibold">{plan.label}</h4>
