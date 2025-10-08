@@ -7,9 +7,14 @@ export const MEDIA_BASE = (
   "https://cdn.upfrica.com"
 ).replace(/\/+$/, "");
 
+// export const FALLBACK_IMAGE =
+//   process.env.NEXT_PUBLIC_FALLBACK_IMAGE ||
+//   "https://cdn.upfrica.com/assets/placeholders/pdp-fallback-800.webp";
+// export const FALLBACK_IMG = FALLBACK_IMAGE;
+
 export const FALLBACK_IMAGE =
   process.env.NEXT_PUBLIC_FALLBACK_IMAGE ||
-  "https://cdn.upfrica.com/assets/placeholders/pdp-fallback-800.webp";
+  "/assets/placeholder-blank.webp"; // small file in /public/assets/
 export const FALLBACK_IMG = FALLBACK_IMAGE;
 
 const CDN_HOST = (process.env.NEXT_PUBLIC_CDN_HOST || "")
