@@ -310,7 +310,6 @@
 
 // app/(pages)/[cc]/[slug]/page.jsx
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import Footer from "@/components/common/footer/Footer";
 import ProductDetailSection from "@/components/ProductDetailSection/ProductDetailSection";
 import RelatedProducts from "@/components/home/ProductList/RealtedProduct";
@@ -320,7 +319,11 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const runtime = "nodejs";
 
-/* ---------------- constants ---------------- */
+// ✅ Set in Vercel env: NEXT_PUBLIC_API_BASE=https://api.upfrica.com
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE?.replace(/\/+$/, "") ||
+  "https://api.upfrica.com";
+
 const FRONTEND_PREFIXES = new Set([
   "onboarding",
   "new-dashboard",
@@ -334,120 +337,75 @@ const FRONTEND_PREFIXES = new Set([
   "password",
 ]);
 
-const REGION_TO_COUNTRY = { gh: "Ghana", ng: "Nigeria", uk: "United Kingdom", gb: "United Kingdom" };
+const REGION_TO_COUNTRY = {
+  gh: "Ghana",
+  ng: "Nigeria",
+  uk: "United Kingdom",
+  gb: "United Kingdom",
+};
 
-/* ---------------- helpers ---------------- */
-function getOrigin() {
-  const h = headers();
-  const proto =
-    h.get("x-forwarded-proto") ||
-    (process.env.NODE_ENV === "production" ? "https" : "http");
-  const host = h.get("x-forwarded-host") || h.get("host");
-  if (host) return `${proto}://${host}`;
-  if (process.env.NEXT_PUBLIC_SITE_URL)
-    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/+$/, "");
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return "http://localhost:3000";
-}
-
-// fetch JSON with cookies forwarded; expose status + Location + parsed body
-async function tryJson(url) {
-  const h = headers();
-  const cookie = h.get("cookie") || "";
-  const auth = h.get("authorization") || "";
-
+// ---- helpers (external API)
+async function fetchJson(url) {
   const res = await fetch(url, {
     cache: "no-store",
     headers: {
       Accept: "application/json",
       "X-Requested-With": "XMLHttpRequest",
-      "X-SSR-NoRedirect": "1", // hint to backend to serialize instead of redirect
-      ...(cookie ? { cookie } : {}),
-      ...(auth ? { authorization: auth } : {}),
+      // If your API supports bypassing redirects for SSR, keep this:
+      "X-SSR-NoRedirect": "1",
     },
     redirect: "manual",
   });
-
-  const status = res.status;
-  const location = res.headers.get("location") || res.headers.get("Location") || null;
-
+  const text = await res.text().catch(() => "");
   let data = null;
-  let text = "";
-  try { text = await res.text(); } catch { }
-  if (text) {
-    try { data = JSON.parse(text); } catch { }
-  }
-
-  return { ok: res.ok, status, url, data, location };
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch { }
+  const location = res.headers.get("location") || res.headers.get("Location");
+  return { ok: res.ok, status: res.status, data, location, url };
 }
 
-// Always coerce redirects back to the slug endpoint (never to ID)
-function coerceToSlugApi(origin, cc, slug) {
-  return `${origin}/api/${cc}/${slug}?noredirect=1`;
+function looksLikeProduct(d) {
+  if (!d) return false;
+  if (Array.isArray(d?.results) && d.results.length) return looksLikeProduct(d.results[0]);
+  return !!(d.id || d.slug || d.title);
 }
 
-/* ---------------- slug-only resolvers ---------------- */
+// ---- slug-only resolvers (external)
 async function resolveProduct({ cc, slug }) {
-  const origin = getOrigin();
   const tried = [];
+  const url = `${API_BASE}/api/${cc}/${slug}`;
+  const r = await fetchJson(url);
+  tried.push({ url, status: r.status, ok: r.ok });
 
-  const firstUrl = coerceToSlugApi(origin, cc, slug);
-  const r = await tryJson(firstUrl);
-  tried.push({ url: firstUrl, status: r.status, ok: r.ok });
-
-  // If backend returned a redirect (JSON or HTTP), coerce right back to slug API
-  if ((r.status === 301 || r.status === 302) || (r.data && r.data.redirect)) {
-    const via = coerceToSlugApi(origin, cc, slug);
-    if (via !== firstUrl) {
-      const r2 = await tryJson(via);
-      tried.push({ url: via, status: r2.status, ok: r2.ok });
-      if (r2.ok && r2.data) {
-        const data = Array.isArray(r2.data?.results) ? r2.data.results[0] : r2.data;
-        if (data && (data.id || data.slug)) return { product: data, tried };
-      }
+  // Follow one redirect if the API sends a Location or JSON redirect
+  const redirectTarget = r.data?.redirect || r.location;
+  if ((r.status === 301 || r.status === 302) && redirectTarget) {
+    const nextUrl = redirectTarget.startsWith("http")
+      ? redirectTarget
+      : `${API_BASE}${redirectTarget.startsWith("/") ? "" : "/"}${redirectTarget}`;
+    const r2 = await fetchJson(nextUrl);
+    tried.push({ url: nextUrl, status: r2.status, ok: r2.ok });
+    if (r2.ok && looksLikeProduct(r2.data)) {
+      return { product: Array.isArray(r2.data?.results) ? r2.data.results[0] : r2.data, tried };
     }
   }
 
-  if (r.ok && r.data) {
-    const data = Array.isArray(r.data?.results) ? r.data.results[0] : r.data;
-    if (data && (data.id || data.slug)) return { product: data, tried };
+  if (r.ok && looksLikeProduct(r.data)) {
+    return { product: Array.isArray(r.data?.results) ? r.data.results[0] : r.data, tried };
   }
 
   return { product: null, tried };
 }
 
-function normalizeSignals(src) {
-  const pickNum = (...keys) => {
-    for (const k of keys) {
-      const v = src?.[k];
-      if (v != null && Number.isFinite(Number(v))) return Number(v);
-    }
-    return 0;
-  };
-  return {
-    views24h: pickNum("views24h", "views_24h", "views_last_24h", "views"),
-    baskets24h: pickNum("baskets24h", "baskets_24h", "added_to_basket_24h", "baskets"),
-    wishlistsTotal: pickNum("wishlistsTotal", "wishlists_total", "wishlist_total", "wishlists"),
-  };
-}
-
-async function getSignalsSSR(cc, slug) {
-  const origin = getOrigin();
-  const url = `${origin}/api/${cc}/${slug}/signals?noredirect=1`;
-  const r = await tryJson(url);
-  if (r.ok && r.data) return normalizeSignals(r.data);
-  return { views24h: 0, baskets24h: 0, wishlistsTotal: 0 };
-}
-
 async function getRelatedProducts(cc, slug) {
-  const origin = getOrigin();
-  const url = `${origin}/api/${cc}/${slug}/related?noredirect=1`;
-  const r = await tryJson(url);
+  const url = `${API_BASE}/api/${cc}/${slug}/related`;
+  const r = await fetchJson(url);
   if (r.ok && Array.isArray(r.data?.results)) return r.data.results;
   return [];
 }
 
-/* ---------------- metadata ---------------- */
+// ---- metadata
 export async function generateMetadata({ params: { cc, slug } }) {
   if (FRONTEND_PREFIXES.has(cc)) {
     return { title: "Upfrica", description: "Buy and sell on Upfrica." };
@@ -494,9 +452,8 @@ export async function generateMetadata({ params: { cc, slug } }) {
   };
 }
 
-/* ---------------- page ---------------- */
+// ---- page
 export default async function Page({ params: { cc, slug } }) {
-  // let non-product areas fall through to their own routes
   if (FRONTEND_PREFIXES.has(cc)) redirect(`/${cc}/${slug}`);
 
   const { product, tried } = await resolveProduct({ cc, slug });
@@ -504,11 +461,11 @@ export default async function Page({ params: { cc, slug } }) {
   if (!product) {
     return (
       <main style={{ padding: 24 }}>
-        <h1>❌ Couldn’t fetch product (slug-only)</h1>
+        <h1>❌ Couldn’t fetch product</h1>
         <p>
           cc=<code>{cc}</code>, slug=<code>{slug}</code>
         </p>
-        <h3>Tried:</h3>
+        <h3>Tried</h3>
         <ol>
           {tried.map((t, i) => (
             <li key={i}>
@@ -517,16 +474,15 @@ export default async function Page({ params: { cc, slug } }) {
           ))}
         </ol>
         <p>
-          Ensure the backend slug endpoint <code>/api/{cc}/{slug}</code> is publicly
-          readable (or that cookies are forwarded), and that your slug exists or maps
-          via history/legacy. If your API still issues redirects, it should honor{" "}
-          <code>?noredirect=1</code> / <code>X-SSR-NoRedirect: 1</code> to return JSON.
+          This page calls <code>{API_BASE}/api/{cc}/{slug}</code>. Make sure the slug exists
+          and that endpoint is reachable from the server. If it sometimes returns redirects,
+          we follow one automatically.
         </p>
       </main>
     );
   }
 
-  const signals = await getSignalsSSR(cc, slug);
+  // (Optional) related; safe to remove if you don’t want it
   const relatedProducts = await getRelatedProducts(cc, slug);
 
   const regionLower = (cc || "").toLowerCase();
@@ -539,22 +495,25 @@ export default async function Page({ params: { cc, slug } }) {
   return (
     <>
       <main className="w-full max-w-[1380px] mx-auto py-0 px-4 sm:px-5 lg:px-8 xl:px-[4rem] 2xl:px-[5rem]">
-        <ProductDetailSection product={product} signals={signals} />
-
-        <section id="related" aria-labelledby="related-heading" className="mt-10">
-          <h2 id="related-heading" className="sr-only">
-            Related items
-          </h2>
-          <RelatedProducts
-            relatedProducts={relatedProducts}
-            productSlug={product.slug}
-            productTitle={product.title}
-            location={locationDisplay}
-          />
-        </section>
+        <ProductDetailSection product={product} signals={null} />
+        {relatedProducts.length > 0 && (
+          <section id="related" aria-labelledby="related-heading" className="mt-10">
+            <h2 id="related-heading" className="sr-only">
+              Related items
+            </h2>
+            <RelatedProducts
+              relatedProducts={relatedProducts}
+              productSlug={product.slug}
+              productTitle={product.title}
+              location={locationDisplay}
+            />
+          </section>
+        )}
       </main>
 
+      {/* If you don’t need tracking, you can remove this too */}
       <ClientTrackView productId={product.id} slug={product.slug} />
+
       <Footer />
     </>
   );
