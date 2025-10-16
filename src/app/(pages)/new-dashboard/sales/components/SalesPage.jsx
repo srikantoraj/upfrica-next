@@ -1,57 +1,68 @@
-///Part 1: Setup & Imports
 "use client";
 
-import React, { useState, useEffect, Fragment } from "react";
+import React, { useEffect, useMemo, useState, Fragment } from "react";
 import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
 import { Dialog, Transition } from "@headlessui/react";
 import { AiOutlineSearch, AiOutlineClose } from "react-icons/ai";
-import OrderDetailsModal from "./OrderDetailsModal";
-import DispatchInfo from "./DispatchInfo";
-import { BASE_API_URL, SITE_BASE_URL } from "@/app/constants";
-import { getCleanToken } from "@/lib/getCleanToken";
+import { useSelector } from "react-redux";
+import { selectToken } from "@/app/store/slices/userSlice";
+
+/* -------------------------------------------------------
+   Config
+--------------------------------------------------------*/
+const API_BASE =
+  (typeof process !== "undefined" &&
+    process.env.NEXT_PUBLIC_API_URL &&
+    process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")) ||
+  "https://api.upfrica.com";
+
+const SITE_BASE =
+  (typeof process !== "undefined" &&
+    process.env.NEXT_PUBLIC_SITE_URL &&
+    process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "")) ||
+  "https://www.upfrica.com";
 
 const fallbackImage =
   "https://d3q0odwafjkyv1.cloudfront.net/50g59dwfx74fq23f6c2p5noqotgo";
 
-/* ---------- image helpers ---------- */
+/* -------------------------------------------------------
+   Auth helper (no dependency on your app utilities)
+--------------------------------------------------------*/
+function getAuthToken() {
+  if (typeof window === "undefined") return "";
+  return "aSJ36UapeFH5YARFamDTYhnJ"
+}
+
+/* -------------------------------------------------------
+   Image helpers
+--------------------------------------------------------*/
 function fixImageUrl(u) {
   if (!u) return "";
 
   let s = String(u).trim();
 
-  // 1) Repair glued CloudFront host (…cloudfront.netdirect_uploads/… → …cloudfront.net/direct_uploads/…)
-  s = s.replace(/([a-z0-9.-]*cloudfront\.net)(?=[^/])/i, "$1/");
+  // Repair missing slash after host (e.g. https://cdn.upfrica.comdirect_uploads/…)
+  s = s.replace(/^(https?:\/\/[^/]+)(?=[^/])/i, "$1/");
 
-  // 2) Already absolute (http/https/data:) → return (after the CloudFront fix above)
+  // Already absolute / data URLs
   if (/^(https?:)?\/\//i.test(s) || s.startsWith("data:")) return s;
 
-  // 3) Relative media paths → make absolute using API base
-  const api = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
-  if (!api) return s; // last resort
-
-  // “/media/…”
+  // Relative media-ish paths → prefix with API base
+  const api = API_BASE.replace(/\/$/, "");
   if (/^\/?media\//i.test(s)) return `${api}/${s.replace(/^\//, "")}`;
-
-  // Common ActiveStorage-style keys → point to /media/<key>
   if (/^(direct_uploads|uploads|active_storage|attachments)\//i.test(s)) {
     return `${api}/media/${s}`;
   }
 
-  return s; // unknown case: return as-is
+  return s;
 }
 
 function pickProductImage(item) {
-  // Try common fields from your payload
-  const candidate =
-    item?.product?.image_objects?.[0]?.image_url ||
-    item?.product?.product_image_url ||
-    item?.product?.thumbnail ||
-    item?.product?.image_url ||
-    item?.product_image || // your grouped field
-    "";
-
-  return fixImageUrl(candidate) || fallbackImage;
+  // API gives: product.product_images: string[]
+  const arr = item?.product?.product_images;
+  const first = Array.isArray(arr) && arr.length > 0 ? arr[0] : "";
+  return fixImageUrl(first) || fallbackImage;
 }
 
 /* A next/image wrapper that falls back on error */
@@ -70,20 +81,160 @@ function SafeImage({ src, alt, fallback = fallbackImage, ...props }) {
   );
 }
 
-////Part 2: Component State and Utilities
+/* -------------------------------------------------------
+   Money & date helpers (no assumptions about "cents")
+--------------------------------------------------------*/
+function formatMoneyRaw(amount, currency) {
+  const code = (currency || "").toUpperCase() || "GHS";
+  const safeNum = typeof amount === "number" ? amount : Number(amount || 0);
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: code,
+      // Many values look already like "major units" in your payload, so don't divide.
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+    }).format(safeNum);
+  } catch {
+    return `${code} ${safeNum.toLocaleString()}`;
+  }
+}
+
+function formatDate(ts) {
+  if (!ts) return "—";
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
+
+/* -------------------------------------------------------
+   Tiny UI bits
+--------------------------------------------------------*/
+function Pill({ children, color = "gray" }) {
+  const map = {
+    gray: "bg-gray-100 text-gray-700 border-gray-300",
+    green: "bg-green-100 text-green-700 border-green-300",
+    red: "bg-red-100 text-red-600 border-red-300",
+    blue: "bg-blue-100 text-blue-700 border-blue-300",
+    amber: "bg-amber-100 text-amber-800 border-amber-300",
+  };
+  return (
+    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${map[color] || map.gray}`}>
+      {children}
+    </span>
+  );
+}
+
+/* -------------------------------------------------------
+   Order Details Modal (inline self-contained)
+--------------------------------------------------------*/
+function OrderDetailsModal({ isOpen, onClose, order }) {
+  return (
+    <Transition show={isOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={onClose}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
+          leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-black/40" />
+        </Transition.Child>
+
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-end sm:items-center justify-center p-4">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-200" enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enterTo="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-150" leaveFrom="opacity-100 translate-y-0 sm:scale-100" leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            >
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-900 p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Title className="text-lg font-semibold mb-3">
+                  Order #{order?.id ?? "—"}
+                </Dialog.Title>
+
+                {order ? (
+                  <div className="space-y-4 text-sm">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="text-gray-500">Order date</div>
+                        <div className="font-medium">{formatDate(order.order_date)}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500">Buyer</div>
+                        <div className="font-medium">
+                          {order.buyer?.first_name || order.buyer?.username || "—"}{" "}
+                          {order.buyer?.last_name || ""}
+                        </div>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-gray-500">Ship to</div>
+                        <div className="font-medium">{order.address?.display_address || "—"}</div>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-3">
+                      <div className="font-semibold mb-2">Items</div>
+                      <div className="space-y-2">
+                        {order.order_items.map((it) => (
+                          <div key={it.id} className="flex justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="font-medium">{it.product_title}</div>
+                              <div className="text-xs text-gray-500">
+                                Qty {it.quantity} • {formatMoneyRaw(it.unit_price, it.currency)}
+                              </div>
+                            </div>
+                            <div className="text-right font-semibold">
+                              {formatMoneyRaw(it.total_price, it.currency)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No data.</p>
+                )}
+
+                <div className="mt-6 text-right">
+                  <button
+                    onClick={onClose}
+                    className="inline-flex items-center px-4 py-2 rounded-md bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    Close
+                  </button>
+                </div>
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
+        </div>
+      </Dialog>
+    </Transition>
+  );
+}
+
+/* -------------------------------------------------------
+   Main Page
+--------------------------------------------------------*/
 export default function SalesPage() {
-  const [orders, setOrders] = useState([]);
+  const token = useSelector(selectToken);
+  console.log("Auth token from Redux:", token);
+  console.log("API Base URL:", API_BASE);
+  const [groups, setGroups] = useState([]); // grouped by order_id
+  const [nextUrl, setNextUrl] = useState(null);
+  const [prevUrl, setPrevUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [isTrackingSheetOpen, setIsTrackingSheetOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
   const [activeOrder, setActiveOrder] = useState(null);
-  const [showAddressMap, setShowAddressMap] = useState({});
+
+  // Dispatch modal state
+  const [isTrackingSheetOpen, setIsTrackingSheetOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
   const [orderToDispatchAll, setOrderToDispatchAll] = useState(null);
-
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [dispatchForm, setDispatchForm] = useState({
     dispatchDate: "",
     dispatchTime: "",
@@ -92,121 +243,137 @@ export default function SalesPage() {
     trackingLink: "",
     notes: "",
   });
+  
 
-  const cleanToken = getCleanToken();
+  // const token = getAuthToken();
 
-  const formatDate = (ts) => {
-    const date = new Date(ts);
-    if (isNaN(date.getTime())) return "N/A";
-    return date.toLocaleString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  };
-
-  // Part 3. Fetching Real API Data & Grouping by OrderGroup
-  const fetchOrders = async () => {
+  /* -------------------- fetch & normalize -------------------- */
+  async function fetchPage(url, { append = false } = {}) {
+    setLoading(true);
     try {
-      const res = await fetch(`${BASE_API_URL}/api/order-items/`, {
-        headers: {
-          Authorization: `Token ${cleanToken}`,
-        },
+      const res = await fetch(url, {
+        headers: token ? { Authorization: `Token ${token}` } : {},
+        cache: "no-store",
       });
-
-      if (!res.ok) throw new Error("Failed to fetch");
-
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
       const data = await res.json();
-      const orderItems = Array.isArray(data) ? data : data.results || [];
 
-      const grouped = {};
+      const items = Array.isArray(data)
+        ? data
+        : Array.isArray(data.results)
+          ? data.results
+          : [];
 
-      for (const item of orderItems) {
-        const group = item.order_group || {};
-        const orderId = group.id || item.order?.id || `unknown-${item.id}`;
-
-        const orderCode =
-          group.order_code ||
-          item.order?.order_code ||
-          item.order?.id ||
-          `unknown-${item.id}`;
-
-        const orderDate =
-          group.created_at || item.order?.created_at || item.created_at || null;
-
-        if (!grouped[orderId]) {
-          grouped[orderId] = {
-            id: orderId,
-            order_code: orderCode,
-            order_date: orderDate,
-            buyer_phone: group.buyer_phone || item.order?.buyer_phone || "",
-            buyer_note: group.buyer_note || item.order?.buyer_note || "",
-            payment_status:
-              group.payment_status_display ||
-              (group.payment_method === "manual" ? "Unpaid" : "Paid"),
-            payment_completed_at:
-              group.payment_completed_at || item.order?.payment_completed_at || null,
-            shipping_name:
-              group.shipping_name || item.shipping_address?.full_name || "Unknown",
-            shipping_address:
-              item.shipping_address || {
-                line1: "—",
-                city: "",
-                region: "",
-                postcode: "",
-                country: "Ghana",
-              },
-            total: 0,
-            order_items: [],
-          };
-        }
-
-        // ✅ Sum frozen totals
-        grouped[orderId].total += item.total_price || 0;
-
-        grouped[orderId].order_items.push({
-          id: item.id,
-          product_title: item.product?.title || "Untitled Product",
-          product_image: pickProductImage(item), // 👈 fixed URL chosen here
-          product_url: item.product?.frontend_url_full || "#",
-          quantity: item.quantity || 1,
-          unit_price: item.unit_price || 0,
-          shipping_fee: item.shipping_fee || 0,
-          total_price: item.total_price || 0,
-          dispatched: item.dispatch_status === 1,
-          dispatch_info: item.tracking_data || {},
-          shipping_address: item.shipping_address || {},
-        });
+      // Group by order_id
+      const groupedMap = new Map();
+      // If appending, seed with current groups
+      if (append) {
+        for (const g of groups) groupedMap.set(g.id, { ...g });
       }
 
-      setOrders(Object.values(grouped));
-    } catch (error) {
-      toast.error("❌ Failed to load orders.");
-      console.error("Fetch error:", error);
+      for (const item of items) {
+        const orderId = item.order_id ?? `unknown-${item.id}`;
+        const existing = groupedMap.get(orderId) || {
+          id: orderId,
+          order_date: item.order_date || null,
+          buyer: item.buyer || null,
+          address: item.address || null,
+          order_items: [],
+        };
+
+        existing.order_items.push({
+          id: item.id,
+          quantity: item.quantity ?? 1,
+          unit_price: item.price_cents ?? 0,
+          total_price: (item.price_cents ?? 0) * (item.quantity ?? 1),
+          currency: (item.price_currency || "GHS").toUpperCase(),
+          dispatched: item.dispatch_status === 1,
+          date_dispatched: item.date_dispatched || null,
+          shipping_carrier: item.shipping_carrier || "",
+          product_title: item.product?.title || "Untitled Product",
+          product_image: pickProductImage(item),
+          product_url:
+            item.product?.canonical_url_db ||
+            (item.product?.frontend_url_db
+              ? `${SITE_BASE}${item.product.frontend_url_db}`
+              : "#"),
+        });
+
+        // Keep latest order_date (max)
+        if (!existing.order_date && item.order_date) existing.order_date = item.order_date;
+        else if (existing.order_date && item.order_date) {
+          if (new Date(item.order_date) > new Date(existing.order_date)) {
+            existing.order_date = item.order_date;
+          }
+        }
+
+        groupedMap.set(orderId, existing);
+      }
+
+      const next = data.next || null;
+      const prev = data.previous || null;
+
+      const newGroups = Array.from(groupedMap.values()).sort(
+        (a, b) => new Date(b.order_date || 0) - new Date(a.order_date || 0)
+      );
+
+      setGroups(newGroups);
+      setNextUrl(next);
+      setPrevUrl(prev);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load orders.");
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
-  // Run once cleanToken is available
+  // Initial load
   useEffect(() => {
-    if (!cleanToken) return;
-    fetchOrders();
-  }, [cleanToken]);
+    if (!token) {
+      toast.error("No auth token found (cookie 'up_auth' or env NEXT_PUBLIC_API_TOKEN).");
+      return;
+    }
+    fetchPage(`${API_BASE}/api/seller/order-items/`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
-  useEffect(() => {
-    orders.forEach((o) => {
-      console.log("🧾 Order:", o.order_code);
-      console.log("➡️ Shipping Name:", o.shipping_name);
-      console.log("➡️ Shipping Address Name:", o.shipping_address?.full_name);
+  /* -------------------- derived: filtered list -------------------- */
+  const filteredGroups = useMemo(() => {
+    const q = (searchQuery || "").toLowerCase().trim();
+    if (!q) return groups;
+    return groups.filter((g) => {
+      const ID = String(g.id || "");
+      const dateStr = formatDate(g.order_date);
+      const addr = g.address?.display_address || [
+        g.address?.full_name,
+        g.address?.address_line_1,
+        g.address?.address_line_2,
+        g.address?.town,
+        g.address?.state_or_region,
+        g.address?.postcode,
+        g.address?.country,
+      ]
+        .filter(Boolean)
+        .join(", ");
+      const buyer =
+        [g.buyer?.first_name, g.buyer?.last_name, g.buyer?.username, g.buyer?.email]
+          .filter(Boolean)
+          .join(" ") || "";
+
+      const products = g.order_items.map((i) => i.product_title).join(" ");
+
+      return (
+        ID.toLowerCase().includes(q) ||
+        dateStr.toLowerCase().includes(q) ||
+        addr.toLowerCase().includes(q) ||
+        buyer.toLowerCase().includes(q) ||
+        products.toLowerCase().includes(q)
+      );
     });
-  }, [orders]);
+  }, [groups, searchQuery]);
 
-  const formatAddress = (address) => {
-    if (!address) return "—";
-    return [address.full_name, address.line1, address.city, address.region, address.country]
-      .filter(Boolean)
-      .join(", ");
-  };
-
-  // Part 4: Dispatch Submission Logic & Modals
+  /* -------------------- dispatch helpers -------------------- */
   const openTrackingSheet = (order, item) => {
     setBulkMode(false);
     setSelectedOrder(order);
@@ -236,47 +403,37 @@ export default function SalesPage() {
     setIsTrackingSheetOpen(true);
   };
 
+  function updateOrderItems(orderId, updater) {
+    setGroups((prev) =>
+      prev.map((g) =>
+        g.id === orderId
+          ? { ...g, order_items: g.order_items.map((it) => updater(it)) }
+          : g
+      )
+    );
+  }
+
   const undoDispatch = async (order, item) => {
     try {
-      const res = await fetch(`${BASE_API_URL}/api/orders/${order.id}/dispatch/`, {
+      const res = await fetch(`${API_BASE}/api/orders/${order.id}/dispatch/`, {
         method: "POST",
         headers: {
-          Authorization: `Token ${cleanToken}`,
+          ...(token ? { Authorization: `Token ${token}` } : {}),
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ item_id: item.id, undo: true }),
       });
-
       if (!res.ok) throw new Error("Failed to undo dispatch");
-      const result = await res.json();
-      updateOrdersWithDispatchedItems(order.id, result.updated_items || []);
-      toast.success(`✅ Dispatch undone for "${item.product_title}".`);
+      // optimistic update
+      updateOrderItems(order.id, (it) =>
+        it.id === item.id
+          ? { ...it, dispatched: false, date_dispatched: null, shipping_carrier: "" }
+          : it
+      );
+      toast.success(`Dispatch undone for "${item.product_title}".`);
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || "Failed to undo dispatch");
     }
-  };
-
-  const updateOrdersWithDispatchedItems = (orderId, updatedItems) => {
-    setOrders((prev) =>
-      prev.map((order) =>
-        order.id === orderId
-          ? {
-              ...order,
-              order_items: order.order_items.map((item) => {
-                const updatedItem = updatedItems.find((ui) => ui.id === item.id);
-                return updatedItem
-                  ? {
-                      ...item,
-                      dispatched: updatedItem.dispatch_status === 1,
-                      dispatch_status: updatedItem.dispatch_status,
-                      dispatch_info: updatedItem.tracking_data || {},
-                    }
-                  : item;
-              }),
-            }
-          : order
-      )
-    );
   };
 
   const handleDispatchSubmit = async () => {
@@ -284,7 +441,6 @@ export default function SalesPage() {
       dispatchForm;
 
     const fullDateTime = dispatchDate ? `${dispatchDate}T${dispatchTime || "09:00"}` : "";
-
     if (!fullDateTime || !carrier.trim()) {
       toast.error("Please fill in dispatch date and carrier.");
       return;
@@ -301,124 +457,90 @@ export default function SalesPage() {
     setIsSubmitting(true);
     try {
       const orderId = bulkMode ? orderToDispatchAll.id : selectedOrder.id;
+      const body = bulkMode ? payload : { ...payload, item_id: selectedItem.id };
 
-      const res = await fetch(`${BASE_API_URL}/api/orders/${orderId}/dispatch/`, {
+      const res = await fetch(`${API_BASE}/api/orders/${orderId}/dispatch/`, {
         method: "POST",
         headers: {
-          Authorization: `Token ${cleanToken}`,
+          ...(token ? { Authorization: `Token ${token}` } : {}),
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(bulkMode ? payload : { ...payload, item_id: selectedItem.id }),
+        body: JSON.stringify(body),
       });
 
-      if (!res.ok) throw new Error(`Failed to dispatch`);
+      if (!res.ok) throw new Error("Failed to dispatch");
 
-      const result = await res.json();
-      updateOrdersWithDispatchedItems(orderId, result.updated_items || []);
-      fetchOrders(); // extra sync
+      // Optimistic: mark items as dispatched locally
+      if (bulkMode) {
+        updateOrderItems(orderId, (it) =>
+          it.dispatched
+            ? it
+            : {
+              ...it,
+              dispatched: true,
+              date_dispatched: fullDateTime,
+              shipping_carrier: carrier.trim(),
+            }
+        );
+      } else {
+        updateOrderItems(orderId, (it) =>
+          it.id === selectedItem.id
+            ? {
+              ...it,
+              dispatched: true,
+              date_dispatched: fullDateTime,
+              shipping_carrier: carrier.trim(),
+            }
+            : it
+        );
+      }
 
       toast.success(
         bulkMode
-          ? `✅ All ${orderToDispatchAll.order_items.length} items marked as dispatched.`
-          : `✅ Item "${selectedItem.product_title}" marked as dispatched.`
+          ? `All ${orderToDispatchAll.order_items.filter((i) => !i.dispatched).length} items marked as dispatched.`
+          : `Item "${selectedItem.product_title}" marked as dispatched.`
       );
-
       setIsTrackingSheetOpen(false);
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || "Dispatch failed");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleViewDetails = (order) => {
-    setActiveOrder(order);
+  /* -------------------- UI helpers -------------------- */
+  function getDispatchStatusBadge(order) {
+    const dispatchedCount = order.order_items.filter((i) => i.dispatched).length;
+    const total = order.order_items.length;
+
+    if (total === 0) return null;
+    if (dispatchedCount === total) return <Pill color="green">✅ All Dispatched</Pill>;
+    if (dispatchedCount > 0)
+      return <Pill color="blue">🟦 {dispatchedCount}/{total} Dispatched</Pill>;
+    return <Pill color="amber">🚚 Pending Dispatch</Pill>;
+  }
+
+  function orderTotalsByCurrency(order) {
+    const map = new Map();
+    for (const it of order.order_items) {
+      const key = it.currency || "GHS";
+      const curr = map.get(key) || 0;
+      map.set(key, curr + (it.total_price || 0));
+    }
+    return Array.from(map.entries()); // [ [ 'GHS', 12345 ], ... ]
+  }
+
+  const openDetails = (group) => {
+    setActiveOrder(group);
     setOrderDetailsOpen(true);
   };
 
-  const toggleAddress = (orderId) => {
-    setShowAddressMap((prev) => ({ ...prev, [orderId]: !prev[orderId] }));
-  };
-
-  // 🧩 Part 5: Badges
-  const getPaymentStatusBadge = (status) =>
-    status === "Paid" ? (
-      <span className="bg-green-100 text-green-700 font-semibold px-3 py-1 rounded-full text-sm">
-        ✅ Paid
-      </span>
-    ) : (
-      <span className="bg-red-100 text-red-600 font-semibold px-3 py-1 rounded-full text-sm">
-        ❌ Unpaid
-      </span>
-    );
-
-  const getDispatchStatusBadge = (order) => {
-    const dispatchedCount = order.order_items.filter((i) => i.dispatched).length;
-    const totalItems = order.order_items.length;
-    const isPaid = order.payment_status === "Paid";
-    const paidAt = order.payment_completed_at ? new Date(order.payment_completed_at) : null;
-    const daysSincePaid = paidAt ? (new Date() - paidAt) / (1000 * 60 * 60 * 24) : 0;
-    const isOverdue = isPaid && dispatchedCount === 0 && daysSincePaid > 3;
-
-    if (!isPaid) return null;
-    if (dispatchedCount === totalItems) {
-      return (
-        <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium border border-green-500 text-green-600 hover:bg-green-50 transition-colors">
-          ✅ All Dispatched
-        </span>
-      );
-    }
-    if (isOverdue) {
-      return (
-        <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium border border-red-500 text-red-600 hover:bg-red-50 transition-colors animate-pulse">
-          ⚠️ Dispatch Overdue
-        </span>
-      );
-    }
-    if (dispatchedCount > 0) {
-      return (
-        <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium border border-blue-500 text-blue-600 hover:bg-blue-50 transition-colors">
-          🟦 {dispatchedCount}/{totalItems} Dispatched
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium border border-amber-500 text-amber-600 hover:bg-amber-50 transition-colors">
-        🚚 Pending Dispatch
-      </span>
-    );
-  };
-
-  // Part 6: Filter
-  const filteredOrders = orders.filter((o) => {
-    if (!o || !Array.isArray(o.order_items) || o.order_items.length === 0) return false;
-
-    const name = o.buyer_name || o.shipping_name || "";
-    const id = o.id || o.order_code || "";
-    const phone = o.buyer_phone || "";
-
-    const address = o.order_items[0]?.shipping_address || {};
-    const addressString = [address.line1, address.line2, address.city, address.region, address.postcode, address.country]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-
-    const query = searchQuery.toLowerCase();
-
-    return (
-      name.toLowerCase().includes(query) ||
-      id.toString().includes(query) ||
-      phone.toLowerCase().includes(query) ||
-      addressString.includes(query)
-    );
-  });
-
-  // Part 7: JSX
+  /* -------------------- render -------------------- */
   return (
-    <div className="max-w-6xl mx-auto px-0 sm:px-6 lg:px-12 py-6 text-black dark:text-white">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-12 py-6 text-black dark:text-white">
       <Toaster position="top-right" />
 
-      {/* Search & Filter */}
+      {/* Search */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
         <div className="relative w-full md:w-2/3">
           <AiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-500 dark:text-gray-300" />
@@ -426,7 +548,7 @@ export default function SalesPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search sales by buyer name or order #..."
+            placeholder="Search by order #, buyer, address, product…"
             className="w-full rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-10 py-2 text-sm"
           />
           {searchQuery && (
@@ -437,167 +559,204 @@ export default function SalesPage() {
           )}
         </div>
 
-        <select className="px-4 py-2 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-sm">
-          <option>All Time</option>
-          <option>Last 30 Days</option>
-          <option>Past 3 Months</option>
-          <option>This Year</option>
-        </select>
+        <div className="text-sm text-gray-500">
+          {loading ? "Loading…" : `${filteredGroups.length} order${filteredGroups.length === 1 ? "" : "s"}`}
+        </div>
       </div>
 
       {/* Orders */}
-      <h1 className="text-2xl font-bold mb-6 dark:text-white">My Sales ({filteredOrders.length})</h1>
-
-      {filteredOrders.length === 0 ? (
-        <p className="text-gray-500 dark:text-gray-400">No sales found.</p>
+      {filteredGroups.length === 0 ? (
+        <p className="text-gray-500 dark:text-gray-400">
+          {loading ? "Loading…" : "No sales found."}
+        </p>
       ) : (
         <div className="space-y-6">
-          {filteredOrders
-            .filter((order) => Array.isArray(order.order_items) && order.order_items.length > 0)
-            .map((order) => (
-              <div key={order.id} className="rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-5 shadow-sm">
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-                  <div>
-                    {getPaymentStatusBadge(order.payment_status)}
-                    <p className="font-semibold mt-2">Order #{order.id || "—"}</p>
-                    <p className="text-sm text-gray-600">Order placed: {order.order_date ? formatDate(order.order_date) : "—"}</p>
-                  </div>
-                  <DispatchInfo order={order} onDispatchAll={openBulkTrackingSheet} />
+          {filteredGroups.map((order) => (
+            <div
+              key={order.id}
+              className="rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-5 shadow-sm"
+            >
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                <div>
+                  <p className="font-semibold">Order #{order.id}</p>
+                  <p className="text-sm text-gray-600">
+                    Order placed: {formatDate(order.order_date)}
+                  </p>
+                  {order.address?.display_address && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Ship to: {order.address.display_address}
+                    </p>
+                  )}
                 </div>
 
-                {/* Items */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3 mt-4">
-                  {order.order_items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between gap-4 text-sm rounded-md border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 px-4 py-3 shadow-sm"
-                    >
-                      {/* LEFT */}
-                      <div className="flex items-center gap-4">
-                        <a href={item.product_url} target="_blank" rel="noopener noreferrer">
-                          <SafeImage
-                            src={item.product_image}
-                            alt={item.product_title}
-                            width={68}
-                            height={68}
-                            className="rounded-md border object-cover"
-                            unoptimized
-                          />
-                        </a>
-                        <div>
-                          <p className="font-medium line-clamp-1">{item.product_title}</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openBulkTrackingSheet(order)}
+                    className="bg-amber-500 hover:bg-amber-600 text-black px-3 py-1.5 rounded-full text-sm font-medium"
+                  >
+                    Dispatch All
+                  </button>
+                  {getDispatchStatusBadge(order)}
+                </div>
+              </div>
 
-                          {!item.dispatched ? (
-                            order.payment_status === "Paid" ? (
-                              <button
-                                onClick={() => openTrackingSheet(order, item)}
-                                className="bg-amber-500 hover:bg-amber-600 text-black px-3 py-1 rounded text-xs mt-1"
-                              >
-                                Mark as Dispatched
-                              </button>
-                            ) : (
-                              <p className="text-xs text-red-500 italic mt-1">Cannot dispatch unpaid order</p>
-                            )
-                          ) : (
-                            <div className="text-green-600 text-xs font-semibold mt-1 block space-y-0.5">
-                              ✅ Dispatched
-                              <button
-                                onClick={() => undoDispatch(order, item)}
-                                className="ml-2 text-red-500 underline text-[11px] hover:text-red-700"
-                              >
-                                Undo
-                              </button>
+              {/* Items */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3 mt-4">
+                {order.order_items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between gap-4 text-sm rounded-md border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 px-4 py-3 shadow-sm"
+                  >
+                    {/* LEFT */}
+                    <div className="flex items-center gap-4 min-w-0">
+                      <a href={item.product_url} target="_blank" rel="noopener noreferrer">
+                        <SafeImage
+                          src={item.product_image}
+                          alt={item.product_title}
+                          width={68}
+                          height={68}
+                          className="rounded-md border object-cover"
+                          unoptimized
+                        />
+                      </a>
+                      <div className="min-w-0">
+                        <p className="font-medium line-clamp-2">{item.product_title}</p>
 
-                              {item.dispatch_info && (
-                                <div className="text-[11px] text-gray-500 dark:text-gray-300 font-normal space-y-0.5">
-                                  {item.dispatch_info.carrier && item.dispatch_info.dispatchDate && (
-                                    <p>
-                                      <span className="font-semibold">{item.dispatch_info.carrier}</span>{" "}
-                                      – {new Date(item.dispatch_info.dispatchDate).toLocaleDateString()}
-                                    </p>
-                                  )}
+                        {!item.dispatched ? (
+                          <button
+                            onClick={() => openTrackingSheet(order, item)}
+                            className="bg-amber-500 hover:bg-amber-600 text-black px-3 py-1 rounded text-xs mt-1"
+                          >
+                            Mark as Dispatched
+                          </button>
+                        ) : (
+                          <div className="text-green-600 text-xs font-semibold mt-1 space-x-2">
+                            <span>✅ Dispatched</span>
+                            <button
+                              onClick={() => undoDispatch(order, item)}
+                              className="text-red-500 underline text-[11px] hover:text-red-700"
+                            >
+                              Undo
+                            </button>
+                          </div>
+                        )}
 
-                                  {item.dispatch_info.trackingNumber ? (
-                                    <p>Tracking #: {item.dispatch_info.trackingNumber}</p>
-                                  ) : (
-                                    <span className="inline-block bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-0.5 rounded text-[10px] font-medium">
-                                      Not Tracked
-                                    </span>
-                                  )}
-
-                                  {item.dispatch_info.trackingLink && (
-                                    <a
-                                      href={item.dispatch_info.trackingLink}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-blue-500 underline hover:text-blue-700"
-                                    >
-                                      Track Package →
-                                    </a>
-                                  )}
-
-                                  {item.dispatch_info.notes && <p className="italic text-gray-400">“{item.dispatch_info.notes}”</p>}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* RIGHT */}
-                      <div className="text-right whitespace-nowrap">
-                        <div className="font-semibold">GHS {item.total_price?.toFixed(2) || "0.00"}</div>
-                        <div className="text-xs text-gray-500">
-                          {item.quantity} × GHS {item.unit_price?.toFixed(2) || "0.00"}
-                        </div>
+                        {/* tiny meta */}
+                        {item.dispatched && (
+                          <div className="text-[11px] text-gray-500 dark:text-gray-300 mt-1 space-y-0.5">
+                            {item.shipping_carrier && (
+                              <p>
+                                Carrier: <span className="font-medium">{item.shipping_carrier}</span>
+                              </p>
+                            )}
+                            {item.date_dispatched && (
+                              <p>Dispatched: {formatDate(item.date_dispatched)}</p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
+
+                    {/* RIGHT */}
+                    <div className="text-right whitespace-nowrap">
+                      <div className="font-semibold">
+                        {formatMoneyRaw(item.total_price, item.currency)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {item.quantity} × {formatMoneyRaw(item.unit_price, item.currency)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer */}
+              <div className="flex flex-col sm:flex-row sm:justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="text-right sm:text-left font-semibold text-lg space-x-2">
+                  <span className="text-gray-400 dark:text-gray-300 text-sm">Total:</span>
+                  {orderTotalsByCurrency(order).map(([cur, sum]) => (
+                    <span key={cur} className="text-gray-800 dark:text-white">
+                      {formatMoneyRaw(sum, cur)}
+                    </span>
                   ))}
                 </div>
 
-                {/* Footer */}
-                <div className="flex flex-col sm:flex-row sm:justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="text-right sm:text-left font-semibold text-lg">
-                    <span className="text-gray-400 dark:text-gray-300 text-sm mr-1">Total:</span>
-                    <span className="text-gray-800 dark:text-white">GHS {order.total}</span>
-                  </div>
-
-                  <div className="flex gap-2 mt-2 sm:mt-0 items-center">
-                    <button
-                      onClick={() => handleViewDetails(order)}
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-1.5 rounded-full text-sm font-medium"
-                    >
-                      View Details
-                    </button>
-
-                    <div className="transition duration-300 ease-in-out inline-flex items-center">
-                      {getDispatchStatusBadge(order)}
-                    </div>
-                  </div>
+                <div className="flex gap-2 mt-2 sm:mt-0 items-center">
+                  <button
+                    onClick={() => openDetails(order)}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-1.5 rounded-full text-sm font-medium"
+                  >
+                    View Details
+                  </button>
                 </div>
               </div>
-            ))}
+            </div>
+          ))}
         </div>
       )}
 
-      <OrderDetailsModal isOpen={orderDetailsOpen} onClose={() => setOrderDetailsOpen(false)} order={activeOrder} />
+      {/* Pagination controls */}
+      <div className="flex items-center justify-between mt-8">
+        <button
+          className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50"
+          disabled={!prevUrl || loading}
+          onClick={() => fetchPage(prevUrl)}
+        >
+          ← Previous
+        </button>
 
-      {/* 📦 Dispatch Modal */}
+        <button
+          className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50"
+          disabled={!nextUrl || loading}
+          onClick={() => fetchPage(nextUrl)}
+        >
+          Next →
+        </button>
+      </div>
+
+      {/* Details modal */}
+      <OrderDetailsModal
+        isOpen={orderDetailsOpen}
+        onClose={() => setOrderDetailsOpen(false)}
+        order={
+          activeOrder
+            ? {
+              ...activeOrder,
+              // for the modal, compute a simple buyer object
+              buyer: activeOrder.buyer,
+            }
+            : null
+        }
+      />
+
+      {/* Dispatch sheet */}
       <Transition show={isTrackingSheetOpen} as={Fragment}>
         <Dialog as="div" className="relative z-50" onClose={() => setIsTrackingSheetOpen(false)}>
-          <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
-            <div className="fixed inset-0 bg-black bg-opacity-40 dark:bg-opacity-50 backdrop-blur-md transition-opacity" />
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
+            leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
           </Transition.Child>
 
-          <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="translate-y-full" enterTo="translate-y-0" leave="ease-in duration-200" leaveFrom="translate-y-0" leaveTo="translate-y-full">
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-200" enterFrom="translate-y-full" enterTo="translate-y-0"
+            leave="ease-in duration-150" leaveFrom="translate-y-0" leaveTo="translate-y-full"
+          >
             <Dialog.Panel className="fixed inset-x-0 bottom-0 max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-t-2xl p-6 flex justify-center shadow-lg">
               <div className="w-full max-w-md">
                 <div className="flex justify-between items-center mb-4">
                   <Dialog.Title className="text-lg font-semibold dark:text-gray-300">
                     {bulkMode ? "Dispatch All Items" : "Mark as Dispatched"}
                   </Dialog.Title>
-                  <button onClick={() => setIsTrackingSheetOpen(false)} className="text-gray-400 hover:text-black dark:hover:text-white text-xl" aria-label="Close">
+                  <button
+                    onClick={() => setIsTrackingSheetOpen(false)}
+                    className="text-gray-400 hover:text-black dark:hover:text-white text-xl"
+                    aria-label="Close"
+                  >
                     <AiOutlineClose />
                   </button>
                 </div>
@@ -606,7 +765,10 @@ export default function SalesPage() {
                   <div className="mb-4 text-sm text-gray-600 dark:text-gray-300">
                     <p className="mb-2">
                       You are dispatching{" "}
-                      <strong>{orderToDispatchAll.order_items.filter((i) => !i.dispatched).length}</strong> items:
+                      <strong>
+                        {orderToDispatchAll.order_items.filter((i) => !i.dispatched).length}
+                      </strong>{" "}
+                      items:
                     </p>
                     <ul className="list-disc pl-5 space-y-1">
                       {orderToDispatchAll.order_items
@@ -625,14 +787,18 @@ export default function SalesPage() {
                     <input
                       type="date"
                       value={dispatchForm.dispatchDate}
-                      onChange={(e) => setDispatchForm({ ...dispatchForm, dispatchDate: e.target.value })}
+                      onChange={(e) =>
+                        setDispatchForm({ ...dispatchForm, dispatchDate: e.target.value })
+                      }
                       className="w-1/2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white px-3 py-2 rounded-md"
                     />
                     <input
                       type="time"
                       step="60"
                       value={dispatchForm.dispatchTime || ""}
-                      onChange={(e) => setDispatchForm({ ...dispatchForm, dispatchTime: e.target.value })}
+                      onChange={(e) =>
+                        setDispatchForm({ ...dispatchForm, dispatchTime: e.target.value })
+                      }
                       className="w-1/2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white px-3 py-2 rounded-md"
                     />
                   </div>
@@ -653,7 +819,9 @@ export default function SalesPage() {
                     className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white placeholder-gray-600 dark:placeholder-gray-300 px-3 py-2 rounded-md"
                     placeholder="Tracking Number"
                     value={dispatchForm.trackingNumber}
-                    onChange={(e) => setDispatchForm({ ...dispatchForm, trackingNumber: e.target.value })}
+                    onChange={(e) =>
+                      setDispatchForm({ ...dispatchForm, trackingNumber: e.target.value })
+                    }
                   />
 
                   <input
@@ -661,7 +829,9 @@ export default function SalesPage() {
                     className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white placeholder-gray-600 dark:placeholder-gray-300 px-3 py-2 rounded-md"
                     placeholder="Tracking Link (optional)"
                     value={dispatchForm.trackingLink}
-                    onChange={(e) => setDispatchForm({ ...dispatchForm, trackingLink: e.target.value })}
+                    onChange={(e) =>
+                      setDispatchForm({ ...dispatchForm, trackingLink: e.target.value })
+                    }
                   />
 
                   <textarea
@@ -675,11 +845,16 @@ export default function SalesPage() {
                 <button
                   onClick={handleDispatchSubmit}
                   disabled={isSubmitting}
-                  className={`mt-6 w-full py-2 rounded-md ${
-                    isSubmitting ? "bg-purple-400 dark:bg-purple-500" : "bg-purple-600 hover:bg-purple-700 dark:hover:bg-purple-500"
-                  } text-white`}
+                  className={`mt-6 w-full py-2 rounded-md ${isSubmitting
+                      ? "bg-purple-400 dark:bg-purple-500"
+                      : "bg-purple-600 hover:bg-purple-700 dark:hover:bg-purple-500"
+                    } text-white`}
                 >
-                  {isSubmitting ? "Saving..." : bulkMode ? "Save & Dispatch All" : "Save & Mark as Dispatched"}
+                  {isSubmitting
+                    ? "Saving..."
+                    : bulkMode
+                      ? "Save & Dispatch All"
+                      : "Save & Mark as Dispatched"}
                 </button>
               </div>
             </Dialog.Panel>

@@ -1,4 +1,3 @@
-// src/app/api/auth/login/route.js
 import { NextResponse } from "next/server";
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
@@ -26,8 +25,14 @@ export async function POST(req) {
       return NextResponse.json({ detail: "No token in response" }, { status: 500 });
     }
 
-    const res = NextResponse.json({ onboarding: payload?.onboarding || null }, { status: 200 });
-    const maxAge = remember ? 60 * 60 * 24 * 30 : undefined; // 30 days or session
+    const user = payload?.user ?? null;
+    const onboarding = payload?.onboarding ?? null;
+
+    // ✅ Return token + user so client can persist them
+    const res = NextResponse.json({ user, token, onboarding }, { status: 200 });
+
+    // Optional: also set an httpOnly cookie for server-side routes
+    const maxAge = remember ? 60 * 60 * 24 * 30 : undefined; // 30 days
     res.cookies.set("up_auth", token, {
       httpOnly: true,
       path: "/",
@@ -35,8 +40,9 @@ export async function POST(req) {
       secure: process.env.NODE_ENV === "production",
       ...(maxAge ? { maxAge } : {}),
     });
+
     return res;
-  } catch (e) {
+  } catch {
     return NextResponse.json({ detail: "Login error" }, { status: 500 });
   }
 }
