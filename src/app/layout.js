@@ -121,6 +121,10 @@ export default function RootLayout({ children }) {
           </Providers>
         </LocalizationProvider>
 
+        <script src="https://cdn.jsdelivr.net/gh/srikantoraj/upfrica-assistant-widge@main/dist/upfrica-assistant-widget.js"
+          data-api-key="YOUR_REAL_API_KEY" data-endpoint="https://n8n.wisebrain.io/webhook/ai/" data-brand="Upfrica assistant"
+          defer></script>
+
         {/* Portal root for sheets/modals (outside main stacking contexts) */}
         <div id="portal-root" />
 

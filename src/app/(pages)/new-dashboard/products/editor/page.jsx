@@ -8,10 +8,12 @@ import WizardShell from "@/components/products/ProductWizard/WizardShell";
 import StepBasics from "@/components/products/ProductWizard/steps/StepBasics";
 import StepMedia from "@/components/products/ProductWizard/steps/StepMedia";
 import StepSEO from "@/components/products/ProductWizard/steps/StepSEO";
+import StepPolicies from "@/components/products/ProductWizard/steps/StepPolicies";
 import StepAttrVariants from "@/components/products/ProductWizard/steps/StepAttrVariants";
 import StepReview from "@/components/products/ProductWizard/steps/StepReview";
 import OverlayPageFrame from "@/components/ui/OverlaySheet";
-
+import StepDelivery from "@/components/products/ProductWizard/steps/StepDelivery";
+import StepPriceStock from "@/components/products/ProductWizard/steps/StepPriceStock";
 const DRAFT_META_KEY = "upfrica:newProductDraftMeta";
 
 export default function ProductEditorPage() {
@@ -55,10 +57,10 @@ export default function ProductEditorPage() {
   const steps = [
     { id: "basics",   title: "Basics",                component: (p) => <StepBasics {...p} /> },
     { id: "media",    title: "Media",                 component: (p) => <StepMedia {...p} /> },
-    { id: "price",    title: "Price & Stock",         component: () => <div className="text-gray-500 dark:text-gray-400">Coming soon.</div> },
-    { id: "delivery", title: "Delivery",              component: () => <div className="text-gray-500 dark:text-gray-400">Coming soon.</div> },
+    { id: "price",    title: "Price & Stock",         component: (p) => <StepPriceStock {...p} /> },
+    { id: "delivery", title: "Delivery",              component: (p) => <StepDelivery {...p} /> },
     { id: "variants", title: "Attributes & Variants", component: (p) => <StepAttrVariants {...p} /> },
-    { id: "policies", title: "Policies",              component: () => <div className="text-gray-500 dark:text-gray-400">Coming soon.</div> },
+    { id: "policies", title: "Policies",              component: (p) => <StepPolicies {...p} /> },
     { id: "seo",      title: "SEO & Visibility",      component: (p) => <StepSEO {...p} /> },
     { id: "review",   title: "Review & Publish",      component: (p) => <StepReview {...p} /> },
   ];
