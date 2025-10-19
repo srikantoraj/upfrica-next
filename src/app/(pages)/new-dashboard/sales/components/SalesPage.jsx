@@ -895,27 +895,30 @@ const fallbackImage =
   "https://d3q0odwafjkyv1.cloudfront.net/50g59dwfx74fq23f6c2p5noqotgo";
 
 /* =======================================================
-   Auth helpers (prod-safe)
+   Auth helpers (prod-safe) — JS only, no TS types
 ======================================================= */
-function readCookie(name: string) {
+function readCookie(name) {
   if (typeof document === "undefined") return "";
   const m = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
   return m ? decodeURIComponent(m[1]) : "";
 }
 
-function resolveAuthToken(reduxToken?: string | null) {
+function resolveAuthToken(reduxToken) {
   if (reduxToken) return reduxToken;
-  // If you set a cookie like "up_auth=TOKEN"
+
+  // Cookie (e.g., up_auth=<TOKEN>)
   const cookieToken = readCookie("up_auth");
   if (cookieToken) return cookieToken;
-  // Optional localStorage fallback
+
+  // localStorage fallback
   try {
     const ls = typeof window !== "undefined" ? localStorage.getItem("up_auth") : null;
     if (ls) return ls;
   } catch { }
-  // Optional build-time fallback
+
+  // Public env fallback (build-time)
   if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_TOKEN) {
-    return process.env.NEXT_PUBLIC_API_TOKEN as string;
+    return process.env.NEXT_PUBLIC_API_TOKEN;
   }
   return "";
 }
@@ -923,12 +926,12 @@ function resolveAuthToken(reduxToken?: string | null) {
 /* =======================================================
    Image helpers
 ======================================================= */
-function fixImageUrl(u?: string | null) {
+function fixImageUrl(u) {
   if (!u) return "";
 
   let s = String(u).trim();
 
-  // Repair missing slash after host (e.g. https://cdn.domain.comdirect_uploads/…)
+  // Repair missing slash after host (e.g., https://cdn.site.comdirect_uploads/…)
   s = s.replace(/^(https?:\/\/[^/]+)(?=[^/])/i, "$1/");
 
   // Absolute or data URLs
@@ -944,24 +947,14 @@ function fixImageUrl(u?: string | null) {
   return s;
 }
 
-function pickProductImage(item: any) {
+function pickProductImage(item) {
   const arr = item?.product?.product_images;
   const first = Array.isArray(arr) && arr.length > 0 ? arr[0] : "";
   return fixImageUrl(first) || fallbackImage;
 }
 
 /* A next/image wrapper that falls back on error */
-function SafeImage({
-  src,
-  alt,
-  fallback = fallbackImage,
-  ...props
-}: {
-  src?: string;
-  alt?: string;
-  fallback?: string;
-  [key: string]: any;
-}) {
+function SafeImage({ src, alt, fallback = fallbackImage, ...props }) {
   const [imgSrc, setImgSrc] = React.useState(fixImageUrl(src) || fallback);
   useEffect(() => {
     setImgSrc(fixImageUrl(src) || fallback);
@@ -979,7 +972,7 @@ function SafeImage({
 /* =======================================================
    Money & date helpers (no "cents" assumptions)
 ======================================================= */
-function formatMoneyRaw(amount: number, currency?: string) {
+function formatMoneyRaw(amount, currency) {
   const code = (currency || "").toUpperCase() || "GHS";
   const safeNum = typeof amount === "number" ? amount : Number(amount || 0);
   try {
@@ -994,7 +987,7 @@ function formatMoneyRaw(amount: number, currency?: string) {
   }
 }
 
-function formatDate(ts?: string | number | Date | null) {
+function formatDate(ts) {
   if (!ts) return "—";
   const d = new Date(ts);
   if (isNaN(d.getTime())) return "—";
@@ -1004,8 +997,8 @@ function formatDate(ts?: string | number | Date | null) {
 /* =======================================================
    Tiny UI bits
 ======================================================= */
-function Pill({ children, color = "gray" }: { children: React.ReactNode; color?: string }) {
-  const map: Record<string, string> = {
+function Pill({ children, color = "gray" }) {
+  const map = {
     gray: "bg-gray-100 text-gray-700 border-gray-300",
     green: "bg-green-100 text-green-700 border-green-300",
     red: "bg-red-100 text-red-600 border-red-300",
@@ -1025,15 +1018,7 @@ function Pill({ children, color = "gray" }: { children: React.ReactNode; color?:
 /* =======================================================
    Order Details Modal
 ======================================================= */
-function OrderDetailsModal({
-  isOpen,
-  onClose,
-  order,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  order: any;
-}) {
+function OrderDetailsModal({ isOpen, onClose, order }) {
   return (
     <Transition show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -1081,14 +1066,16 @@ function OrderDetailsModal({
                       </div>
                       <div className="col-span-2">
                         <div className="text-gray-500">Ship to</div>
-                        <div className="font-medium">{order.address?.display_address || "—"}</div>
+                        <div className="font-medium">
+                          {order.address?.display_address || "—"}
+                        </div>
                       </div>
                     </div>
 
                     <div className="border-t pt-3">
                       <div className="font-semibold mb-2">Items</div>
                       <div className="space-y-2">
-                        {order.order_items.map((it: any) => (
+                        {order.order_items.map((it) => (
                           <div key={it.id} className="flex justify-between gap-3">
                             <div className="flex-1">
                               <div className="font-medium">{it.product_title}</div>
@@ -1130,21 +1117,21 @@ function OrderDetailsModal({
 ======================================================= */
 export default function SalesPage() {
   const reduxToken = useSelector(selectToken);
-  const [groups, setGroups] = useState < any[] > ([]);
-  const [nextUrl, setNextUrl] = useState < string | null > (null);
-  const [prevUrl, setPrevUrl] = useState < string | null > (null);
+  const [groups, setGroups] = useState([]);
+  const [nextUrl, setNextUrl] = useState(null);
+  const [prevUrl, setPrevUrl] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
-  const [activeOrder, setActiveOrder] = useState < any > (null);
+  const [activeOrder, setActiveOrder] = useState(null);
 
   // Dispatch modal state
   const [isTrackingSheetOpen, setIsTrackingSheetOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
-  const [orderToDispatchAll, setOrderToDispatchAll] = useState < any > (null);
-  const [selectedOrder, setSelectedOrder] = useState < any > (null);
-  const [selectedItem, setSelectedItem] = useState < any > (null);
+  const [orderToDispatchAll, setOrderToDispatchAll] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dispatchForm, setDispatchForm] = useState({
     dispatchDate: "",
@@ -1156,7 +1143,7 @@ export default function SalesPage() {
   });
 
   /* -------------------- fetch & normalize -------------------- */
-  async function fetchPage(url: string, { append = false } = {}) {
+  async function fetchPage(url, { append = false } = {}) {
     setLoading(true);
     const token = resolveAuthToken(reduxToken);
 
@@ -1180,14 +1167,14 @@ export default function SalesPage() {
 
       const data = await res.json();
 
-      const items: any[] = Array.isArray(data)
+      const items = Array.isArray(data)
         ? data
         : Array.isArray(data.results)
           ? data.results
           : [];
 
       // Group by order_id
-      const groupedMap = new Map < string, any> ();
+      const groupedMap = new Map();
 
       if (append) {
         for (const g of groups) groupedMap.set(String(g.id), { ...g });
@@ -1201,7 +1188,7 @@ export default function SalesPage() {
             order_date: item.order_date || null,
             buyer: item.buyer || null,
             address: item.address || null,
-            order_items: [] as any[],
+            order_items: [],
           };
 
         existing.order_items.push({
@@ -1237,13 +1224,14 @@ export default function SalesPage() {
       const prev = data.previous || null;
 
       const newGroups = Array.from(groupedMap.values()).sort(
-        (a, b) => new Date(b.order_date || 0).getTime() - new Date(a.order_date || 0).getTime()
+        (a, b) =>
+          new Date(b.order_date || 0).getTime() - new Date(a.order_date || 0).getTime()
       );
 
       setGroups(newGroups);
       setNextUrl(next);
       setPrevUrl(prev);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       toast.error(err.message || "Failed to load orders.");
     } finally {
@@ -1257,9 +1245,9 @@ export default function SalesPage() {
     // If your API REQUIRES a token, enforce it here for clarity:
     // If your API allows cookie session without token, you can remove this guard.
     if (!token) {
-      // Still allow attempt with only cookie session if you prefer:
-      // fetchPage(`${API_BASE}/api/seller/order-items/`);
+      // To allow cookie-only session, comment the next line and uncomment fetchPage below.
       toast.error("No auth token found. Please sign in.");
+      // fetchPage(`${API_BASE}/api/seller/order-items/`);
       return;
     }
     fetchPage(`${API_BASE}/api/seller/order-items/`);
@@ -1290,7 +1278,7 @@ export default function SalesPage() {
           .filter(Boolean)
           .join(" ") || "";
 
-      const products = g.order_items.map((i: any) => i.product_title).join(" ");
+      const products = g.order_items.map((i) => i.product_title).join(" ");
 
       return (
         ID.toLowerCase().includes(q) ||
@@ -1303,7 +1291,7 @@ export default function SalesPage() {
   }, [groups, searchQuery]);
 
   /* -------------------- dispatch helpers -------------------- */
-  const openTrackingSheet = (order: any, item: any) => {
+  const openTrackingSheet = (order, item) => {
     setBulkMode(false);
     setSelectedOrder(order);
     setSelectedItem(item);
@@ -1318,7 +1306,7 @@ export default function SalesPage() {
     setIsTrackingSheetOpen(true);
   };
 
-  const openBulkTrackingSheet = (order: any) => {
+  const openBulkTrackingSheet = (order) => {
     setBulkMode(true);
     setOrderToDispatchAll(order);
     setDispatchForm({
@@ -1332,13 +1320,15 @@ export default function SalesPage() {
     setIsTrackingSheetOpen(true);
   };
 
-  function updateOrderItems(orderId: string, updater: (it: any) => any) {
+  function updateOrderItems(orderId, updater) {
     setGroups((prev) =>
-      prev.map((g) => (g.id === orderId ? { ...g, order_items: g.order_items.map((it: any) => updater(it)) } : g))
+      prev.map((g) =>
+        g.id === orderId ? { ...g, order_items: g.order_items.map((it) => updater(it)) } : g
+      )
     );
   }
 
-  const undoDispatch = async (order: any, item: any) => {
+  const undoDispatch = async (order, item) => {
     const token = resolveAuthToken(reduxToken);
     try {
       const res = await fetch(`${API_BASE}/api/orders/${order.id}/dispatch/`, {
@@ -1356,16 +1346,19 @@ export default function SalesPage() {
       }
       // optimistic update
       updateOrderItems(order.id, (it) =>
-        it.id === item.id ? { ...it, dispatched: false, date_dispatched: null, shipping_carrier: "" } : it
+        it.id === item.id
+          ? { ...it, dispatched: false, date_dispatched: null, shipping_carrier: "" }
+          : it
       );
       toast.success(`Dispatch undone for "${item.product_title}".`);
-    } catch (err: any) {
+    } catch (err) {
       toast.error(err.message || "Failed to undo dispatch");
     }
   };
 
   const handleDispatchSubmit = async () => {
-    const { dispatchDate, dispatchTime, carrier, trackingNumber, trackingLink, notes } = dispatchForm;
+    const { dispatchDate, dispatchTime, carrier, trackingNumber, trackingLink, notes } =
+      dispatchForm;
 
     const fullDateTime = dispatchDate ? `${dispatchDate}T${dispatchTime || "09:00"}` : "";
     if (!fullDateTime || !carrier.trim()) {
@@ -1427,11 +1420,11 @@ export default function SalesPage() {
 
       toast.success(
         bulkMode
-          ? `All ${orderToDispatchAll.order_items.filter((i: any) => !i.dispatched).length} items marked as dispatched.`
+          ? `All ${orderToDispatchAll.order_items.filter((i) => !i.dispatched).length} items marked as dispatched.`
           : `Item "${selectedItem.product_title}" marked as dispatched.`
       );
       setIsTrackingSheetOpen(false);
-    } catch (err: any) {
+    } catch (err) {
       toast.error(err.message || "Dispatch failed");
     } finally {
       setIsSubmitting(false);
@@ -1439,18 +1432,19 @@ export default function SalesPage() {
   };
 
   /* -------------------- UI helpers -------------------- */
-  function getDispatchStatusBadge(order: any) {
-    const dispatchedCount = order.order_items.filter((i: any) => i.dispatched).length;
+  function getDispatchStatusBadge(order) {
+    const dispatchedCount = order.order_items.filter((i) => i.dispatched).length;
     const total = order.order_items.length;
 
     if (total === 0) return null;
     if (dispatchedCount === total) return <Pill color="green">✅ All Dispatched</Pill>;
-    if (dispatchedCount > 0) return <Pill color="blue">🟦 {dispatchedCount}/{total} Dispatched</Pill>;
+    if (dispatchedCount > 0)
+      return <Pill color="blue">🟦 {dispatchedCount}/{total} Dispatched</Pill>;
     return <Pill color="amber">🚚 Pending Dispatch</Pill>;
   }
 
-  function orderTotalsByCurrency(order: any) {
-    const map = new Map < string, number> ();
+  function orderTotalsByCurrency(order) {
+    const map = new Map();
     for (const it of order.order_items) {
       const key = it.currency || "GHS";
       const curr = map.get(key) || 0;
@@ -1459,7 +1453,7 @@ export default function SalesPage() {
     return Array.from(map.entries()); // [ [ 'GHS', 12345 ], ... ]
   }
 
-  const openDetails = (group: any) => {
+  const openDetails = (group) => {
     setActiveOrder(group);
     setOrderDetailsOpen(true);
   };
@@ -1495,7 +1489,9 @@ export default function SalesPage() {
 
       {/* Orders */}
       {filteredGroups.length === 0 ? (
-        <p className="text-gray-500 dark:text-gray-400">{loading ? "Loading…" : "No sales found."}</p>
+        <p className="text-gray-500 dark:text-gray-400">
+          {loading ? "Loading…" : "No sales found."}
+        </p>
       ) : (
         <div className="space-y-6">
           {filteredGroups.map((order) => (
@@ -1507,9 +1503,13 @@ export default function SalesPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
                 <div>
                   <p className="font-semibold">Order #{order.id}</p>
-                  <p className="text-sm text-gray-600">Order placed: {formatDate(order.order_date)}</p>
+                  <p className="text-sm text-gray-600">
+                    Order placed: {formatDate(order.order_date)}
+                  </p>
                   {order.address?.display_address && (
-                    <p className="text-xs text-gray-500 mt-1">Ship to: {order.address.display_address}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Ship to: {order.address.display_address}
+                    </p>
                   )}
                 </div>
 
@@ -1526,7 +1526,7 @@ export default function SalesPage() {
 
               {/* Items */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3 mt-4">
-                {order.order_items.map((item: any) => (
+                {order.order_items.map((item) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between gap-4 text-sm rounded-md border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 px-4 py-3 shadow-sm"
@@ -1570,10 +1570,13 @@ export default function SalesPage() {
                           <div className="text-[11px] text-gray-500 dark:text-gray-300 mt-1 space-y-0.5">
                             {item.shipping_carrier && (
                               <p>
-                                Carrier: <span className="font-medium">{item.shipping_carrier}</span>
+                                Carrier:{" "}
+                                <span className="font-medium">{item.shipping_carrier}</span>
                               </p>
                             )}
-                            {item.date_dispatched && <p>Dispatched: {formatDate(item.date_dispatched)}</p>}
+                            {item.date_dispatched && (
+                              <p>Dispatched: {formatDate(item.date_dispatched)}</p>
+                            )}
                           </div>
                         )}
                       </div>
@@ -1581,7 +1584,9 @@ export default function SalesPage() {
 
                     {/* RIGHT */}
                     <div className="text-right whitespace-nowrap">
-                      <div className="font-semibold">{formatMoneyRaw(item.total_price, item.currency)}</div>
+                      <div className="font-semibold">
+                        {formatMoneyRaw(item.total_price, item.currency)}
+                      </div>
                       <div className="text-xs text-gray-500">
                         {item.quantity} × {formatMoneyRaw(item.unit_price, item.currency)}
                       </div>
@@ -1650,7 +1655,11 @@ export default function SalesPage() {
 
       {/* Dispatch sheet */}
       <Transition show={isTrackingSheetOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={() => setIsTrackingSheetOpen(false)}>
+        <Dialog
+          as="div"
+          className="relative z-50"
+          onClose={() => setIsTrackingSheetOpen(false)}
+        >
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-200"
@@ -1692,15 +1701,21 @@ export default function SalesPage() {
                     <p className="mb-2">
                       You are dispatching{" "}
                       <strong>
-                        {orderToDispatchAll.order_items.filter((i: any) => !i.dispatched).length}
+                        {
+                          orderToDispatchAll.order_items.filter((i) => !i.dispatched)
+                            .length
+                        }
                       </strong>{" "}
                       items:
                     </p>
                     <ul className="list-disc pl-5 space-y-1">
                       {orderToDispatchAll.order_items
-                        .filter((i: any) => !i.dispatched)
-                        .map((i: any) => (
-                          <li key={i.id} className="whitespace-normal break-words leading-snug">
+                        .filter((i) => !i.dispatched)
+                        .map((i) => (
+                          <li
+                            key={i.id}
+                            className="whitespace-normal break-words leading-snug"
+                          >
                             {i.product_title}
                           </li>
                         ))}
@@ -1713,14 +1728,24 @@ export default function SalesPage() {
                     <input
                       type="date"
                       value={dispatchForm.dispatchDate}
-                      onChange={(e) => setDispatchForm({ ...dispatchForm, dispatchDate: e.target.value })}
+                      onChange={(e) =>
+                        setDispatchForm({
+                          ...dispatchForm,
+                          dispatchDate: e.target.value,
+                        })
+                      }
                       className="w-1/2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white px-3 py-2 rounded-md"
                     />
                     <input
                       type="time"
-                      step={60}
+                      step="60"
                       value={dispatchForm.dispatchTime || ""}
-                      onChange={(e) => setDispatchForm({ ...dispatchForm, dispatchTime: e.target.value })}
+                      onChange={(e) =>
+                        setDispatchForm({
+                          ...dispatchForm,
+                          dispatchTime: e.target.value,
+                        })
+                      }
                       className="w-1/2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white px-3 py-2 rounded-md"
                     />
                   </div>
@@ -1728,7 +1753,9 @@ export default function SalesPage() {
                   <select
                     className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white px-3 py-2 rounded-md"
                     value={dispatchForm.carrier}
-                    onChange={(e) => setDispatchForm({ ...dispatchForm, carrier: e.target.value })}
+                    onChange={(e) =>
+                      setDispatchForm({ ...dispatchForm, carrier: e.target.value })
+                    }
                   >
                     <option value="">Select Carrier</option>
                     <option>Ghana Post</option>
@@ -1741,7 +1768,12 @@ export default function SalesPage() {
                     className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white placeholder-gray-600 dark:placeholder-gray-300 px-3 py-2 rounded-md"
                     placeholder="Tracking Number"
                     value={dispatchForm.trackingNumber}
-                    onChange={(e) => setDispatchForm({ ...dispatchForm, trackingNumber: e.target.value })}
+                    onChange={(e) =>
+                      setDispatchForm({
+                        ...dispatchForm,
+                        trackingNumber: e.target.value,
+                      })
+                    }
                   />
 
                   <input
@@ -1749,24 +1781,37 @@ export default function SalesPage() {
                     className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white placeholder-gray-600 dark:placeholder-gray-300 px-3 py-2 rounded-md"
                     placeholder="Tracking Link (optional)"
                     value={dispatchForm.trackingLink}
-                    onChange={(e) => setDispatchForm({ ...dispatchForm, trackingLink: e.target.value })}
+                    onChange={(e) =>
+                      setDispatchForm({
+                        ...dispatchForm,
+                        trackingLink: e.target.value,
+                      })
+                    }
                   />
 
                   <textarea
                     className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white placeholder-gray-600 dark:placeholder-gray-300 px-3 py-2 rounded-md"
                     placeholder="Additional Notes (optional)"
                     value={dispatchForm.notes}
-                    onChange={(e) => setDispatchForm({ ...dispatchForm, notes: e.target.value })}
+                    onChange={(e) =>
+                      setDispatchForm({ ...dispatchForm, notes: e.target.value })
+                    }
                   />
                 </div>
 
                 <button
                   onClick={handleDispatchSubmit}
                   disabled={isSubmitting}
-                  className={`mt-6 w-full py-2 rounded-md ${isSubmitting ? "bg-purple-400 dark:bg-purple-500" : "bg-purple-600 hover:bg-purple-700 dark:hover:bg-purple-500"
+                  className={`mt-6 w-full py-2 rounded-md ${isSubmitting
+                      ? "bg-purple-400 dark:bg-purple-500"
+                      : "bg-purple-600 hover:bg-purple-700 dark:hover:bg-purple-500"
                     } text-white`}
                 >
-                  {isSubmitting ? "Saving..." : bulkMode ? "Save & Dispatch All" : "Save & Mark as Dispatched"}
+                  {isSubmitting
+                    ? "Saving..."
+                    : bulkMode
+                      ? "Save & Dispatch All"
+                      : "Save & Mark as Dispatched"}
                 </button>
               </div>
             </Dialog.Panel>
