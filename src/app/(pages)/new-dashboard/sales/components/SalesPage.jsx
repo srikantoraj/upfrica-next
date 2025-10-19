@@ -330,10 +330,10 @@ export default function SalesPage() {
 
   // Initial load
   useEffect(() => {
-    if (!token) {
-      toast.error("No auth token found (cookie 'up_auth' or env NEXT_PUBLIC_API_TOKEN).");
-      return;
-    }
+    // if (!token) {
+    //   toast.error("No auth token found (cookie 'up_auth' or env NEXT_PUBLIC_API_TOKEN).");
+    //   return;
+    // }
     fetchPage(`${API_BASE}/api/seller/order-items/`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
